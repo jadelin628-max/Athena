@@ -2,7 +2,7 @@
  * Service Worker：缓存应用与 KaTeX，实现离线可用
  * 说明：仅在 http(s) 环境下生效（file:// 下浏览器不注册 SW）。
  */
-const VERSION = 'ms3-v1';
+const VERSION = 'ms3-v2';
 const APP_CACHE = VERSION + '-app';
 const KATEX_CACHE = VERSION + '-katex';
 
@@ -77,16 +77,17 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  // 其他静态资源：缓存优先
+  // 其他静态资源（app.js / style.css / 图标等）：网络优先，回退缓存
+  // 这样上传新版本后，在线刷新即可看到更新，无需手动清缓存
   e.respondWith(
-    caches.match(req).then(function (cached) {
-      return cached || fetch(req).then(function (resp) {
-        if (resp && resp.status === 200) {
-          const clone = resp.clone();
-          caches.open(APP_CACHE).then(function (c) { c.put(req, clone); });
-        }
-        return resp;
-      });
+    fetch(req).then(function (resp) {
+      if (resp && resp.status === 200) {
+        const clone = resp.clone();
+        caches.open(APP_CACHE).then(function (c) { c.put(req, clone); });
+      }
+      return resp;
+    }).catch(function () {
+      return caches.match(req);
     })
   );
 });

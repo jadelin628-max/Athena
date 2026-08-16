@@ -52,6 +52,11 @@ nav { display: flex; gap: 6px; align-items: center; }
 .nav-btn:hover, .icon-btn:hover { background: var(--accent-weak); color: var(--text); }
 .nav-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
 .icon-btn { padding: 8px 10px; }
+.subject-select {
+  border: 1px solid var(--border); background: var(--card); color: var(--text);
+  padding: 7px 8px; border-radius: 9px; font-size: 14px; cursor: pointer;
+  max-width: 110px;
+}
 
 /* 主容器 */
 #app { max-width: 720px; margin: 0 auto; padding: 18px max(16px, env(safe-area-inset-right)) calc(60px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }

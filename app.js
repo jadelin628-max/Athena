@@ -6,7 +6,30 @@
 (function () {
   'use strict';
 
-  const { CATS, DATA, META } = window.KAOYAN_MS3;
+  // ---------------- 学科管理（多学科数据注册表） ----------------
+  const SUBJECT_KEY = 'formula_app_subject';
+  let currentSubjectId = null;
+  let CATS = null, DATA = null, META = null;
+
+  function subjectList() { return window.SUBJECTS || {}; }
+  function setSubject(id) {
+    const list = subjectList();
+    const subj = list[id] || list[Object.keys(list)[0]] || null;
+    if (!subj) return false;
+    currentSubjectId = subj.id;
+    CATS = subj.CATS;
+    DATA = subj.DATA;
+    META = subj.META;
+    try { localStorage.setItem(SUBJECT_KEY, subj.id); } catch (e) {}
+    document.title = subj.name + ' · 公式记忆';
+    const b = document.getElementById('brandText');
+    if (b) b.textContent = subj.icon + ' ' + subj.short + '公式记忆';
+    const sel = document.getElementById('subjectSelect');
+    if (sel) sel.value = subj.id;
+    return true;
+  }
+  function dbKey() { return currentSubjectId + '_formula_srs_v1'; }
+  function sessionKey() { return currentSubjectId + '_formula_session_v1'; }
 
   // ---------------- KaTeX 加载（多 CDN 自动回退） ----------------
   const KATEX_SOURCES = [
@@ -83,9 +106,7 @@
   }
 
   // ---------------- 数据持久化 ----------------
-  const LS_KEY = 'ms3_formula_srs_v1';
   const THEME_KEY = 'ms3_formula_theme';
-  const SESSION_KEY = 'ms3_formula_session_v1';
   let DB = null;
 
   function defaultCard() { return { reps: 0, ef: 2.5, ivl: 0, due: 0, lapses: 0, state: 'new', s: 0 }; }
@@ -137,9 +158,9 @@
   function loadDBAsync() {
     return new Promise(function (resolve) {
       let local = null;
-      try { local = JSON.parse(localStorage.getItem(LS_KEY)); } catch (e) {}
+      try { local = JSON.parse(localStorage.getItem(dbKey())); } catch (e) {}
       if (local && typeof local === 'object') { normalizeDB(local); resolve(); return; }
-      idbGet(LS_KEY).then(function (v) {
+      idbGet(dbKey()).then(function (v) {
         normalizeDB((v && typeof v === 'object') ? v : null);
         resolve();
       }).catch(function () { normalizeDB(null); resolve(); });
@@ -147,8 +168,8 @@
   }
   function saveDB() {
     const json = JSON.stringify(DB);
-    try { localStorage.setItem(LS_KEY, json); } catch (e) {}
-    try { idbSet(LS_KEY, DB); } catch (e) {}
+    try { localStorage.setItem(dbKey(), json); } catch (e) {}
+    try { idbSet(dbKey(), DB); } catch (e) {}
   }
 
   function sanitizeCard(c) {
@@ -167,19 +188,30 @@
   function importDB(text) {
     let data;
     try { data = JSON.parse(text); } catch (e) { throw new Error('不是有效的 JSON 文件'); }
-    if (!data || typeof data !== 'object' || !data.cards || typeof data.cards !== 'object') {
+    let payload = data;
+    let target = currentSubjectId;
+    if (data && data.format === 'formula-memory' && data.db) {
+      payload = data.db;
+      target = data.subject || currentSubjectId;
+    }
+    if (!payload || typeof payload !== 'object' || !payload.cards || typeof payload.cards !== 'object') {
       throw new Error('文件格式不正确（缺少 cards 数据）');
     }
-    const newCards = {};
-    DATA.forEach(function (f) { newCards[f.id] = sanitizeCard(data.cards[f.id]); });
-    DB.cards = newCards;
-    if (data.settings && typeof data.settings.dailyNew === 'number') {
-      DB.settings.dailyNew = Math.max(1, Math.min(99, Math.round(data.settings.dailyNew)));
+    if (target !== currentSubjectId) {
+      if (!setSubject(target)) throw new Error('备份中的学科不受支持');
+      deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
+      browseCat = 'all'; browseQuery = ''; browseExpanded = {}; searchRefocus = false; browseMastery = 'all'; browseStars = 'all';
     }
-    if (data.log && data.log.checkins && typeof data.log.checkins === 'object') {
-      DB.log.checkins = DB.log.checkins || {};
-      Object.keys(data.log.checkins).forEach(function (k) { DB.log.checkins[k] = true; });
+    const fresh = { cards: {}, settings: { dailyNew: 10 }, log: {} };
+    DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
+    if (payload.settings && typeof payload.settings.dailyNew === 'number') {
+      fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
     }
+    if (payload.log && payload.log.checkins && typeof payload.log.checkins === 'object') {
+      fresh.log.checkins = {};
+      Object.keys(payload.log.checkins).forEach(function (k) { fresh.log.checkins[k] = true; });
+    }
+    DB = fresh;
     saveDB();
   }
   function card(id) { return DB.cards[id]; }
@@ -194,11 +226,11 @@
 
   // ---------------- 会话持久化（跨模块/刷新保持学习卡片） ----------------
   function saveSession() {
-    try { localStorage.setItem(SESSION_KEY, JSON.stringify({ deck: deck, pos: pos, frontier: frontier, pendingAdvance: pendingAdvance, seenAgain: seenAgain })); } catch (e) {}
+    try { localStorage.setItem(sessionKey(), JSON.stringify({ deck: deck, pos: pos, frontier: frontier, pendingAdvance: pendingAdvance, seenAgain: seenAgain })); } catch (e) {}
   }
   function loadSession() {
     try {
-      const raw = localStorage.getItem(SESSION_KEY);
+      const raw = localStorage.getItem(sessionKey());
       if (raw) {
         const s = JSON.parse(raw);
         if (s && Array.isArray(s.deck) && s.deck.length > 0) {
@@ -212,6 +244,26 @@
       }
     } catch (e) {}
     return false;
+  }
+
+  // 旧版本（单学科）数据迁移到按学科命名的新键
+  function migrateLegacy() {
+    const pairs = [
+      ['ms3_formula_srs_v1', 'math3_formula_srs_v1'],
+      ['ms3_formula_session_v1', 'math3_formula_session_v1']
+    ];
+    pairs.forEach(function (p) {
+      try {
+        if (!localStorage.getItem(p[1]) && localStorage.getItem(p[0])) {
+          localStorage.setItem(p[1], localStorage.getItem(p[0]));
+        }
+      } catch (e) {}
+    });
+    try {
+      idbGet('ms3_formula_srs_v1').then(function (v) {
+        if (v) idbGet('math3_formula_srs_v1').then(function (n) { if (!n) idbSet('math3_formula_srs_v1', v); }).catch(function () {});
+      }).catch(function () {});
+    } catch (e) {}
   }
 
   // ---------------- 打卡与坚持天数 ----------------
@@ -839,21 +891,48 @@
     const wrap = el('div', 'principles-wrap');
 
     wrap.appendChild(el('h2', null, '🧠 记忆原理'));
-    wrap.appendChild(el('p', 'muted', '本应用遵循认知科学中被反复验证的记忆规律——你正在进行的每一步，都对应下面一条原理。'));
+    wrap.appendChild(el('p', 'muted', '本应用遵循认知科学中被反复验证的记忆与学习规律——每条都给出「是什么」与「怎么实践」。'));
 
     const cards = [
       { icon: '✍️', name: '主动回忆 · Active Recall',
         desc: '先回想、再核对，比反复阅读更能加固记忆。',
-        how: '卡片默认只显示提示，你必须先自行回想，再点「显示答案」。' },
+        how: '卡片默认只显示提示，先自行回想，再点「显示答案」。' },
       { icon: '⏱️', name: '间隔重复 · Spaced Repetition',
         desc: '在即将遗忘时复习，用最少次数达成长期记忆。',
-        how: '内置 SM-2 算法：按「忘记/困难/良好/简单」打分，自动把下次复习安排在遗忘临界点（10 分钟 → 1 天 → 6 天 → 指数拉长）。' },
+        how: '内置 SM-2 算法：按「忘记/困难/良好/简单」打分，自动把下次复习安排在遗忘临界点。' },
+      { icon: '📉', name: '遗忘曲线 · Forgetting Curve',
+        desc: '艾宾浩斯发现遗忘「先快后慢」，不复习会迅速丢失。',
+        how: '每天完成「待复习」卡片，在遗忘临界点及时巩固，而不是考前突击。' },
       { icon: '🔀', name: '交错练习 · Interleaving',
-        desc: '混合不同章节，比集中刷一类更能提升辨析能力。',
-        how: '复习队列随机乱序，导数、积分、线代、概率混合出现。' },
+        desc: '混合不同章节，比集中刷一类更能提升辨析与迁移能力。',
+        how: '复习队列随机乱序，各章节公式混合出现。' },
       { icon: '🧪', name: '测试效应 · Testing Effect',
         desc: '「考自己」比「看自己」记得更牢。',
-        how: '自测模式随机抽题，给出公式让你选名称，检验是否真正认得。' }
+        how: '用自测模式随机抽题，给出公式选名称，检验是否真正认得。' },
+      { icon: '🌱', name: '生成效应 · Generation Effect',
+        desc: '自己生成答案，比被动接收的记忆更深。',
+        how: '看到提示后先在脑中/纸上写出公式，再点「显示答案」核对。' },
+      { icon: '🔗', name: '精加工 · Elaboration',
+        desc: '把新知识与已知知识、应用场景建立联系，形成意义网络。',
+        how: '复习时追问：公式的条件是什么？和其他公式什么关系？用在什么题型？' },
+      { icon: '🖼️', name: '双重编码 · Dual Coding',
+        desc: '语言符号 + 图形图像双通道编码，记忆更牢。',
+        how: '给公式配上图形（积分面积、正态曲线、预算线等），文字与图形一起记。' },
+      { icon: '🗣️', name: '费曼技巧 · Feynman Technique',
+        desc: '能用自己的话讲清楚，才是真理解。',
+        how: '合上卡片，把公式与推导讲给自己或写下来；讲不通就回去再看。' },
+      { icon: '❓', name: '自我解释 · Self-explanation',
+        desc: '学习时向自己解释每一步「为什么」。',
+        how: '每记一个公式都问「为什么成立、为什么这样推导」，不只看结论。' },
+      { icon: '🎯', name: '元认知监控 · Metacognition',
+        desc: '准确判断自己「会不会」，避免熟练错觉。',
+        how: '用「忘记/困难/良好/简单」如实自评，并用自测结果校准对自己掌握度的判断。' },
+      { icon: '🌙', name: '睡眠巩固 · Sleep & Consolidation',
+        desc: '睡眠期间大脑会巩固白天所学，是记忆的关键环节。',
+        how: '睡前做一组复习并保证充足睡眠，避免熬夜突击影响记忆固化。' },
+      { icon: '📅', name: '分散学习 · Distributed Practice',
+        desc: '每天少量多次，远优于考前一次性集中。',
+        how: '每天坚持打卡、完成当日队列（「坚持天数」会给你反馈），让复习形成习惯。' }
     ];
     cards.forEach(function (c) {
       const box = el('div', 'principle');
@@ -963,11 +1042,13 @@
         break;
       }
       case 'export': {
-        const blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' });
+        const payload = { format: 'formula-memory', version: 2, subject: currentSubjectId, db: DB };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = '数三公式记忆-备份.json';
+        const subj = subjectList()[currentSubjectId];
+        a.download = (subj ? subj.short : '公式') + '公式记忆-备份.json';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1072,14 +1153,49 @@
     });
   }
 
-  // ---------------- 启动 ----------------
-  function initApp() {
-    applyTheme();
+  // ---------------- 学科切换与选择器 ----------------
+  function switchSubject(id) {
+    if (id === currentSubjectId || !setSubject(id)) return;
+    deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
+    browseCat = 'all'; browseQuery = ''; browseExpanded = {}; searchRefocus = false; browseMastery = 'all'; browseStars = 'all';
     loadDBAsync().then(function () {
       if (!loadSession()) buildSession(0);
       currentView = 'learn';
       renderApp();
     });
+  }
+  function renderSubjectSelect() {
+    const sel = document.getElementById('subjectSelect');
+    if (!sel) return;
+    sel.innerHTML = '';
+    Object.keys(subjectList()).forEach(function (id) {
+      const s = subjectList()[id];
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = s.icon + ' ' + s.short;
+      sel.appendChild(opt);
+    });
+    sel.value = currentSubjectId;
+  }
+
+  // ---------------- 启动 ----------------
+  function initApp() {
+    applyTheme();
+    let saved = null;
+    try { saved = localStorage.getItem(SUBJECT_KEY); } catch (e) {}
+    setSubject(saved);
+    migrateLegacy();
+    renderSubjectSelect();
+    loadDBAsync().then(function () {
+      if (!loadSession()) buildSession(0);
+      currentView = 'learn';
+      renderApp();
+    });
+  }
+
+  const subjectSelect = document.getElementById('subjectSelect');
+  if (subjectSelect) {
+    subjectSelect.addEventListener('change', function () { switchSubject(subjectSelect.value); });
   }
 
   initApp();

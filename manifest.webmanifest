@@ -1,7 +1,7 @@
 {
-  "name": "考研数学三 · 公式记忆",
-  "short_name": "数三公式记忆",
-  "description": "基于主动回忆与间隔重复的考研数学三公式记忆工具",
+  "name": "考研公式记忆",
+  "short_name": "公式记忆",
+  "description": "基于主动回忆与间隔重复的考研数学三与微观经济学公式记忆工具",
   "lang": "zh-CN",
   "start_url": "./index.html",
   "scope": "./",

@@ -150,6 +150,38 @@
     try { localStorage.setItem(LS_KEY, json); } catch (e) {}
     try { idbSet(LS_KEY, DB); } catch (e) {}
   }
+
+  function sanitizeCard(c) {
+    const out = defaultCard();
+    if (c && typeof c === 'object') {
+      if (typeof c.reps === 'number') out.reps = c.reps;
+      if (typeof c.ef === 'number') out.ef = c.ef;
+      if (typeof c.ivl === 'number') out.ivl = c.ivl;
+      if (typeof c.due === 'number') out.due = c.due;
+      if (typeof c.lapses === 'number') out.lapses = c.lapses;
+      if (typeof c.s === 'number') out.s = c.s;
+      if (c.state === 'new' || c.state === 'learn' || c.state === 'review') out.state = c.state;
+    }
+    return out;
+  }
+  function importDB(text) {
+    let data;
+    try { data = JSON.parse(text); } catch (e) { throw new Error('不是有效的 JSON 文件'); }
+    if (!data || typeof data !== 'object' || !data.cards || typeof data.cards !== 'object') {
+      throw new Error('文件格式不正确（缺少 cards 数据）');
+    }
+    const newCards = {};
+    DATA.forEach(function (f) { newCards[f.id] = sanitizeCard(data.cards[f.id]); });
+    DB.cards = newCards;
+    if (data.settings && typeof data.settings.dailyNew === 'number') {
+      DB.settings.dailyNew = Math.max(1, Math.min(99, Math.round(data.settings.dailyNew)));
+    }
+    if (data.log && data.log.checkins && typeof data.log.checkins === 'object') {
+      DB.log.checkins = DB.log.checkins || {};
+      Object.keys(data.log.checkins).forEach(function (k) { DB.log.checkins[k] = true; });
+    }
+    saveDB();
+  }
   function card(id) { return DB.cards[id]; }
   function shuffle(arr) {
     const a = arr.slice();
@@ -781,11 +813,15 @@
     wrap.appendChild(el('p', 'muted', '新卡片会按此数量加入每天的复习队列，建议 5~15 张。'));
 
     const s2 = el('div', 'setting-row');
-    s2.appendChild(el('span', null, '导出学习进度备份'));
+    s2.appendChild(el('span', null, '备份 / 迁移进度'));
     const exp = el('button', 'btn', '导出 JSON');
     exp.setAttribute('data-action', 'export');
     s2.appendChild(exp);
+    const imp = el('button', 'btn primary', '导入 JSON');
+    imp.setAttribute('data-action', 'importjson');
+    s2.appendChild(imp);
     wrap.appendChild(s2);
+    wrap.appendChild(el('p', 'muted', '换设备或换网址（如本地→线上）时：先「导出」生成备份文件，再到新位置「导入」。'));
 
     const s3 = el('div', 'setting-row danger-row');
     s3.appendChild(el('span', null, '重置全部学习进度'));
@@ -937,6 +973,30 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         toast('已导出');
+        break;
+      }
+      case 'importjson': {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json,.json';
+        input.onchange = function () {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function () {
+            try {
+              importDB(String(reader.result));
+              buildSession(0);
+              currentView = 'learn';
+              renderApp();
+              toast('导入成功');
+            } catch (err) {
+              toast(err.message || '导入失败');
+            }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
         break;
       }
       case 'resetall':

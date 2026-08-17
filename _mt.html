@@ -3,37 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="考研数学三公式记忆：基于主动回忆与间隔重复的轻量记忆工具">
-  <meta name="theme-color" content="#4f6ef7">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="数三公式记忆">
-  <link rel="manifest" href="manifest.webmanifest?v=3">
-  <link rel="icon" type="image/png" href="icons/favicon.png?v=3">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3">
-  <title>考研数学三 · 公式记忆</title>
+  <title>sqrt test</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
     <div class="brand"><span id="brandText"></span></div>
     <nav>
-      <select class="subject-select" id="subjectSelect" title="切换学科" aria-label="切换学科"></select>
+      <select class="subject-select" id="subjectSelect"></select>
       <button class="nav-btn" data-action="nav" data-arg="learn">学习</button>
       <button class="nav-btn" data-action="nav" data-arg="browse">浏览</button>
       <button class="nav-btn" data-action="nav" data-arg="map">导图</button>
       <button class="nav-btn" data-action="nav" data-arg="quiz">自测</button>
       <button class="nav-btn" data-action="nav" data-arg="principle">原理</button>
       <button class="nav-btn" data-action="nav" data-arg="settings">设置</button>
-      <button class="icon-btn" id="themeToggle" title="切换明暗主题">🌓</button>
+      <button class="icon-btn" id="themeToggle">🌓</button>
     </nav>
   </header>
-
   <main id="app"></main>
-
   <script src="data/math3.js"></script>
   <script src="data/econ.js"></script>
   <script src="data/stats.js"></script>
   <script src="app.js"></script>
+  <script>
+    window._errs = [];
+    window.addEventListener('error', function (e) { window._errs.push(e.message); });
+    setTimeout(function () {
+      var b = document.querySelector('nav .nav-btn[data-arg="map"]');
+      if (b) b.click();
+    }, 900);
+  </script>
 </body>
 </html>

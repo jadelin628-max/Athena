@@ -124,7 +124,7 @@
   const THEME_KEY = 'ms3_formula_theme';
   let DB = null;
 
-  function defaultCard() { return { reps: 0, ef: 2.5, ivl: 0, due: 0, lapses: 0, state: 'new', s: 0 }; }
+  function defaultCard() { return { reps: 0, ef: 2.5, ivl: 0, due: 0, lapses: 0, state: 'new', s: 0, notes: '' }; }
 
   // IndexedDB（作为更持久的数据备份；localStorage 仍为主存储）
   function idbOpen() {
@@ -167,6 +167,7 @@
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
       if (typeof c.s !== 'number') c.s = initialStrength(c);
+      if (typeof c.notes !== 'string') c.notes = '';
     });
     saveDB();
   }
@@ -197,6 +198,7 @@
       if (typeof c.lapses === 'number') out.lapses = c.lapses;
       if (typeof c.s === 'number') out.s = c.s;
       if (c.state === 'new' || c.state === 'learn' || c.state === 'review') out.state = c.state;
+      if (typeof c.notes === 'string') out.notes = c.notes;
     }
     return out;
   }
@@ -471,8 +473,23 @@
     saveSession();
   }
 
+  function surfaceDue() {
+    if (!deck.length || frontier >= deck.length) return;
+    const now = Date.now();
+    const head = deck.slice(0, frontier);
+    const tail = deck.slice(frontier);
+    const due = tail.filter(function (id) {
+      const c = card(id);
+      return (c.state === 'review' || c.state === 'learn') && c.due <= now;
+    });
+    if (!due.length) return;
+    const rest = tail.filter(function (id) { return due.indexOf(id) === -1; });
+    deck = head.concat(due, rest);
+  }
+
   function renderLearn() {
     const app = document.getElementById('app');
+    surfaceDue();
     app.appendChild(statsBar());
 
     const done = (deck.length === 0) || (frontier >= deck.length && pos >= frontier);
@@ -589,6 +606,20 @@
         : '回想后再点击「显示答案」核对，主动回忆效果最佳。');
     cardEl.appendChild(hint);
 
+    const notesBox = el('div', 'notes-box');
+    notesBox.appendChild(el('div', 'mini-label', '📝 我的笔记（感想 / 补充 / 易错点）'));
+    const notes = el('textarea', 'card-notes');
+    notes.placeholder = '在这里记录你的理解、补充或易错点…';
+    notes.value = st.notes || '';
+    let notesTimer;
+    notes.addEventListener('input', function () {
+      st.notes = notes.value;
+      clearTimeout(notesTimer);
+      notesTimer = setTimeout(saveDB, 400);
+    });
+    notesBox.appendChild(notes);
+    cardEl.appendChild(notesBox);
+
     wrap.appendChild(cardEl);
 
     const nav = el('div', 'learn-nav');
@@ -684,7 +715,7 @@
     allChip.setAttribute('data-action', 'bcat');
     allChip.setAttribute('data-arg', 'all');
     chips.appendChild(allChip);
-    Object.keys(CATS).forEach(function (k) {
+    catOrder().forEach(function (k) {
       const b = el('button', 'chip' + (browseCat === k ? ' active' : ''), CATS[k]);
       b.setAttribute('data-action', 'bcat');
       b.setAttribute('data-arg', k);
@@ -783,6 +814,19 @@
       reset.setAttribute('data-action', 'resetcard');
       reset.setAttribute('data-arg', f.id);
       body.appendChild(reset);
+      const notesBox = el('div', 'notes-box');
+      notesBox.appendChild(el('div', 'mini-label', '📝 我的笔记（感想 / 补充 / 易错点）'));
+      const notes = el('textarea', 'card-notes');
+      notes.placeholder = '在这里记录你的理解、补充或易错点…';
+      notes.value = card(f.id).notes || '';
+      let notesTimer;
+      notes.addEventListener('input', function () {
+        card(f.id).notes = notes.value;
+        clearTimeout(notesTimer);
+        notesTimer = setTimeout(saveDB, 400);
+      });
+      notesBox.appendChild(notes);
+      body.appendChild(notesBox);
       item.appendChild(body);
     }
     return item;
@@ -1056,11 +1100,15 @@
     list.forEach(function (f) { s += mastery(f.id).pct; });
     return Math.round(s / list.length);
   }
+  function catOrder() {
+    const subj = subjectList()[currentSubjectId];
+    return (subj && Array.isArray(subj.ORDER) && subj.ORDER.length) ? subj.ORDER : Object.keys(CATS);
+  }
 
   function renderMap() {
     const app = document.getElementById('app');
     const subj = subjectList()[currentSubjectId];
-    const cats = Object.keys(CATS);
+    const cats = catOrder();
     if (!mapCat || !CATS[mapCat]) mapCat = cats[0];
     const cards = DATA.filter(function (f) { return f.cat === mapCat; });
 
@@ -1324,15 +1372,26 @@
 
   // 触屏手势：右滑「上一张」，左滑「下一张/回到当前」
   let touchStart = null;
+  function inScrollable(t) {
+    let n = t;
+    while (n && n !== document.body && n.nodeType === 1) {
+      const cs = getComputedStyle(n);
+      if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true;
+      n = n.parentElement;
+    }
+    return false;
+  }
   document.addEventListener('touchstart', function (e) {
     if (currentView !== 'learn') return;
-    if (e.touches.length === 1) touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.touches.length === 1) touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, scroll: inScrollable(e.target) };
   }, { passive: true });
   document.addEventListener('touchend', function (e) {
     if (currentView !== 'learn' || !touchStart) return;
     const dx = e.changedTouches[0].clientX - touchStart.x;
     const dy = e.changedTouches[0].clientY - touchStart.y;
+    const wasScroll = touchStart.scroll;
     touchStart = null;
+    if (wasScroll) return; // 公式/内容横向滚动时，不触发卡片翻页
     if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return; // 需明显水平滑动
     if (dx < 0 && pos < frontier) handleAction('gofront');
     else if (dx > 0 && pos > 0) handleAction('goback');

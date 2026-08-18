@@ -257,6 +257,14 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .example-a { color: var(--text); }
 .example-src { font-size: 12px; color: var(--muted); margin-top: 8px; }
 .rel-box { margin-top: 12px; }
+.notes-box { margin-top: 14px; }
+.card-notes {
+  width: 100%; min-height: 76px; margin-top: 6px; padding: 10px 12px;
+  border: 1px dashed var(--border); border-radius: 10px;
+  background: var(--accent-weak); color: var(--text);
+  font-size: 14px; line-height: 1.6; resize: vertical; font-family: inherit;
+}
+.card-notes:focus { outline: none; border-color: var(--accent); }
 .rel-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 7px; }
 .rel-chip { text-align: left; white-space: normal; }
 

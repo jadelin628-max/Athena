@@ -284,6 +284,9 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px;
 }
 .map-panel-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-size: 17px; }
+.map-card-content { margin: 10px 0; }
+.map-front { margin-bottom: 8px; }
+.map-back { border-top: 1px dashed var(--border); padding-top: 8px; }
 
 /* 导图详情悬浮窗 */
 .map-modal { position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; padding: 18px; }
@@ -299,6 +302,39 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   border-radius: 10px; cursor: pointer; z-index: 1;
 }
 .map-modal-close:hover { background: var(--accent-weak); color: var(--text); }
+
+/* 版本号 */
+.app-version { text-align: center; color: var(--muted); font-size: 12px; margin-top: 22px; padding-bottom: 6px; opacity: .8; }
+
+/* 常见陷阱 */
+.pitfall-box { margin-top: 10px; font-size: 14px; background: color-mix(in srgb, var(--warn) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--border)); border-radius: 10px; padding: 8px 12px; }
+.pitfall-label { color: var(--warn); font-weight: 700; margin-right: 6px; }
+
+/* 待复习角标 */
+.nav-badge { background: var(--danger); color: #fff; font-size: 11px; line-height: 1; padding: 3px 6px; border-radius: 999px; margin-left: 5px; font-weight: 700; }
+
+/* 导图缩放 */
+.map-zoom-ctrl { display: inline-flex; gap: 4px; }
+
+/* 学习统计 */
+.heatmap-grid { display: grid; gap: 3px; grid-auto-rows: 12px; margin-bottom: 8px; overflow-x: auto; }
+.heat-cell { width: 12px; height: 12px; border-radius: 3px; background: var(--border); }
+.heat-cell.l1 { background: #bcd8ff; }
+.heat-cell.l2 { background: #7fb3f5; }
+.heat-cell.l3 { background: #4f86e0; }
+.heat-cell.l4 { background: #2f66c0; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 14px 16px; margin-bottom: 10px; }
+.cat-bar-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; }
+.cat-bar-name { flex: 0 0 110px; color: var(--text); }
+.cat-bar { flex: 1; height: 10px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.cat-bar-fill { height: 100%; border-radius: 999px; }
+.cat-bar-val { flex: 0 0 42px; text-align: right; color: var(--muted); }
+
+/* 沉浸模式 */
+#immersiveExit { position: fixed; top: 12px; right: 12px; z-index: 300; display: none; background: var(--card); box-shadow: var(--shadow); }
+body.immersive header { display: none; }
+body.immersive .stats-bar, body.immersive .app-version { display: none; }
+body.immersive #immersiveExit { display: block; }
 
 /* 记忆原理 */
 .principles-wrap { display: flex; flex-direction: column; gap: 14px; }

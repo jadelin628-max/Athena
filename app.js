@@ -5,12 +5,13 @@
  */
 (function () {
   'use strict';
+  const VERSION = '1.1.2';
 
   // ---------------- 学科管理（多学科数据注册表） ----------------
   const SUBJECT_KEY = 'formula_app_subject';
   let currentSubjectId = null;
   let CATS = null, DATA = null, META = null;
-  let EXAMPLES = {}, REL = {}, DEPTH = {};
+  let EXAMPLES = {}, REL = {}, DEPTH = {}, PITFALL = {};
 
   function subjectList() { return window.SUBJECTS || {}; }
   function setSubject(id) {
@@ -24,6 +25,7 @@
     EXAMPLES = subj.EXAMPLE || {};
     REL = subj.REL || {};
     DEPTH = subj.DEPTH || {};
+    PITFALL = subj.PITFALL || {};
     try { localStorage.setItem(SUBJECT_KEY, subj.id); } catch (e) {}
     document.title = subj.name;
     const b = document.getElementById('brandText');
@@ -44,6 +46,17 @@
     const subj = subjectList()[currentSubjectId];
     const s = stats();
     b.textContent = (subj ? subj.icon : '') + ' ' + s.avg + '%';
+  }
+
+  function updateNavBadge() {
+    const btn = document.querySelector('nav .nav-btn[data-arg="learn"]');
+    if (!btn || !DB || !DATA) return;
+    const due = stats().due;
+    let badge = btn.querySelector('.nav-badge');
+    if (due > 0) {
+      if (!badge) { badge = el('span', 'nav-badge'); badge.textContent = String(due); btn.appendChild(badge); }
+      else badge.textContent = String(due);
+    } else if (badge) { badge.remove(); }
   }
 
   // ---------------- KaTeX 加载（多 CDN 自动回退） ----------------
@@ -328,7 +341,9 @@
   }
 
   function metaOf(id) { return (META && META[id]) || [3, '综合计算与应用']; }
+  function pitfallOf(id) { return (PITFALL && PITFALL[id]) || ''; }
   function exampleOf(id) { return (EXAMPLES && EXAMPLES[id]) || null; }
+  function examplesOf(id) { const ex = EXAMPLES && EXAMPLES[id]; if (!ex) return []; return Array.isArray(ex) ? ex : [ex]; }
   function relOf(id) { return (REL && REL[id]) || []; }
   function starText(n) {
     n = Math.max(1, Math.min(5, Math.round(n) || 3));
@@ -370,7 +385,7 @@
       c.ivl = 0;
       c.state = 'learn';
       c.s = Math.max(0, s - 25);
-      c.due = now + 10 * 60 * 1000; // 10 分钟后再见
+      c.due = now + ((metaOf(id)[0] >= 4) ? 5 : 10) * 60 * 1000; // 高星遗忘后 5 分钟再见，其余 10 分钟
       return;
     }
     const q = rating + 2; // hard=3 good=4 easy=5
@@ -401,6 +416,7 @@
   let seenAgain = {};
   let quiz = null;
   let mapCat = null, mapSel = null;
+  let mapScale = 1;
   let mapTx = 0, mapTy = 0;
   let mapDragMoved = false;
 
@@ -437,12 +453,18 @@
     else if (currentView === 'quiz') renderQuiz();
     else if (currentView === 'settings') renderSettings();
     else if (currentView === 'principle') renderPrinciples();
+    else if (currentView === 'statistics') renderStatistics();
     else if (currentView === 'map') renderMap();
     // 高亮导航
     document.querySelectorAll('nav .nav-btn').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-arg') === currentView);
     });
+    const vf = el('div', 'app-version');
+    vf.textContent = '版本 v' + VERSION;
+    app.appendChild(vf);
+    updateNavBadge();
     updateBrand();
+    snapshotMastery();
   }
 
   function statsBar() {
@@ -457,6 +479,25 @@
   }
 
   // ---------------- 学习视图 ----------------
+  function interleave(ids) {
+    const byCat = {};
+    ids.forEach(function (id) {
+      const f = DATA.find(function (x) { return x.id === id; });
+      const c = f ? f.cat : '?';
+      (byCat[c] = byCat[c] || []).push(id);
+    });
+    const groups = Object.keys(byCat).map(function (k) { return shuffle(byCat[k]); });
+    const out = [];
+    let added = true;
+    while (added) {
+      added = false;
+      for (let i = 0; i < groups.length; i++) {
+        if (groups[i].length) { out.push(groups[i].shift()); added = true; }
+      }
+    }
+    return out;
+  }
+
   function buildSession() {
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
@@ -464,8 +505,13 @@
       const c = card(id);
       return (c.state === 'review' || c.state === 'learn') && c.due <= now;
     });
-    const rest = shuffle(all.filter(function (id) { return due.indexOf(id) === -1; }));
-    deck = shuffle(due).concat(rest);
+    due.sort(function (a, b) {
+      const sa = metaOf(a)[0] || 0, sb = metaOf(b)[0] || 0;
+      if (sb !== sa) return sb - sa;
+      return card(a).due - card(b).due;
+    });
+    const rest = interleave(all.filter(function (id) { return due.indexOf(id) === -1; }));
+    deck = due.concat(rest);
     pos = 0;
     frontier = 0;
     pendingAdvance = false;
@@ -508,13 +554,14 @@
 
   // 例题 + 相关知识点（答案区附加内容，hiddenClass 为空字符串时可见）
   function buildExtras(id, hiddenClass) {
-    const ex = exampleOf(id);
+    const exs = examplesOf(id);
     const rels = relOf(id);
-    if (!ex && rels.length === 0) return null;
+    if (exs.length === 0 && rels.length === 0) return null;
     const box = el('div', 'extras' + hiddenClass);
-    if (ex) {
+    exs.forEach(function (ex, i) {
       const eb = el('div', 'example-box');
-      eb.appendChild(el('div', 'example-label', ex.src ? '📝 真题' : '📝 经典例题'));
+      const label = exs.length > 1 ? ('📝 ' + (ex.src ? '真题' : '例题') + ' ' + (i + 1)) : (ex.src ? '📝 真题' : '📝 经典例题');
+      eb.appendChild(el('div', 'example-label', label));
       const q = el('div', 'example-q');
       renderTex(q, ex.q);
       eb.appendChild(q);
@@ -522,9 +569,15 @@
       const a = el('div', 'example-a');
       renderTex(a, ex.a);
       eb.appendChild(a);
+      if (ex.a2) {
+        eb.appendChild(el('div', 'mini-label', '💡 巧解'));
+        const a2 = el('div', 'example-a');
+        renderTex(a2, ex.a2);
+        eb.appendChild(a2);
+      }
       if (ex.src) eb.appendChild(el('div', 'example-src', '📚 来源：' + ex.src));
       box.appendChild(eb);
-    }
+    });
     if (rels.length) {
       const rb = el('div', 'rel-box');
       rb.appendChild(el('div', 'mini-label', '相关知识点'));
@@ -597,6 +650,14 @@
     useBox.appendChild(el('span', null, metaOf(id)[1]));
     cardEl.appendChild(useBox);
 
+    const pf = pitfallOf(id);
+    if (pf) {
+      const pfb = el('div', 'pitfall-box' + (reviewed ? '' : ' hidden'));
+      pfb.appendChild(el('span', 'pitfall-label', '⚠️ 常见陷阱：'));
+      pfb.appendChild(texEl('span', null, pf));
+      cardEl.appendChild(pfb);
+    }
+
     const extras = buildExtras(id, reviewed ? '' : ' hidden');
     if (extras) cardEl.appendChild(extras);
 
@@ -606,7 +667,7 @@
         : '回想后再点击「显示答案」核对，主动回忆效果最佳。');
     cardEl.appendChild(hint);
 
-    const notesBox = el('div', 'notes-box');
+    const notesBox = el('div', 'notes-box' + (reviewed ? '' : ' hidden'));
     notesBox.appendChild(el('div', 'mini-label', '📝 我的笔记（感想 / 补充 / 易错点）'));
     const notes = el('textarea', 'card-notes');
     notes.placeholder = '在这里记录你的理解、补充或易错点…';
@@ -667,6 +728,10 @@
     const ex = app.querySelector('.extras');
     if (ex) ex.classList.remove('hidden');
     app.querySelector('.hint').classList.remove('hidden');
+    const nb = app.querySelector('.notes-box');
+    if (nb) nb.classList.remove('hidden');
+    const pb = app.querySelector('.pitfall-box');
+    if (pb) pb.classList.remove('hidden');
     app.querySelector('.controls').classList.add('hidden');
     app.querySelector('.rating').classList.remove('hidden');
   }
@@ -808,6 +873,13 @@
       ub.appendChild(el('span', null, metaOf(f.id)[1]));
       a.appendChild(ub);
       body.appendChild(a);
+      const pf = pitfallOf(f.id);
+      if (pf) {
+        const pfb = el('div', 'pitfall-box');
+        pfb.appendChild(el('span', 'pitfall-label', '⚠️ 常见陷阱：'));
+        pfb.appendChild(texEl('span', null, pf));
+        body.appendChild(pfb);
+      }
       const extras = buildExtras(f.id, '');
       if (extras) body.appendChild(extras);
       const reset = el('button', 'btn small danger', '重置此卡片进度');
@@ -954,6 +1026,82 @@
   }
 
   // ---------------- 记忆原理视图 ----------------
+  function snapshotMastery() {
+    if (!DB || !DATA) return;
+    const t = todayStr();
+    if (!DB.log.mastery) DB.log.mastery = {};
+    if (DB.log.mastery[t] == null) {
+      DB.log.mastery[t] = stats().avg;
+      saveDB();
+    }
+  }
+
+  function renderStatistics() {
+    const app = document.getElementById('app');
+    const wrap = el('div', 'principles-wrap');
+    wrap.appendChild(el('h2', null, '📈 学习统计'));
+
+    wrap.appendChild(el('h3', null, '🔥 学习日历（近 16 周）'));
+    const daily = (DB.log && DB.log.daily) || {};
+    const weeks = 16, total = weeks * 7;
+    const start = new Date(); start.setDate(start.getDate() - (total - 1));
+    const grid = el('div', 'heatmap-grid');
+    grid.style.gridTemplateColumns = 'repeat(' + weeks + ', 12px)';
+    for (let d = 0; d < total; d++) {
+      const date = new Date(start); date.setDate(start.getDate() + d);
+      const key = fmtDate(date), cnt = daily[key] || 0;
+      const cell = el('div', 'heat-cell');
+      cell.title = key + '：' + cnt + ' 张';
+      cell.className += cnt >= 8 ? ' l4' : cnt >= 5 ? ' l3' : cnt >= 2 ? ' l2' : cnt > 0 ? ' l1' : ' l0';
+      grid.appendChild(cell);
+    }
+    const hb = el('div', 'stat-card'); hb.appendChild(grid);
+    hb.appendChild(el('p', 'muted', '颜色越深，当天学习张数越多。'));
+    wrap.appendChild(hb);
+
+    wrap.appendChild(el('h3', null, '📈 平均掌握度趋势'));
+    const mlog = (DB.log && DB.log.mastery) || {};
+    const keys = Object.keys(mlog).sort();
+    const tc = el('div', 'stat-card');
+    if (keys.length < 2) {
+      tc.appendChild(el('p', 'muted', '数据积累中——每天打开应用会自动记录一次平均掌握度，几天后这里会显示趋势折线。'));
+    } else {
+      const W = 680, H = 170, pad = 26;
+      const vals = keys.map(function (k) { return mlog[k]; });
+      const mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), rg = (mx - mn) || 1;
+      const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%' });
+      const pts = keys.map(function (k, i) {
+        const x = pad + i * (W - 2 * pad) / (keys.length - 1);
+        const y = H - pad - (mlog[k] - mn) / rg * (H - 2 * pad);
+        return [x, y];
+      });
+      svg.appendChild(svgEl('path', { d: 'M ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L '), fill: 'none', stroke: '#4f6ef7', 'stroke-width': '2' }));
+      pts.forEach(function (p) { svg.appendChild(svgEl('circle', { cx: p[0], cy: p[1], r: '2.5', fill: '#4f6ef7' })); });
+      tc.appendChild(svg);
+      tc.appendChild(el('p', 'muted', '共 ' + keys.length + ' 天记录，最新平均掌握度 ' + vals[vals.length - 1] + '%。'));
+    }
+    wrap.appendChild(tc);
+
+    wrap.appendChild(el('h3', null, '📊 各分类掌握度'));
+    const cc = el('div', 'stat-card');
+    catOrder().forEach(function (c) {
+      const avg = categoryAvg(c);
+      const row = el('div', 'cat-bar-row');
+      row.appendChild(el('span', 'cat-bar-name', CATS[c]));
+      const bar = el('div', 'cat-bar');
+      const fill = el('div', 'cat-bar-fill');
+      fill.style.width = avg + '%';
+      fill.style.background = masteryColor(avg);
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(el('span', 'cat-bar-val', avg + '%'));
+      cc.appendChild(row);
+    });
+    wrap.appendChild(cc);
+
+    app.appendChild(wrap);
+  }
+
   function renderPrinciples() {
     const app = document.getElementById('app');
     const wrap = el('div', 'principles-wrap');
@@ -1115,20 +1263,30 @@
     const wrap = el('div', 'map-wrap');
     const bar = el('div', 'map-toolbar');
     bar.appendChild(el('strong', null, (subj ? subj.icon + ' ' + subj.name : '') + ' · 思维导图'));
-    bar.appendChild(el('span', 'muted', '拖动 / 滚动查看 · 点分类展开 · 点知识点看详情'));
+    bar.appendChild(el('span', 'muted', '拖动/滚动查看 · Ctrl+滚轮或按钮缩放 · 点分类展开 · 点知识点看详情'));
+    const zoom = el('span', 'map-zoom-ctrl');
+    const mkz = function (label, arg) { const b = el('button', 'btn small', label); b.setAttribute('data-action', 'mapzoom'); b.setAttribute('data-arg', arg); zoom.appendChild(b); };
+    mkz('−', 'out'); mkz('＋', 'in'); mkz('⟲', 'reset');
+    bar.appendChild(zoom);
     wrap.appendChild(bar);
 
     const rowH = 48;
     const W = 1180;
     const H = Math.max(860, (Math.max(cats.length, cards.length) + 2) * rowH + 40);
     const scroll = el('div', 'map-scroll');
+    const zoomWrap = el('div', 'map-zoom');
+    zoomWrap.style.width = (W * mapScale) + 'px';
+    zoomWrap.style.height = (H * mapScale) + 'px';
     const canvas = el('div', 'map-canvas');
     canvas.style.width = W + 'px';
     canvas.style.height = H + 'px';
+    canvas.style.transform = 'scale(' + mapScale + ')';
+    canvas.style.transformOrigin = '0 0';
     const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%' });
     svg.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;';
     canvas.appendChild(svg);
-    scroll.appendChild(canvas);
+    zoomWrap.appendChild(canvas);
+    scroll.appendChild(zoomWrap);
 
     const root = mapPillHtml(90, H / 2, subj ? subj.name : '', '#4f6ef7', '#fff', false, subj ? subj.name : '', '18');
     canvas.appendChild(root.el);
@@ -1180,7 +1338,20 @@
     h.appendChild(texEl('strong', null, f.title));
     h.appendChild(el('span', 'star-badge small', starText(metaOf(f.id)[0])));
     panel.appendChild(h);
+    const cont = el('div', 'map-card-content');
+    cont.appendChild(el('div', 'mini-label', '💡 提示'));
+    const fq = el('div', 'map-front'); renderTex(fq, f.front); cont.appendChild(fq);
+    cont.appendChild(el('div', 'mini-label', '答案'));
+    const fa = el('div', 'map-back'); renderTex(fa, f.back); cont.appendChild(fa);
+    panel.appendChild(cont);
     panel.appendChild(el('p', 'muted', '📌 常考题型：' + metaOf(f.id)[1]));
+    const pf = pitfallOf(f.id);
+    if (pf) {
+      const pfb = el('div', 'pitfall-box');
+      pfb.appendChild(el('span', 'pitfall-label', '⚠️ 常见陷阱：'));
+      pfb.appendChild(texEl('span', null, pf));
+      panel.appendChild(pfb);
+    }
     const rels = relOf(f.id);
     if (rels.length) {
       const rw = el('div', 'rel-list');
@@ -1197,16 +1368,21 @@
     } else {
       panel.appendChild(el('p', 'muted', '暂无关联标签。'));
     }
-    const ex = exampleOf(f.id);
-    if (ex) {
+    const exs = examplesOf(f.id);
+    exs.forEach(function (ex, i) {
       const eb = el('div', 'example-box');
-      eb.appendChild(el('div', 'example-label', ex.src ? '📝 真题' : '📝 经典例题'));
+      const label = exs.length > 1 ? ('📝 ' + (ex.src ? '真题' : '例题') + ' ' + (i + 1)) : (ex.src ? '📝 真题' : '📝 经典例题');
+      eb.appendChild(el('div', 'example-label', label));
       const q = el('div', 'example-q'); renderTex(q, ex.q); eb.appendChild(q);
       eb.appendChild(el('div', 'mini-label', '解析'));
       const a = el('div', 'example-a'); renderTex(a, ex.a); eb.appendChild(a);
+      if (ex.a2) {
+        eb.appendChild(el('div', 'mini-label', '💡 巧解'));
+        const a2 = el('div', 'example-a'); renderTex(a2, ex.a2); eb.appendChild(a2);
+      }
       if (ex.src) eb.appendChild(el('div', 'example-src', '📚 来源：' + ex.src));
       panel.appendChild(eb);
-    }
+    });
     return panel;
   }
 
@@ -1234,6 +1410,12 @@
         break;
       case 'mapclose':
         mapSel = null;
+        renderApp();
+        break;
+      case 'mapzoom':
+        if (arg === 'in') mapScale = Math.min(2.5, mapScale + 0.2);
+        else if (arg === 'out') mapScale = Math.max(0.4, mapScale - 0.2);
+        else mapScale = 1;
         renderApp();
         break;
       case 'goback':
@@ -1409,6 +1591,24 @@
     applyTheme();
   });
 
+  // 沉浸模式
+  const itBtn = document.getElementById('immersiveToggle');
+  if (itBtn) itBtn.addEventListener('click', function () { document.body.classList.toggle('immersive'); });
+  const ieBtn = document.getElementById('immersiveExit');
+  if (ieBtn) ieBtn.addEventListener('click', function () { document.body.classList.remove('immersive'); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') document.body.classList.remove('immersive');
+  });
+
+  // 导图 Ctrl+滚轮缩放
+  document.addEventListener('wheel', function (e) {
+    if (currentView !== 'map' || !e.ctrlKey) return;
+    e.preventDefault();
+    if (e.deltaY < 0) mapScale = Math.min(2.5, mapScale + 0.15);
+    else mapScale = Math.max(0.4, mapScale - 0.15);
+    renderApp();
+  }, { passive: false });
+
   // ---------------- PWA / 离线 ----------------
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
     window.addEventListener('load', function () {
@@ -1420,7 +1620,7 @@
   function switchSubject(id) {
     if (id === currentSubjectId || !setSubject(id)) return;
     deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
-    mapCat = null; mapSel = null; mapTx = 0; mapTy = 0;
+    mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0;
     browseCat = 'all'; browseQuery = ''; browseExpanded = {}; searchRefocus = false; browseMastery = 'all'; browseStars = 'all';
     loadDBAsync().then(function () {
       if (!loadSession()) buildSession(0);

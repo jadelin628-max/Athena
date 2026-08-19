@@ -648,6 +648,73 @@ window.SUBJECTS.math3 = (function () {
     F('ext28', 'ode', R`线性方程解的结构`,
       R`叙述线性微分方程解的结构（齐次解叠加、非齐次通解）`,
       R`齐次方程任意两个解的线性组合仍是解。非齐次方程的通解＝对应齐次方程的通解＋非齐次方程的一个特解。$n$ 阶方程通解含 $n$ 个独立任意常数。`),
+
+    // ============ 2016–2025 真题全覆盖补充 ============
+    F('ms01', 'integral', '定积分比较大小',
+      R`如何比较同一区间上两个定积分的大小？`,
+      R`保序性：若在 $[a,b]$ 上 $f(x)\le g(x)$，则$$\int_a^b f(x)\,dx\le\int_a^b g(x)\,dx$$常结合 $\ln(1+x)<x\ (x>0)$、单调性、对称性等先比较被积函数。`),
+    F('ms02', 'integral', '变限积分函数的性质',
+      R`由 $F(x)=\int_a^x f(t)\,dt$ 讨论奇偶性、极值与拐点的方法`,
+      R`由 $F'(x)=f(x)$：用 $f$ 的符号判单调与极值，用 $f'$ 的符号判凹凸与拐点；$f$ 为奇函数时 $F$ 为偶函数。`),
+    F('ms03', 'linalg', '二次型规范形与惯性指数',
+      R`如何求二次型的规范形与正、负惯性指数？`,
+      R`二次型经可逆（正交）变换化为标准形，再缩放为规范形（平方项系数只取 $1,-1,0$）。正惯性指数＝正特征值个数，负惯性指数＝负特征值个数；$p+q$（秩）与 $p-q$ 为合同不变量。`),
+
+    // ============ 解题模板（方法论/套路） ============
+    F('tp01', 'limit', '极限的七种求法',
+      R`写出求极限的七种常用方法（解题框架）`,
+      R`① 直接代入：连续点先代值。
+② 等价无穷小替换：只换乘除因式。
+③ 洛必达法则：$0/0$、$\infty/\infty$ 型。
+④ 两个重要极限：$\frac{\sin x}{x}\to1$、$(1+x)^{1/x}\to e$（含 $1^\infty$ 型）。
+⑤ 泰勒展开：分母是 $x^k$ 就展到 $x^k$ 阶。
+⑥ 夹逼 / 单调有界：数列极限。
+⑦ 变形技巧：有理化、通分、提取主部、幂指型取对数。`),
+    F('tp02', 'integral', '积分计算五大技巧',
+      R`写出不定积分/定积分计算的常用套路`,
+      R`① 直接套基本积分表。
+② 第一类换元（凑微分）：$\int f(g)g'\,dx=\int f(u)\,du$。
+③ 第二类换元（三角/根式代换）：$\sqrt{a^2-x^2}$ 令 $x=a\sin t$ 等。
+④ 分部积分：按"反对幂指三"选 $u$，$\int u\,dv=uv-\int v\,du$。
+⑤ 有理函数拆部分分式；三角幂用降幂/华里士公式。`),
+    F('tp03', 'mvt', '中值定理证明套路',
+      R`证明"存在 $\xi$ 使 …"类题目的通用套路`,
+      R`① 看结论定定理：只含一个函数 $f'(\xi)$ → 罗尔/拉格朗日；含两个函数 → 柯西；含 $f''$ 或高阶 → 泰勒。
+② 构造辅助函数 $F(x)$：把目标式移项、积分、乘积分因子，凑出 $F'(\xi)=0$。
+③ 验证 $F$ 满足罗尔三条件（连续、可导、端点值相等）。
+④ 由罗尔得 $F'(\xi)=0$，整理即目标等式。`),
+    F('tp04', 'linalg', '特征值·对角化大题流程',
+      R`写出"求特征值与特征向量并（正交）对角化"的标准流程`,
+      R`① 解特征方程 $|\lambda E-A|=0$ 得特征值（含重数）。
+② 对每个 $\lambda_i$ 解 $(\lambda_i E-A)x=0$，基础解系即特征向量。
+③ 判可对角化：$k$ 重特征值恰有 $k$ 个线性无关特征向量。
+④ 实对称矩阵：不同特征值的向量已正交；同特征值内部施密特正交化。
+⑤ 单位化得正交矩阵 $Q$，则 $Q^{-1}AQ=Q^{T}AQ=\Lambda$。
+⑥ 二次型：令 $x=Qy$ 化标准形，再缩放得规范形、定惯性指数。`),
+    F('tp05', 'series', '级数审敛与求和流程',
+      R`写出判断级数敛散性与求和的完整流程`,
+      R`① 先看通项：$u_n\not\to0$ 必发散。
+② 正项级数：先与几何/p 级数比较，再用比值/根值（含阶乘、幂次用比值）。
+③ 交错级数：莱布尼茨（$u_n$ 单调递减趋于 0）。
+④ 任意项级数：先判绝对收敛，发散再判条件收敛。
+⑤ 幂级数：求收敛半径 $R$，端点单独判。
+⑥ 求和函数：逐项求导/积分化到已知展开 $\frac1{1-x}$、$\ln(1-x)$、$e^x$、$\arctan x$。`),
+    F('tp06', 'multi', '多元极值·条件极值流程',
+      R`写出求二元函数极值与条件极值的完整流程`,
+      R`① 无条件极值：解 $f_x=f_y=0$ 得驻点。
+② 算 $A=f_{xx},\ B=f_{xy},\ C=f_{yy}$，判别式 $\Delta=AC-B^2$。
+③ $\Delta>0$：$A>0$ 极小、$A<0$ 极大；$\Delta<0$ 非极值；$\Delta=0$ 无法判定。
+④ 条件极值：构造 $L=f+\lambda\varphi$，解 $L_x=L_y=L_\lambda=0$。
+⑤ 比较全部候选点的函数值得最值（实际最值问题可只比较候选点）。`),
+    F('tp07', 'ode', '微分方程解法流程',
+      R`写出各类一阶、二阶微分方程的判别与解法流程`,
+      R`① 一阶可分离变量：$\frac{dy}{dx}=f(x)g(y)$ → 分离后两边积分。
+② 一阶线性 $y'+Py=Q$ → 通解公式 $y=e^{-\int P}\left[\int Qe^{\int P}dx+C\right]$。
+③ 齐次 $dy/dx=f(y/x)$ → 令 $u=y/x$。
+④ 伯努利 $y'+Py=Qy^n$ → 令 $z=y^{1-n}$ 化线性。
+⑤ 二阶常系数齐次 → 特征方程（两实根/重根/共轭复根三种通解）。
+⑥ 二阶非齐次 → 按 $f(x)$ 形式设特解（$e^{\lambda x}P_m$ 或三角型，共振乘 $x^k$）。
+⑦ 通解 = 齐次通解 + 特解，代初值定常数。`),
   ];
 
   // 元数据：[重要程度 1~5 星, 常考题型]
@@ -860,6 +927,17 @@ window.SUBJECTS.math3 = (function () {
     ext26: [3, '判断二重极限是否存在（选择题）'],
     ext27: [4, '利用对称性化简二重积分'],
     ext28: [3, '验证解 / 通解结构（选择题）'],
+    ms01: [3, '选择题：定积分比较大小'],
+    ms02: [4, '选择题：变限积分综合（极值/拐点/奇偶性）'],
+    ms03: [4, '二次型标准形/规范形/惯性指数'],
+    // 解题模板
+    tp01: [5, '解答题框架：求极限'],
+    tp02: [5, '解答题框架：积分计算'],
+    tp03: [5, '证明题框架：中值定理'],
+    tp04: [5, '线代大题：特征值/对角化'],
+    tp05: [5, '级数审敛与求和'],
+    tp06: [5, '多元极值/条件极值'],
+    tp07: [5, '解微分方程'],
   };
 
   // ============ 经典例题（题目 + 解析） ============
@@ -867,7 +945,7 @@ window.SUBJECTS.math3 = (function () {
     lim01: { q: R`求 $\lim_{x\to0}\frac{\sin 2x-\sin x}{x}$`,
       a: R`$$\lim_{x\to0}\frac{\sin 2x-\sin x}{x}=\lim_{x\to0}\left(2\cdot\frac{\sin 2x}{2x}-\frac{\sin x}{x}\right)=2\cdot1-1=1$$` },
     lim09: { q: R`求 $\lim_{x\to\frac{\pi}{4}}(\tan x)^{\frac{1}{\cos x-\sin x}}$`,
-      a: R`这是 $1^{\infty}$ 型极限。令 $t=x-\frac{\pi}{4}\to0$，则 $\tan x=\tan\left(\frac{\pi}{4}+t\right)\sim1+2t$，且 $\cos x-\sin x=\sqrt2\cos\left(x+\frac{\pi}{4}\right)=-\sqrt2\sin t\sim-\sqrt2\,t$。故$$\frac{\ln\tan x}{\cos x-\sin x}\sim\frac{\tan x-1}{\cos x-\sin x}\sim\frac{2t}{-\sqrt2\,t}=-\sqrt2$$所以原式 $=e^{-\sqrt2}$。`, src: '2012 年数三真题' },
+      a: R`这是 $1^{\infty}$ 型极限。令 $t=x-\frac{\pi}{4}\to0$，则 $\tan x=\tan\left(\frac{\pi}{4}+t\right)\sim1+2t$，且 $\cos x-\sin x=\sqrt2\cos\left(x+\frac{\pi}{4}\right)=-\sqrt2\sin t\sim-\sqrt2\,t$。故$$\frac{\ln\tan x}{\cos x-\sin x}\sim\frac{\tan x-1}{\cos x-\sin x}\sim\frac{2t}{-\sqrt2\,t}=-\sqrt2$$所以原式 $=e^{-\sqrt2}$。`, src: '2012 年数三真题', a2: R`$\tan x-1=\dfrac{\sin x-\cos x}{\cos x}=-\dfrac{\cos x-\sin x}{\cos x}$，故$$\frac{\ln\tan x}{\cos x-\sin x}\sim\frac{\tan x-1}{\cos x-\sin x}=-\frac{1}{\cos x}\to-\sqrt2$$于是原式 $=e^{-\sqrt2}$（无需换元 $t=x-\frac\pi4$）。` },
     inf08: { q: R`（2025 数三）当 $x\to0^{+}$ 时，下列无穷小量中与 $x$ 等价的是：(A) $e^{-\sin x}-1$；(B) $\sqrt{x+1}-\cos x$；(C) $1-\cos\sqrt{2x}$；(D) $1-\dfrac{\ln(1+x)}{x}$`,
       a: R`由 $1-\cos u\sim\dfrac{u^{2}}{2}$ 得 $1-\cos\sqrt{2x}\sim\dfrac{(\sqrt{2x})^{2}}{2}=x$，故选 (C)。其余：$e^{-\sin x}-1\sim-\sin x\sim-x$；$\sqrt{x+1}-\cos x\sim\dfrac{x}{2}$；$1-\dfrac{\ln(1+x)}{x}\sim\dfrac{x}{2}$。`, src: '2025 年数三真题' },
     dr04: { q: R`设 $y=\sin(x^{2})$，求 $y'$`,
@@ -883,21 +961,23 @@ window.SUBJECTS.math3 = (function () {
     int28: { q: R`求 $y=x^{2}$ 与 $y=x$ 所围平面图形的面积，并求该图形绕 $x$ 轴旋转所得旋转体的体积`,
       a: R`交点 $x=0,1$。面积：$$S=\int_{0}^{1}(x-x^{2})\,dx=\left[\frac{x^{2}}{2}-\frac{x^{3}}{3}\right]_{0}^{1}=\frac{1}{6}$$体积（圆环法）：$$V=\pi\int_{0}^{1}\left[x^{2}-(x^{2})^{2}\right]dx=\pi\int_{0}^{1}(x^{2}-x^{4})\,dx=\pi\left(\frac13-\frac15\right)=\frac{2\pi}{15}$$`, src: '2011 年数三真题' },
     tay01: { q: R`求 $\lim_{x\to0}\frac{e^{x}-1-x}{x^{2}}$`,
-      a: R`由 $e^{x}=1+x+\dfrac{x^{2}}{2}+o(x^{2})$，得$$\lim_{x\to0}\frac{e^{x}-1-x}{x^{2}}=\frac{1}{2}$$`, src: '2017 年数三真题' },
+      a: R`由 $e^{x}=1+x+\dfrac{x^{2}}{2}+o(x^{2})$，得$$\lim_{x\to0}\frac{e^{x}-1-x}{x^{2}}=\frac{1}{2}$$`, src: '2017 年数三真题', a2: R`两次洛必达：$$\lim_{x\to0}\frac{e^x-1-x}{x^2}=\lim_{x\to0}\frac{e^x-1}{2x}=\lim_{x\to0}\frac{e^x}{2}=\frac12$$（无需记忆 $e^x$ 展开式）` },
     tay04: { q: R`设幂级数 $\sum_{n=0}^{\infty}a_{n}x^{n}$ 的和函数为 $\ln(2+x)$，求 $\sum_{n=0}^{\infty}n\,a_{2n}$`,
-      a: R`$$\ln(2+x)=\ln 2+\ln\left(1+\frac{x}{2}\right)=\ln 2+\sum_{n=1}^{\infty}\frac{(-1)^{n-1}}{n}\left(\frac{x}{2}\right)^{n}$$故 $a_{0}=\ln 2$，$a_{n}=\dfrac{(-1)^{n-1}}{n\cdot2^{n}}\ (n\ge1)$。于是$$a_{2n}=\frac{(-1)^{2n-1}}{2n\cdot2^{2n}}=-\frac{1}{2n\cdot4^{n}}\quad(n\ge1)$$所以$$\sum_{n=0}^{\infty}n\,a_{2n}=\sum_{n=1}^{\infty}n\left(-\frac{1}{2n\cdot4^{n}}\right)=-\frac{1}{2}\sum_{n=1}^{\infty}\frac{1}{4^{n}}=-\frac{1}{2}\cdot\frac{1/4}{1-1/4}=-\frac{1}{6}$$`, src: '2024 年数三真题' },
+      a: R`$$\ln(2+x)=\ln 2+\ln\left(1+\frac{x}{2}\right)=\ln 2+\sum_{n=1}^{\infty}\frac{(-1)^{n-1}}{n}\left(\frac{x}{2}\right)^{n}$$故 $a_{0}=\ln 2$，$a_{n}=\dfrac{(-1)^{n-1}}{n\cdot2^{n}}\ (n\ge1)$。于是$$a_{2n}=\frac{(-1)^{2n-1}}{2n\cdot2^{2n}}=-\frac{1}{2n\cdot4^{n}}\quad(n\ge1)$$所以$$\sum_{n=0}^{\infty}n\,a_{2n}=\sum_{n=1}^{\infty}n\left(-\frac{1}{2n\cdot4^{n}}\right)=-\frac{1}{2}\sum_{n=1}^{\infty}\frac{1}{4^{n}}=-\frac{1}{2}\cdot\frac{1/4}{1-1/4}=-\frac{1}{6}$$`, src: '2024 年数三真题', a2: R`令 $S(x)=\ln(2+x)=\sum a_nx^n$。由偶部 $\frac{S(x)+S(-x)}{2}=\sum a_{2n}x^{2n}$，两边求导并令 $x=1$：$$2\sum n\,a_{2n}=\frac{S'(1)-S'(-1)}{2}=\frac{\frac13-1}{2}=-\frac13$$故 $\sum n\,a_{2n}=-\frac16$，不必逐项求 $a_{2n}$。` },
     mvt02: { q: R`证明：当 $x>0$ 时，$\dfrac{x}{1+x}<\ln(1+x)<x$`,
-      a: R`对 $f(t)=\ln(1+t)$ 在 $[0,x]$ 用拉格朗日中值定理：存在 $\xi\in(0,x)$ 使 $\ln(1+x)=\dfrac{x}{1+\xi}$；由 $0<\xi<x$ 得 $\dfrac{x}{1+x}<\dfrac{x}{1+\xi}<x$，即证。`, src: '2016 年数三真题' },
+      a: R`对 $f(t)=\ln(1+t)$ 在 $[0,x]$ 用拉格朗日中值定理：存在 $\xi\in(0,x)$ 使 $\ln(1+x)=\dfrac{x}{1+\xi}$；由 $0<\xi<x$ 得 $\dfrac{x}{1+x}<\dfrac{x}{1+\xi}<x$，即证。`, src: '2016 年数三真题', a2: R`用已知不等式 $\ln(1+x)<x$；又 $1+x=\dfrac{1}{1-\frac{x}{1+x}}$，故 $\ln(1+x)=-\ln\left(1-\dfrac{x}{1+x}\right)>\dfrac{x}{1+x}$（用到 $-\ln(1-u)>u$，$0<u<1$）。合起来即 $\dfrac{x}{1+x}<\ln(1+x)<x$，无需构造辅助函数。` },
     ser10: { q: R`求幂级数 $\sum_{n=1}^{\infty}\frac{x^{n}}{n}$ 的收敛域，并在收敛域内求其和函数`,
-      a: R`$$R=\lim_{n\to\infty}\left|\frac{a_{n}}{a_{n+1}}\right|=\lim_{n\to\infty}\frac{n+1}{n}=1$$端点 $x=-1$ 为交错级数收敛，$x=1$ 为调和级数发散，故收敛域 $[-1,1)$。设和函数 $S(x)=\sum_{n=1}^{\infty}\frac{x^{n}}{n}$，则$$S'(x)=\sum_{n=1}^{\infty}x^{n-1}=\frac{1}{1-x}\ (|x|<1)$$积分并由 $S(0)=0$ 得$$S(x)=-\ln(1-x),\quad x\in[-1,1)$$`, src: '2009 年数三真题' },
+      a: R`$$R=\lim_{n\to\infty}\left|\frac{a_{n}}{a_{n+1}}\right|=\lim_{n\to\infty}\frac{n+1}{n}=1$$端点 $x=-1$ 为交错级数收敛，$x=1$ 为调和级数发散，故收敛域 $[-1,1)$。设和函数 $S(x)=\sum_{n=1}^{\infty}\frac{x^{n}}{n}$，则$$S'(x)=\sum_{n=1}^{\infty}x^{n-1}=\frac{1}{1-x}\ (|x|<1)$$积分并由 $S(0)=0$ 得$$S(x)=-\ln(1-x),\quad x\in[-1,1)$$`, src: '2009 年数三真题', a2: R`由已知展开 $\ln(1-x)=-\sum_{n=1}^{\infty}\frac{x^n}{n}\ (|x|<1)$ 直接得 $S(x)=-\ln(1-x)$；端点 $x=-1$ 处为交错级数收敛，$x=1$ 处发散，故收敛域 $[-1,1)$。免去逐项求导再积分。` },
     ode02: { q: R`求一阶线性方程 $y'+y=x$ 的通解`,
-      a: R`$$y=e^{-x}\left[\int x\,e^{x}\,dx+C\right]=e^{-x}\left[(x-1)e^{x}+C\right]=(x-1)+Ce^{-x}$$`, src: '2022 年数三真题' },
+      a: R`$$y=e^{-x}\left[\int x\,e^{x}\,dx+C\right]=e^{-x}\left[(x-1)e^{x}+C\right]=(x-1)+Ce^{-x}$$`, src: '2022 年数三真题', a2: R`设特解 $y^*=ax+b$（右端为一次多项式），代入 $y'+y=x$ 得 $a+ax+b=x$，比较系数 $a=1,\ a+b=0\Rightarrow b=-1$。齐次解 $Ce^{-x}$，故通解 $y=x-1+Ce^{-x}$，免去积分。` },
     dbi02: { q: R`计算二重积分 $\iint_{D}x\,dxdy$，其中 $D$ 由 $(x-1)^{2}+y^{2}\le 1$ 围成`,
-      a: R`区域为以 $(1,0)$ 为圆心、半径 $1$ 的圆：$(x-1)^{2}+y^{2}\le1\iff x^{2}+y^{2}\le 2x$。极坐标下 $r\le 2\cos\theta$，$\theta\in\left[-\frac{\pi}{2},\frac{\pi}{2}\right]$，$x=r\cos\theta$，故$$\iint_{D}x\,dxdy=\int_{-\pi/2}^{\pi/2}d\theta\int_{0}^{2\cos\theta}r\cos\theta\cdot r\,dr=\frac{8}{3}\int_{-\pi/2}^{\pi/2}\cos^{4}\theta\,d\theta=\frac{8}{3}\cdot\frac{3\pi}{8}=\pi$$`, src: '2023 年数三真题' },
+      a: R`区域为以 $(1,0)$ 为圆心、半径 $1$ 的圆：$(x-1)^{2}+y^{2}\le1\iff x^{2}+y^{2}\le 2x$。极坐标下 $r\le 2\cos\theta$，$\theta\in\left[-\frac{\pi}{2},\frac{\pi}{2}\right]$，$x=r\cos\theta$，故$$\iint_{D}x\,dxdy=\int_{-\pi/2}^{\pi/2}d\theta\int_{0}^{2\cos\theta}r\cos\theta\cdot r\,dr=\frac{8}{3}\int_{-\pi/2}^{\pi/2}\cos^{4}\theta\,d\theta=\frac{8}{3}\cdot\frac{3\pi}{8}=\pi$$`, src: '2023 年数三真题', a2: R`区域 $D$ 是圆心在 $(1,0)$、半径 $1$ 的圆，面积 $S=\pi$，形心横坐标 $\bar x=1$。由$$\iint_D x\,d\sigma=\bar x\cdot S(D)=1\cdot\pi=\pi$$一步得解，无需极坐标积分。` },
     la04: { q: R`求矩阵 $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$ 的特征值与特征向量，并求可逆矩阵 $P$ 使 $P^{-1}AP$ 为对角阵`,
-      a: R`$$|\lambda E-A|=\begin{vmatrix}\lambda-2&-1\\-1&\lambda-2\end{vmatrix}=(\lambda-2)^{2}-1=0\Rightarrow \lambda_{1}=1,\ \lambda_{2}=3$$对 $\lambda=1$：解 $(A-E)x=0$ 得特征向量 $\alpha_{1}=(1,-1)^{T}$；对 $\lambda=3$：解 $(A-3E)x=0$ 得 $\alpha_{2}=(1,1)^{T}$。取$$P=\begin{pmatrix}1&1\\-1&1\end{pmatrix}\Rightarrow P^{-1}AP=\begin{pmatrix}1&0\\0&3\end{pmatrix}$$`, src: '2010 年数三真题' },
-    multi03: { q: R`求 $f(x,y)=x^{3}+y^{3}-3xy$ 的极值（判断驻点是否为极值点）`,
+      a: R`$$|\lambda E-A|=\begin{vmatrix}\lambda-2&-1\\-1&\lambda-2\end{vmatrix}=(\lambda-2)^{2}-1=0\Rightarrow \lambda_{1}=1,\ \lambda_{2}=3$$对 $\lambda=1$：解 $(A-E)x=0$ 得特征向量 $\alpha_{1}=(1,-1)^{T}$；对 $\lambda=3$：解 $(A-3E)x=0$ 得 $\alpha_{2}=(1,1)^{T}$。取$$P=\begin{pmatrix}1&1\\-1&1\end{pmatrix}\Rightarrow P^{-1}AP=\begin{pmatrix}1&0\\0&3\end{pmatrix}$$`, src: '2010 年数三真题', a2: R`$A$ 为实对称矩阵，特征值满足$$\lambda_1+\lambda_2=\operatorname{tr}A=4,\qquad \lambda_1\lambda_2=|A|=3$$解得 $\lambda_1=1,\lambda_2=3$，省去解特征方程；实对称矩阵不同特征值的特征向量自动正交，直接取 $\alpha_1=(1,-1)^T,\alpha_2=(1,1)^T$。` },
+    multi03: [ { q: R`求 $f(x,y)=x^{3}+y^{3}-3xy$ 的极值（判断驻点是否为极值点）`,
       a: R`由 $f_{x}=3x^{2}-3y=0,\ f_{y}=3y^{2}-3x=0$ 得 $y=x^{2},\ x=y^{2}$，故 $x^{4}=x$，驻点为 $(0,0)$ 与 $(1,1)$。$$f_{xx}=6x,\ f_{xy}=-3,\ f_{yy}=6y,\ \Delta=AC-B^{2}=36xy-9$$在 $(0,0)$：$\Delta=-9<0$，为鞍点，非极值；在 $(1,1)$：$\Delta=27>0$ 且 $A=6>0$，取极小值 $f(1,1)=1+1-3=-1$。`, src: '2012 年数三真题' },
+      { q: R`（2020 数三）求函数 $f(x,y)=x^{3}+8y^{3}-xy$ 的极值。`,
+        a: R`由 $f_{x}=3x^{2}-y=0,\ f_{y}=24y^{2}-x=0$ 得 $y=3x^{2},\ x=24y^{2}$，故 $x=216x^{4}$，即 $x=0$ 或 $x=\frac16$，驻点为 $(0,0)$ 与 $\left(\frac16,\frac{1}{12}\right)$。$$f_{xx}=6x,\ f_{xy}=-1,\ f_{yy}=48y,\quad \Delta=AC-B^{2}=288xy-1$$在 $(0,0)$：$\Delta=-1<0$，非极值；在 $\left(\frac16,\frac{1}{12}\right)$：$\Delta=3>0$ 且 $A=1>0$，取极小值 $f\left(\frac16,\frac{1}{12}\right)=\frac{1}{216}+\frac{1}{216}-\frac{1}{72}=-\frac{1}{216}$。`, src: '2020 年数三真题' } ],
     lim05: { q: R`求 $\lim_{x\to0}\frac{1-\cos x}{x^{2}}$`,
       a: R`由 $1-\cos x\sim\dfrac{x^{2}}{2}$，得$$\lim_{x\to0}\frac{1-\cos x}{x^{2}}=\frac{1}{2}$$` },
     lim07: { q: R`求 $\lim_{x\to0}\frac{e^{2x}-1}{\arcsin x}$（综合：$e^{x}-1\sim x$ 与 $\arcsin x\sim x$）`,
@@ -905,11 +985,11 @@ window.SUBJECTS.math3 = (function () {
     lim11: { q: R`求 $\lim_{x\to\infty}\left(\frac{x+1}{x-1}\right)^{x}$（综合：第二重要极限的两种变形）`,
       a: R`$$\left(\frac{x+1}{x-1}\right)^{x}=\frac{\left(1+\frac{1}{x}\right)^{x}}{\left(1-\frac{1}{x}\right)^{x}}\to\frac{e}{e^{-1}}=e^{2}$$故$$\lim_{x\to\infty}\left(\frac{x+1}{x-1}\right)^{x}=e^{2}$$` },
     lim12: { q: R`求 $\lim_{n\to\infty}\sqrt[n]{2^{n}+3^{n}}$`,
-      a: R`由 $3=\sqrt[n]{3^{n}}\le\sqrt[n]{2^{n}+3^{n}}\le\sqrt[n]{2\cdot3^{n}}=3\sqrt[n]{2}\to3$，夹逼得极限 $=3$。`, src: '2003 年数三真题' },
+      a: R`由 $3=\sqrt[n]{3^{n}}\le\sqrt[n]{2^{n}+3^{n}}\le\sqrt[n]{2\cdot3^{n}}=3\sqrt[n]{2}\to3$，夹逼得极限 $=3$。`, src: '2003 年数三真题', a2: R`提取最大项：$$\sqrt[n]{2^n+3^n}=3\sqrt[n]{1+\left(\tfrac23\right)^n}\to3\cdot1=3$$比构造双边夹逼更直接。` },
     inf01: { q: R`求 $\lim_{x\to0}\frac{\sin x}{\ln(1+x)}$`,
       a: R`$$\sin x\sim x,\ \ln(1+x)\sim x\ \Rightarrow\ \lim_{x\to0}\frac{\sin x}{\ln(1+x)}=1$$` },
     inf06: { q: R`求 $\lim_{x\to0}\frac{e^{x}-e^{\sin x}}{x-\sin x}$（综合：$e^{x}-1\sim x$ 与 $\sin x\sim x$）`,
-      a: R`$$e^{x}-e^{\sin x}=e^{\sin x}\left(e^{x-\sin x}-1\right)$$令 $t=x-\sin x\to0$，则 $e^{t}-1\sim t$，故$$\lim_{x\to0}\frac{e^{x}-e^{\sin x}}{x-\sin x}=\lim_{x\to0}e^{\sin x}\cdot\frac{e^{x-\sin x}-1}{x-\sin x}=e^{0}\cdot1=1$$`, src: '2021 年数三真题' },
+      a: R`$$e^{x}-e^{\sin x}=e^{\sin x}\left(e^{x-\sin x}-1\right)$$令 $t=x-\sin x\to0$，则 $e^{t}-1\sim t$，故$$\lim_{x\to0}\frac{e^{x}-e^{\sin x}}{x-\sin x}=\lim_{x\to0}e^{\sin x}\cdot\frac{e^{x-\sin x}-1}{x-\sin x}=e^{0}\cdot1=1$$`, src: '2021 年数三真题', a2: R`对 $f(u)=e^u$ 在 $[\sin x,x]$ 用拉格朗日中值：$$e^x-e^{\sin x}=e^{\xi}(x-\sin x),\quad \xi\ \text{介于}\ \sin x\ \text{与}\ x\ \text{之间}$$当 $x\to0$ 时 $\xi\to0$，故$$\lim_{x\to0}\frac{e^x-e^{\sin x}}{x-\sin x}=\lim_{x\to0}e^{\xi}=1$$` },
     d01: { q: R`求 $f(x)=x^{2}\sqrt{x}+\sqrt[3]{x}$ 的导数（综合：幂函数求导与根式化简）`,
       a: R`$$f(x)=x^{2}\cdot x^{1/2}+x^{1/3}=x^{5/2}+x^{1/3}$$故$$f'(x)=\frac{5}{2}x^{3/2}+\frac{1}{3}x^{-2/3}$$` },
     d04: { q: R`求 $y=\ln(3x)$ 的导数`,
@@ -917,7 +997,7 @@ window.SUBJECTS.math3 = (function () {
     d07: { q: R`求 $y=\cos(2x)$ 的导数`,
       a: R`$$y'=-\sin(2x)\cdot 2=-2\sin(2x)$$` },
     dr02: { q: R`设 $f(x)=(e^{x}-1)(e^{2x}-2)\cdots(e^{nx}-n)$，其中 $n$ 为正整数，求 $f'(0)$`,
-      a: R`由乘积求导法则，$f'(0)$ 为各项分别求导后其余项取 $x=0$ 的值之和。当 $x=0$ 时 $e^{kx}-k=1-k$，故除第一项 $(e^{x}-1)$（其值为 $0$）外，其余各项求导产生的乘积都含因子 $(e^{x}-1)\big|_{x=0}=0$。故$$f'(0)=(e^{x})'\big|_{x=0}\cdot(1-2)(1-3)\cdots(1-n)=(-1)^{n-1}(n-1)!$$`, src: '2012 年数三真题' },
+      a: R`由乘积求导法则，$f'(0)$ 为各项分别求导后其余项取 $x=0$ 的值之和。当 $x=0$ 时 $e^{kx}-k=1-k$，故除第一项 $(e^{x}-1)$（其值为 $0$）外，其余各项求导产生的乘积都含因子 $(e^{x}-1)\big|_{x=0}=0$。故$$f'(0)=(e^{x})'\big|_{x=0}\cdot(1-2)(1-3)\cdots(1-n)=(-1)^{n-1}(n-1)!$$`, src: '2012 年数三真题', a2: R`由定义 $f'(0)=\lim_{x\to0}\frac{f(x)-f(0)}{x}$，而 $f(0)=0$（首因子 $(e^x-1)|_{x=0}=0$）。故$$f'(0)=\lim_{x\to0}\frac{e^x-1}{x}\cdot(e^{2x}-2)\cdots(e^{nx}-n)=1\cdot(1-2)\cdots(1-n)=(-1)^{n-1}(n-1)!$$` },
     dr03: { q: R`求 $y=\dfrac{\ln x}{x}$ 的导数，并求其极值点（综合：除法法则与单调性）`,
       a: R`$$y'=\frac{\frac{1}{x}\cdot x-\ln x\cdot1}{x^{2}}=\frac{1-\ln x}{x^{2}}$$令 $y'=0$ 得 $x=e$；当 $0<x<e$ 时 $y'>0$，当 $x>e$ 时 $y'<0$，故 $x=e$ 为极大值点，极大值 $y(e)=\frac{1}{e}$。` },
     dr07: { q: R`求 $y=x^{2}e^{x}$ 的二阶导数`,
@@ -935,7 +1015,7 @@ window.SUBJECTS.math3 = (function () {
     int29: { q: R`设平面区域 $D$ 由曲线 $y=\sqrt{x}\sin(\pi x)\ (0\le x\le1)$ 与 $x$ 轴围成，求 $D$ 绕 $x$ 轴旋转所得旋转体的体积`,
       a: R`$$V=\pi\int_{0}^{1}\left[\sqrt{x}\sin(\pi x)\right]^{2}dx=\pi\int_{0}^{1}x\sin^{2}(\pi x)\,dx$$由 $\sin^{2}(\pi x)=\frac{1-\cos(2\pi x)}{2}$，得$$\int_{0}^{1}x\sin^{2}(\pi x)\,dx=\frac12\int_{0}^{1}x\,dx-\frac12\int_{0}^{1}x\cos(2\pi x)\,dx=\frac14-0=\frac14$$故$$V=\frac{\pi}{4}$$`, src: '2021 年数三真题' },
     tay02: { q: R`求 $\lim_{x\to0}\frac{\sin x-x}{x^{3}}$`,
-      a: R`由 $\sin x=x-\dfrac{x^{3}}{6}+o(x^{3})$，得$$\lim_{x\to0}\frac{\sin x-x}{x^{3}}=-\frac{1}{6}$$`, src: '2002 年数三真题' },
+      a: R`由 $\sin x=x-\dfrac{x^{3}}{6}+o(x^{3})$，得$$\lim_{x\to0}\frac{\sin x-x}{x^{3}}=-\frac{1}{6}$$`, src: '2002 年数三真题', a2: R`三次洛必达：$$\lim_{x\to0}\frac{\sin x-x}{x^3}=\lim_{x\to0}\frac{\cos x-1}{3x^2}=\lim_{x\to0}\frac{-\sin x}{6x}=-\frac16$$（中间步也可用 $1-\cos x\sim\frac{x^2}{2}$ 加速）` },
     tay05: { q: R`写出 $(1+x)^{1/2}$ 在 $x=0$ 处的二阶泰勒展开`,
       a: R`$$(1+x)^{1/2}=1+\frac{1}{2}x-\frac{1}{8}x^{2}+o(x^{2})$$` },
     mvt01: { q: R`设 $f(x)$ 在 $[0,\pi]$ 上连续，且 $\int_{0}^{\pi}f(x)\cos x\,dx=\int_{0}^{\pi}f(x)\sin x\,dx=0$，证明 $f(x)$ 在 $(0,\pi)$ 内至少有两个零点。（2000 年数三真题）`,
@@ -964,8 +1044,10 @@ window.SUBJECTS.math3 = (function () {
       a: R`$$\begin{vmatrix}2&1\\3&4\end{vmatrix}=2\times4-1\times3=5$$` },
     la02: { q: R`求 $A=\begin{pmatrix}1&2\\3&4\end{pmatrix}$ 的逆矩阵`,
       a: R`$|A|=-2$，$$A^{-1}=\frac{1}{-2}\begin{pmatrix}4&-2\\-3&1\end{pmatrix}=\begin{pmatrix}-2&1\\3/2&-1/2\end{pmatrix}$$` },
-    la13: { q: R`设 $A$ 为 3 阶矩阵，$\Lambda=\operatorname{diag}(1,-1,0)$，则 $A$ 的特征值为 $1,-1,0$ 的充分必要条件是什么？`,
+    la13: [ { q: R`设 $A$ 为 3 阶矩阵，$\Lambda=\operatorname{diag}(1,-1,0)$，则 $A$ 的特征值为 $1,-1,0$ 的充分必要条件是什么？`,
       a: R`充分必要条件：$A$ 与 $\Lambda$ 相似，即存在可逆矩阵 $P$，使 $A=P\Lambda P^{-1}$。理由：3 阶矩阵 $A$ 有 3 个互异特征值 $1,-1,0$，故有 3 个线性无关的特征向量，从而可对角化，且相似于以其特征值为对角元的对角阵 $\Lambda$；反之相似矩阵有相同特征值。注意：存在可逆 $P,Q$ 使 $A=P\Lambda Q$ 是"等价"，存在可逆 $P$ 使 $A=P\Lambda P^{T}$ 是"合同"，均非特征值条件。`, src: '2022 年数三真题' },
+      { q: R`（2025 数三）“$A^{3}-A^{2}$ 可对角化”是“$A$ 可对角化”的（ ）(A) 充分不必要 (B) 必要不充分 (C) 充分必要 (D) 既不充分也不必要`,
+        a: R`若 $A$ 可对角化，则 $A$ 的多项式 $A^{3}-A^{2}=A^{2}(A-E)$ 也可对角化，故是必要条件。反之，取幂零 Jordan 块 $A=\begin{pmatrix}0&1\\0&0\end{pmatrix}$，则 $A^{2}=O$，$A^{3}-A^{2}=O$ 可对角化，但 $A$ 不可对角化，故不充分。选 (B)。`, src: '2025 年数三真题' } ],
     d02: { q: R`求 $y=e^{2x}$ 的导数`,
       a: R`$$y'=2e^{2x}$$` },
     d03: { q: R`求 $y=3^{x}$ 的导数`,
@@ -1031,7 +1113,7 @@ window.SUBJECTS.math3 = (function () {
     la08: { q: R`（2024 数三）设 $A=\begin{pmatrix}a+1&b&3\\a&\frac{b}{2}&1\\1&1&2\end{pmatrix}$，$M_{ij}$ 为 $a_{ij}$ 的余子式，若 $|A|=-\dfrac12$ 且 $-M_{21}+M_{22}-M_{23}=0$，则（ ）(A) $a=1$ 或 $a=-\dfrac32$；(B) $a=0$ 或 $a=\dfrac32$；(C) $b=1$ 或 $b=-\dfrac12$；(D) $b=-1$ 或 $a=\dfrac12$`,
       a: R`代数余子式 $A_{ij}=(-1)^{i+j}M_{ij}$，故 $-M_{21}+M_{22}-M_{23}=A_{21}+A_{22}+A_{23}$，它等于把 $A$ 的第 2 行换成 $(1,1,1)$ 后按第 2 行展开的行列式：$$\begin{vmatrix}a+1&b&3\\1&1&1\\1&1&2\end{vmatrix}=\begin{vmatrix}a+1&b&3\\1&1&1\\0&0&1\end{vmatrix}=a+1-b=0$$故 $b=a+1$。对 $|A|$ 先作 $r_{1}-r_{2}$ 再作 $r_{1}-r_{3}$：$$|A|=\begin{vmatrix}a+1&b&3\\a&\frac b2&1\\1&1&2\end{vmatrix}=\begin{vmatrix}0&\frac b2-1&0\\a&\frac b2&1\\1&1&2\end{vmatrix}=-\left(\frac b2-1\right)(2a-1)=-\frac12$$即 $\left(\dfrac b2-1\right)(2a-1)=\dfrac12$。代入 $b=a+1$ 得 $\dfrac{a-1}{2}(2a-1)=\dfrac12$，即 $2a^{2}-3a=0$，故 $a=0$ 或 $a=\dfrac32$，选 (B)。`, src: '2024 年数三真题' },
     la10: { q: R`设 $\alpha$ 为 3 维单位列向量，$E$ 为 3 阶单位矩阵，判断 $E-\alpha\alpha^{T}$ 是否可逆`,
-      a: R`因 $\alpha^{T}\alpha=1$，秩为 $1$ 的矩阵 $\alpha\alpha^{T}$ 的三个特征值为 $1,0,0$（其迹 $\mathrm{tr}(\alpha\alpha^{T})=\alpha^{T}\alpha=1$）。故 $E-\alpha\alpha^{T}$ 的三个特征值为 $0,1,1$，于是$$|E-\alpha\alpha^{T}|=0\times1\times1=0$$所以 $E-\alpha\alpha^{T}$ 不可逆。`, src: '2017 年数三真题' },
+      a: R`因 $\alpha^{T}\alpha=1$，秩为 $1$ 的矩阵 $\alpha\alpha^{T}$ 的三个特征值为 $1,0,0$（其迹 $\mathrm{tr}(\alpha\alpha^{T})=\alpha^{T}\alpha=1$）。故 $E-\alpha\alpha^{T}$ 的三个特征值为 $0,1,1$，于是$$|E-\alpha\alpha^{T}|=0\times1\times1=0$$所以 $E-\alpha\alpha^{T}$ 不可逆。`, src: '2017 年数三真题', a2: R`由 $\alpha^T\alpha=1$，得$$(E-\alpha\alpha^T)\alpha=\alpha-\alpha(\alpha^T\alpha)=\alpha-\alpha=0$$即非零向量 $\alpha$ 满足 $(E-\alpha\alpha^T)\alpha=0$，故 $E-\alpha\alpha^T$ 有非零解、不可逆，一行即证。` },
     la12: { q: R`设 $A$ 是 3 阶实对称矩阵，$E$ 为 3 阶单位矩阵，若 $A^{2}+A=2E$ 且 $|A|=4$，求二次型 $x^{T}Ax$ 的规范形`,
       a: R`设 $\lambda$ 为 $A$ 的特征值，由 $A^{2}+A=2E$ 得 $\lambda^{2}+\lambda=2$，即 $\lambda=1$ 或 $-2$。又三个特征值之积 $=|A|=4$，故三个特征值只能为 $1,-2,-2$。于是二次型 $x^{T}Ax$ 的正惯性指数为 $1$、负惯性指数为 $2$，规范形为$$y_{1}^{2}-y_{2}^{2}-y_{3}^{2}$$`, src: '2019 年数三真题' },
     la14: { q: R`求 $A=\begin{pmatrix}1&2\\2&1\end{pmatrix}$ 的特征值并验证特征向量正交`,
@@ -1194,22 +1276,32 @@ window.SUBJECTS.math3 = (function () {
       a: R`设 $\gamma=x_{1}\alpha_{1}+x_{2}\alpha_{2}=x_{3}\beta_{1}+x_{4}\beta_{2}$，即 $x_{1}\alpha_{1}+x_{2}\alpha_{2}-x_{3}\beta_{1}-x_{4}\beta_{2}=0$。对 $(\alpha_{1},\alpha_{2},-\beta_{1},-\beta_{2})=\begin{pmatrix}1&2&-2&-1\\2&1&-5&0\\3&1&-9&-1\end{pmatrix}$ 作行变换得行最简形 $\begin{pmatrix}1&0&0&3\\0&1&0&-1\\0&0&1&1\end{pmatrix}$，通解 $x_{1}=-3x_{4},\ x_{2}=x_{4},\ x_{3}=-x_{4}$。故$$\gamma=x_{1}\alpha_{1}+x_{2}\alpha_{2}=k(1,5,8)^{T}\ (k\in\mathbb R)$$选 (D)。`, src: '2023 年数三真题' },
     la18: { q: R`判断 $A=\begin{pmatrix}\cos\theta&-\sin\theta\\\sin\theta&\cos\theta\end{pmatrix}$ 是否正交`,
       a: R`$A^{T}A=E$，故为正交矩阵。` },
-    ext01: { q: R`设 $f(0)=0$ 且 $f'(0)$ 存在，求 $\lim_{x\to0}\frac{f(1-\cos x)}{x^{2}}$`,
+    ext01: [ { q: R`设 $f(0)=0$ 且 $f'(0)$ 存在，求 $\lim_{x\to0}\frac{f(1-\cos x)}{x^{2}}$`,
       a: R`由 $1-\cos x\sim\frac{x^{2}}{2}$，$$\lim_{x\to0}\frac{f(1-\cos x)}{x^{2}}=\lim_{x\to0}\frac{f(1-\cos x)-f(0)}{1-\cos x}\cdot\frac{1-\cos x}{x^{2}}=f'(0)\cdot\frac12=\frac12 f'(0)$$`, src: '幕布版自测' },
+      { q: R`（2020 数三）设 $\lim_{x\to a}\dfrac{f(x)-a}{x-a}=b$，则 $\lim_{x\to a}\dfrac{\sin f(x)-\sin a}{x-a}=$（ ）(A) $b\sin a$ (B) $b\cos a$ (C) $b\sin f(a)$ (D) $b\cos f(a)$`,
+        a: R`由题设 $f(x)-a=b(x-a)+o(x-a)$，故 $f(x)\to a$。用 $\sin f(x)-\sin a=\cos a\,[f(x)-a]+o(f(x)-a)$：$$\lim_{x\to a}\frac{\sin f(x)-\sin a}{x-a}=\cos a\cdot\lim_{x\to a}\frac{f(x)-a}{x-a}=b\cos a$$选 (B)。`, src: '2020 年数三真题' } ],
     ext02: { q: R`求 $\lim_{x\to0}\left(\frac{1}{\sin^{2}x}-\frac{1}{x^{2}}\right)$`,
       a: R`通分：$$\lim_{x\to0}\frac{x^{2}-\sin^{2}x}{x^{2}\sin^{2}x}=\lim_{x\to0}\frac{x^{2}-\sin^{2}x}{x^{4}}$$为 $\frac00$ 型，用洛必达（或泰勒）得 $\frac13$。`, src: '幕布版自测' },
     ext03: { q: R`判断命题真假并说明理由：(1) 若数列 $\{a_n\}$ 收敛，则 $\{a_n\}$ 必有界；(2) 若 $\lim_{n\to\infty}a_nb_n=0$，则 $\{a_n\}$ 与 $\{b_n\}$ 中至少有一个收敛于 $0$。`,
       a: R`(1) 真（收敛数列必有界）；(2) 假，如 $a_n=\frac{1+(-1)^n}{2},\ b_n=\frac{1-(-1)^n}{2}$，有 $a_nb_n\equiv0$，但两者均不收敛于 $0$。`, src: '幕布版自测' },
     ext04: { q: R`设 $f\in C[0,2]$，且 $f(0)+f(1)+f(2)=3$，证明：存在 $\xi\in[0,2]$，使 $f(\xi)=1$。`,
       a: R`由最值定理设最小值为 $m$、最大值为 $M$，则 $m\le\frac{f(0)+f(1)+f(2)}{3}\le M$，即 $m\le1\le M$；由介值定理，存在 $\xi\in[0,2]$ 使 $f(\xi)=1$。`, src: '幕布版自测' },
-    ext05: { q: R`求 $f(x)=(x-1)x^{\frac23}$ 的单调区间与极值。`,
+    ext05: [ { q: R`求 $f(x)=(x-1)x^{\frac23}$ 的单调区间与极值。`,
       a: R`$$f'(x)=x^{2/3}+\frac23(x-1)x^{-1/3}=\frac{5x-2}{3x^{1/3}}$$驻点 $x=\frac25$，不可导点 $x=0$。递增区间 $(-\infty,0)\cup(\frac25,+\infty)$，递减区间 $(0,\frac25)$；极大值 $f(0)=0$，极小值 $f(\frac25)=-\frac35\left(\frac25\right)^{2/3}$。`, src: '幕布版自测' },
-    ext06: { q: R`求曲线 $y=\frac{x^{3}}{(x-1)^{2}}$ 的全部渐近线。`,
+      { q: R`（2019 数三）设 $f(x)=\begin{cases}x^{2x},&x>0\\xe^{x}+1,&x\le0\end{cases}$，求 $f'(x)$ 并求 $f(x)$ 的极值。`,
+        a: R`$x>0$：$f'(x)=2x^{2x}(\ln x+1)$；$x<0$：$f'(x)=e^{x}(x+1)$。由 $\lim_{x\to0^{+}}\dfrac{x^{2x}-1}{x}=\lim\dfrac{2x\ln x}{x}=-\infty$，$f'(0)$ 不存在。令 $f'(x)=0$ 得驻点 $x=-1$ 与 $x=\frac1e$。极小值 $f(-1)=1-\frac1e$、$f\left(\frac1e\right)=e^{-\frac2e}$，极大值 $f(0)=1$。`, src: '2019 年数三真题' } ],
+    ext06: [ { q: R`求曲线 $y=\frac{x^{3}}{(x-1)^{2}}$ 的全部渐近线。`,
       a: R`垂直渐近线 $x=1$。$k=\lim_{x\to\infty}\frac{f(x)}x=\lim\frac{x^{2}}{(x-1)^2}=1$，$b=\lim[f(x)-x]=\lim\frac{2x^{2}-x}{(x-1)^2}=2$，故斜渐近线 $y=x+2$。`, src: '幕布版自测' },
-    ext07: { q: R`用边长为 $a$ 的正方形铁皮，四角各截去一个全等小正方形后折成无盖方盒，问截去的小正方形边长为多少时盒子容积最大？`,
+      { q: R`（2022 数三）设 $y(x)$ 是微分方程 $y'+\dfrac{1}{2\sqrt{x}}y=2+\sqrt{x}$ 满足 $y(1)=3$ 的解，求曲线 $y=y(x)$ 的渐近线。`,
+        a: R`由一阶线性通解公式：$$y=e^{-\sqrt{x}}\left[\int(2+\sqrt{x})\,e^{\sqrt{x}}\,dx+C\right]$$令 $u=\sqrt{x}$，则 $\int(2+u)e^{u}\cdot2u\,du=2u^{2}e^{u}+C$，故$$y=e^{-\sqrt{x}}\left(2x\,e^{\sqrt{x}}+C\right)=2x+Ce^{-\sqrt{x}}$$由 $y(1)=3$ 得 $C=e$，即 $y=2x+e^{1-\sqrt{x}}$。因 $\lim_{x\to+\infty}[y-2x]=\lim e^{1-\sqrt{x}}=0$，故斜渐近线为 $y=2x$（无铅直、水平渐近线）。`, src: '2022 年数三真题' } ],
+    ext07: [ { q: R`用边长为 $a$ 的正方形铁皮，四角各截去一个全等小正方形后折成无盖方盒，问截去的小正方形边长为多少时盒子容积最大？`,
       a: R`设截去边长 $x$，体积 $V=x(a-2x)^2\ (0<x<\frac a2)$。$V'=(a-2x)(a-6x)$，唯一驻点 $x=\frac a6$；由实际问题意义，此时容积最大，最大容积 $\frac{2}{27}a^3$。`, src: '幕布版自测' },
-    ext08: { q: R`某商品需求函数 $Q=100-5p$。(1) 求需求价格弹性 $\eta(p)$；(2) $p$ 在什么范围内提价可使总收益增加？$p$ 为何值时总收益最大？`,
+      { q: R`（2024 数三）某商品价格 $P=\begin{cases}25-0.25Q,&Q\le20\\35-0.75Q,&Q>20\end{cases}$，总成本 $C=150+5Q+0.25Q^{2}$，求利润最大值。`,
+        a: R`$Q\le20$：利润 $L=(25-0.25Q)Q-C=20Q-0.5Q^{2}-150$，$L'=20-Q=0\Rightarrow Q=20$，$L(20)=50$。$Q>20$：$L=(35-0.75Q)Q-C=30Q-Q^{2}-150$，$L'=30-2Q<0$（当 $Q>20$），故在 $(20,+\infty)$ 递减。所以最大利润 $=50$ 万元。`, src: '2024 年数三真题' } ],
+    ext08: [ { q: R`某商品需求函数 $Q=100-5p$。(1) 求需求价格弹性 $\eta(p)$；(2) $p$ 在什么范围内提价可使总收益增加？$p$ 为何值时总收益最大？`,
       a: R`$$\eta(p)=-\frac{p}{Q}\frac{dQ}{dp}=-\frac{p}{100-5p}\cdot(-5)=\frac{5p}{100-5p}$$当 $|\eta|<1$ 即 $0<p<10$ 时提价增收；$p=10$ 时 $|\eta|=1$，总收益最大。`, src: '幕布版自测' },
+      { q: R`（2019 数三）商品 $A$ 的需求量 $Q_{A}=500-P_{A}^{2}-P_{A}P_{B}+2P_{B}^{2}$，当 $P_{A}=10,\ P_{B}=20$ 时，$A$ 的需求量对自身价格的弹性 $\eta_{AA}$ 为____`,
+        a: R`$$\eta_{AA}=-\frac{P_A}{Q_A}\cdot\frac{\partial Q_A}{\partial P_A}=-\frac{10}{1000}\cdot(-2P_A-P_B)\Big|_{P_A=10,\,P_B=20}=\frac{10}{1000}\times40=0.4$$`, src: '2019 年数三真题' } ],
     ext09: { q: R`求 $\int x\,e^{x^{2}}\,dx$`,
       a: R`令 $u=x^{2}$，$du=2x\,dx$，$$\int x\,e^{x^{2}}dx=\frac12\int e^{u}du=\frac12 e^{x^{2}}+C$$` },
     ext10: { q: R`求 $\int_0^{\pi/2}\sin^{6}x\,dx$`,
@@ -1218,14 +1310,20 @@ window.SUBJECTS.math3 = (function () {
       a: R`在 $[0,1]$ 上 $1\le e^{x^{2}}\le e$，由估值定理 $1\le\int_0^1 e^{x^{2}}dx\le e$；由积分中值定理，存在 $\xi\in[0,1]$ 使积分 $=e^{\xi^{2}}\in[1,e]$。` },
     ext12: { q: R`判断 $\int_0^1\frac{dx}{\sqrt{x}}$ 的敛散性并求其值。`,
       a: R`$p=\frac12<1$，收敛，且$$\int_0^1\frac{dx}{\sqrt{x}}=2\sqrt{x}\,\Big|_0^1=2$$` },
-    ext13: { q: R`设 $f(x,y)$ 在 $(0,0)$ 的某邻域内满足 $|f(x,y)|\le x^{2}+y^{2}$，证明 $f$ 在 $(0,0)$ 处可微，并求 $df\big|_{(0,0)}$。`,
+    ext13: [ { q: R`设 $f(x,y)$ 在 $(0,0)$ 的某邻域内满足 $|f(x,y)|\le x^{2}+y^{2}$，证明 $f$ 在 $(0,0)$ 处可微，并求 $df\big|_{(0,0)}$。`,
       a: R`由夹逼 $f(0,0)=0$，且 $\frac{|f(x,y)|}{\sqrt{x^2+y^2}}\le\sqrt{x^2+y^2}\to0$，故 $f_x(0,0)=f_y(0,0)=0$，$f$ 在 $(0,0)$ 可微，$df\big|_{(0,0)}=0$。`, src: '幕布版自测' },
-    ext14: { q: R`设 $z=z(x,y)$ 由方程 $x-az=e^{y+az}$（$a$ 为非零常数）确定，求 $\frac{\partial z}{\partial x}-\frac{\partial z}{\partial y}$`,
+      { q: R`（2023 数三）设 $f(x,y)=\ln(y+|x\sin y|)$，则（ ）(A) $\frac{\partial f}{\partial x}\big|_{(0,1)}$ 不存在，$\frac{\partial f}{\partial y}\big|_{(0,1)}$ 存在；(B) 前者存在、后者不存在；(C) 均存在；(D) 均不存在`,
+        a: R`固定 $y=1$：$f(x,1)=\ln(1+|x|\sin1)$，在 $x=0$ 处含 $|x|$，左右导数分别为 $\sin1$ 与 $-\sin1$，故 $\frac{\partial f}{\partial x}\big|_{(0,1)}$ 不存在。固定 $x=0$：$f(0,y)=\ln y$，$\frac{\partial f}{\partial y}\big|_{(0,1)}=\frac1y\big|_{y=1}=1$ 存在。故选 (A)。`, src: '2023 年数三真题' } ],
+    ext14: [ { q: R`设 $z=z(x,y)$ 由方程 $x-az=e^{y+az}$（$a$ 为非零常数）确定，求 $\frac{\partial z}{\partial x}-\frac{\partial z}{\partial y}$`,
       a: R`令 $F=x-az-e^{y+az}=0$，则$$F_{x}=1,\quad F_{y}=-e^{y+az},\quad F_{z}=-a-ae^{y+az}=-a(1+e^{y+az})$$由隐函数求偏导公式：$$\frac{\partial z}{\partial x}=-\frac{F_{x}}{F_{z}}=\frac{1}{a(1+e^{y+az})},\qquad \frac{\partial z}{\partial y}=-\frac{F_{y}}{F_{z}}=-\frac{e^{y+az}}{a(1+e^{y+az})}$$故$$\frac{\partial z}{\partial x}-\frac{\partial z}{\partial y}=\frac{1+e^{y+az}}{a(1+e^{y+az})}=\frac{1}{a}$$`, src: '2026 年数三真题' },
+      { q: R`（2024 数三）设 $z=z(x,y)$ 由 $z+e^{x}-y\ln(1+z^{2})=0$ 确定，求 $\left(\dfrac{\partial^{2}z}{\partial x^{2}}+\dfrac{\partial^{2}z}{\partial y^{2}}\right)\Big|_{(0,0)}$`,
+        a: R`令 $F=z+e^{x}-y\ln(1+z^{2})=0$。代入 $x=y=0$ 得 $z(0,0)=-1$。$$F_{x}=e^{x},\quad F_{y}=-\ln(1+z^{2}),\quad F_{z}=1-\frac{2yz}{1+z^{2}}$$在 $(0,0,-1)$：$F_{z}=1$，故 $z_{x}=-1,\ z_{y}=\ln2$。再由 $F_{x}+F_{z}z_{x}=0$ 对 $x$ 求导：$F_{xx}+2F_{xz}z_{x}+F_{zz}z_{x}^{2}+F_{z}z_{xx}=0$，代入 $F_{xx}=1,\ F_{xz}=0,\ F_{zz}=0$ 得 $z_{xx}=-1$。同理对 $F_{y}+F_{z}z_{y}=0$ 对 $y$ 求导，代入 $F_{yy}=0,\ F_{yz}=\frac{-2z}{1+z^{2}}=1,\ F_{zz}=0$ 得 $z_{yy}=-2\ln2$。故原式 $=-(1+2\ln2)$。`, src: '2024 年数三真题' } ],
     ext15: { q: R`判断下列级数的敛散性：(1) $\sum_{n=1}^{\infty}\left(1-\cos\frac1n\right)$；(2) $\sum_{n=2}^{\infty}\frac{1}{n\sqrt[n]{n}}$。`,
       a: R`(1) $1-\cos\frac1n\sim\frac{1}{2n^2}$，与 $\sum\frac1{n^2}$ 同敛散，收敛；(2) $\sqrt[n]{n}\to1$，$\frac{1}{n\sqrt[n]{n}}\sim\frac1n$，与调和级数同敛散，发散。`, src: '幕布版自测' },
-    ext16: { q: R`讨论级数 $\sum_{n=1}^{\infty}\frac{(-1)^{n-1}}{n^{p}}$ 的敛散性。`,
+    ext16: [ { q: R`讨论级数 $\sum_{n=1}^{\infty}\frac{(-1)^{n-1}}{n^{p}}$ 的敛散性。`,
       a: R`$p>1$：$\sum\frac1{n^p}$ 收敛，绝对收敛；$0<p\le1$：$\sum\frac1{n^p}$ 发散但 $\frac1{n^p}$ 单调递减趋于 $0$，莱布尼茨判别法 ⇒ 条件收敛；$p\le0$：通项不趋于 $0$，发散。`, src: '幕布版自测' },
+      { q: R`（2023 数三）已知 $a_n<b_n$。若级数 $\sum a_n$ 与 $\sum b_n$ 均收敛，则“$\sum a_n$ 绝对收敛”是“$\sum b_n$ 绝对收敛”的（ ）(A) 充分必要条件 (B) 充分不必要 (C) 必要不充分 (D) 既不充分也不必要`,
+        a: R`令 $c_n=b_n-a_n>0$，则 $\sum c_n=\sum b_n-\sum a_n$ 收敛且为正项级数，故绝对收敛。于是 $b_n=a_n+c_n$、$a_n=b_n-c_n$，分别有$$|b_n|\le|a_n|+c_n,\qquad |a_n|\le|b_n|+c_n$$故 $\sum|a_n|$ 收敛 $\iff$ $\sum|b_n|$ 收敛，选 (A)。`, src: '2023 年数三真题' } ],
     ext17: { q: R`求幂级数 $\sum_{n=1}^{\infty}\frac{x^{n}}{n+1}$ 的和函数，并求 $\sum_{n=1}^{\infty}\frac{1}{(n+1)2^{n}}$。`,
       a: R`令 $S(x)=\sum\frac{x^n}{n+1}$，则 $xS(x)=\sum\frac{x^{n+1}}{n+1}$，$[xS(x)]'=\sum x^n=\frac1{1-x}$，积分得 $xS(x)=-\ln(1-x)-x$，故$$S(x)=-\frac{\ln(1-x)}{x}-1\ (x\neq0),\quad S(0)=0$$数项级数和 $=S(\frac12)=2\ln2-1$。`, src: '幕布版自测' },
     ext18: { q: R`某永续年金每年年末支付 $a$ 元，年利率 $r$（$r>0$，按年复利贴现），求该年金的现值。`,
@@ -1250,6 +1348,46 @@ window.SUBJECTS.math3 = (function () {
       a: R`$xy$ 为奇函数，积分为 $0$；由对称性 $\iint x^2=\iint y^2=\frac12\iint(x^2+y^2)$，极坐标下 $\iint(x^2+y^2)=\int_0^{2\pi}d\theta\int_0^1 r^2\cdot r\,dr=\frac{\pi}{2}$，故原积分 $=\frac{\pi}{4}$。`, src: '幕布版自测' },
     ext28: { q: R`验证 $y=C_1\cos2x+C_2\sin2x$ 是方程 $y''+4y=0$ 的通解，并求满足 $y(0)=1,\ y'(0)=2$ 的特解。`,
       a: R`$y''=-4C_1\cos2x-4C_2\sin2x=-4y$，故 $y''+4y=0$ 恒成立，且含两个独立任意常数，为通解；由 $y(0)=1$ 得 $C_1=1$，$y'(0)=2$ 得 $C_2=1$，特解 $y=\cos2x+\sin2x$。`, src: '幕布版自测' },
+    ms01: { q: R`（2022 数三）设 $I_1=\int_0^1\dfrac{\ln(1+x)}{2(1+\cos x)}\,dx$，$I_2=\int_0^1\dfrac{2x}{1+\cos x}\,dx$，$I_3=\int_0^1\dfrac{2x}{1+\sin x}\,dx$，则（ ）(A) $I_1<I_2<I_3$；(B) $I_2<I_1<I_3$；(C) $I_1<I_3<I_2$；(D) $I_3<I_2<I_1$`,
+      a: R`在 $(0,1)$ 内 $\ln(1+x)<x$，故 $\dfrac{\ln(1+x)}{2(1+\cos x)}<\dfrac{x}{1+\cos x}<\dfrac{2x}{1+\cos x}$，即 $I_1<I_2$。又 $\cos x>\sin x$，故 $1+\cos x>1+\sin x$，从而 $\dfrac{2x}{1+\cos x}<\dfrac{2x}{1+\sin x}$，即 $I_2<I_3$。故 $I_1<I_2<I_3$，选 (A)。`, src: '2022 年数三真题' },
+    ms02: { q: R`（2025 数三）设 $f(x)=\int_0^x e^{t^{2}}\sin t\,dt$，$g(x)=\left(\int_0^x e^{t^{2}}dt\right)\sin^{2}x$，则（ ）(A) $x=0$ 是 $f,g$ 的极值点；(B) $x=0$ 是 $f$ 的极值点，$(0,0)$ 是 $g$ 的拐点；(C) $x=0$ 是 $f$ 的极值点，$(0,0)$ 是 $f$ 的拐点；(D) $(0,0)$ 是 $f,g$ 的拐点`,
+      a: R`$f'(x)=e^{x^{2}}\sin x$，在 $x=0$ 两侧 $f'$ 由负变正，故 $x=0$ 是 $f$ 的极小值点。又 $F(x)=\int_0^x e^{t^{2}}dt\sim x+\dfrac{x^{3}}{3}$，$\sin^{2}x\sim x^{2}$，故 $g(x)=F(x)\sin^{2}x\sim x^{3}$（$x\to0$），为奇函数型三次，$(0,0)$ 为 $g$ 的拐点。故选 (B)。`, src: '2025 年数三真题' },
+    ms03: { q: R`（2021 数三）二次型 $f(x_1,x_2,x_3)=(x_1+x_2)^{2}+(x_2+x_3)^{2}-(x_3-x_1)^{2}$ 的正惯性指数与负惯性指数依次为（ ）(A) $2,0$；(B) $1,1$；(C) $2,1$；(D) $1,2$`,
+      a: R`$f$ 对应的对称矩阵为$$A=\begin{pmatrix}0&1&1\\1&2&1\\1&1&0\end{pmatrix}$$由 $|\lambda E-A|=-(\lambda-3)\lambda(\lambda+1)$ 得特征值 $3,0,-1$，故正惯性指数 $1$、负惯性指数 $1$，选 (B)。`, src: '2021 年数三真题' },
+    tp01: [ { q: R`（2020 数三）已知 $a,b$ 为常数，若 $\left(1+\dfrac1n\right)^{n}-e$ 与 $\dfrac{b}{n^{a}}$ 在 $n\to+\infty$ 时是等价无穷小，求 $a,b$。`,
+      a: R`令 $x=\dfrac1n\to0$，则 $\left(1+\dfrac1n\right)^{n}=(1+x)^{1/x}=e^{\frac{\ln(1+x)}{x}}$。由 $\ln(1+x)=x-\dfrac{x^{2}}{2}+o(x^{2})$ 得 $\dfrac{\ln(1+x)}{x}=1-\dfrac{x}{2}+o(x)$，故$$(1+x)^{1/x}=e\cdot e^{-x/2+o(x)}=e\left(1-\frac{x}{2}+o(x)\right)=e-\frac{e}{2}x+o(x)$$于是 $\left(1+\dfrac1n\right)^{n}-e=-\dfrac{e}{2n}+o\left(\dfrac1n\right)$。与 $\dfrac{b}{n^{a}}$ 等价，得 $a=1,\ b=-\dfrac{e}{2}$。`, src: '2020 年数三真题' },
+      { q: R`求 $\lim_{x\to0}\frac{e^{x}-\sin x-1}{x^{2}}$`,
+        a: R`由 $e^{x}=1+x+\frac{x^{2}}{2}+o(x^{2})$、$\sin x=x+o(x^{2})$，得$$\lim_{x\to0}\frac{e^{x}-\sin x-1}{x^{2}}=\lim_{x\to0}\frac{\frac{x^{2}}{2}+o(x^{2})}{x^{2}}=\frac12$$` } ],
+    tp02: [ { q: R`（2019 数三）求曲线 $y=e^{-x}\sin x\ (x\ge0)$ 与 $x$ 轴之间图形的面积。`,
+      a: R`分部积分两次得$$\int e^{-x}\sin x\,dx=-\frac{e^{-x}}{2}(\sin x+\cos x)+C$$在 $[n\pi,(n+1)\pi]$ 上 $|\sin x|=(-1)^{n}\sin x$，故$$\int_{n\pi}^{(n+1)\pi}e^{-x}|\sin x|\,dx=(-1)^{n}\int_{n\pi}^{(n+1)\pi}e^{-x}\sin x\,dx=\frac12\left(e^{-n\pi}+e^{-(n+1)\pi}\right)$$于是总面积（几何级数求和）$$S=\sum_{n=0}^{\infty}\frac12\left(e^{-n\pi}+e^{-(n+1)\pi}\right)=\frac12\cdot\frac{1+e^{-\pi}}{1-e^{-\pi}}=\frac{e^{\pi}+1}{2(e^{\pi}-1)}$$`, src: '2019 年数三真题' },
+      { q: R`求 $\int x\ln x\,dx$`,
+        a: R`按"反对幂指三"取 $u=\ln x$（对数优先），$dv=x\,dx$：$$\int x\ln x\,dx=\frac{x^{2}}{2}\ln x-\int\frac{x^{2}}{2}\cdot\frac1x\,dx=\frac{x^{2}}{2}\ln x-\frac{x^{2}}{4}+C$$` } ],
+    tp03: [ { q: R`（2025 数三）设 $f(x)$ 在 $(a,b)$ 内可导。证明：$f'(x)$ 在 $(a,b)$ 内严格单调增加 ⟺ 对任意 $a<x_1<x_2<x_3<b$，有 $\dfrac{f(x_2)-f(x_1)}{x_2-x_1}<\dfrac{f(x_3)-f(x_2)}{x_3-x_2}$。`,
+      a: R`（Ⅰ）设 $f'$ 严格增加。对任意 $x_1<x_2<x_3$，由拉格朗日中值定理，存在 $\xi_1\in(x_1,x_2),\ \xi_2\in(x_2,x_3)$ 使$$\frac{f(x_2)-f(x_1)}{x_2-x_1}=f'(\xi_1),\qquad \frac{f(x_3)-f(x_2)}{x_3-x_2}=f'(\xi_2)$$因 $x_1<\xi_1<x_2<\xi_2<x_3$ 且 $f'$ 严格增，故 $f'(\xi_1)<f'(\xi_2)$，即证。
+
+（Ⅱ）设不等式对一切 $x_1<x_2<x_3$ 成立。对任意 $u<v$，取 $h>0$ 使 $u<u+h<v<v+h<b$，分别对 $(u,u+h,v)$ 与 $(u,v,v+h)$ 用题设得$$\frac{f(u+h)-f(u)}{h}<\frac{f(v)-f(u+h)}{v-u-h},\qquad \frac{f(v)-f(u)}{v-u}<\frac{f(v+h)-f(v)}{h}$$令 $h\to0^{+}$，由可导性得 $f'(u)\le\dfrac{f(v)-f(u)}{v-u}\le f'(v)$，故 $f'$ 单调不减。若 $f'$ 不严格增，则存在 $c<d$ 使 $f'(c)=f'(d)$，由单调不减知 $f'$ 在 $[c,d]$ 上恒为常数，从而 $f$ 在 $[c,d]$ 上为线性函数；取 $c<x_1<x_2<x_3<d$，两割线斜率相等，与题设严格不等式矛盾。故 $f'$ 严格增加。`, src: '2025 年数三真题' },
+      { q: R`设 $f(x)$ 在 $[0,1]$ 上连续、在 $(0,1)$ 内可导，且 $f(0)=f(1)=0$，证明：存在 $\xi\in(0,1)$ 使 $f'(\xi)=-f(\xi)$`,
+        a: R`构造 $F(x)=e^{x}f(x)$，则 $F(0)=F(1)=0$，$F$ 在 $[0,1]$ 连续、$(0,1)$ 可导。由罗尔定理，存在 $\xi\in(0,1)$ 使$$F'(\xi)=e^{\xi}\left[f(\xi)+f'(\xi)\right]=0$$因 $e^{\xi}\neq0$，故 $f'(\xi)=-f(\xi)$。` } ],
+    tp04: [ { q: R`（2023 数三）设矩阵 $A$ 满足：对任意 $x_1,x_2,x_3$ 有 $A\begin{pmatrix}x_1\\x_2\\x_3\end{pmatrix}=\begin{pmatrix}x_1+x_2+x_3\\2x_1-x_2+x_3\\x_2-x_3\end{pmatrix}$。(Ⅰ) 求 $A$；(Ⅱ) 求可逆矩阵 $P$ 与对角矩阵 $\Lambda$，使 $P^{-1}AP=\Lambda$。`,
+      a: R`(Ⅰ) 分别取 $(x_1,x_2,x_3)=e_1,e_2,e_3$，得各列为 $Ae_1=(1,2,0)^{T},\ Ae_2=(1,-1,1)^{T},\ Ae_3=(1,1,-1)^{T}$，故$$A=\begin{pmatrix}1&1&1\\2&-1&1\\0&1&-1\end{pmatrix}$$
+
+(Ⅱ) $|\lambda E-A|=\begin{vmatrix}\lambda-1&-1&-1\\-2&\lambda+1&-1\\0&-1&\lambda+1\end{vmatrix}=(\lambda-2)(\lambda+1)(\lambda+2)$，特征值为 $\lambda_1=2,\ \lambda_2=-1,\ \lambda_3=-2$（互异，必可对角化）。解 $(\lambda_i E-A)x=0$：$$\lambda=2:\ \alpha_1=(4,3,1)^{T};\qquad \lambda=-1:\ \alpha_2=(1,0,-2)^{T};\qquad \lambda=-2:\ \alpha_3=(0,1,-1)^{T}$$取$$P=\begin{pmatrix}4&1&0\\3&0&1\\1&-2&-1\end{pmatrix}\ \Longrightarrow\ P^{-1}AP=\operatorname{diag}(2,-1,-2)$$`, src: '2023 年数三真题' },
+      { q: R`求 $A=\begin{pmatrix}0&1\\1&0\end{pmatrix}$ 的特征值，并求正交矩阵 $Q$ 使 $Q^{-1}AQ$ 为对角阵`,
+        a: R`$|\lambda E-A|=\lambda^{2}-1=0\Rightarrow\lambda=\pm1$。对 $\lambda=1$ 解 $(A-E)x=0$ 得 $\alpha_1=(1,1)^T$；对 $\lambda=-1$ 得 $\alpha_2=(1,-1)^T$，二者已正交。单位化得$$Q=\frac1{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix},\qquad Q^{-1}AQ=\begin{pmatrix}1&0\\0&-1\end{pmatrix}$$` } ],
+    tp05: [ { q: R`（2021 数三）设 $n$ 为正整数，$y=y_n(x)$ 是微分方程 $xy'-(n+1)y=0$ 的满足 $y_n(1)=\dfrac{1}{n(n+1)}$ 的解。(Ⅰ) 求 $y_n(x)$；(Ⅱ) 求级数 $\sum_{n=1}^{\infty}y_n(x)$ 的收敛域及和函数。`,
+      a: R`(Ⅰ) 分离变量 $\dfrac{dy}{y}=\dfrac{n+1}{x}dx$，得 $y=Cx^{n+1}$；由 $y_n(1)=\dfrac1{n(n+1)}$ 得 $C=\dfrac1{n(n+1)}$，故 $y_n(x)=\dfrac{x^{n+1}}{n(n+1)}$。
+
+(Ⅱ) 设 $S(x)=\sum_{n=1}^{\infty}\dfrac{x^{n+1}}{n(n+1)}$。由比值判别法收敛半径 $R=1$；端点 $x=1$ 时 $\sum\dfrac1{n(n+1)}=1$ 收敛，$x=-1$ 时 $\sum\dfrac{(-1)^{n+1}}{n(n+1)}$ 绝对收敛，故收敛域 $[-1,1]$。由 $\dfrac1{n(n+1)}=\dfrac1n-\dfrac1{n+1}$：$$S(x)=\sum_{n=1}^{\infty}\frac{x^{n+1}}{n}-\sum_{n=1}^{\infty}\frac{x^{n+1}}{n+1}=x\sum_{n=1}^{\infty}\frac{x^n}{n}-\left[\sum_{n=1}^{\infty}\frac{x^n}{n}-x\right]$$由 $-\ln(1-x)=\sum_{n=1}^{\infty}\dfrac{x^n}{n}\ (|x|<1)$ 得$$S(x)=-x\ln(1-x)+\ln(1-x)+x=(1-x)\ln(1-x)+x\ (|x|<1)$$由 $S$ 在 $[-1,1]$ 连续，$S(1)=\lim_{x\to1^{-}}S(x)=1$，$S(-1)=2\ln2-1$。故$$S(x)=\begin{cases}(1-x)\ln(1-x)+x,&x\in[-1,1)\\1,&x=1\end{cases}$$`, src: '2021 年数三真题' },
+      { q: R`求幂级数 $\sum_{n=1}^{\infty} n x^{n-1}$ 的收敛域与和函数`,
+        a: R`$|x|<1$ 时，由 $\sum_{n=0}^{\infty}x^{n}=\frac1{1-x}$ 逐项求导得$$\sum_{n=1}^{\infty}nx^{n-1}=\left(\frac1{1-x}\right)'=\frac1{(1-x)^{2}}$$端点 $x=\pm1$ 时通项不趋于 0，发散，故收敛域 $(-1,1)$。` } ],
+    tp06: [ { q: R`（2021 数三）求函数 $f(x,y)=2\ln|x|+\dfrac{(x-1)^{2}+y^{2}}{2x^{2}}$ 的极值。`,
+      a: R`$$f_{x}=\frac{2x^{2}+x-1-y^{2}}{x^{3}},\qquad f_{y}=\frac{y}{x^{2}}$$由 $f_y=0$ 得 $y=0$；代入 $f_x=0$ 得 $(2x-1)(x+1)=0$，驻点为 $(-1,0)$ 与 $(\tfrac12,0)$。$$A=f_{xx}=\frac{-2x^{2}-2x+3+3y^{2}}{x^{4}},\quad B=f_{xy}=-\frac{2y}{x^{3}},\quad C=f_{yy}=\frac{1}{x^{2}}$$在 $(-1,0)$：$A=3,\ B=0,\ C=1$，$\Delta=AC-B^{2}=3>0$ 且 $A>0$，极小值 $f(-1,0)=2$；在 $(\tfrac12,0)$：$A=24,\ B=0,\ C=4$，$\Delta=96>0$ 且 $A>0$，极小值 $f(\tfrac12,0)=\dfrac12-2\ln2$。`, src: '2021 年数三真题' },
+      { q: R`求 $f(x,y)=x^{2}+y^{2}$ 在约束 $x+y=1$ 下的最小值`,
+        a: R`构造 $L=x^{2}+y^{2}+\lambda(x+y-1)$，解$$L_x=2x+\lambda=0,\quad L_y=2y+\lambda=0,\quad x+y=1$$得 $x=y=\frac12$，$f(\frac12,\frac12)=\frac12$。由实际问题知即为最小值 $\frac12$。` } ],
+    tp07: [ { q: R`（2025 数三）微分方程 $xy'-y+x^{2}e^{x}=0$ 满足 $y(1)=-e$ 的解为 $y=$____`,
+      a: R`方程化为 $y'-\dfrac1x y=-x\,e^{x}$（一阶线性）。由通解公式：$$y=e^{\int\frac1x dx}\left[\int(-x\,e^{x})\,e^{-\int\frac1x dx}\,dx+C\right]=x\left[\int(-e^{x})\,dx+C\right]=x\left(-e^{x}+C\right)$$由 $y(1)=-e+C=-e$ 得 $C=0$，故 $y=-x\,e^{x}$。（快捷法：原方程即 $\left(\dfrac yx\right)'=\dfrac{xy'-y}{x^{2}}=-e^{x}$，积分得 $\dfrac yx=-e^{x}+C$，同得 $y=-xe^{x}$。）`, src: '2025 年数三真题' },
+      { q: R`求微分方程 $y''-3y'+2y=e^{x}$ 的通解`,
+        a: R`特征方程 $r^{2}-3r+2=0$ 得 $r_1=1,\ r_2=2$，齐次通解 $C_1e^{x}+C_2e^{2x}$。因 $\lambda=1$ 是单特征根，设特解 $y^{*}=Axe^{x}$，代入得 $A=-1$。故通解$$y=C_1e^{x}+C_2e^{2x}-xe^{x}$$` } ],
   };
 
   // ============ 知识点关系标签 ============
@@ -1447,6 +1585,16 @@ window.SUBJECTS.math3 = (function () {
     ext26: [ { to: 'multi01', tag: '相关' }, { to: 'lim16', tag: '类比' } ],
     ext27: [ { to: 'dbi01', tag: '相关' }, { to: 'dbi02', tag: '前置' }, { to: 'int26', tag: '类比' } ],
     ext28: [ { to: 'ode03', tag: '前置' }, { to: 'ode05', tag: '相关' } ],
+    ms01: [ { to: 'int23', tag: '前置' }, { to: 'ineq04', tag: '应用' } ],
+    ms02: [ { to: 'int25', tag: '前置' }, { to: 'ext05', tag: '相关' } ],
+    ms03: [ { to: 'la09', tag: '相关' }, { to: 'la12', tag: '相关' } ],
+    tp01: [ { to: 'lim09', tag: '重要极限' }, { to: 'ext02', tag: '洛必达' }, { to: 'tay01', tag: '泰勒' }, { to: 'lim12', tag: '夹逼' } ],
+    tp02: [ { to: 'int24', tag: '分部积分' }, { to: 'ext09', tag: '换元' }, { to: 'int23', tag: '定积分' }, { to: 'ext10', tag: '华里士' } ],
+    tp03: [ { to: 'mvt01', tag: '罗尔' }, { to: 'mvt02', tag: '拉格朗日' }, { to: 'mvt03', tag: '柯西' }, { to: 'mvt04', tag: '泰勒' } ],
+    tp04: [ { to: 'la04', tag: '特征方程' }, { to: 'la13', tag: '可对角化' }, { to: 'la14', tag: '实对称' }, { to: 'la15', tag: '施密特' } ],
+    tp05: [ { to: 'ser06', tag: '比值' }, { to: 'ser05', tag: '莱布尼茨' }, { to: 'ser10', tag: '收敛半径' }, { to: 'ser12', tag: '逐项求导' } ],
+    tp06: [ { to: 'multi03', tag: '极值判别' }, { to: 'multi04', tag: '拉格朗日' }, { to: 'multi01', tag: '偏导' } ],
+    tp07: [ { to: 'ode01', tag: '可分离' }, { to: 'ode02', tag: '一阶线性' }, { to: 'ode03', tag: '二阶齐次' }, { to: 'ode05', tag: '非齐次' } ],
   };
 
   // ============ 深度（1~5，5 为满分冲刺） ============
@@ -1473,8 +1621,52 @@ window.SUBJECTS.math3 = (function () {
     trig02: 3, trig03: 2, trig04: 3, trig05: 3, trig08: 3, trig09: 3, trig10: 3, trig11: 3, trig12: 3,
     ineq01: 2, ineq02: 3, ineq06: 3,
     ser09: 3, ser11: 3, ser13: 2,
-    la05: 2, la06: 2, la07: 3, la09: 4, la11: 3, la15: 3, la16: 3, la18: 2
+    la05: 2, la06: 2, la07: 3, la09: 4, la11: 3, la15: 3, la16: 3, la18: 2,
+    tp01: 5, tp02: 5, tp03: 5, tp04: 5, tp05: 5, tp06: 4, tp07: 5
   };
 
-  return { id: 'math3', name: '考研数学三', short: '数三', icon: '📐', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, DEPTH: DEPTH, ORDER: ['limit', 'infinitesimal', 'derivative', 'drule', 'taylor', 'mvt', 'integral', 'multi', 'doubleint', 'series', 'ode', 'trig', 'inequality', 'linalg'] };
+  const PITFALL = {
+    // —— 极限 ——
+    lim01: R`$\frac{\sin x}{x}\to1$ 只对 $x\to0$；$\lim\frac{\sin 2x}{x}$ 要先凑成 $2\cdot\frac{\sin 2x}{2x}$，勿直接写 $=1$。`,
+    lim05: R`$1-\cos x\sim\frac{x^2}{2}$ 的系数 $\frac12$ 常被漏掉，写成 $\sim x^2$ 就错。`,
+    lim09: R`$1^\infty$ 型化成 $e^{\lim v\ln u}$ 后，常见错误是只算出 $\lim v\ln u$ 就停笔、忘记写回 $e$ 指数。`,
+    lim12: R`夹逼准则要求两边极限存在且相等；放缩过松使两边极限不等时夹逼失败，需换更紧的放缩。`,
+    lim13: R`单调有界准则"单调"与"有界"缺一不可，只证其一不能推出收敛。`,
+    // —— 等价无穷小 ——
+    inf01: R`等价无穷小只能整体替换乘除因式；加减项不能分别替换（如 $\sin x-\tan x$ 不能换成 $x-x=0$）。`,
+    inf06: R`$e^u-1\sim u$ 要求 $u\to0$；$e^{x-\sin x}-1\sim x-\sin x$ 而非 $\sim x$，先确认括号内趋于 0。`,
+    inf08: R`$1-\cos u\sim\frac{u^2}{2}$ 中 $u$ 可为复合量，替换后要整体平方，勿丢系数或漏代入 $u$。`,
+    // —— 导数 ——
+    d14: R`$(\arctan u)'=\frac{u'}{1+u^2}$，勿漏内层导数：$(\arctan2x)'=\frac{2}{1+4x^2}$。`,
+    dr03: R`除法法则分子是 $u'v-uv'$（"先导不导"减"不导先导"），顺序颠倒会整体变号。`,
+    dr04: R`链式法则勿漏内层导数：$\sin(x^2)$ 求导 $=\cos(x^2)\cdot 2x$，漏乘 $2x$ 是最高频错误。`,
+    // —— 积分 ——
+    int03: R`$\int\frac1x dx=\ln|x|+C$ 必须加绝对值；解微分方程或定积分时漏掉绝对值号会丢解或出错。`,
+    int24: R`分部积分选 $u$ 按"反对幂指三"优先顺序：$\int x\,e^xdx$ 中 $u=x$，勿把 $e^x$ 当 $u$。`,
+    int25: R`变限积分求导勿忘乘上限导数，且上下限都含 $x$ 时要拆成两段相减再求导。`,
+    int26: R`对称区间奇函数积分为 0 以积分存在为前提（反常积分先判敛）；偶函数才可翻倍。`,
+    int27: R`无穷积分 $\int_1^{+\infty}\frac{dx}{x^p}$ 收敛 $\iff p>1$，瑕积分 $\int_0^1\frac{dx}{x^p}$ 收敛 $\iff p<1$，方向相反勿混淆。`,
+    // —— 泰勒 ——
+    tay01: R`泰勒展开必须展开到与分母同阶：分母是 $x^k$ 时分子要展到 $x^k$ 并带 $o(x^k)$，否则截断误差致错。`,
+    // —— 级数 ——
+    ser02: R`p 级数收敛 $\iff p>1$，$p=1$ 的调和级数发散，勿误记成"$p\ge1$ 收敛"。`,
+    ser06: R`比值判别法 $\rho=1$ 时无法判定，必须换比较法；勿把 $\rho=1$ 当成收敛。`,
+    ser10: R`收敛半径求出后，区间端点的敛散性必须单独判定，勿直接写成闭区间。`,
+    // —— 微分方程 ——
+    ode02: R`一阶线性公式 $e^{-\int Pdx}$ 与括号内 $e^{+\int Pdx}$ 指数符号相反，勿同号；漏放积分常数 $C$ 也是高频错。`,
+    ode03: R`特征方程重根时通解要乘 $x$（$y=(C_1+C_2x)e^{rx}$）；复根 $\alpha\pm\beta i$ 对应 $e^{\alpha x}(C_1\cos\beta x+C_2\sin\beta x)$，勿忘 $e^{\alpha x}$。`,
+    ode05: R`非齐次特解设 $x^k$ 时 $k$ 是 $\lambda$ 作为特征根的重数；$k$ 取错会导致待定系数消不掉、求不出解。`,
+    // —— 多元 ——
+    multi03: R`$\Delta=AC-B^2=0$ 时判别式失效，需用定义或配方判断，勿误判为极值。`,
+    // —— 二重积分 ——
+    dbi02: R`极坐标面积元是 $r\,dr\,d\theta$，勿漏乘 $r$——这是极坐标二重积分第一大错。`,
+    // —— 线代 ——
+    la01: R`$|AB|=|A||B|$ 只对方阵成立；$|kA|=k^n|A|$（$n$ 阶），$|A+B|\neq|A|+|B|$。`,
+    la04: R`特征向量必须非零；求 $(\lambda E-A)x=0$ 得的是基础解系（特征向量），重根要找齐对应个数的线性无关特征向量。`,
+    la17: R`基础解系含 $n-r(A)$ 个向量而非 $r(A)$ 个，勿把自由变量个数与秩混淆。`,
+    // —— 综合 ——
+    ext13: R`偏导存在 $\not\Rightarrow$ 可微，可微 $\not\Rightarrow$ 偏导连续；判断可微必须验证全增量减线性近似是 $o(\rho)$。`,
+  };
+
+  return { id: 'math3', name: '考研数学三', short: '数三', icon: '📐', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, DEPTH: DEPTH, PITFALL: PITFALL, ORDER: ['limit', 'infinitesimal', 'derivative', 'drule', 'taylor', 'mvt', 'integral', 'multi', 'doubleint', 'series', 'ode', 'trig', 'inequality', 'linalg'] };
 })();

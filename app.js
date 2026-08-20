@@ -5,7 +5,18 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.2.1';
+  const VERSION = '1.2.3';
+
+  // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
+  const CHANGELOG = [
+    { v: '1.2.3', date: '2026-08', items: ['考研倒计时徽章移至界面左上角（替代品牌字标），每日弹窗提示语精简', '数三 / 微观 / 统计：为尚未对应真题的卡片补充真实考研真题例题（本轮新增 155 张卡的真题来源标注：数三 +28、微观 +50、统计 +77）'] },
+    { v: '1.2.2', date: '2026-08', items: ['时政分类改为仅收录 2026 年时政大事（两会·十五五纲要 / 建党 105 周年 / 中央经济工作会议 / 中央一号文件 / 中德联合声明 / 夏季达沃斯等）', '设置页新增「📜 更新日志」，可查看每个版本的修改内容'] },
+    { v: '1.2.1', date: '2026-08', items: ['应用更名 Athena，美术全面换用新品牌视觉规范（新图标 / 新色板 / 深色主题）', '考研倒计时：上边栏常驻徽章 + 每日首次打开弹窗，考试日期可在设置中修改', '每日新卡数量上限（默认 10，设置可调），新卡不再一次性全部塞入学习队列', '新增「🗝️ 助记」行：政治 46 条 / 数三 9 条 / 统计 5 条背诵口诀', '新增时政分类（v1.2.2 起改为仅 2026 年时政大事）'] },
+    { v: '1.2.0', date: '2026-08', items: ['新增政治学科：马原（哲学/政经/科社）、毛中特、史纲、思修·法治共 180 张背诵卡 + 8 张分析题答题套路卡', 'UI 按背诵类学科适配（搜索/自测/考查方式文案），政治专属红色主题'] },
+    { v: '1.1.3', date: '2026-08', items: ['三科各新增 3 张解题套路卡（共 9 张）', '热力图可点开查看每日复习明细，导出/导入保留统计日志'] },
+    { v: '1.1.0', date: '2026-07', items: ['思维导图支持缩放（按钮 / Ctrl+滚轮）', '新增「统计」视图：学习日历热力图 / 平均掌握度趋势 / 各分类掌握度进度条', '模板卡各配 1 道真题'] },
+    { v: '1.0.0', date: '2026-06', items: ['初始版本：数三公式记忆，含学习（SM-2 间隔重复 + 交错练习）/ 浏览 / 导图 / 自测 / 统计 / 记忆原理 / 设置', 'PWA 离线可用，支持导出 / 导入进度备份'] }
+  ];
 
   // ---------------- 学科管理（多学科数据注册表） ----------------
   const SUBJECT_KEY = 'formula_app_subject';
@@ -396,9 +407,9 @@
       card.appendChild(days);
     }
     card.appendChild(el('p', 'muted', '考试日期：' + fmtDate(exam) + (DB.settings && DB.settings.examDate ? '（手动设置）' : '（默认每年 12 月 20 日）')));
-    card.appendChild(el('p', 'countdown-tip', d > 0 && d <= 30
-      ? '已进入冲刺阶段：稳住节奏，坚持每天复习，优先攻克高频与薄弱知识点。'
-      : '把考点拆成卡片，抽一张、背一张、对一张。'));
+    if (d > 0 && d <= 30) {
+      card.appendChild(el('p', 'countdown-tip', '已进入冲刺阶段：稳住节奏，坚持每天复习，优先攻克高频与薄弱知识点。'));
+    }
     const ok = el('button', 'btn primary', '开始学习');
     ok.setAttribute('data-action', 'countdown-close');
     card.appendChild(ok);
@@ -1208,6 +1219,28 @@
     s3.appendChild(reset);
     wrap.appendChild(s3);
 
+    const s5 = el('div', 'setting-row changelog-row');
+    s5.appendChild(el('span', null, '📜 更新日志'));
+    const tog = el('button', 'btn small', '展开');
+    tog.setAttribute('data-action', 'togglog');
+    s5.appendChild(tog);
+    wrap.appendChild(s5);
+    wrap.appendChild(el('p', 'muted', '记录每个版本的修改内容，当前版本高亮。'));
+
+    const cl = el('div', 'changelog-body hidden');
+    CHANGELOG.forEach(function (entry) {
+      const row = el('div', 'changelog-item' + (entry.v === VERSION ? ' current' : ''));
+      row.appendChild(el('span', 'changelog-badge', 'v' + entry.v));
+      const right = el('div', 'changelog-main');
+      right.appendChild(el('span', 'changelog-date', entry.date));
+      const list = el('ul', 'changelog-items');
+      entry.items.forEach(function (it) { list.appendChild(el('li', null, it)); });
+      right.appendChild(list);
+      row.appendChild(right);
+      cl.appendChild(row);
+    });
+    wrap.appendChild(cl);
+
     app.appendChild(wrap);
   }
 
@@ -1767,6 +1800,14 @@
           toast('已重置');
         }
         break;
+      case 'togglog': {
+        const body = document.querySelector('.changelog-body');
+        if (!body) break;
+        const hidden = body.classList.toggle('hidden');
+        const btn = document.querySelector('[data-action="togglog"]');
+        if (btn) btn.textContent = hidden ? '展开' : '收起';
+        break;
+      }
     }
   }
 

@@ -1352,5 +1352,14 @@ H 股：$10.33\pm2.131\times\dfrac{8.36}{\sqrt{16}}=10.33\pm4.45$，即 $(5.88,\
     test12: R`配对样本与两独立样本检验别混用：配对用差值的 $t$ 检验（$d_i=X_i-Y_i$），两独立等方差才合并方差 $S_p^2$。`,
   };
 
-  return { id: 'stats', name: '统计学', short: '统计', icon: '📊', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, DEPTH: DEPTH, PITFALL: PITFALL, ORDER: ['prob_basic', 'dist', 'multidim', 'numchar', 'limit', 'sampling', 'estimation', 'testing', 'regress'] };
+  // ============ 助记（MNEM，可选） ============
+  const MNEM = {
+    pb04: R`条件概率分母是「条件事件」的概率：$P(B|A)$ 分母为 $P(A)$——「谁在竖线后面，谁做分母」。`,
+    pb06: R`全概率=「先分完备组，再按组加权求和」：$P(B)=\sum P(A_i)P(B|A_i)$。`,
+    pb07: R`贝叶斯=「先验×似然 / 全概率」：分子是其中一条路，分母是全部路加起来。`,
+    rv06: R`二项分布记「$C_n^k$ 选 k 次成功，$p^k$ 成功、$(1-p)^{n-k}$ 失败」。`,
+    rv11: R`正态密度记「$\frac{1}{\sqrt{2\pi}\sigma}$ 壳、$-\frac{(x-\mu)^2}{2\sigma^2}$ 芯」。`,
+  };
+
+  return { id: 'stats', name: '统计学', short: '统计', icon: '📊', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, DEPTH: DEPTH, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['prob_basic', 'dist', 'multidim', 'numchar', 'limit', 'sampling', 'estimation', 'testing', 'regress'] };
 })();

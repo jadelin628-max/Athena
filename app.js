@@ -5,13 +5,13 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.2.0';
+  const VERSION = '1.2.1';
 
   // ---------------- 学科管理（多学科数据注册表） ----------------
   const SUBJECT_KEY = 'formula_app_subject';
   let currentSubjectId = null;
   let CATS = null, DATA = null, META = null;
-  let EXAMPLES = {}, REL = {}, DEPTH = {}, PITFALL = {};
+  let EXAMPLES = {}, REL = {}, DEPTH = {}, PITFALL = {}, MNEM = {};
 
   function subjectList() { return window.SUBJECTS || {}; }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配
@@ -31,6 +31,7 @@
     REL = subj.REL || {};
     DEPTH = subj.DEPTH || {};
     PITFALL = subj.PITFALL || {};
+    MNEM = subj.MNEM || {};
     try { localStorage.setItem(SUBJECT_KEY, subj.id); } catch (e) {}
     document.title = subj.name;
     const b = document.getElementById('brandText');
@@ -242,6 +243,9 @@
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
     }
+    if (payload.settings && typeof payload.settings.examDate === 'string') {
+      fresh.settings.examDate = payload.settings.examDate;
+    }
     if (payload.log && payload.log.checkins && typeof payload.log.checkins === 'object') {
       fresh.log.checkins = {};
       Object.keys(payload.log.checkins).forEach(function (k) { fresh.log.checkins[k] = true; });
@@ -339,6 +343,69 @@
     return (DB.log.daily && DB.log.daily[todayStr()]) || 0;
   }
 
+  // ---------------- 考研倒计时 ----------------
+  const EXAM_AUTO_MONTH = 11, EXAM_AUTO_DAY = 20; // 默认按每年 12 月 20 日（初试通常在 12 月下旬）
+  function examDateObj() {
+    const s = (DB && DB.settings && DB.settings.examDate) || '';
+    if (s) {
+      const d = new Date(s + 'T00:00:00');
+      if (!isNaN(d.getTime())) return d;
+    }
+    const now = new Date();
+    let d = new Date(now.getFullYear(), EXAM_AUTO_MONTH, EXAM_AUTO_DAY);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (d < today) d = new Date(now.getFullYear() + 1, EXAM_AUTO_MONTH, EXAM_AUTO_DAY);
+    return d;
+  }
+  function countdownDays() {
+    const exam = examDateObj();
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.max(0, Math.round((exam - today) / 86400000));
+  }
+  function updateCountdown() {
+    const badge = document.getElementById('countdownBadge');
+    if (!badge || !DB) return;
+    const d = countdownDays();
+    badge.textContent = d === 0 ? '🎯 今天考研' : '📅 距考研 ' + d + ' 天';
+    badge.title = '考试日期：' + fmtDate(examDateObj()) + (DB.settings && DB.settings.examDate ? '（手动设置，可在设置中修改）' : '（默认每年 12 月 20 日，可在设置中修改）');
+    badge.classList.toggle('urgent', d > 0 && d <= 30);
+  }
+  const COUNTDOWN_SEEN_KEY = 'athena_countdown_seen';
+  function maybeShowCountdownPopup() {
+    try {
+      if (localStorage.getItem(COUNTDOWN_SEEN_KEY) === todayStr()) return;
+      localStorage.setItem(COUNTDOWN_SEEN_KEY, todayStr());
+    } catch (e) {}
+    showCountdownPopup();
+  }
+  function showCountdownPopup() {
+    const d = countdownDays();
+    const exam = examDateObj();
+    const modal = el('div', 'countdown-modal');
+    const backdrop = el('div', 'countdown-backdrop');
+    backdrop.setAttribute('data-action', 'countdown-close');
+    modal.appendChild(backdrop);
+    const card = el('div', 'countdown-card');
+    card.appendChild(el('div', 'countdown-hero', '📚'));
+    card.appendChild(el('div', 'countdown-title', d === 0 ? '今天就是考研日！' : '距离考研还有'));
+    if (d > 0) {
+      const days = el('div', 'countdown-days');
+      days.appendChild(el('span', 'countdown-num', String(d)));
+      days.appendChild(el('span', 'countdown-unit', '天'));
+      card.appendChild(days);
+    }
+    card.appendChild(el('p', 'muted', '考试日期：' + fmtDate(exam) + (DB.settings && DB.settings.examDate ? '（手动设置）' : '（默认每年 12 月 20 日）')));
+    card.appendChild(el('p', 'countdown-tip', d > 0 && d <= 30
+      ? '已进入冲刺阶段：稳住节奏，坚持每天复习，优先攻克高频与薄弱知识点。'
+      : '把考点拆成卡片，抽一张、背一张、对一张。'));
+    const ok = el('button', 'btn primary', '开始学习');
+    ok.setAttribute('data-action', 'countdown-close');
+    card.appendChild(ok);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
   // ---------------- 统计与掌握度 ----------------
   function initialStrength(c) {
     if (c.state === 'new') return 0;
@@ -367,6 +434,7 @@
 
   function metaOf(id) { return (META && META[id]) || [3, '综合计算与应用']; }
   function pitfallOf(id) { return (PITFALL && PITFALL[id]) || ''; }
+  function mnemOf(id) { return (MNEM && MNEM[id]) || ''; }
   function exampleOf(id) { return (EXAMPLES && EXAMPLES[id]) || null; }
   function examplesOf(id) { const ex = EXAMPLES && EXAMPLES[id]; if (!ex) return []; return Array.isArray(ex) ? ex : [ex]; }
   function relOf(id) { return (REL && REL[id]) || []; }
@@ -486,10 +554,11 @@
       b.classList.toggle('active', b.getAttribute('data-arg') === currentView);
     });
     const vf = el('div', 'app-version');
-    vf.textContent = '版本 v' + VERSION;
+    vf.textContent = 'Athena · 版本 v' + VERSION;
     app.appendChild(vf);
     updateNavBadge();
     updateBrand();
+    updateCountdown();
     snapshotMastery();
   }
 
@@ -524,6 +593,29 @@
     return out;
   }
 
+  // 每日新卡配额（A1）：记录「今天已引入多少张新卡」，避免一轮塞进全部新卡
+  function newIntroducedToday() {
+    try {
+      const l = (DB.log && DB.log.newToday) || {};
+      const t = todayStr();
+      return (l[t] && typeof l[t].n === 'number') ? l[t].n : 0;
+    } catch (e) { return 0; }
+  }
+  function markNewIntroduced(n) {
+    try {
+      if (!DB.log) DB.log = {};
+      if (!DB.log.newToday) DB.log.newToday = {};
+      const t = todayStr();
+      const l = DB.log.newToday[t] || { n: 0 };
+      l.n += n;
+      DB.log.newToday[t] = l;
+      saveDB();
+    } catch (e) {}
+  }
+  function dailyNewLimit() {
+    return Math.max(1, Math.min(99, (DB.settings && typeof DB.settings.dailyNew === 'number') ? DB.settings.dailyNew : 10));
+  }
+
   function buildSession() {
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
@@ -536,8 +628,16 @@
       if (sb !== sa) return sb - sa;
       return card(a).due - card(b).due;
     });
-    const rest = interleave(all.filter(function (id) { return due.indexOf(id) === -1; }));
-    deck = due.concat(rest);
+    // 新卡：今天最多引入 dailyNew 张，超出部分顺延到明天
+    const fresh = interleave(all.filter(function (id) { return card(id).state === 'new'; }));
+    const quota = Math.max(0, dailyNewLimit() - newIntroducedToday());
+    const chosenNew = fresh.slice(0, quota);
+    if (chosenNew.length) markNewIntroduced(chosenNew.length);
+    const freshLater = fresh.slice(quota);
+    const rest = interleave(all.filter(function (id) {
+      return due.indexOf(id) === -1 && chosenNew.indexOf(id) === -1 && freshLater.indexOf(id) === -1;
+    }));
+    deck = due.concat(chosenNew, rest);
     pos = 0;
     frontier = 0;
     pendingAdvance = false;
@@ -568,7 +668,15 @@
     if (done) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
-      wrap.appendChild(el('p', 'muted', '已完成 ' + deck.length + ' 个知识点的一轮学习。'));
+      const remainNew = DATA.filter(function (f) { return card(f.id).state === 'new'; }).length;
+      if (deck.length === 0) {
+        wrap.appendChild(el('p', 'muted', '今日到期复习已清空，新卡额度已用完——明天再来解锁新知识点。'));
+      } else {
+        wrap.appendChild(el('p', 'muted', '已完成 ' + deck.length + ' 个知识点的一轮学习。'));
+        if (remainNew > 0) {
+          wrap.appendChild(el('p', 'muted', '还有 ' + remainNew + ' 张新知识点将在明天开放（每日上限 ' + dailyNewLimit() + ' 张）。'));
+        }
+      }
       const again = el('button', 'btn primary', '再来一轮');
       again.setAttribute('data-action', 'restart');
       wrap.appendChild(again);
@@ -676,6 +784,14 @@
     useBox.appendChild(el('span', null, metaOf(id)[1]));
     cardEl.appendChild(useBox);
 
+    const mn = mnemOf(id);
+    if (mn) {
+      const mb = el('div', 'mnem-box' + (reviewed ? '' : ' hidden'));
+      mb.appendChild(el('span', 'mnem-label', '🗝️ 助记：'));
+      mb.appendChild(texEl('span', null, mn));
+      cardEl.appendChild(mb);
+    }
+
     const pf = pitfallOf(id);
     if (pf) {
       const pfb = el('div', 'pitfall-box' + (reviewed ? '' : ' hidden'));
@@ -758,6 +874,8 @@
     if (nb) nb.classList.remove('hidden');
     const pb = app.querySelector('.pitfall-box');
     if (pb) pb.classList.remove('hidden');
+    const mb = app.querySelector('.mnem-box');
+    if (mb) mb.classList.remove('hidden');
     app.querySelector('.controls').classList.add('hidden');
     app.querySelector('.rating').classList.remove('hidden');
   }
@@ -899,6 +1017,13 @@
       ub.appendChild(el('span', null, metaOf(f.id)[1]));
       a.appendChild(ub);
       body.appendChild(a);
+      const mn = mnemOf(f.id);
+      if (mn) {
+        const mb = el('div', 'mnem-box');
+        mb.appendChild(el('span', 'mnem-label', '🗝️ 助记：'));
+        mb.appendChild(texEl('span', null, mn));
+        body.appendChild(mb);
+      }
       const pf = pitfallOf(f.id);
       if (pf) {
         const pfb = el('div', 'pitfall-box');
@@ -1032,6 +1157,39 @@
     const app = document.getElementById('app');
     const wrap = el('div', 'settings-wrap');
 
+    const s1 = el('div', 'setting-row');
+    s1.appendChild(el('span', null, '每日新卡数量'));
+    const num = el('input', 'num');
+    num.type = 'number'; num.min = 1; num.max = 99;
+    num.value = dailyNewLimit();
+    num.addEventListener('change', function () {
+      const v = Math.max(1, Math.min(99, Math.round(parseInt(num.value, 10) || 10)));
+      num.value = v;
+      DB.settings.dailyNew = v;
+      saveDB();
+      toast('每日新卡数量已设为 ' + v);
+    });
+    s1.appendChild(num);
+    wrap.appendChild(s1);
+    wrap.appendChild(el('p', 'muted', '每天最多引入的新知识点数量（默认 10）。当日额度用完后，其余新卡顺延到次日开放，避免新卡一次性堆积。'));
+
+    const s4 = el('div', 'setting-row');
+    s4.appendChild(el('span', null, '考研日期'));
+    const examInput = el('input', 'num');
+    examInput.type = 'date';
+    examInput.style.width = '158px';
+    examInput.value = (DB.settings && DB.settings.examDate) || '';
+    examInput.title = '留空则自动按每年 12 月 20 日（考研初试通常在 12 月下旬）';
+    examInput.addEventListener('change', function () {
+      DB.settings.examDate = examInput.value || '';
+      saveDB();
+      updateCountdown();
+      toast(examInput.value ? '考研日期已设为 ' + examInput.value : '已恢复自动（每年 12 月 20 日）');
+    });
+    s4.appendChild(examInput);
+    wrap.appendChild(s4);
+    wrap.appendChild(el('p', 'muted', '用于顶部倒计时与每日首启弹窗。留空 = 自动取最近一个 12 月下旬的考研初试日。'));
+
     const s2 = el('div', 'setting-row');
     s2.appendChild(el('span', null, '备份 / 迁移进度'));
     const exp = el('button', 'btn', '导出 JSON');
@@ -1139,8 +1297,8 @@
         const y = H - pad - (mlog[k] - mn) / rg * (H - 2 * pad);
         return [x, y];
       });
-      svg.appendChild(svgEl('path', { d: 'M ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L '), fill: 'none', stroke: '#4f6ef7', 'stroke-width': '2' }));
-      pts.forEach(function (p) { svg.appendChild(svgEl('circle', { cx: p[0], cy: p[1], r: '2.5', fill: '#4f6ef7' })); });
+      svg.appendChild(svgEl('path', { d: 'M ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L '), fill: 'none', stroke: '#378ADD', 'stroke-width': '2' }));
+      pts.forEach(function (p) { svg.appendChild(svgEl('circle', { cx: p[0], cy: p[1], r: '2.5', fill: '#378ADD' })); });
       tc.appendChild(svg);
       tc.appendChild(el('p', 'muted', '共 ' + keys.length + ' 天记录，最新平均掌握度 ' + vals[vals.length - 1] + '%。'));
     }
@@ -1264,13 +1422,13 @@
     return svgEl('path', { d: 'M ' + sx + ' ' + sy + ' C ' + midX + ' ' + sy + ', ' + midX + ' ' + ey + ', ' + ex + ' ' + ey, fill: 'none', stroke: color, 'stroke-width': '1.5', 'stroke-linecap': 'round' });
   }
   function masteryColor(pct) {
-    if (pct < 1) return '#cbd2e0';
-    if (pct < 25) return '#ffc1ad';
-    if (pct < 45) return '#ffd29d';
-    if (pct < 65) return '#ffe08a';
-    if (pct < 85) return '#a8e6cf';
-    if (pct < 95) return '#5fc49a';
-    return '#2f9e6e';
+    if (pct < 1) return '#EDEBE4';
+    if (pct < 25) return '#D3D1C7';
+    if (pct < 45) return '#B5D4F4';
+    if (pct < 65) return '#76AFE8';
+    if (pct < 85) return '#378ADD';
+    if (pct < 95) return '#2A75C0';
+    return '#D4537E'; // 樱粉=已记牢（与品牌对勾同色）
   }
   function textWidth(text, fontSize) {
     fontSize = +fontSize || 0;
@@ -1300,7 +1458,7 @@
     const w = Math.max(fontSize * 2.2, m.w + padX * 2);
     const h = Math.max(fontSize * 1.75, m.h + padY * 2);
     const p = document.createElement('div');
-    p.style.cssText = 'position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.25;box-sizing:border-box;left:' + x + 'px;top:' + y + 'px;width:' + Math.ceil(w) + 'px;height:' + Math.ceil(h) + 'px;background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.92), ' + fill + ' 55%, ' + fill + ');border:' + (ring ? '3px solid #16a065' : '1.3px solid #d5dbea') + ';color:' + color + ';font-size:' + fontSize + 'px;font-weight:600;border-radius:' + Math.ceil(h / 2) + 'px;cursor:pointer;';
+    p.style.cssText = 'position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.25;box-sizing:border-box;left:' + x + 'px;top:' + y + 'px;width:' + Math.ceil(w) + 'px;height:' + Math.ceil(h) + 'px;background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.92), ' + fill + ' 55%, ' + fill + ');border:' + (ring ? '3px solid #378ADD' : '1.3px solid #E4E1D8') + ';color:' + color + ';font-size:' + fontSize + 'px;font-weight:600;border-radius:' + Math.ceil(h / 2) + 'px;cursor:pointer;';
     if (tip) p.title = plainText(tip);
     renderTex(p, text);
     return { el: p, w: w, h: h };
@@ -1352,7 +1510,7 @@
     zoomWrap.appendChild(canvas);
     scroll.appendChild(zoomWrap);
 
-    const root = mapPillHtml(90, H / 2, subj ? subj.name : '', '#4f6ef7', '#fff', false, subj ? subj.name : '', '18');
+    const root = mapPillHtml(90, H / 2, subj ? subj.name : '', '#D4537E', '#fff', false, subj ? subj.name : '', '18');
     canvas.appendChild(root.el);
 
     const catX = 330;
@@ -1365,7 +1523,7 @@
       const txt = avg >= 85 ? '#fff' : '#1c2333';
       const p = mapPillHtml(catX, y, CATS[k], fill, txt, (k === mapCat), CATS[k] + ' · 平均掌握 ' + avg + '%', '15');
       catMeta[k] = { x: catX, y: y, w: p.w, h: p.h };
-      svg.appendChild(mapEdge(90, H / 2, root.w, root.h, catX, y, p.w, p.h, '#cdd3e4'));
+      svg.appendChild(mapEdge(90, H / 2, root.w, root.h, catX, y, p.w, p.h, '#DCD9D0'));
       p.el.addEventListener('click', function () { mapCat = k; mapSel = null; renderApp(); });
       canvas.appendChild(p.el);
     });
@@ -1377,10 +1535,10 @@
       const y = cardStartY + i * rowH;
       const sel = (f.id === mapSel);
       const mp = mastery(f.id).pct;
-      const fill = sel ? '#16a065' : masteryColor(mp);
+      const fill = sel ? '#D4537E' : masteryColor(mp);
       const txt = (sel || mp >= 85) ? '#fff' : '#1c2333';
       const p = mapPillHtml(cardX, y, f.title, fill, txt, sel, f.title + ' · 掌握 ' + mp + '%', '13');
-      svg.appendChild(mapEdge(base.x, base.y, base.w, base.h, cardX, y, p.w, p.h, '#cdd3e4'));
+      svg.appendChild(mapEdge(base.x, base.y, base.w, base.h, cardX, y, p.w, p.h, '#DCD9D0'));
       p.el.addEventListener('click', function () { mapSel = f.id; renderApp(); });
       canvas.appendChild(p.el);
     });
@@ -1409,6 +1567,13 @@
     const fa = el('div', 'map-back'); renderTex(fa, f.back); cont.appendChild(fa);
     panel.appendChild(cont);
     panel.appendChild(el('p', 'muted', (subjKind() === 'qa' ? '📌 考查方式：' : '📌 常考题型：') + metaOf(f.id)[1]));
+    const mn = mnemOf(f.id);
+    if (mn) {
+      const mb = el('div', 'mnem-box');
+      mb.appendChild(el('span', 'mnem-label', '🗝️ 助记：'));
+      mb.appendChild(texEl('span', null, mn));
+      panel.appendChild(mb);
+    }
     const pf = pitfallOf(f.id);
     if (pf) {
       const pfb = el('div', 'pitfall-box');
@@ -1476,6 +1641,11 @@
         mapSel = null;
         renderApp();
         break;
+      case 'countdown-close': {
+        const m = document.querySelector('.countdown-modal');
+        if (m) m.remove();
+        break;
+      }
       case 'mapzoom':
         if (arg === 'in') mapScale = Math.min(2.5, mapScale + 0.2);
         else if (arg === 'out') mapScale = Math.max(0.4, mapScale - 0.2);
@@ -1726,6 +1896,7 @@
       if (!loadSession()) buildSession(0);
       currentView = 'learn';
       renderApp();
+      setTimeout(maybeShowCountdownPopup, 350);
     });
   }
 

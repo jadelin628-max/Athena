@@ -1709,5 +1709,18 @@ window.SUBJECTS.math3 = (function () {
     ext13: R`偏导存在 $\not\Rightarrow$ 可微，可微 $\not\Rightarrow$ 偏导连续；判断可微必须验证全增量减线性近似是 $o(\rho)$。`,
   };
 
-  return { id: 'math3', name: '考研数学三', short: '数三', icon: '📐', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, DEPTH: DEPTH, PITFALL: PITFALL, ORDER: ['limit', 'infinitesimal', 'derivative', 'drule', 'taylor', 'mvt', 'integral', 'multi', 'doubleint', 'series', 'ode', 'trig', 'inequality', 'linalg'] };
+  // ============ 助记（MNEM，可选） ============
+  const MNEM = {
+    lim08: R`$(1+x)^{\alpha}-1\sim\alpha x$：把「1 的幂」看成「加 x 再开方/乘方」，指数 $\alpha$ 直接提到前面。`,
+    dr03: R`除法法则口决：「上导下不导，减上不导下导，除以分母平方」——分子是交叉相减。`,
+    tay01: R`$e^{x}$ 展开：「一阶一阶来，系数是阶乘倒数」：$1+x+\frac{x^2}{2!}+\frac{x^3}{3!}+\cdots$。`,
+    trig01: R`$\sin^2+\cos^2=1$ 全家桶：同除 $\cos^2$ 得 $1+\tan^2=\sec^2$，同除 $\sin^2$ 得 $1+\cot^2=\csc^2$。`,
+    int23: R`牛-莱公式：先找原函数，再「上限代入减下限代入」——$F(b)-F(a)$。`,
+    int24: R`分部积分「反对幂指三」：按此顺序选 $u$（反三角、对数、幂、指数、三角），剩下的是 $dv$。`,
+    int25: R`变限积分求导：上限代入乘以上限导数，减下限代入乘以下限导数——「上导减下导」。`,
+    ext10: R`华里士（点火）公式：$\int_0^{\pi/2}\sin^n x\,dx$，$n$ 奇=$\frac{(n-1)!!}{n!!}$，$n$ 偶再乘 $\frac{\pi}{2}$。`,
+    la12: R`特征值三性质：迹=特征值之和、行列式=特征值之积、$A$ 可逆则特征值全非零。`,
+  };
+
+  return { id: 'math3', name: '考研数学三', short: '数三', icon: '📐', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, DEPTH: DEPTH, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['limit', 'infinitesimal', 'derivative', 'drule', 'taylor', 'mvt', 'integral', 'multi', 'doubleint', 'series', 'ode', 'trig', 'inequality', 'linalg'] };
 })();

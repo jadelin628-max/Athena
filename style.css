@@ -78,10 +78,8 @@ body[data-subject="politics"] header {
 }
 .brand {
   font-weight: 800; font-size: 18px; letter-spacing: .2px;
-  display: flex; align-items: baseline; gap: 6px; white-space: nowrap;
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
 }
-.brand-wordmark { font-weight: 600; font-size: 17px; letter-spacing: .6px; color: var(--text); }
-.brand-wordmark b { color: var(--accent); font-weight: 800; }
 .countdown-badge {
   display: inline-flex; align-items: center; gap: 4px;
   background: linear-gradient(135deg, #F4C0D1, #F0AEC4); color: #72243E;
@@ -109,6 +107,35 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   max-width: 118px; transition: border-color .15s;
 }
 .subject-select:focus { outline: none; border-color: var(--accent); }
+
+/* ☰ 抽屉导航（移动端） */
+#menuToggle { display: none; }
+.drawer-backdrop {
+  position: fixed; inset: 0; z-index: 240;
+  background: rgba(44, 44, 42, .45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 250;
+  width: min(280px, 82vw);
+  background: var(--card); box-shadow: var(--shadow);
+  transform: translateX(-105%); transition: transform .28s ease;
+  display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+  padding: calc(14px + env(safe-area-inset-top)) 12px 16px;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.drawer.open { transform: none; }
+.drawer-head { font-weight: 800; font-size: 16px; padding: 6px 14px 12px; color: var(--text); }
+.drawer-item {
+  width: 100%; text-align: left; justify-content: flex-start; gap: 10px;
+  padding: 13px 14px; font-size: 15px; border-radius: 12px;
+}
+.drawer-item .nav-badge { margin-left: auto; }
+.drawer-foot { margin-top: auto; font-size: 12px; color: var(--muted); padding: 14px 14px 2px; }
+@media (min-width: 521px) {
+  #menuToggle, .drawer, .drawer-backdrop { display: none !important; }
+}
 
 /* 主容器 */
 #app { max-width: 760px; margin: 0 auto; padding: 20px max(16px, env(safe-area-inset-right)) calc(70px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
@@ -228,6 +255,27 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .setting-row { display: flex; align-items: center; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
 .num { width: 80px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
 .danger-row { border-top: 1px solid var(--border); padding-top: 16px; }
+
+/* 更新日志 */
+.changelog-row { border-top: 1px solid var(--border); padding-top: 16px; }
+.changelog-body { margin-top: 6px; }
+.changelog-item {
+  display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border);
+}
+.changelog-item:last-child { border-bottom: none; }
+.changelog-item.current {
+  background: var(--accent-weak); border-radius: 11px; padding: 11px 13px; border-bottom: none; margin-top: 2px;
+}
+.changelog-badge {
+  flex: none; align-self: flex-start; font-weight: 700; font-size: 12px; line-height: 1.5;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
+  padding: 3px 10px; border-radius: 999px; white-space: nowrap; margin-top: 1px;
+}
+.changelog-item.current .changelog-badge { background: linear-gradient(135deg, #B5D4F4, #378ADD); }
+.changelog-main { flex: 1; min-width: 0; }
+.changelog-date { display: inline-block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+.changelog-items { margin: 0; padding-left: 18px; }
+.changelog-items li { font-size: 13px; line-height: 1.65; margin: 2px 0; }
 
 /* KaTeX 适配 */
 .kx-block { margin: 8px 0; overflow-x: auto; }
@@ -399,6 +447,14 @@ body.immersive #immersiveExit { display: block; }
   .rating { grid-template-columns: repeat(2, 1fr); }
   .brand { font-size: 16px; }
   header { padding: calc(10px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); }
+  /* 移动端顶栏瘦身：7 个导航按钮收进 ☰ 抽屉，顶栏保持单行 */
+  header nav { flex-wrap: nowrap; overflow-x: auto; }
+  header nav > .nav-btn { display: none; }
+  #menuToggle { display: inline-flex; flex: none; }
+  .subject-select { max-width: 86px; font-size: 13px; padding: 7px 7px; }
+  .countdown-badge { font-size: 11px; padding: 4px 9px; }
+  .brand { gap: 6px; }
+  #brandText { font-size: 13px; }
   .nav-btn { padding: 9px 10px; font-size: 13px; min-height: 40px; }
   .btn { min-height: 44px; padding: 11px 15px; }
   .chip { min-height: 36px; padding: 7px 12px; }

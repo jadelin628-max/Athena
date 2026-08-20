@@ -5,10 +5,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.2.3';
+  const VERSION = '1.2.4';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.2.4', date: '2026-08', items: ['移动端顶栏瘦身：7 个导航入口收进「☰」抽屉菜单，顶栏保持单行（倒计时徽标与学科掌握度保留）', '修复：完成今日任务后「再来一轮」无反应——每日额度内已引入但未学完的新卡可再次进入队列，且无内容可学时不再显示无效按钮'] },
     { v: '1.2.3', date: '2026-08', items: ['考研倒计时徽章移至界面左上角（替代品牌字标），每日弹窗提示语精简', '数三 / 微观 / 统计：为尚未对应真题的卡片补充真实考研真题例题（本轮新增 155 张卡的真题来源标注：数三 +28、微观 +50、统计 +77）'] },
     { v: '1.2.2', date: '2026-08', items: ['时政分类改为仅收录 2026 年时政大事（两会·十五五纲要 / 建党 105 周年 / 中央经济工作会议 / 中央一号文件 / 中德联合声明 / 夏季达沃斯等）', '设置页新增「📜 更新日志」，可查看每个版本的修改内容'] },
     { v: '1.2.1', date: '2026-08', items: ['应用更名 Athena，美术全面换用新品牌视觉规范（新图标 / 新色板 / 深色主题）', '考研倒计时：上边栏常驻徽章 + 每日首次打开弹窗，考试日期可在设置中修改', '每日新卡数量上限（默认 10，设置可调），新卡不再一次性全部塞入学习队列', '新增「🗝️ 助记」行：政治 46 条 / 数三 9 条 / 统计 5 条背诵口诀', '新增时政分类（v1.2.2 起改为仅 2026 年时政大事）'] },
@@ -66,14 +67,15 @@
   }
 
   function updateNavBadge() {
-    const btn = document.querySelector('nav .nav-btn[data-arg="learn"]');
-    if (!btn || !DB || !DATA) return;
+    if (!DB || !DATA) return;
     const due = stats().due;
-    let badge = btn.querySelector('.nav-badge');
-    if (due > 0) {
-      if (!badge) { badge = el('span', 'nav-badge'); badge.textContent = String(due); btn.appendChild(badge); }
-      else badge.textContent = String(due);
-    } else if (badge) { badge.remove(); }
+    document.querySelectorAll('.nav-btn[data-arg="learn"]').forEach(function (btn) {
+      let badge = btn.querySelector('.nav-badge');
+      if (due > 0) {
+        if (!badge) { badge = el('span', 'nav-badge'); badge.textContent = String(due); btn.appendChild(badge); }
+        else badge.textContent = String(due);
+      } else if (badge) { badge.remove(); }
+    });
   }
 
   // ---------------- KaTeX 加载（多 CDN 自动回退） ----------------
@@ -604,7 +606,7 @@
     return out;
   }
 
-  // 每日新卡配额（A1）：记录「今天已引入多少张新卡」，避免一轮塞进全部新卡
+  // 每日新卡配额（A1）：记录「今天已引入多少张新卡（含卡 id）」，避免一轮塞进全部新卡
   function newIntroducedToday() {
     try {
       const l = (DB.log && DB.log.newToday) || {};
@@ -612,13 +614,23 @@
       return (l[t] && typeof l[t].n === 'number') ? l[t].n : 0;
     } catch (e) { return 0; }
   }
-  function markNewIntroduced(n) {
+  // 今日已计入额度、但可能仍未评分（会话中断）的新卡 id —— 「再来一轮」可再次提供它们，不额外占额度
+  function newIntroducedIdsToday() {
+    try {
+      const l = (DB.log && DB.log.newToday) || {};
+      const t = todayStr();
+      const e = l[t];
+      return (e && Array.isArray(e.ids)) ? e.ids : [];
+    } catch (e) { return []; }
+  }
+  function markNewIntroduced(ids) {
     try {
       if (!DB.log) DB.log = {};
       if (!DB.log.newToday) DB.log.newToday = {};
       const t = todayStr();
-      const l = DB.log.newToday[t] || { n: 0 };
-      l.n += n;
+      const l = DB.log.newToday[t] || { n: 0, ids: [] };
+      l.n += ids.length;
+      l.ids = (l.ids || []).concat(ids);
       DB.log.newToday[t] = l;
       saveDB();
     } catch (e) {}
@@ -641,14 +653,17 @@
     });
     // 新卡：今天最多引入 dailyNew 张，超出部分顺延到明天
     const fresh = interleave(all.filter(function (id) { return card(id).state === 'new'; }));
+    // 今日额度内已引入但尚未评分（会话中断）的新卡：可再次提供，不再占用新额度
+    const paid = interleave(fresh.filter(function (id) { return newIntroducedIdsToday().indexOf(id) !== -1; }));
+    const unpaid = fresh.filter(function (id) { return paid.indexOf(id) === -1; });
     const quota = Math.max(0, dailyNewLimit() - newIntroducedToday());
-    const chosenNew = fresh.slice(0, quota);
-    if (chosenNew.length) markNewIntroduced(chosenNew.length);
-    const freshLater = fresh.slice(quota);
+    const unpaidChosen = unpaid.slice(0, quota);
+    if (unpaidChosen.length) markNewIntroduced(unpaidChosen);
+    const freshLater = unpaid.slice(quota);
     const rest = interleave(all.filter(function (id) {
-      return due.indexOf(id) === -1 && chosenNew.indexOf(id) === -1 && freshLater.indexOf(id) === -1;
+      return due.indexOf(id) === -1 && paid.indexOf(id) === -1 && unpaidChosen.indexOf(id) === -1 && freshLater.indexOf(id) === -1;
     }));
-    deck = due.concat(chosenNew, rest);
+    deck = due.concat(paid, unpaidChosen, rest);
     pos = 0;
     frontier = 0;
     pendingAdvance = false;
@@ -681,16 +696,20 @@
       wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
       const remainNew = DATA.filter(function (f) { return card(f.id).state === 'new'; }).length;
       if (deck.length === 0) {
-        wrap.appendChild(el('p', 'muted', '今日到期复习已清空，新卡额度已用完——明天再来解锁新知识点。'));
+        if (remainNew > 0) {
+          wrap.appendChild(el('p', 'muted', '今日新卡额度已用完，还有 ' + remainNew + ' 张新知识点将在明天开放（每日上限 ' + dailyNewLimit() + ' 张）。'));
+        } else {
+          wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，今日暂无到期复习内容，明天再来。'));
+        }
       } else {
         wrap.appendChild(el('p', 'muted', '已完成 ' + deck.length + ' 个知识点的一轮学习。'));
         if (remainNew > 0) {
           wrap.appendChild(el('p', 'muted', '还有 ' + remainNew + ' 张新知识点将在明天开放（每日上限 ' + dailyNewLimit() + ' 张）。'));
         }
+        const again = el('button', 'btn primary', '再来一轮');
+        again.setAttribute('data-action', 'restart');
+        wrap.appendChild(again);
       }
-      const again = el('button', 'btn primary', '再来一轮');
-      again.setAttribute('data-action', 'restart');
-      wrap.appendChild(again);
       app.appendChild(wrap);
       return;
     }
@@ -1667,8 +1686,12 @@
   function handleAction(action, arg) {
     switch (action) {
       case 'nav':
+        closeDrawer();
         currentView = arg;
         renderApp();
+        break;
+      case 'menuclose':
+        closeDrawer();
         break;
       case 'mapclose':
         mapSel = null;
@@ -1852,6 +1875,8 @@
   }, { passive: true });
   document.addEventListener('touchend', function (e) {
     if (currentView !== 'learn' || !touchStart) return;
+    const d = document.getElementById('drawer');
+    if (d && d.classList.contains('open')) { touchStart = null; return; } // 抽屉打开时不触发翻页
     const dx = e.changedTouches[0].clientX - touchStart.x;
     const dy = e.changedTouches[0].clientY - touchStart.y;
     const wasScroll = touchStart.scroll;
@@ -1879,8 +1904,31 @@
   if (itBtn) itBtn.addEventListener('click', function () { document.body.classList.toggle('immersive'); });
   const ieBtn = document.getElementById('immersiveExit');
   if (ieBtn) ieBtn.addEventListener('click', function () { document.body.classList.remove('immersive'); });
+
+  // ☰ 抽屉菜单（移动端导航）
+  function openDrawer() {
+    const d = document.getElementById('drawer');
+    const b = document.getElementById('drawerBackdrop');
+    if (d) d.classList.add('open');
+    if (b) b.classList.add('open');
+  }
+  function closeDrawer() {
+    const d = document.getElementById('drawer');
+    const b = document.getElementById('drawerBackdrop');
+    if (d) d.classList.remove('open');
+    if (b) b.classList.remove('open');
+  }
+  const menuBtn = document.getElementById('menuToggle');
+  if (menuBtn) {
+    menuBtn.addEventListener('click', function () {
+      const d = document.getElementById('drawer');
+      if (d && d.classList.contains('open')) closeDrawer();
+      else openDrawer();
+    });
+  }
+
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') document.body.classList.remove('immersive');
+    if (e.key === 'Escape') { document.body.classList.remove('immersive'); closeDrawer(); }
   });
 
   // 导图 Ctrl+滚轮缩放

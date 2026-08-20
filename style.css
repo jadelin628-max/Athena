@@ -69,6 +69,9 @@ body[data-subject="econ"] header {
 body[data-subject="stats"] header {
   background: linear-gradient(135deg, rgba(224,138,0,.20), rgba(229,72,77,.08)), color-mix(in srgb, var(--card) 80%, transparent);
 }
+body[data-subject="politics"] header {
+  background: linear-gradient(135deg, rgba(229,72,77,.22), rgba(255,138,60,.08)), color-mix(in srgb, var(--card) 80%, transparent);
+}
 .brand {
   font-weight: 800; font-size: 18px; letter-spacing: .2px;
   display: flex; align-items: baseline; gap: 6px; white-space: nowrap;
@@ -323,6 +326,10 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .heat-cell.l2 { background: #7fb3f5; }
 .heat-cell.l3 { background: #4f86e0; }
 .heat-cell.l4 { background: #2f66c0; }
+.heat-cell.clickable { cursor: pointer; }
+.heat-cell.sel { outline: 2px solid #4f6ef7; outline-offset: 1px; }
+.heat-detail-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.heat-detail-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 14px 16px; margin-bottom: 10px; }
 .cat-bar-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; }
 .cat-bar-name { flex: 0 0 110px; color: var(--text); }

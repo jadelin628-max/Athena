@@ -1,7 +1,7 @@
 {
-  "name": "考研公式记忆",
-  "short_name": "公式记忆",
-  "description": "基于主动回忆与间隔重复的考研数学三与微观经济学公式记忆工具",
+  "name": "考研知识点记忆",
+  "short_name": "知识记忆",
+  "description": "基于主动回忆与间隔重复的考研知识点记忆工具（数学三 / 微观经济学 / 统计学 / 思想政治）",
   "lang": "zh-CN",
   "start_url": "./index.html",
   "scope": "./",

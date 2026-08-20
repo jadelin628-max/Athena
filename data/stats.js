@@ -482,6 +482,15 @@ window.SUBJECTS.stats = (function () {
     F('ts06', 'regress', '回归与方差分析流程',
       R`方差分析与回归分析的标准流程？`,
       R`方差分析：① 提 $H_0$：各水平均值相等；② 平方和分解 $SST=SSA+SSE$；③ 算 $F=\dfrac{SSA/(k-1)}{SSE/(n-k)}$；④ 与 $F_\alpha(k-1,n-k)$ 比较下结论。回归：① 建模 $y=\alpha+\beta x+\varepsilon$；② OLS 估 $\hat\beta=\dfrac{\sum(x_i-\bar x)(y_i-\bar y)}{\sum(x_i-\bar x)^2}$、$\hat\alpha=\bar y-\hat\beta\bar x$；③ 显著性检验（系数 $t$ 检验、方程整体 $F$ 检验）；④ 拟合优度 $R^2$ 与预测区间。`),
+    F('ts07', 'dist', '常用分布识别与计算流程',
+      R`拿到分布题，如何识别常用分布并套用其性质？`,
+      R`① 离散型：$0\text{-}1$ 分布、二项 $B(n,p)$（$n$ 重伯努利）、泊松 $P(\lambda)$、几何 $G(p)$，先写出分布律。② 连续型：均匀 $U(a,b)$、指数 $E(\lambda)$、正态 $N(\mu,\sigma^2)$，先写出密度与定义域。③ 套用数字特征：二项 $E=np,\ D=npq$；泊松 $E=D=\lambda$；均匀 $E=\frac{a+b}2,\ D=\frac{(b-a)^2}{12}$；指数 $E=\frac1\lambda,\ D=\frac1{\lambda^2}$；正态 $E=\mu,\ D=\sigma^2$。④ 标准化：$X\sim N(\mu,\sigma^2)\Rightarrow\frac{X-\mu}{\sigma}\sim N(0,1)$。⑤ 特殊性质：指数无记忆性；正态线性变换仍正态；泊松可加性。`),
+    F('ts08', 'multidim', '二维变量（边缘/条件/独立）流程',
+      R`求二维随机变量的边缘、条件分布与独立性判定的流程？`,
+      R`① 求边缘：离散型行（列）相加，$P(X=x_i)=\sum_j p_{ij}$；连续型对另一变量积分，$f_X(x)=\int f(x,y)\,dy$。② 条件分布：$f(y|x)=\frac{f(x,y)}{f_X(x)}$（或 $P(Y=y_j|X=x_i)=\frac{p_{ij}}{p_{i\cdot}}$）。③ 独立性判定：$f(x,y)=f_X(x)f_Y(y)$ 对一切 $(x,y)$ 成立（或 $F(x,y)=F_X(x)F_Y(y)$）。④ 联合分布函数 $F(x,y)=\int_{-\infty}^{x}\int_{-\infty}^{y}f(u,v)\,du\,dv$。⑤ 由边缘求联合：需额外条件（独立或给定相关结构），否则不唯一。`),
+    F('ts09', 'limit', '大数定律/中心极限定理应用流程',
+      R`用大数定律与中心极限定理做近似计算的流程？`,
+      R`① 切比雪夫不等式：$P(|X-\mu|\ge\varepsilon)\le\frac{\sigma^2}{\varepsilon^2}$（只需方差存在，用于粗估）。② 大数定律：$\bar X\xrightarrow{P}\mu$，样本均值稳定于期望。③ 中心极限定理：$X_i$ iid 且方差有限，$n$ 大时 $\frac{\sum X_i-n\mu}{\sqrt n\,\sigma}\xrightarrow{d}N(0,1)$，即 $\sum X_i\approx N(n\mu,n\sigma^2)$、$\bar X\approx N(\mu,\frac{\sigma^2}{n})$。④ 应用：标准化后查标准正态表求概率。⑤ 二项分布 $B(n,p)$ 用棣莫弗-拉普拉斯：$\frac{X-np}{\sqrt{npq}}\approx N(0,1)$（$n$ 大）。`),
   ];
 
   const META = {
@@ -627,6 +636,9 @@ window.SUBJECTS.stats = (function () {
     ts04: [5, '解题方法论'],
     ts05: [5, '解题方法论'],
     ts06: [5, '解题方法论'],
+    ts07: [5, '解题方法论'],
+    ts08: [5, '解题方法论'],
+    ts09: [5, '解题方法论'],
   };
 
   // ============ 经典例题 ============
@@ -1138,6 +1150,18 @@ H 股：$10.33\pm2.131\times\dfrac{8.36}{\sqrt{16}}=10.33\pm4.45$，即 $(5.88,\
         a: R`(1) $H_0:\beta_{\mathrm{Income}}=0$ 对 $H_1:\beta_{\mathrm{Income}}\ne0$。$$t=\frac{0.0976}{0.0034}\approx28.7$$自由度 $df=n-k-1=20-2-1=17$，因 $|t|=28.7>t_{0.05}(17)=1.740$，拒绝 $H_0$，Income 对 Y 有显著影响。
 (2) $H_0:\beta_{\mathrm{Income}}=\beta_{\mathrm{Interest}}=0$（联合检验）对 $H_1$：至少一个不为 0。$$F=\frac{R^2/k}{(1-R^2)/(n-k-1)}=\frac{0.7/2}{0.3/17}\approx19.8$$因 $19.8>F_{0.10}(2,17)\approx2.64$，拒绝 $H_0$，Income 与 Interest 对 Y 的影响不全为零。`,
         src: '2015 北京大学光华 431 统计真题' } ],
+    ts07: [ { q: R`设 $X\sim B(4,0.3)$，求 $P(X=2)$、$E(X)$、$D(X)$`,
+      a: R`$P(X=2)=C_4^2\,0.3^2\,0.7^2=6\times0.09\times0.49=0.2646$。$E(X)=np=4\times0.3=1.2$，$D(X)=npq=4\times0.3\times0.7=0.84$。` },
+      { q: R`设 $X\sim P(2)$，求 $P(X\ge1)$`,
+        a: R`$P(X\ge1)=1-P(X=0)=1-e^{-2}\approx0.8647$。` } ],
+    ts08: [ { q: R`设二维随机变量 $(X,Y)$ 的联合密度为 $f(x,y)=6x^2y\ (0\le x\le1,\ 0\le y\le1)$，求边缘密度并判断 $X,Y$ 是否独立。`,
+      a: R`$f_X(x)=\int_0^1 6x^2y\,dy=3x^2\ (0\le x\le1)$；$f_Y(y)=\int_0^1 6x^2y\,dx=2y\ (0\le y\le1)$。因 $f_X(x)f_Y(y)=3x^2\cdot2y=6x^2y=f(x,y)$，故 $X,Y$ 相互独立。` },
+      { q: R`设 $(X,Y)$ 的联合密度 $f(x,y)=x+y\ (0<x<1,\ 0<y<1)$，求 $f_X(x)$ 与 $P(Y>\frac12\,|\,X=\frac12)$`,
+        a: R`$f_X(x)=\int_0^1(x+y)\,dy=x+\frac12\ (0<x<1)$。条件密度 $f(y|x)=\frac{x+y}{x+\frac12}$，故$$P\left(Y>\frac12\,\middle|\,X=\frac12\right)=\int_{1/2}^{1}\frac{\frac12+y}{1}\,dy=\left[\frac12y+\frac{y^2}{2}\right]_{1/2}^{1}=\frac58$$` } ],
+    ts09: [ { q: R`某灯泡寿命 $X\sim E(0.01)$。任取 $n=100$ 只，用中心极限定理近似求 $\bar X$ 落在 $[90,110]$ 内的概率（$\Phi(1)=0.8413$）。`,
+      a: R`$E(X)=\frac1\lambda=100$，$D(X)=\frac1{\lambda^2}=10000$。$\bar X\approx N\left(100,\frac{10000}{100}\right)=N(100,100)$，标准差 $10$。$$P(90\le\bar X\le110)=P\left(-1\le\frac{\bar X-100}{10}\le1\right)\approx\Phi(1)-\Phi(-1)=2\Phi(1)-1=0.6826$$` },
+      { q: R`抛均匀硬币 $n=400$ 次，用棣莫弗-拉普拉斯定理近似求正面次数在 $[190,210]$ 内的概率（$\Phi(1)=0.8413$）。`,
+        a: R`$X\sim B(400,0.5)$，$np=200,\ npq=100$。近似 $\frac{X-200}{10}\sim N(0,1)$：$$P(190\le X\le210)=P\left(-1\le\frac{X-200}{10}\le1\right)\approx2\Phi(1)-1=0.6826$$` } ],
   };
 
   // ============ 知识点关系标签 ============
@@ -1284,6 +1308,9 @@ H 股：$10.33\pm2.131\times\dfrac{8.36}{\sqrt{16}}=10.33\pm4.45$，即 $(5.88,\
     ts04: [ { to: 'test01', tag: '方法' }, { to: 'test06', tag: '方法' }, { to: 'test07', tag: '方法' } ],
     ts05: [ { to: 'est07', tag: '方法' }, { to: 'est16', tag: '方法' }, { to: 'est08', tag: '应用' } ],
     ts06: [ { to: 'reg01', tag: '方法' }, { to: 'reg03', tag: '方法' }, { to: 'reg05', tag: '方法' } ],
+    ts07: [ { to: 'rv06', tag: '方法' }, { to: 'rv07', tag: '方法' }, { to: 'rv10', tag: '方法' }, { to: 'rv12', tag: '方法' } ],
+    ts08: [ { to: 'mv02', tag: '方法' }, { to: 'mv03', tag: '方法' }, { to: 'mv04', tag: '方法' }, { to: 'mv01', tag: '前置' } ],
+    ts09: [ { to: 'll01', tag: '方法' }, { to: 'll04', tag: '方法' }, { to: 'll05', tag: '方法' }, { to: 'nc09', tag: '前置' } ],
   };
 
   // ============ 深度（1~5） ============
@@ -1299,7 +1326,8 @@ H 股：$10.33\pm2.131\times\dfrac{8.36}{\sqrt{16}}=10.33\pm4.45$，即 $(5.88,\
     reg01: 3, reg02: 3, reg03: 3, reg04: 3, reg05: 4, reg06: 3, reg07: 3, reg08: 3, reg09: 4, reg10: 3,
     sx01: 4, sx02: 3, sx03: 3, sx04: 3,
     sy01: 4, sy02: 4, sy03: 4, sy04: 3, sy05: 4, sy06: 3, sy07: 4, sy08: 3, sy09: 3,
-    ts01: 3, ts02: 3, ts03: 4, ts04: 4, ts05: 4, ts06: 4
+    ts01: 3, ts02: 3, ts03: 4, ts04: 4, ts05: 4, ts06: 4,
+    ts07: 4, ts08: 4, ts09: 4
   };
 
   const PITFALL = {

@@ -5,7 +5,7 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.1.2';
+  const VERSION = '1.2.0';
 
   // ---------------- 学科管理（多学科数据注册表） ----------------
   const SUBJECT_KEY = 'formula_app_subject';
@@ -14,6 +14,11 @@
   let EXAMPLES = {}, REL = {}, DEPTH = {}, PITFALL = {};
 
   function subjectList() { return window.SUBJECTS || {}; }
+  // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配
+  function subjKind() {
+    const s = subjectList()[currentSubjectId];
+    return (s && s.kind) || 'formula';
+  }
   function setSubject(id) {
     const list = subjectList();
     const subj = list[id] || list[Object.keys(list)[0]] || null;
@@ -230,7 +235,7 @@
     if (target !== currentSubjectId) {
       if (!setSubject(target)) throw new Error('备份中的学科不受支持');
       deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
-      browseCat = 'all'; browseQuery = ''; browseExpanded = {}; searchRefocus = false; browseMastery = 'all'; browseStars = 'all';
+      browseCat = 'all'; browseQuery = ''; browseExpanded = {}; searchRefocus = false; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
     }
     const fresh = { cards: {}, settings: { dailyNew: 10 }, log: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
@@ -240,6 +245,21 @@
     if (payload.log && payload.log.checkins && typeof payload.log.checkins === 'object') {
       fresh.log.checkins = {};
       Object.keys(payload.log.checkins).forEach(function (k) { fresh.log.checkins[k] = true; });
+    }
+    if (payload.log && typeof payload.log === 'object') {
+      ['daily', 'mastery', 'detail'].forEach(function (k) {
+        if (payload.log[k] && typeof payload.log[k] === 'object') {
+          fresh.log[k] = {};
+          Object.keys(payload.log[k]).forEach(function (dk) {
+            const v = payload.log[k][dk];
+            if (k === 'detail') {
+              fresh.log[k][dk] = (v && typeof v === 'object') ? JSON.parse(JSON.stringify(v)) : {};
+            } else if (typeof v === 'number') {
+              fresh.log[k][dk] = v;
+            }
+          });
+        }
+      });
     }
     DB = fresh;
     saveDB();
@@ -304,10 +324,15 @@
     return y + '-' + m + '-' + day;
   }
   function todayStr() { return fmtDate(new Date()); }
-  function markReviewed() {
+  function markReviewed(id) {
     if (!DB.log.daily) DB.log.daily = {};
     const t = todayStr();
     DB.log.daily[t] = (DB.log.daily[t] || 0) + 1;
+    if (id) {
+      if (!DB.log.detail) DB.log.detail = {};
+      if (!DB.log.detail[t]) DB.log.detail[t] = {};
+      DB.log.detail[t][id] = (DB.log.detail[t][id] || 0) + 1;
+    }
     saveDB();
   }
   function todayReviewed() {
@@ -416,6 +441,7 @@
   let seenAgain = {};
   let quiz = null;
   let mapCat = null, mapSel = null;
+  let heatSel = null;
   let mapScale = 1;
   let mapTx = 0, mapTy = 0;
   let mapDragMoved = false;
@@ -646,7 +672,7 @@
     cardEl.appendChild(backBox);
 
     const useBox = el('div', 'use-box' + (reviewed ? '' : ' hidden'));
-    useBox.appendChild(el('span', 'use-label', '📌 常考题型：'));
+    useBox.appendChild(el('span', 'use-label', subjKind() === 'qa' ? '📌 考查方式：' : '📌 常考题型：'));
     useBox.appendChild(el('span', null, metaOf(id)[1]));
     cardEl.appendChild(useBox);
 
@@ -743,7 +769,7 @@
     applyRating(id, r);
     const after = (typeof card(id).s === 'number') ? card(id).s : 0;
     lastMasteryDelta = Math.round(after - before);
-    markReviewed();
+    markReviewed(id);
     if (r === 0 && !seenAgain[id]) {
       seenAgain[id] = true;
       deck.push(id);
@@ -769,7 +795,7 @@
     const head = el('div', 'browse-head');
     const search = el('input', 'search');
     search.type = 'search';
-    search.placeholder = '搜索公式（名称 / 内容）…';
+    search.placeholder = subjKind() === 'qa' ? '搜索知识点（名称 / 内容）…' : '搜索公式（名称 / 内容）…';
     search.value = browseQuery;
     search.addEventListener('input', function () { browseQuery = search.value; searchRefocus = true; renderApp(); });
     head.appendChild(search);
@@ -821,7 +847,7 @@
       n++;
       list.appendChild(browseItem(f));
     });
-    if (n === 0) list.appendChild(el('p', 'muted', '没有匹配的公式。'));
+    if (n === 0) list.appendChild(el('p', 'muted', subjKind() === 'qa' ? '没有匹配的知识点。' : '没有匹配的公式。'));
     app.appendChild(list);
 
     if (searchRefocus) {
@@ -869,7 +895,7 @@
       renderTex(ab, f.back);
       a.appendChild(ab);
       const ub = el('div', 'use-box');
-      ub.appendChild(el('span', 'use-label', '📌 常考题型：'));
+      ub.appendChild(el('span', 'use-label', subjKind() === 'qa' ? '📌 考查方式：' : '📌 常考题型：'));
       ub.appendChild(el('span', null, metaOf(f.id)[1]));
       a.appendChild(ub);
       body.appendChild(a);
@@ -910,7 +936,9 @@
     if (!quiz) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '📝 随机自测'));
-      wrap.appendChild(el('p', 'muted', '每次随机抽取 10 道题：给出公式，选择它的名称。用来检验你是否真正「认得」公式。'));
+      wrap.appendChild(el('p', 'muted', subjKind() === 'qa'
+        ? '每次随机抽取 10 道题：给出内容，选择它的名称。用来检验你是否真正「认得」这些知识点。'
+        : '每次随机抽取 10 道题：给出公式，选择它的名称。用来检验你是否真正「认得」公式。'));
       const b = el('button', 'btn primary', '开始自测');
       b.setAttribute('data-action', 'qstart');
       wrap.appendChild(b);
@@ -935,7 +963,7 @@
     wrap.appendChild(top);
 
     const cardEl = el('div', 'card');
-    const label = el('div', 'mini-label', '这个公式叫什么？');
+    const label = el('div', 'mini-label', subjKind() === 'qa' ? '这个知识点叫什么？' : '这个公式叫什么？');
     cardEl.appendChild(label);
     const fb = el('div', 'front');
     renderTex(fb, q.card.back);
@@ -1043,6 +1071,7 @@
 
     wrap.appendChild(el('h3', null, '🔥 学习日历（近 16 周）'));
     const daily = (DB.log && DB.log.daily) || {};
+    const detailLog = (DB.log && DB.log.detail) || {};
     const weeks = 16, total = weeks * 7;
     const start = new Date(); start.setDate(start.getDate() - (total - 1));
     const grid = el('div', 'heatmap-grid');
@@ -1051,13 +1080,48 @@
       const date = new Date(start); date.setDate(start.getDate() + d);
       const key = fmtDate(date), cnt = daily[key] || 0;
       const cell = el('div', 'heat-cell');
-      cell.title = key + '：' + cnt + ' 张';
+      cell.title = key + '：' + cnt + ' 张' + (cnt > 0 ? '（点击查看当日明细）' : '');
       cell.className += cnt >= 8 ? ' l4' : cnt >= 5 ? ' l3' : cnt >= 2 ? ' l2' : cnt > 0 ? ' l1' : ' l0';
+      if (cnt > 0) {
+        cell.classList.add('clickable');
+        cell.setAttribute('data-action', 'heatdate');
+        cell.setAttribute('data-arg', key);
+      }
+      if (heatSel === key) cell.classList.add('sel');
       grid.appendChild(cell);
     }
     const hb = el('div', 'stat-card'); hb.appendChild(grid);
-    hb.appendChild(el('p', 'muted', '颜色越深，当天学习张数越多。'));
+    hb.appendChild(el('p', 'muted', '颜色越深，当天学习张数越多；点击有记录的格子可查看当日明细。'));
     wrap.appendChild(hb);
+
+    if (heatSel) {
+      const selCnt = daily[heatSel] || 0;
+      const det = el('div', 'stat-card heat-detail');
+      const dhead = el('div', 'heat-detail-head');
+      dhead.appendChild(el('strong', null, '📅 ' + heatSel + ' · 共复习 ' + selCnt + ' 张'));
+      const dclose = el('button', 'btn small', '关闭');
+      dclose.setAttribute('data-action', 'heatclose');
+      dhead.appendChild(dclose);
+      det.appendChild(dhead);
+      const detail = detailLog[heatSel] || {};
+      const ids = Object.keys(detail).filter(function (id) { return DATA.some(function (f) { return f.id === id; }); });
+      if (ids.length) {
+        ids.sort(function (a, b) { return detail[b] - detail[a]; });
+        const list = el('div', 'heat-detail-list');
+        ids.forEach(function (id) {
+          const f = DATA.find(function (x) { return x.id === id; });
+          const row = texEl('button', 'chip heat-item', f.title + ' ×' + detail[id]);
+          row.setAttribute('data-action', 'jump');
+          row.setAttribute('data-arg', id);
+          list.appendChild(row);
+        });
+        det.appendChild(list);
+        det.appendChild(el('p', 'muted', '点击知识点可跳转到浏览页查看完整卡片。'));
+      } else {
+        det.appendChild(el('p', 'muted', '当天复习 ' + selCnt + ' 张。单卡明细从本次更新后开始记录，历史日期的明细暂未保留。'));
+      }
+      wrap.appendChild(det);
+    }
 
     wrap.appendChild(el('h3', null, '📈 平均掌握度趋势'));
     const mlog = (DB.log && DB.log.mastery) || {};
@@ -1344,7 +1408,7 @@
     cont.appendChild(el('div', 'mini-label', '答案'));
     const fa = el('div', 'map-back'); renderTex(fa, f.back); cont.appendChild(fa);
     panel.appendChild(cont);
-    panel.appendChild(el('p', 'muted', '📌 常考题型：' + metaOf(f.id)[1]));
+    panel.appendChild(el('p', 'muted', (subjKind() === 'qa' ? '📌 考查方式：' : '📌 常考题型：') + metaOf(f.id)[1]));
     const pf = pitfallOf(f.id);
     if (pf) {
       const pfb = el('div', 'pitfall-box');
@@ -1418,6 +1482,14 @@
         else mapScale = 1;
         renderApp();
         break;
+      case 'heatdate':
+        heatSel = arg;
+        renderApp();
+        break;
+      case 'heatclose':
+        heatSel = null;
+        renderApp();
+        break;
       case 'goback':
         if (pos > 0) { pos--; pendingAdvance = false; saveSession(); renderApp(); }
         break;
@@ -1482,7 +1554,7 @@
         const a = document.createElement('a');
         a.href = url;
         const subj = subjectList()[currentSubjectId];
-        a.download = (subj ? subj.short : '公式') + '公式记忆-备份.json';
+        a.download = (subj ? subj.short : '公式') + (subjKind() === 'qa' ? '知识点记忆-备份.json' : '公式记忆-备份.json');
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1620,7 +1692,7 @@
   function switchSubject(id) {
     if (id === currentSubjectId || !setSubject(id)) return;
     deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
-    mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0;
+    mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; heatSel = null;
     browseCat = 'all'; browseQuery = ''; browseExpanded = {}; searchRefocus = false; browseMastery = 'all'; browseStars = 'all';
     loadDBAsync().then(function () {
       if (!loadSession()) buildSession(0);

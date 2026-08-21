@@ -85,8 +85,10 @@ body[data-subject="politics"] header {
   background: linear-gradient(135deg, #F4C0D1, #F0AEC4); color: #72243E;
   font-size: 12.5px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
   white-space: nowrap; box-shadow: 0 2px 8px rgba(212, 83, 126, .18);
-  flex: none;
+  flex: none; cursor: pointer; transition: transform .12s, box-shadow .12s;
 }
+.countdown-badge:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212, 83, 126, .3); }
+.countdown-badge:active { transform: translateY(0); }
 .countdown-badge.urgent { background: linear-gradient(135deg, #D4537E, #C24A71); color: #fff; }
 .brand small { color: var(--muted); font-weight: 600; font-size: 13px; }
 nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
@@ -188,7 +190,8 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   padding: 3px 11px; border-radius: 999px; font-size: 12px; font-weight: 600;
 }
 .controls { text-align: center; margin-top: 10px; }
-.rating { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+.rating { display: flex; gap: 9px; margin-top: 10px; }
+.rating .btn { flex: 1; }
 .rate { font-weight: 600; border-width: 1.5px; }
 .r0 { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 55%, var(--border)); background: color-mix(in srgb, var(--danger) 7%, var(--card)); }
 .r1 { color: #72243E; border-color: color-mix(in srgb, #F4C0D1 60%, var(--border)); background: color-mix(in srgb, #F4C0D1 16%, var(--card)); }
@@ -330,6 +333,15 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   font-size: 14px; line-height: 1.6; resize: vertical; font-family: inherit;
 }
 .card-notes:focus { outline: none; border-color: var(--accent); }
+/* 记忆算法可视化 */
+.memory-box { margin-top: 14px; border: 1px dashed var(--border); border-radius: 11px; padding: 10px 12px; background: var(--bg); font-size: 12.5px; }
+.memory-badge { display: inline-block; font-weight: 700; color: var(--accent); margin-right: 6px; }
+.memory-text { color: var(--text); }
+.memory-sched { margin-top: 2px; font-size: 12px; }
+.memory-fsrs { margin-top: 3px; font-size: 12px; color: var(--accent); }
+.chart-wrap { margin-top: 10px; max-width: 100%; overflow-x: auto; }
+.chart-label { font-size: 11.5px; margin-bottom: 4px; }
+.chart-wrap svg { display: block; height: auto; min-width: 240px; }
 .rel-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 7px; }
 .rel-chip { text-align: left; white-space: normal; }
 
@@ -444,7 +456,7 @@ body.immersive #immersiveExit { display: block; }
 }
 
 @media (max-width: 520px) {
-  .rating { grid-template-columns: repeat(2, 1fr); }
+  .rating { gap: 6px; }
   .brand { font-size: 16px; }
   header { padding: calc(10px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); }
   /* 移动端顶栏瘦身：7 个导航按钮收进 ☰ 抽屉，顶栏保持单行 */

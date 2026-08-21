@@ -5,10 +5,16 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.2.4';
+  const VERSION = '1.3.3';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.3.3', date: '2026-08', items: ['例题清理：删除所有非真题例题（含「幕布版自测」及无来源自编题目），知识卡片的例题区**仅保留真实考研真题**（数三 125 / 微观 140 / 统计 159 条真题；原自编例题卡片不再显示例题）'] },
+    { v: '1.3.2', date: '2026-08', items: ['删除自定的「期望保留率」校准机制，改用 FSRS 论文标准默认保留率(0.9)——核心调度完全对齐 FSRS-4.5 论文定义', '掌握度改为「当前可提取性 R（预测回忆概率）」：R(t,S)=(1+F·t/S)^-0.5，复习阶段显示此刻回忆起来的概率，趋势图对比实际 vs 预测 R（无自创算法，均来自论文/训练权重）'] },
+    { v: '1.3.1', date: '2026-08', items: ['记忆算法升级为完整 FSRS-4.5：卡片按「难度 D + 稳定性 S」建模，幂律遗忘曲线 R(t,S)=(1+F·t/S)^-0.5，按期望保留率反推复习间隔', '引入 FSRS 官方 17 参数（默认权重由 fsrs-benchmark 训练得到）+ 难度均值回归 + 稳定性随保留率/难度非线性更新；掌握度改为由 FSRS 稳定性平滑导出', '毕业卡记忆框显示「难度 D / 稳定性 S / 目标保留率」'] },
+    { v: '1.3.0', date: '2026-08', items: ['记忆算法升级：恢复四档评分（忘记/困难/良好/简单）+ 学习阶段改时间步进（1分钟→10分钟），更贴合主流 Anki', '掌握度与记忆算法绑定（近期回答质量+当前间隔平滑导出），新增记忆可视化（掌握度趋势：实际+预测双曲线，时间横轴可浏览）', '新增真实数据校准：用每次到期复习的真实回忆质量动态调整目标保留率，预测越用越准；清空进度同步清空统计', '初步引入 FSRS：卡片按「难度 D + 记忆稳定性 S」建模，幂律遗忘曲线 + 期望保留率决定复习间隔', '卡片页笔记模块上移至记忆模块之上，其余统计/UI 适配'] },
+    { v: '1.2.7', date: '2026-08', items: ['记忆算法重构：两阶段（学习→复习）+ SM-2；遗忘即回退学习阶段并降低易度，答对才毕业；修复重复学/无限学/别科无卡等旧问题', '新卡改为每科软上限（每批 10 张，学完点「再来 10 张」继续），删除原「每日新卡数量」硬限制；学习界面删「剩余 x 张」，新增「待复习」「未学完新卡」标签', '内容拓展（长期）：识图/提取文本把自编例题改为真实真题（本轮数三 16 道 / 统计 15 张 / 微观 20 张，含 1.2.5 新增卡优先真题化）'] },
+    { v: '1.2.5', date: '2026-08', items: ['修复：完成每日目标后「再来一轮」不再重复展示上一组卡片——队列只含到期复习 + 今日额度内新卡，已学未到期卡按 SM-2 排期不重复出现', '新增：点击左上角考研倒计时徽章可直接跳转到学习界面', '修正：上边栏「今天已学习 X 张」按去重卡片统计，不再重复计数', '内容拓展（长期推进）：细化 14 张简陋知识点、新增 9 张知识点/套路卡、补充 23 条陷阱提示（本轮第一批）'] },
     { v: '1.2.4', date: '2026-08', items: ['移动端顶栏瘦身：7 个导航入口收进「☰」抽屉菜单，顶栏保持单行（倒计时徽标与学科掌握度保留）', '修复：完成今日任务后「再来一轮」无反应——每日额度内已引入但未学完的新卡可再次进入队列，且无内容可学时不再显示无效按钮'] },
     { v: '1.2.3', date: '2026-08', items: ['考研倒计时徽章移至界面左上角（替代品牌字标），每日弹窗提示语精简', '数三 / 微观 / 统计：为尚未对应真题的卡片补充真实考研真题例题（本轮新增 155 张卡的真题来源标注：数三 +28、微观 +50、统计 +77）'] },
     { v: '1.2.2', date: '2026-08', items: ['时政分类改为仅收录 2026 年时政大事（两会·十五五纲要 / 建党 105 周年 / 中央经济工作会议 / 中央一号文件 / 中德联合声明 / 夏季达沃斯等）', '设置页新增「📜 更新日志」，可查看每个版本的修改内容'] },
@@ -156,7 +162,7 @@
   const THEME_KEY = 'ms3_formula_theme';
   let DB = null;
 
-  function defaultCard() { return { reps: 0, ef: 2.5, ivl: 0, due: 0, lapses: 0, state: 'new', s: 0, notes: '' }; }
+  function defaultCard() { return { reps: 0, ef: 2.5, ivl: 0, due: 0, lapses: 0, state: 'new', s: 0, grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, notes: '', hist: [], lastR: 0, ivlR: 0 }; }
 
   // IndexedDB（作为更持久的数据备份；localStorage 仍为主存储）
   function idbOpen() {
@@ -229,7 +235,15 @@
       if (typeof c.due === 'number') out.due = c.due;
       if (typeof c.lapses === 'number') out.lapses = c.lapses;
       if (typeof c.s === 'number') out.s = c.s;
-      if (c.state === 'new' || c.state === 'learn' || c.state === 'review') out.state = c.state;
+      if (typeof c.grad === 'number') out.grad = c.grad;
+      if (typeof c.step === 'number') out.step = c.step;
+      if (typeof c.diff === 'number') out.diff = c.diff;
+      if (typeof c.stab === 'number') out.stab = c.stab;
+      if (c.fsrsInit) out.fsrsInit = 1;
+      if (Array.isArray(c.hist)) out.hist = c.hist.map(function (h) { return { t: h.t, m: h.m, ivl: h.ivl || 0 }; });
+      if (typeof c.lastR === 'number') out.lastR = c.lastR;
+      if (typeof c.ivlR === 'number') out.ivlR = c.ivlR;
+      if (c.state === 'new' || c.state === 'learning' || c.state === 'review') out.state = c.state;
       if (typeof c.notes === 'string') out.notes = c.notes;
     }
     return out;
@@ -353,7 +367,14 @@
     saveDB();
   }
   function todayReviewed() {
-    return (DB.log.daily && DB.log.daily[todayStr()]) || 0;
+    const t = todayStr();
+    // 「今天已学习 X 张」按去重卡片统计（DB.log.detail 记录每个卡 id 只出现一次），而不是每次评分累加
+    const det = (DB.log && DB.log.detail && DB.log.detail[t]) || null;
+    if (det && typeof det === 'object') {
+      const keys = Object.keys(det).filter(function (id) { return DATA.some(function (f) { return f.id === id; }); });
+      return keys.length;
+    }
+    return (DB.log && DB.log.daily && DB.log.daily[t]) || 0;
   }
 
   // ---------------- 考研倒计时 ----------------
@@ -422,7 +443,7 @@
   // ---------------- 统计与掌握度 ----------------
   function initialStrength(c) {
     if (c.state === 'new') return 0;
-    if (c.state === 'learn') return 15;
+    if (c.state === 'learning') return 15;
     const d = c.ivl;
     if (d < 1) return 25;
     if (d < 7) return 45;
@@ -433,16 +454,26 @@
 
   function mastery(id) {
     const c = card(id);
-    const s = Math.max(0, Math.min(100, Math.round((typeof c.s === 'number') ? c.s : initialStrength(c))));
+    let score;
+    if (c.state === 'new') {
+      score = 0;
+    } else if (c.state === 'learning') {
+      score = Math.round(10 + (c.step | 0) * 5); // 学习阶段较低，随步进略升（无稳定性，仅占位）
+    } else {
+      // 复习阶段：掌握度 = 当前可提取性 R（预测回忆概率）R(t,S)=(1+F·t/S)^−0.5
+      const days = Math.max(0, (Date.now() - (c.lastR || Date.now())) / DAY);
+      score = Math.round(fsrsRetention(days, c.stab) * 100);
+    }
+    score = Math.max(0, Math.min(100, score));
     let label;
-    if (s < 10) label = '未学';
-    else if (s < 25) label = '初学';
-    else if (s < 45) label = '生疏';
-    else if (s < 65) label = '巩固中';
-    else if (s < 85) label = '已掌握';
-    else if (s < 95) label = '熟练';
+    if (score < 10) label = '未学';
+    else if (score < 25) label = '初学';
+    else if (score < 45) label = '生疏';
+    else if (score < 65) label = '巩固中';
+    else if (score < 85) label = '已掌握';
+    else if (score < 95) label = '熟练';
     else label = '稳固';
-    return { pct: s, label: label };
+    return { pct: score, label: label };
   }
 
   function metaOf(id) { return (META && META[id]) || [3, '综合计算与应用']; }
@@ -458,12 +489,87 @@
     return s;
   }
   function scheduleText(c) {
-    if (c.state === 'learn') return '10 分钟后再复习';
+    if (c.state === 'learning') return '再作答几次（答「简单」）后进入间隔记忆';
     return '间隔 ' + c.ivl + ' 天后再复习';
   }
   function masteryDeltaText() {
     if (lastMasteryDelta == null) return '已记录';
     return '掌握度 ' + (lastMasteryDelta >= 0 ? '+' : '') + lastMasteryDelta;
+  }
+
+  // 记忆算法可视化：下次复习时间 + 掌握度趋势曲线 + 实际/预测遗忘曲线
+  function fmtDayMs(ts) { const d = new Date(ts); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function svgText(tag, x, y, str, attrsExtra) {
+    const t = svgEl(tag, Object.assign({ x: x, y: y, 'font-size': '9', fill: '#999' }, attrsExtra || {}));
+    t.textContent = str;
+    return t;
+  }
+  function nextReviewText(c) {
+    if (c.state === 'new') return '待学习';
+    if (c.state === 'learning') {
+      const min = Math.max(1, Math.round((c.due - Date.now()) / 60000));
+      return '学习中 · 第 ' + ((c.step | 0) + 1) + ' 步（约 ' + min + ' 分钟后重现）';
+    }
+    return '下次复习：' + fmtDayMs(c.due) + '（间隔 ' + c.ivl + ' 天）';
+  }
+  // 掌握度趋势：实际曲线（历史）+ 预测曲线（从上次复习按校准目标衰减到下次复习）
+  function svgMasteryTrend(id) {
+    const c = card(id);
+    const hist = (c.hist || []);
+    const wrap = el('div', 'chart-wrap');
+    wrap.appendChild(el('div', 'chart-label muted', '掌握度趋势（时间）· — 实际 · - - 预测(FSRS)'));
+    const hasActual = hist.length >= 2;
+    const isReview = c.state === 'review' && c.due > 0 && c.lastR > 0 && c.ivl > 0;
+    if (!hasActual && !isReview) { wrap.appendChild(el('p', 'muted', '📈 数据积累中——学习 2 次后显示趋势。')); return wrap; }
+    let minT = hist.length ? hist[0].t : Date.now();
+    let maxT = hist.length ? hist[hist.length - 1].t : Date.now();
+    if (isReview) maxT = Math.max(maxT, c.due);
+    const spanT = Math.max(1, (maxT - minT) || 1);
+    const W = 300, H = 118, padL = 28, padR = 8, padT = 12, padB = 18;
+    const X = function (t) { return padL + (t - minT) / spanT * (W - padL - padR); };
+    const Y = function (m) { return padT + (1 - m / 100) * (H - padT - padB); };
+    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%' });
+    [0, 50, 100].forEach(function (m) { const y = Y(m); svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: y, y2: y, stroke: '#E7E4DD', 'stroke-width': '1' })); svg.appendChild(svgText('text', padL - 4, y + 3, String(m), { 'text-anchor': 'end' })); });
+    // 预测曲线（FSRS 幂律）：从上次复习时刻的 100% 可提取性，按稳定性衰减到下次复习（≈期望保留率）
+    if (isReview && hist.length) {
+      const last = hist[hist.length - 1];
+      const stab = Math.max(0.25, c.stab || c.ivlR || 9);
+      let dstr = ''; const steps = 24;
+      for (let i = 0; i <= steps; i++) {
+        const t = last.t + (c.due - last.t) * i / steps;
+        const days = Math.max(0, (t - last.t) / DAY);
+        const p = 100 * fsrsRetention(days, stab); // 预测可提取性 R(t,S)
+        dstr += (i === 0 ? 'M' : ' L') + X(t) + ' ' + Y(p);
+      }
+      svg.appendChild(svgEl('path', { d: dstr, fill: 'none', stroke: '#B5D4F4', 'stroke-width': '2', 'stroke-dasharray': '4 3' }));
+      svg.appendChild(svgEl('circle', { cx: X(last.t), cy: Y(100 * fsrsRetention(0, c.stab)), r: '3.5', fill: '#B5D4F4' }));
+    }
+    // 实际曲线 + 点
+    if (hasActual) {
+      const pts = hist.map(function (p) { return X(p.t) + ',' + Y(p.m); }).join(' ');
+      svg.appendChild(svgEl('polyline', { points: pts, fill: 'none', stroke: '#D4537E', 'stroke-width': '2' }));
+    }
+    hist.forEach(function (p) {
+      const cEl = svgEl('circle', { cx: X(p.t), cy: Y(p.m), r: '3', fill: '#378ADD' });
+      const tt = svgEl('title', {}); tt.textContent = fmtDayMs(p.t) + ' 掌握 ' + p.m + '%';
+      cEl.appendChild(tt); svg.appendChild(cEl);
+    });
+    // 日期横坐标
+    svg.appendChild(svgText('text', padL, H - 5, fmtDayMs(minT)));
+    svg.appendChild(svgText('text', W - padR, H - 5, fmtDayMs(maxT), { 'text-anchor': 'end' }));
+    wrap.appendChild(svg);
+    return wrap;
+  }
+  function memoryBox(id, hiddenClass) {
+    const c = card(id);
+    const box = el('div', 'memory-box' + (hiddenClass || ''));
+    box.appendChild(el('div', 'memory-badge', '🧠 记忆'));
+    box.appendChild(el('div', 'memory-sched muted', '🗓 ' + nextReviewText(c)));
+    if (c.state === 'review') {
+      box.appendChild(el('div', 'memory-fsrs muted', '📐 难度 ' + (c.diff || 5).toFixed(1) + ' · 稳定性 ' + (c.stab || 0).toFixed(1) + ' 天 · 目标保留 ' + Math.round(FDR * 100) + '%'));
+    }
+    box.appendChild(svgMasteryTrend(id));
+    return box;
   }
 
   function stats() {
@@ -473,43 +579,145 @@
       const c = card(f.id);
       pctSum += mastery(f.id).pct;
       if (c.state === 'new') fresh++;
-      else if (c.state === 'learn') { if (c.due <= now) due++; else learn++; }
+      else if (c.state === 'learning') { if (c.due <= now) due++; else learn++; }
       else { if (c.due <= now) due++; else { review++; if (c.ivl >= 21) mature++; } }
     });
     return { due: due, learn: learn, review: review, fresh: fresh, mature: mature, total: DATA.length, avg: Math.round(pctSum / DATA.length) };
   }
 
-  // ---------------- SM-2 间隔重复 ----------------
+  // ---------------- 记忆算法：两阶段（学习 → 复习）+ SM-2 ----------------
   const DAY = 86400000;
+  const EF_MIN = 1.3; // （保留，向后兼容；FSRS 的易度由难度/稳定性替代）
+  // 期望保留率：FSRS 论文标准默认值（0.9，即「到期复习时回忆概率」），不再做自定校准
+  const FDR = 0.9;
+  // ================= 完整 FSRS-4.5（全部来自论文 / 训练库） =================
+  // 官方默认参数（在 fsrs-benchmark 上训练，含 17 个权重）
+  const FW = [0.40255, 1.18385, 3.173, 15.69105, 7.1949, 0.5345, 1.4604, 0.0046, 1.54575, 0.1192, 1.01925, 1.9395, 0.11, 0.29605, 2.2698, 0.2315, 2.9898];
+  const FFACTOR = 19 / 81;
+  const FDECAY = -0.5;
+  // 可提取性（遗忘曲线，幂律）R(t,S) = (1 + F·t/S)^DECAY
+  function fsrsRetention(daysSince, S) {
+    S = Math.max(0.25, S);
+    return Math.pow(1 + FFACTOR * Math.max(0, daysSince) / S, FDECAY);
+  }
+  // 期望保留率(DR) → 下次复习间隔（天）：I = (S/F)·(R_req^(-2) − 1)
+  function fsrsInterval(S) {
+    const i = (Math.max(0.25, S) / FFACTOR) * (Math.pow(FDR, 1 / FDECAY) - 1);
+    return Math.max(0.2, i);
+  }
+  // 初始稳定性（第 1 次评分）S0(G) = w[G-1]，G=1..4
+  function fsrsInitStability(G) { return FW[G - 1]; }
+  // 初始难度 D0(G) = w4 − e^(w5·(G−1)) + 1，钳 1..10
+  function fsrsInitDifficulty(G) {
+    return Math.max(1, Math.min(10, FW[4] - Math.exp(FW[5] * (G - 1)) + 1));
+  }
+  function fsrsInitDifficulty3() { return Math.max(1, Math.min(10, FW[4] - Math.exp(FW[5] * 2) + 1)); } // 用于均值回归锚点 G=3
+  // 难度更新（含均值回归）
+  function fsrsDifficulty(D, G) {
+    D = (typeof D === 'number') ? D : 5;
+    const dNext = D - FW[6] * (G - 3);
+    const dNew = FW[7] * fsrsInitDifficulty3() + (1 - FW[7]) * dNext;
+    return Math.max(1, Math.min(10, dNew));
+  }
+  // 成功复习的稳定性更新（G=2..4）
+  function fsrsSuccessStability(D, S, R, G) {
+    const h = (G === 2) ? FW[15] : 1;
+    const b = (G === 4) ? FW[16] : 1;
+    const growth = Math.exp(FW[8]) * (11 - D) * Math.pow(Math.max(0.25, S), -FW[9]) * (Math.exp(FW[10] * (1 - R)) - 1) * h * b;
+    return Math.max(0.25, S * (1 + growth));
+  }
+  // 遗忘（G=1）的稳定性更新（含 min，稳定性不上升）
+  function fsrsLapseStability(D, S, R) {
+    const sNew = FW[11] * Math.pow(Math.max(1, D), -FW[12]) * (Math.pow(Math.max(0.25, S) + 1, FW[13]) - 1) * Math.exp(FW[14] * (1 - R));
+    return Math.min(Math.max(0.25, S), sNew);
+  }
+
+  // 学习毕业：首次毕业用 FSRS 初始化 D/S；重学毕业沿用（已被遗忘更新过的）D/S
+  function graduateReview(c, rating, s) {
+    const G = rating + 1; // 0=Again→1, 2=Good→3, 3=Easy→4
+    c.grad = 1; c.reps = 1; c.state = 'review';
+    if (!c.fsrsInit) {
+      c.diff = fsrsInitDifficulty(G);
+      c.stab = fsrsInitStability(G);
+      c.fsrsInit = 1;
+    } else {
+      if (!(c.stab > 0)) c.stab = fsrsInitStability(G);
+      if (!(c.diff >= 1 && c.diff <= 10)) c.diff = fsrsInitDifficulty(G);
+    }
+    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+    c.s = Math.min(100, (typeof s === 'number' ? s : 0) + (rating === 3 ? 20 : 12));
+    c.due = Date.now() + c.ivl * DAY;
+  }
+
+  // 学习阶段：时间步进（1 分钟 → 10 分钟），答 Good 到最后一档后毕业；Easy 直接毕业
+  const STEP_MS = [60 * 1000, 10 * 60 * 1000];
+  const LAST_STEP = 1;
+  // 四档评分：0 = 忘记(Again)；1 = 困难(Hard)；2 = 良好(Good)；3 = 简单(Easy)
   function applyRating(id, rating) {
     const c = card(id);
     const now = Date.now();
     const s = (typeof c.s === 'number') ? c.s : initialStrength(c);
-    if (rating === 0) { // 忘记：掌握度大幅下调
-      c.reps = 0;
-      c.lapses++;
-      c.ivl = 0;
-      c.state = 'learn';
-      c.s = Math.max(0, s - 25);
-      c.due = now + ((metaOf(id)[0] >= 4) ? 5 : 10) * 60 * 1000; // 高星遗忘后 5 分钟再见，其余 10 分钟
+    if (typeof c.step !== 'number') c.step = 0;
+    // —— 学习阶段（新卡 / 学习卡）：时间步进 ——
+    if (c.state === 'new' || c.state === 'learning') {
+      if (rating === 0) { // Again：回第 0 步（1 分钟）
+        c.step = 0; c.state = 'learning'; c.grad = 0; c.reps = 0; c.ivl = 0;
+        c.s = Math.max(0, s - 25);
+        c.due = now + STEP_MS[0];
+        return;
+      }
+      if (rating === 1) { // Hard：前进一步（到最后一档后仍要 Good 才能毕业）
+        c.step = Math.min(c.step + 1, LAST_STEP);
+        c.state = 'learning';
+        c.s = Math.max(0, s - 8);
+        c.due = now + STEP_MS[c.step];
+        return;
+      }
+      if (rating === 2) { // Good：前进一步，超过最后一档 → 毕业
+        c.step = c.step + 1;
+        if (c.step > LAST_STEP) {
+          graduateReview(c, 2, s);
+        } else {
+          c.state = 'learning'; c.s = Math.min(100, s + 10);
+          c.due = now + STEP_MS[c.step];
+        }
+        return;
+      }
+      // Easy：直接毕业
+      graduateReview(c, 3, s);
       return;
     }
-    const q = rating + 2; // hard=3 good=4 easy=5
-    c.ef = Math.max(1.3, c.ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
-    let ivl;
-    if (c.reps === 0) ivl = (rating === 3) ? 4 : 1;
-    else if (c.reps === 1) ivl = (rating === 3) ? 12 : 6;
-    else {
-      const mult = (rating === 1) ? 1.2 : (rating === 3 ? c.ef * 1.3 : c.ef);
-      ivl = Math.max(1, Math.round(c.ivl * mult));
+    // —— 复习阶段（FSRS-4.5：R(t,S) 幂律 + 难度/稳定性更新 + 期望保留率）——
+    const daysSince = Math.max(0, (now - (c.lastR || c.due)) / DAY);
+    const R = fsrsRetention(daysSince, c.stab);
+    if (rating === 0) { // Again：遗忘 → 稳定性下降、难度上升，回到学习阶段重学
+      c.step = 0; c.state = 'learning'; c.grad = 0; c.reps = 0; c.ivl = 0;
+      c.lapses++;
+      c.diff = fsrsDifficulty(c.diff, 1);
+      c.stab = fsrsLapseStability(c.diff, c.stab, R);
+      c.s = Math.max(0, s - 25);
+      c.due = now + STEP_MS[0];
+      return;
     }
-    c.ivl = ivl;
-    c.reps++;
-    c.state = 'review';
-    if (rating === 1) c.s = Math.max(0, s - 8);       // 困难：小幅下调
-    else if (rating === 2) c.s = Math.min(100, s + 12); // 良好：上调
-    else c.s = Math.min(100, s + 20);                   // 简单：更多上调
-    c.due = now + ivl * DAY;
+    if (rating === 1) { // Hard
+      c.diff = fsrsDifficulty(c.diff, 2);
+      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 2);
+      c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+      c.reps++; c.state = 'review'; c.s = Math.max(0, s - 8); c.due = now + c.ivl * DAY;
+      return;
+    }
+    if (rating === 2) { // Good
+      c.diff = fsrsDifficulty(c.diff, 3);
+      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 3);
+      c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+      c.reps++; c.state = 'review'; c.s = Math.min(100, s + 12); c.due = now + c.ivl * DAY;
+      return;
+    }
+    // Easy
+    c.diff = fsrsDifficulty(c.diff, 4);
+    c.stab = fsrsSuccessStability(c.diff, c.stab, R, 4);
+    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+    c.reps++; c.state = 'review'; c.s = Math.min(100, s + 20); c.due = now + c.ivl * DAY;
   }
 
   // ---------------- 视图状态 ----------------
@@ -577,11 +785,12 @@
 
   function statsBar() {
     const s = stats();
+    const incNew = incompleteNewCount();
     const bar = el('div', 'stats-bar');
     bar.appendChild(el('span', 'stat', '今天已学习 ' + todayReviewed() + ' 张'));
-    bar.appendChild(el('span', 'stat', '待复习 ' + s.due));
+    bar.appendChild(el('span', 'stat', '待复习 ' + s.due + ' 张'));
+    bar.appendChild(el('span', 'stat', '未学完新卡 ' + incNew + ' 张'));
     bar.appendChild(el('span', 'stat', '平均掌握 ' + s.avg + '%'));
-    bar.appendChild(el('span', 'stat', '已掌握 ' + s.mature));
     bar.appendChild(el('span', 'stat', '总计 ' + s.total));
     return bar;
   }
@@ -606,64 +815,57 @@
     return out;
   }
 
-  // 每日新卡配额（A1）：记录「今天已引入多少张新卡（含卡 id）」，避免一轮塞进全部新卡
-  function newIntroducedToday() {
-    try {
-      const l = (DB.log && DB.log.newToday) || {};
-      const t = todayStr();
-      return (l[t] && typeof l[t].n === 'number') ? l[t].n : 0;
-    } catch (e) { return 0; }
+  // 新卡摄入：每科「软上限 10 张」一批，学习完后用按钮加载下一批（非每日硬限制）
+  const NEW_WAVE = 10;
+  function introState() {
+    if (!DB.log) DB.log = {};
+    if (!DB.log.newIntro || !Array.isArray(DB.log.newIntro.ids)) DB.log.newIntro = { ids: [] };
+    return DB.log.newIntro;
   }
-  // 今日已计入额度、但可能仍未评分（会话中断）的新卡 id —— 「再来一轮」可再次提供它们，不额外占额度
-  function newIntroducedIdsToday() {
-    try {
-      const l = (DB.log && DB.log.newToday) || {};
-      const t = todayStr();
-      const e = l[t];
-      return (e && Array.isArray(e.ids)) ? e.ids : [];
-    } catch (e) { return []; }
+  function curWaveNewIds() {
+    const st = introState();
+    if (!st.ids.length) return [];
+    const last = st.ids.length - 1;
+    const start = Math.floor(last / NEW_WAVE) * NEW_WAVE;
+    return st.ids.slice(start, start + NEW_WAVE);
   }
-  function markNewIntroduced(ids) {
-    try {
-      if (!DB.log) DB.log = {};
-      if (!DB.log.newToday) DB.log.newToday = {};
-      const t = todayStr();
-      const l = DB.log.newToday[t] || { n: 0, ids: [] };
-      l.n += ids.length;
-      l.ids = (l.ids || []).concat(ids);
-      DB.log.newToday[t] = l;
-      saveDB();
-    } catch (e) {}
+  // 尚未引入的新卡数（可继续点「再来 N 张」）
+  function unstartedNewCount() {
+    const st = introState();
+    return DATA.filter(function (f) { return card(f.id).state === 'new' && st.ids.indexOf(f.id) === -1; }).length;
   }
-  function dailyNewLimit() {
-    return Math.max(1, Math.min(99, (DB.settings && typeof DB.settings.dailyNew === 'number') ? DB.settings.dailyNew : 10));
+  // 未完全学习的新卡：处于学习阶段、尚未毕业（曾经点过「忘记」）
+  function incompleteNewCount() {
+    return DATA.filter(function (f) { const c = card(f.id); return c.state === 'learning' && (c.grad | 0) === 0; }).length;
   }
 
   function buildSession() {
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
+    const st = introState();
+    // 首次进入该学科：先引入第一批新卡（软上限 NEW_WAVE 张，完全随机取样）
+    if (st.ids.length === 0) {
+      const firstWave = shuffle(all.filter(function (id) { return card(id).state === 'new'; })).slice(0, NEW_WAVE);
+      st.ids = firstWave;
+      saveDB();
+    }
+    // 到期复习（review 且到期）
     const due = all.filter(function (id) {
       const c = card(id);
-      return (c.state === 'review' || c.state === 'learn') && c.due <= now;
+      return c.state === 'review' && c.due <= now;
     });
     due.sort(function (a, b) {
       const sa = metaOf(a)[0] || 0, sb = metaOf(b)[0] || 0;
       if (sb !== sa) return sb - sa;
       return card(a).due - card(b).due;
     });
-    // 新卡：今天最多引入 dailyNew 张，超出部分顺延到明天
-    const fresh = interleave(all.filter(function (id) { return card(id).state === 'new'; }));
-    // 今日额度内已引入但尚未评分（会话中断）的新卡：可再次提供，不再占用新额度
-    const paid = interleave(fresh.filter(function (id) { return newIntroducedIdsToday().indexOf(id) !== -1; }));
-    const unpaid = fresh.filter(function (id) { return paid.indexOf(id) === -1; });
-    const quota = Math.max(0, dailyNewLimit() - newIntroducedToday());
-    const unpaidChosen = unpaid.slice(0, quota);
-    if (unpaidChosen.length) markNewIntroduced(unpaidChosen);
-    const freshLater = unpaid.slice(quota);
-    const rest = interleave(all.filter(function (id) {
-      return due.indexOf(id) === -1 && paid.indexOf(id) === -1 && unpaidChosen.indexOf(id) === -1 && freshLater.indexOf(id) === -1;
-    }));
-    deck = due.concat(paid, unpaidChosen, rest);
+    // 学习阶段（时间步进到点）的卡：新卡被遗忘 / 复习卡被遗忘，都在等计时器，到点才回来
+    const resumeLearning = interleave(all.filter(function (id) { return card(id).state === 'learning' && card(id).due <= now; }));
+    // 当前批新卡（本波次里仍未学的，完全随机序）
+    const waveIds = curWaveNewIds();
+    const newToStudy = shuffle(waveIds.filter(function (id) { return card(id).state === 'new'; }));
+    // 队列 = 到期复习 + 续学 + 本批新卡
+    deck = due.concat(resumeLearning, newToStudy);
     pos = 0;
     frontier = 0;
     pendingAdvance = false;
@@ -678,13 +880,13 @@
     const tail = deck.slice(frontier);
     const due = tail.filter(function (id) {
       const c = card(id);
-      return (c.state === 'review' || c.state === 'learn') && c.due <= now;
+      return (c.state === 'review' || c.state === 'learning') && c.due <= now;
     });
     if (!due.length) return;
     const rest = tail.filter(function (id) { return due.indexOf(id) === -1; });
     deck = head.concat(due, rest);
   }
-
+  // 自适应步进：学习阶段的卡若等待过久（超过阈值），把它从队列靠后拉近，尽早重现
   function renderLearn() {
     const app = document.getElementById('app');
     surfaceDue();
@@ -694,21 +896,14 @@
     if (done) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
-      const remainNew = DATA.filter(function (f) { return card(f.id).state === 'new'; }).length;
-      if (deck.length === 0) {
-        if (remainNew > 0) {
-          wrap.appendChild(el('p', 'muted', '今日新卡额度已用完，还有 ' + remainNew + ' 张新知识点将在明天开放（每日上限 ' + dailyNewLimit() + ' 张）。'));
-        } else {
-          wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，今日暂无到期复习内容，明天再来。'));
-        }
+      const moreNew = unstartedNewCount();
+      if (moreNew > 0) {
+        wrap.appendChild(el('p', 'muted', '已完成本批学习。还有 ' + moreNew + ' 张新知识点未学，可点按钮继续加入（每批 ' + NEW_WAVE + ' 张）。'));
+        const more = el('button', 'btn primary', '再来 ' + NEW_WAVE + ' 张新卡');
+        more.setAttribute('data-action', 'newwave');
+        wrap.appendChild(more);
       } else {
-        wrap.appendChild(el('p', 'muted', '已完成 ' + deck.length + ' 个知识点的一轮学习。'));
-        if (remainNew > 0) {
-          wrap.appendChild(el('p', 'muted', '还有 ' + remainNew + ' 张新知识点将在明天开放（每日上限 ' + dailyNewLimit() + ' 张）。'));
-        }
-        const again = el('button', 'btn primary', '再来一轮');
-        again.setAttribute('data-action', 'restart');
-        wrap.appendChild(again);
+        wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
       }
       app.appendChild(wrap);
       return;
@@ -777,12 +972,11 @@
     const app = document.getElementById('app');
     const f = DATA.find(function (x) { return x.id === id; });
     const reviewed = pos < frontier;
-    const remaining = deck.length - frontier;
     const wrap = el('div', 'learn-wrap');
 
     const top = el('div', 'learn-top');
     top.appendChild(el('span', 'badge', CATS[f.cat]));
-    top.appendChild(el('span', 'muted', (reviewed && !pendingAdvance ? '回顾中 · ' : '') + '剩余 ' + remaining + ' 张'));
+    top.appendChild(texEl('span', 'muted', f.title));
     wrap.appendChild(top);
 
     const m = mastery(id);
@@ -851,7 +1045,10 @@
       notesTimer = setTimeout(saveDB, 400);
     });
     notesBox.appendChild(notes);
+
+    // 笔记在记忆模块之上（记忆可视化揭示答案后才显示）
     cardEl.appendChild(notesBox);
+    cardEl.appendChild(memoryBox(id, reviewed ? '' : ' hidden'));
 
     wrap.appendChild(cardEl);
 
@@ -883,10 +1080,10 @@
         b.setAttribute('title', sub);
         rating.appendChild(b);
       };
-      mk('忘记', '10 分钟后再见', 0);
-      mk('困难', '缩短间隔', 1);
-      mk('良好', '正常间隔', 2);
-      mk('简单', '拉长间隔', 3);
+      mk('忘记', '完全没印象，再学一次', 0);
+      mk('困难', '有印象但吃力', 1);
+      mk('良好', '能想起，正常间隔', 2);
+      mk('简单', '很轻松，拉长间隔', 3);
       wrap.appendChild(rating);
     }
 
@@ -906,6 +1103,8 @@
     if (pb) pb.classList.remove('hidden');
     const mb = app.querySelector('.mnem-box');
     if (mb) mb.classList.remove('hidden');
+    const mem = app.querySelector('.memory-box');
+    if (mem) mem.classList.remove('hidden');
     app.querySelector('.controls').classList.add('hidden');
     app.querySelector('.rating').classList.remove('hidden');
   }
@@ -913,13 +1112,23 @@
   function doRate(r) {
     if (frontier >= deck.length) return;
     const id = deck[frontier];
-    const before = (typeof card(id).s === 'number') ? card(id).s : initialStrength(card(id));
+    const wasReview = card(id).state === 'review';
+    const beforeM = mastery(id).pct; // 评分前掌握度 = 当前可提取性 R（复习卡=复习时的真实回忆概率）
     applyRating(id, r);
-    const after = (typeof card(id).s === 'number') ? card(id).s : 0;
-    lastMasteryDelta = Math.round(after - before);
+    const afterM = mastery(id).pct;
+    lastMasteryDelta = afterM - beforeM;
     markReviewed(id);
-    if (r === 0 && !seenAgain[id]) {
-      seenAgain[id] = true;
+    // 记录掌握度历史快照（复习卡记录「复习时的可提取性 R」，新/学习卡记录评分后），供趋势图
+    {
+      const c = card(id);
+      if (!Array.isArray(c.hist)) c.hist = [];
+      c.hist.push({ t: Date.now(), m: wasReview ? beforeM : afterM, ivl: c.ivl || 0 });
+      if (c.hist.length > 60) c.hist = c.hist.slice(-60);
+      c.lastR = Date.now();
+      c.ivlR = c.ivl || 0;
+    }
+    // 时间步进：学习中的卡按计时器到点重现（推回队尾，由 surfaceDue 在其 due 到达时提前）
+    if (card(id).state === 'learning') {
       deck.push(id);
     }
     frontier++;
@@ -1063,6 +1272,7 @@
       }
       const extras = buildExtras(f.id, '');
       if (extras) body.appendChild(extras);
+      body.appendChild(memoryBox(f.id));
       const reset = el('button', 'btn small danger', '重置此卡片进度');
       reset.setAttribute('data-action', 'resetcard');
       reset.setAttribute('data-arg', f.id);
@@ -1186,22 +1396,6 @@
   function renderSettings() {
     const app = document.getElementById('app');
     const wrap = el('div', 'settings-wrap');
-
-    const s1 = el('div', 'setting-row');
-    s1.appendChild(el('span', null, '每日新卡数量'));
-    const num = el('input', 'num');
-    num.type = 'number'; num.min = 1; num.max = 99;
-    num.value = dailyNewLimit();
-    num.addEventListener('change', function () {
-      const v = Math.max(1, Math.min(99, Math.round(parseInt(num.value, 10) || 10)));
-      num.value = v;
-      DB.settings.dailyNew = v;
-      saveDB();
-      toast('每日新卡数量已设为 ' + v);
-    });
-    s1.appendChild(num);
-    wrap.appendChild(s1);
-    wrap.appendChild(el('p', 'muted', '每天最多引入的新知识点数量（默认 10）。当日额度用完后，其余新卡顺延到次日开放，避免新卡一次性堆积。'));
 
     const s4 = el('div', 'setting-row');
     s4.appendChild(el('span', null, '考研日期'));
@@ -1340,7 +1534,7 @@
     if (keys.length < 2) {
       tc.appendChild(el('p', 'muted', '数据积累中——每天打开应用会自动记录一次平均掌握度，几天后这里会显示趋势折线。'));
     } else {
-      const W = 680, H = 170, pad = 26;
+      const W = 680, H = 170, pad = 30;
       const vals = keys.map(function (k) { return mlog[k]; });
       const mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), rg = (mx - mn) || 1;
       const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%' });
@@ -1351,8 +1545,14 @@
       });
       svg.appendChild(svgEl('path', { d: 'M ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L '), fill: 'none', stroke: '#378ADD', 'stroke-width': '2' }));
       pts.forEach(function (p) { svg.appendChild(svgEl('circle', { cx: p[0], cy: p[1], r: '2.5', fill: '#378ADD' })); });
+      // 日期横坐标（首/中/尾）
+      const labelIdx = [0, Math.floor((keys.length - 1) / 2), keys.length - 1];
+      labelIdx.forEach(function (i, j) {
+        const x = pts[i][0];
+        svg.appendChild(svgText('text', x, H - 4, keys[i], j === labelIdx.length - 1 ? { 'text-anchor': 'end' } : (j === 0 ? {} : { 'text-anchor': 'middle' })));
+      });
       tc.appendChild(svg);
-      tc.appendChild(el('p', 'muted', '共 ' + keys.length + ' 天记录，最新平均掌握度 ' + vals[vals.length - 1] + '%。'));
+      tc.appendChild(el('p', 'muted', '共 ' + keys.length + ' 天记录，最新平均掌握度 ' + vals[vals.length - 1] + '%（横坐标为日期）。'));
     }
     wrap.appendChild(tc);
 
@@ -1732,6 +1932,16 @@
         buildSession();
         renderApp();
         break;
+      case 'newwave': {
+        // 每科软上限：学习完本批后，再引入下一批 NEW_WAVE 张新卡（完全随机取样）
+        const st = introState();
+        const pool = DATA.filter(function (f) { return card(f.id).state === 'new' && st.ids.indexOf(f.id) === -1; });
+        st.ids = st.ids.concat(shuffle(pool.map(function (f) { return f.id; })).slice(0, NEW_WAVE));
+        saveDB();
+        buildSession();
+        renderApp();
+        break;
+      }
       case 'reveal':
         revealCurrent();
         break;
@@ -1813,14 +2023,16 @@
         break;
       }
       case 'resetall':
-        if (confirm('确定要清空全部学习进度吗？此操作不可撤销。')) {
+        if (confirm('确定要清空全部学习进度吗？（清空后学习统计与记忆安排一并归零，便于重新测试）')) {
           DB.cards = {};
           DATA.forEach(function (f) { DB.cards[f.id] = defaultCard(); });
-          saveDB();
+          // 同时清空学习统计日志与每科新卡波次、会话，使统计条归零
+          DB.log = {};
           buildSession(0);
+          localStorage.removeItem(sessionKey());
           currentView = 'learn';
           renderApp();
-          toast('已重置');
+          toast('已重置（统计已清空）');
         }
         break;
       case 'togglog': {

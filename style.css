@@ -192,6 +192,8 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .controls { text-align: center; margin-top: 10px; }
 .rating { display: flex; gap: 9px; margin-top: 10px; }
 .rating .btn { flex: 1; }
+.btn.rate { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.rate-prev { font-size: 11px; opacity: .82; font-weight: 600; }
 .rate { font-weight: 600; border-width: 1.5px; }
 .r0 { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 55%, var(--border)); background: color-mix(in srgb, var(--danger) 7%, var(--card)); }
 .r1 { color: #72243E; border-color: color-mix(in srgb, #F4C0D1 60%, var(--border)); background: color-mix(in srgb, #F4C0D1 16%, var(--card)); }
@@ -257,6 +259,8 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 }
 .setting-row { display: flex; align-items: center; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
 .num { width: 80px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+.setting-check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+.setting-check input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; }
 .danger-row { border-top: 1px solid var(--border); padding-top: 16px; }
 
 /* 更新日志 */
@@ -431,6 +435,16 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .cat-bar { flex: 1; height: 10px; background: var(--border); border-radius: 999px; overflow: hidden; }
 .cat-bar-fill { height: 100%; border-radius: 999px; }
 .cat-bar-val { flex: 0 0 42px; text-align: right; color: var(--muted); }
+/* 学习统计：总览 KPI + 趋势图网格 */
+.stat-overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 6px; }
+.stat-kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 12px; text-align: center; }
+.stat-kpi strong { display: block; font-size: 24px; font-weight: 700; color: var(--accent); line-height: 1.2; }
+.stat-kpi span { font-size: 12px; }
+.trend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 600px) { .trend-grid { grid-template-columns: 1fr; } }
+.trend-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.trend-head strong { font-size: 14px; }
+.trend-latest { font-size: 12px; color: var(--accent); font-weight: 600; white-space: nowrap; }
 
 /* 沉浸模式 */
 #immersiveExit { position: fixed; top: 12px; right: 12px; z-index: 300; display: none; background: var(--card); box-shadow: var(--shadow); }

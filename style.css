@@ -285,9 +285,15 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .changelog-items li { font-size: 13px; line-height: 1.65; margin: 2px 0; }
 
 /* KaTeX 适配 */
-.kx-block { margin: 8px 0; overflow-x: auto; }
-.kx-inline { white-space: nowrap; }
+.kx-block { display: block; margin: 8px 0; overflow-x: auto; }
+.kx-inline { white-space: normal; }
 .katex { font-size: 1.14em; }
+/* 长答案按分点分段：每段一个块，左侧细竖线 + 间距，可视化更清晰 */
+.ans-point { margin: 7px 0; padding: 2px 0 2px 10px; border-left: 2px solid color-mix(in srgb, var(--accent) 38%, var(--border)); line-height: 1.6; }
+.ans-point:first-child { margin-top: 0; }
+.ans-point:last-child { margin-bottom: 0; }
+/* 承载数学公式的内容容器：宽公式在内部滚动，不撑破页面（移动端防整页缩放） */
+.card, .example-box, .example-q, .example-a, .browse-q, .browse-a, .use-box, .mnem-box, .pitfall-box, .rel-box, .notes-box, .map-front, .map-back { max-width: 100%; overflow-x: auto; }
 
 /* Toast */
 .toast {

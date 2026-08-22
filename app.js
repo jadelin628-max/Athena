@@ -5,11 +5,15 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.3.8';
+  const VERSION = '1.4.3';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
-    { v: '1.3.8', date: '2026-08', items: ['修复：卡片中 `$` 之外的文本模式 LaTeX 命令（如 \\textbf\\underline 加粗/下划线）此前不渲染、原样显示 —— 改为对含此类命令的正文段用 \\text{} 包裹后交给 KaTeX 渲染，正文中文不受影响'] },
+    { v: '1.4.3', date: '2026-08', items: ['长答案按分点分段可视化：`renderTex` 检测 `①②③…`/全角`（1）（2）…` 分点，自动拆成带左侧竖线的段落块 `.ans-point`（跳过数学下标/命令内标记如 `X_{(1)}`、`\\textbf{①…` 以免破坏结构）；长答案更清晰分层' , '将目前确立的内容与文本规范固化为「开发标准」（见 PROGRESS）：算法来源（核心=FSRS 官方，自创需标注⚠️并请示）、内容范围（光华431=微观+统计·无宏观金融；数三=高数+线代）、例题仅真实真题且可跨知识点复用、标题公式用原始模板、正文加粗/下划线用应用字体、长答案分点分段、时间预算软上限、改数据文件禁用 PowerShell GBK 读写'] },
+    { v: '1.4.2', date: '2026-08', items: ['正文文本模式命令改为**HTML 渲染**（彻底用应用字体，不再经 KaTeX 字体）：`\\textbf{…}`→`<b>`、`\\underline{…}`→`<u>`、`\\textit{…}`→`<i>`、`\\textrm`/`\\textsf`/`\\mathrm`/`\\text`→（默认字体）仅渲染内部文本；命令内部若含 `$..$` 数学则递归交给 KaTeX。→ 加粗/下划线不再出现字体不一致，也无 `\\textbf`/`\\n` 字面残留'] },
+    { v: '1.4.1', date: '2026-08', items: ['修复正文渲染：此前用 \\text{} 包裹整段正文，导致（a）正文内出现 \\textbf 加粗/\\underline 下划线时字体不一致（KaTeX 字体 vs 应用字体）、（b）跨行正文（真实换行）被 KaTeX 报错、显示字面 \\\\n 等。改为「普通正文（含换行）保留为文本节点（应用字体），仅把 \\textbf{}/\\underline{}/\\textit{} 等文本模式命令片段单独交给 KaTeX」——字体统一、无 \\n/\\textbf 字面残留'] },
+    { v: '1.3.9', date: '2026-08', items: ['记忆算法从 FSRS-4.5 升级为 FSRS-6（最新，2024-2025）：改用官方 21 参数默认权重（ts-fsrs/fsrs-rs v6.x DEFAULT_PARAMETERS）、遗忘曲线 R=(1+factor·t/S)^{-w20}（decay=0.1542）、引入短时记忆稳定度（学习期 Again 会降低稳定度、Good/Easy 不降）——修复此前「学习期多次遗忘→终于简单→仍给 15.69 天(16天间隔)」的不合理行为；现「遗忘后简单」毕业间隔显著缩短', 'FSRS-6 初始稳定度调整：再次=0.212 天 / 困难=1.29 天 / 良好=2.31 天 / 简单=8.30 天（原 FSRS-4.5 为 0.40/1.18/3.17/15.69）；难度更新改用线性阻尼+均值回归到 D0(Easy)；遗忘稳定度含 w17·w18 封顶；毕业/半衰期/目标 h_N 概念同步改为 FSRS-6 曲线（h≈90·S）'] },
+    { v: '1.3.8', date: '2026-08', items: ['修复：卡片中 `$` 之外的文本模式 LaTeX 命令（如 \\textbf\\underline 加粗/下划线）此前不渲染、原样显示 —— 改为对含此类命令的正文段用 \\text{} 包裹后交给 KaTeX 渲染，正文中文不受影响', '修复移动端长等式溢出：行内公式过长会撑破页面导致整页缩放，改为 `.kx-inline` 过长时内部横向滚动 + 公式容器 overflow-x:auto 兜底'] },
     { v: '1.3.7', date: '2026-08', items: ['统计页重构 + 记忆算法可视化：总览 KPI、记忆算法关键指标趋势（平均掌握度/平均可提取R/待复习/已毕业/累计遗忘/学习中新卡）、记忆状态分布、记忆强度（半衰期 h）分布、各分类掌握度', '浏览页学习卡片的「我的笔记」模块上移至「记忆」模块之上（与学习页一致）', '内容拓展：统计深度补强（茆诗松/何书元/陈家鼎 + 古扎拉蒂/伍德里奇计量 + 光华431）、微观进阶补强（平新乔十八讲/范里安 + 光华431）、数学三广度拓展；例题优先真实真题，可跨知识点复用'] },
     { v: '1.3.6', date: '2026-08', items: ['掌握度改为「存储强度到目标的比」（毕业=100%）：h=半衰期、H=目标，s=ln(1+h)/ln(1+H)，达到毕业目标即满分（⚠️自设计，依据论文「存储强度」概念+对数压缩；FSRS 调度内核未动）', '"当前可提取性 R" 与掌握度解耦：趋势图专画 R（实际 vs 预测 R，同量纲）；卡面另显示存储强度 S/半衰期 h', '"考研倒计时"改为"目标倒计时"：目标名称与日期都可在设置中编辑（默认 考研 / 每年 12 月 20 日），考研后可改成四六级/教资等继续使用；每日首启弹窗与文案同步适配'] },
     { v: '1.3.5', date: '2026-08', items: ['毕业目标改为「与考研倒计时挂钩」（默认开启）：要求考试日仍能 ≥90% 记得（等价稳定度 S ≥ 剩余天数，即半衰期 h ≥ 12.79×剩余天数），目标随倒计时自动变化而非固定 90 天；可在设置中关闭并改回固定目标值。⚠️ 借 SSP-MMC「目标半衰期」概念并适配考研目标（非论文原始算法）'] },
@@ -126,43 +130,138 @@
     setTimeout(fail, 12000);
   }
 
+  // 将长答案按「分点」分段（①②③…、全角（1）（2）…），拆成可视化段落；
+  // 跳过数学下标/命令内的标记（如 X_{(1)}、\textbf{①…）以免破坏结构
+  function splitPoints(str) {
+    const segs = [];
+    const marker = /([①-⑩]|（\d+）)/g;
+    let last = 0, m;
+    while ((m = marker.exec(str)) !== null) {
+      const idx = m.index;
+      const prev = idx > 0 ? str[idx - 1] : '';
+      if (prev === '{' || prev === '\\' || prev === '（' || prev === '(' || prev === '_' || prev === '^' || prev === '*' || prev === '`') continue;
+      segs.push(str.slice(last, idx));
+      last = idx;
+    }
+    segs.push(str.slice(last));
+    return segs.map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
   // ---------------- 数学渲染（KaTeX 可用则渲染，否则降级为纯文本） ----------------
   function renderTex(el, str) {
     el.setAttribute('data-tex', str);
     el.innerHTML = '';
     if (typeof window.katex !== 'undefined' && window.katex.render) {
-      const parts = String(str).split(/(\$\$[^$]*\$\$|\$[^$]*\$)/g);
-      for (let i = 0; i < parts.length; i++) {
-        const p = parts[i];
-        if (!p) continue;
-        if (p.startsWith('$$')) {
+      const pts = splitPoints(String(str));
+      if (pts.length > 1) {
+        pts.forEach(function (pt) {
           const d = document.createElement('div');
-          d.className = 'kx-block';
-          try { window.katex.render(p.slice(2, -2), d, { displayMode: true, throwOnError: false }); }
-          catch (e) { d.textContent = p.slice(2, -2); }
+          d.className = 'ans-point';
+          renderInto(d, pt);
           el.appendChild(d);
-        } else if (p.startsWith('$')) {
-          const sp = document.createElement('span');
-          sp.className = 'kx-inline';
-          try { window.katex.render(p.slice(1, -1), sp, { displayMode: false, throwOnError: false }); }
-          catch (e) { sp.textContent = p.slice(1, -1); }
-          el.appendChild(sp);
-        } else {
-          // prose（$ 之外）：若含 LaTeX 文本模式命令（\textbf/\underline/\mathrm 等）且花括号平衡，
-          // 用 \text{} 包起来交给 KaTeX 渲染（使 \textbf/\underline 生效），否则保持纯文本节点
-          if (p.split('{').length === p.split('}').length && /\\[a-zA-Z]+/.test(p)) {
-            const sp = document.createElement('span');
-            sp.className = 'kx-inline';
-            try { window.katex.render('\\text{' + p + '}', sp, { displayMode: false, throwOnError: false }); }
-            catch (e) { sp.textContent = p; }
-            el.appendChild(sp);
-          } else {
-            el.appendChild(document.createTextNode(p));
-          }
-        }
+        });
+      } else {
+        renderInto(el, String(str));
       }
     } else {
       el.textContent = String(str).replace(/\$/g, '');
+    }
+  }
+  // 找到从 open 位置起、与第 0 层 `{` 配对的 `}`（支持嵌套花括号，如 $\chi^{2}$ 里的 {2}）；找不到返回 -1
+  function matchBrace(str, open) {
+    let depth = 0;
+    for (let j = open; j < str.length; j++) {
+      const c = str[j];
+      if (c === '{') depth++;
+      else if (c === '}') { depth--; if (depth === 0) return j; }
+    }
+    return -1;
+  }
+  // 返回从 from 起下一个特殊字符（$、\、*）的下标；无则 -1
+  function nextSpecial(str, from) {
+    for (let j = from; j < str.length; j++) {
+      const c = str[j];
+      if (c === '$' || c === '\\' || c === '*') return j;
+    }
+    return -1;
+  }
+  // 把字符串渲染进 el：字符级扫描器（非单条正则）——
+  //   $$..$$/$..$ 走 KaTeX；\textbf/\underline/\textit/\textrm/\textsf/\mathbf/\mathrm/\text{...}
+  //   与 markdown **...** 转 HTML（应用字体）；\cmd{...} 用括号配对读取，内部可再含 $..$ 数学与嵌套花括号（递归）。
+  //   这样 \textbf{方差用 $\chi^{2}$} 或 \underline{$\chi^{2}$ 拟合} 也能整体匹配，不再被 {2} 截断。
+  function renderInto(el, str) {
+    let i = 0;
+    const n = str.length;
+    while (i < n) {
+      const ch = str[i];
+      // 1) 行间公式 $$...$$
+      if (ch === '$' && str[i + 1] === '$') {
+        const end = str.indexOf('$$', i + 2);
+        if (end === -1) { el.appendChild(document.createTextNode(str.slice(i))); break; }
+        const body = str.slice(i + 2, end);
+        const d = document.createElement('div');
+        d.className = 'kx-block';
+        try { window.katex.render(body, d, { displayMode: true, throwOnError: false }); }
+        catch (e) { d.textContent = body; }
+        el.appendChild(d);
+        i = end + 2;
+        continue;
+      }
+      // 2) 行内公式 $...$
+      if (ch === '$') {
+        const end = str.indexOf('$', i + 1);
+        if (end === -1) { el.appendChild(document.createTextNode(str.slice(i))); break; }
+        const body = str.slice(i + 1, end);
+        const sp = document.createElement('span');
+        sp.className = 'kx-inline';
+        try { window.katex.render(body, sp, { displayMode: false, throwOnError: false }); }
+        catch (e) { sp.textContent = body; }
+        el.appendChild(sp);
+        i = end + 1;
+        continue;
+      }
+      // 3) markdown 加粗 **...**
+      if (ch === '*' && str[i + 1] === '*') {
+        const end = str.indexOf('**', i + 2);
+        if (end === -1) { el.appendChild(document.createTextNode(str.slice(i))); break; }
+        const b = document.createElement('b');
+        renderInto(b, str.slice(i + 2, end));
+        el.appendChild(b);
+        i = end + 2;
+        continue;
+      }
+      // 4) 文本模式命令 \cmd{...}（括号配对，支持嵌套）
+      if (ch === '\\') {
+        const cm = /^\\(textbf|underline|textit|textrm|textsf|mathbf|mathrm|text)\{/.exec(str.slice(i));
+        if (cm) {
+          const tag = cm[1];
+          const openBrace = i + cm[0].length - 1;
+          const closeBrace = matchBrace(str, openBrace);
+          if (closeBrace === -1) { el.appendChild(document.createTextNode(str.slice(i))); break; }
+          const inner = str.slice(openBrace + 1, closeBrace);
+          if (tag === 'textbf' || tag === 'mathbf') {
+            const b = document.createElement('b'); renderInto(b, inner); el.appendChild(b);
+          } else if (tag === 'underline') {
+            const u = document.createElement('u'); renderInto(u, inner); el.appendChild(u);
+          } else if (tag === 'textit') {
+            const it = document.createElement('i'); renderInto(it, inner); el.appendChild(it);
+          } else {
+            // textrm/textsf/mathrm/text → 应用字体，无额外标签
+            renderInto(el, inner);
+          }
+          i = closeBrace + 1;
+          continue;
+        }
+        // 无法识别的 \xxx：按字面保留（不吞掉，避免破坏后续内容）
+        el.appendChild(document.createTextNode(ch));
+        i++;
+        continue;
+      }
+      // 5) 普通文本：前进到下一个特殊字符
+      const nx = nextSpecial(str, i);
+      if (nx === -1) { el.appendChild(document.createTextNode(str.slice(i))); break; }
+      el.appendChild(document.createTextNode(str.slice(i, nx)));
+      i = nx;
     }
   }
 
@@ -262,7 +361,7 @@
       if (Array.isArray(c.hist)) out.hist = c.hist.map(function (h) { return { t: h.t, m: h.m, ivl: h.ivl || 0 }; });
       if (typeof c.lastR === 'number') out.lastR = c.lastR;
       if (typeof c.ivlR === 'number') out.ivlR = c.ivlR;
-      if (c.state === 'new' || c.state === 'learning' || c.state === 'review') out.state = c.state;
+      if (c.state === 'new' || (c.state === 'learning' || c.state === 'relearning') || c.state === 'relearning' || c.state === 'review') out.state = c.state;
       if (typeof c.notes === 'string') out.notes = c.notes;
     }
     return out;
@@ -478,7 +577,7 @@
   // ---------------- 统计与掌握度 ----------------
   function initialStrength(c) {
     if (c.state === 'new') return 0;
-    if (c.state === 'learning') return 15;
+    if ((c.state === 'learning' || c.state === 'relearning')) return 15;
     const d = c.ivl;
     if (d < 1) return 25;
     if (d < 7) return 45;
@@ -492,7 +591,7 @@
     let score;
     if (c.state === 'new') {
       score = 0;
-    } else if (c.state === 'learning') {
+    } else if ((c.state === 'learning' || c.state === 'relearning')) {
       score = Math.round(10 + (c.step | 0) * 5); // 学习阶段较低，随步进略升（无稳定性，仅占位）
     } else {
       // 复习阶段：掌握度 = 存储强度到目标的比例（⚠️自设计，依据论文「存储强度」概念 + 对数压缩）
@@ -537,7 +636,7 @@
     return s;
   }
   function scheduleText(c) {
-    if (c.state === 'learning') return '再作答几次（答「简单」）后进入间隔记忆';
+    if ((c.state === 'learning' || c.state === 'relearning')) return '再作答几次（答「简单」）后进入间隔记忆';
     return '间隔 ' + c.ivl + ' 天后再复习';
   }
   function masteryDeltaText() {
@@ -554,7 +653,7 @@
   }
   function nextReviewText(c) {
     if (c.state === 'new') return '待学习';
-    if (c.state === 'learning') {
+    if ((c.state === 'learning' || c.state === 'relearning')) {
       const min = Math.max(1, Math.round((c.due - Date.now()) / 60000));
       return '学习中 · 第 ' + ((c.step | 0) + 1) + ' 步（约 ' + min + ' 分钟后重现）';
     }
@@ -631,7 +730,7 @@
       const c = card(f.id);
       pctSum += mastery(f.id).pct;
       if (c.state === 'new') fresh++;
-      else if (c.state === 'learning') { if (c.due <= now) due++; else learn++; }
+      else if ((c.state === 'learning' || c.state === 'relearning')) { if (c.due <= now) due++; else learn++; }
       else { if (c.due <= now) due++; else { review++; if (isGraduated(c)) mature++; } }
     });
     return { due: due, learn: learn, review: review, fresh: fresh, mature: mature, total: DATA.length, avg: Math.round(pctSum / DATA.length) };
@@ -650,7 +749,7 @@
     DATA.forEach(function (f) {
       const c = card(f.id);
       if (c.state === 'new') fresh++;
-      else if (c.state === 'learning') learn++;
+      else if ((c.state === 'learning' || c.state === 'relearning')) learn++;
       else { review++; if (isGraduated(c)) grad++; }
     });
     return { fresh: fresh, learn: learn, review: review, grad: grad };
@@ -691,51 +790,65 @@
   const RATING_COST_S = [9, 6, 3, 1];
   // 每张「新卡」的估计学习成本（秒）：用于把剩余时间预算换算成可引入的新卡数
   const EST_NEW_CARD_SEC = 10;
-  // ================= 完整 FSRS-4.5（全部来自论文 / 训练库） =================
-  // 官方默认参数（在 fsrs-benchmark 上训练，含 17 个权重）
-  const FW = [0.40255, 1.18385, 3.173, 15.69105, 7.1949, 0.5345, 1.4604, 0.0046, 1.54575, 0.1192, 1.01925, 1.9395, 0.11, 0.29605, 2.2698, 0.2315, 2.9898];
-  const FFACTOR = 19 / 81;
-  const FDECAY = -0.5;
-  // 可提取性（遗忘曲线，幂律）R(t,S) = (1 + F·t/S)^DECAY
+  // ================= 完整 FSRS-6（2024-2025 最新，来自 open-spaced-repetition 官方训练权重） =================
+  // 21 参数默认权重（ts-fsrs / fsrs-rs v6.x DEFAULT_PARAMETERS：w0..w20）
+  const FW = [0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542];
+  const FSRS_DECAY = -FW[20];               // 遗忘曲线指数 decay = -w20 = -0.1542
+  const FSRS_FACTOR = Math.exp(Math.log(0.9) / FSRS_DECAY) - 1; // factor = e^{ln0.9/decay} - 1 ≈ 0.98
+  const FSRS_S_MIN = 0.001;
+  const FSRS_S_MAX = 36500.0;
+  const FSRS_HALFLIFE_K = (Math.pow(0.5, 1 / FSRS_DECAY) - 1) / FSRS_FACTOR; // 半衰期 h = K·S（FSRS-6 曲线，K≈90）
+  function fsrsClamp(x, lo, hi) { return Math.min(hi, Math.max(lo, x)); }
+  // 可提取性（遗忘曲线）R(t,S) = (1 + factor·t/S)^{decay}
   function fsrsRetention(daysSince, S) {
-    S = Math.max(0.25, S);
-    return Math.pow(1 + FFACTOR * Math.max(0, daysSince) / S, FDECAY);
+    S = Math.max(FSRS_S_MIN, S);
+    return Math.pow(1 + FSRS_FACTOR * Math.max(0, daysSince) / S, FSRS_DECAY);
   }
-  // 期望保留率(DR) → 下次复习间隔（天）：I = (S/F)·(R_req^(-2) − 1)
+  // 期望保留率(DR) → 下次复习间隔（天）：I(r,s) = (r^{1/decay} − 1)/factor × s，DR=0.9 时 I=S
   function fsrsInterval(S) {
-    const i = (Math.max(0.25, S) / FFACTOR) * (Math.pow(FDR, 1 / FDECAY) - 1);
-    return Math.max(0.2, i);
+    const mod = (Math.pow(FDR, 1 / FSRS_DECAY) - 1) / FSRS_FACTOR;
+    return Math.max(1, Math.round(Math.max(FSRS_S_MIN, S) * mod));
   }
-  // 初始稳定性（第 1 次评分）S0(G) = w[G-1]，G=1..4
-  function fsrsInitStability(G) { return FW[G - 1]; }
-  // 初始难度 D0(G) = w4 − e^(w5·(G−1)) + 1，钳 1..10
+  // 初始稳定性 S0(G) = max(w[G-1], 0.1)，G=1..4
+  function fsrsInitStability(G) { return Math.max(FW[G - 1], 0.1); }
+  // 初始难度 D0(G) = w4 − e^{(G−1)·w5} + 1，钳 1..10
   function fsrsInitDifficulty(G) {
-    return Math.max(1, Math.min(10, FW[4] - Math.exp(FW[5] * (G - 1)) + 1));
+    return fsrsClamp(FW[4] - Math.exp((G - 1) * FW[5]) + 1, 1, 10);
   }
-  function fsrsInitDifficulty3() { return Math.max(1, Math.min(10, FW[4] - Math.exp(FW[5] * 2) + 1)); } // 用于均值回归锚点 G=3
-  // 难度更新（含均值回归）
+  function fsrsInitDifficulty4() { return fsrsInitDifficulty(4); } // 均值回归锚点 D0(Easy)
+  // 线性阻尼：难度越接近 10，每次变化越小
+  function fsrsLinearDamping(delta_d, oldD) { return (delta_d * (10 - oldD)) / 9; }
+  // 难度更新：delta = -w6·(G-3) → 线性阻尼 → 均值回归到 D0(Easy)
   function fsrsDifficulty(D, G) {
-    D = (typeof D === 'number') ? D : 5;
-    const dNext = D - FW[6] * (G - 3);
-    const dNew = FW[7] * fsrsInitDifficulty3() + (1 - FW[7]) * dNext;
-    return Math.max(1, Math.min(10, dNew));
+    D = (typeof D === 'number' && D >= 1 && D <= 10) ? D : 7;
+    const delta_d = -FW[6] * (G - 3);
+    const next_d = D + fsrsLinearDamping(delta_d, D);
+    const reverted = FW[7] * fsrsInitDifficulty4() + (1 - FW[7]) * next_d;
+    return fsrsClamp(reverted, 1, 10);
   }
-  // 成功复习的稳定性更新（G=2..4）
+  // 成功回忆的稳定性更新（Hard 有 w15 惩罚、Easy 有 w16 加成）
   function fsrsSuccessStability(D, S, R, G) {
-    const h = (G === 2) ? FW[15] : 1;
-    const b = (G === 4) ? FW[16] : 1;
-    const growth = Math.exp(FW[8]) * (11 - D) * Math.pow(Math.max(0.25, S), -FW[9]) * (Math.exp(FW[10] * (1 - R)) - 1) * h * b;
-    return Math.max(0.25, S * (1 + growth));
+    const hardPenalty = (G === 2) ? FW[15] : 1;
+    const easyBound = (G === 4) ? FW[16] : 1;
+    const growth = Math.exp(FW[8]) * (11 - D) * Math.pow(Math.max(FSRS_S_MIN, S), -FW[9]) * (Math.exp(FW[10] * (1 - R)) - 1) * hardPenalty * easyBound;
+    return fsrsClamp(Math.max(FSRS_S_MIN, S) * (1 + growth), FSRS_S_MIN, FSRS_S_MAX);
   }
-  // 遗忘（G=1）的稳定性更新（含 min，稳定性不上升）
+  // 遗忘的稳定性更新：sForget 与「短时记忆封顶 s/e^{w17·w18}」取小（稳定性不高于遗忘前）
   function fsrsLapseStability(D, S, R) {
-    const sNew = FW[11] * Math.pow(Math.max(1, D), -FW[12]) * (Math.pow(Math.max(0.25, S) + 1, FW[13]) - 1) * Math.exp(FW[14] * (1 - R));
-    return Math.min(Math.max(0.25, S), sNew);
+    const sForget = fsrsClamp(FW[11] * Math.pow(Math.max(1, D), -FW[12]) * (Math.pow(Math.max(FSRS_S_MIN, S) + 1, FW[13]) - 1) * Math.exp(FW[14] * (1 - R)), FSRS_S_MIN, FSRS_S_MAX);
+    const newSMin = Math.max(FSRS_S_MIN, S) / Math.exp(FW[17] * FW[18]);
+    return fsrsClamp(newSMin, FSRS_S_MIN, sForget);
+  }
+  // 短时记忆稳定度（同日学习步进，t≈0）：Again 可降、Hard/Good/Easy 不低于原值
+  function fsrsShortTermStability(S, G) {
+    const sinc = Math.pow(Math.max(FSRS_S_MIN, S), -FW[19]) * Math.exp(FW[17] * (G - 3 + FW[18]));
+    const maskedSinc = (G >= 2) ? Math.max(sinc, 1) : sinc;
+    return fsrsClamp(Math.max(FSRS_S_MIN, S) * maskedSinc, FSRS_S_MIN, FSRS_S_MAX);
   }
 
-  // 半衰期 h：可提取性 R 降到 50% 的时间间隔。由幂律 R(t,S)=(1+F·t/S)^-0.5 解 R=0.5 → h=3·S/F（天）
-  // h 反映「存储强度」：h 越大记忆越牢；FSRS 稳定性 S 与半衰期 h 只是常数换算关系（h≈12.79·S）
-  function fsrsHalflife(S) { return 3 * Math.max(0.25, S) / FFACTOR; }
+  // 半衰期 h：可提取性 R 降到 50% 的时间间隔。由 FSRS-6 曲线 R(t,S)=(1+factor·t/S)^{decay} 解 R=0.5 → h=K·S
+  // h 反映「存储强度」：h 越大记忆越牢；FSRS-6 的 curve 较平缓，K≈90
+  function fsrsHalflife(S) { return Math.max(FSRS_S_MIN, S) * FSRS_HALFLIFE_K; }
   function cardHalflife(c) { return (c.state === 'review' && typeof c.stab === 'number') ? fsrsHalflife(c.stab) : 0; }
   // 毕业目标半衰期（天）：卡片记忆强度达到该值即视为「毕业/稳固」。
   // 开「与目标倒计时挂钩」：目标 = 保证目标日可提取性 ≥ TARGET_CONFIDENCE（默认 90%），等价要求 S ≥ 剩余天数，
@@ -746,7 +859,7 @@
     const linked = !(DB && DB.settings && DB.settings.targetLinkExam === false); // 默认开启
     if (!linked) return manual;
     const remain = Math.max(TARGET_MIN_DAYS, countdownDays());
-    return 3 * remain / (Math.pow(TARGET_CONFIDENCE, 1 / FDECAY) - 1);
+    return remain * FSRS_HALFLIFE_K; // h_N = K·剩余天数（等价要求 S ≥ 剩余天数，即考试日可提取性 ≥ 90%）
   }
   // 是否与目标倒计时挂钩（用于记忆框/设置页文案）
   function targetLinked() { return !(DB && DB.settings && DB.settings.targetLinkExam === false); }
@@ -774,70 +887,74 @@
     return '存储强度 S=' + (c.stab || 0).toFixed(1) + '天 · 半衰期 h=' + h.toFixed(1) + '天' + (isGraduated(c) ? ' · ✔已毕业' : '');
   }
 
-  // 学习毕业：首次毕业用 FSRS 初始化 D/S；重学毕业沿用（已被遗忘更新过的）D/S
-  function graduateReview(c, rating, s) {
-    const G = rating + 1; // 0=Again→1, 2=Good→3, 3=Easy→4
+  // 学习毕业：毕业时用「当前稳定度」（可能已被短时记忆 / 学习期遗忘压低）确定间隔
+  function graduateReview(c, stab) {
     c.grad = 1; c.reps = 1; c.state = 'review';
-    if (!c.fsrsInit) {
-      c.diff = fsrsInitDifficulty(G);
-      c.stab = fsrsInitStability(G);
-      c.fsrsInit = 1;
-    } else {
-      if (!(c.stab > 0)) c.stab = fsrsInitStability(G);
-      if (!(c.diff >= 1 && c.diff <= 10)) c.diff = fsrsInitDifficulty(G);
-    }
+    c.stab = Math.max(FSRS_S_MIN, (typeof stab === 'number') ? stab : c.stab);
     c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-    c.s = Math.min(100, (typeof s === 'number' ? s : 0) + (rating === 3 ? 20 : 12));
     c.due = Date.now() + c.ivl * DAY;
   }
 
-  // 学习阶段：时间步进（1 分钟 → 10 分钟），答 Good 到最后一档后毕业；Easy 直接毕业
+  // 学习阶段：时间步进（新卡 Learning 1 分钟 → 10 分钟）；复习遗忘进入 Relearning（10 分钟一步，FSRS-6 默认）
   const STEP_MS = [60 * 1000, 10 * 60 * 1000];
-  const LAST_STEP = 1;
+  const LAST_STEP = 1;                    // learning：第 1 步为最后一步（Good 过此步毕业）
+  const RELEARN_MS = [10 * 60 * 1000];    // FSRS-6 relearning_steps = ['10m']
+  const RELEARN_LAST_STEP = 0;            // relearning：仅 1 步（索引 0）
   // 四档评分：0 = 忘记(Again)；1 = 困难(Hard)；2 = 良好(Good)；3 = 简单(Easy)
   function applyRatingToCard(c, rating) {
     const now = Date.now();
+    const G = rating + 1; // 0=Again→1, 1=Hard→2, 2=Good→3, 3=Easy→4
     const s = (typeof c.s === 'number') ? c.s : initialStrength(c);
     if (typeof c.step !== 'number') c.step = 0;
-    // —— 学习阶段（新卡 / 学习卡）：时间步进 ——
-    if (c.state === 'new' || c.state === 'learning') {
-      if (rating === 0) { // Again：回第 0 步（1 分钟）
-        c.step = 0; c.state = 'learning'; c.grad = 0; c.reps = 0; c.ivl = 0;
-        c.s = Math.max(0, s - 25);
-        c.due = now + STEP_MS[0];
+    // —— 学习 / 重学阶段（FSRS-6：Learning=[1m,10m]，Relearning=[10m]；短时记忆稳定度）——
+    if (c.state === 'new' || (c.state === 'learning' || c.state === 'relearning') || c.state === 'relearning') {
+      const isRelearn = (c.state === 'relearning');
+      const steps = isRelearn ? RELEARN_MS : STEP_MS;
+      const lastStep = isRelearn ? RELEARN_LAST_STEP : LAST_STEP;
+      // 新卡首次评分建立初始 D/S；其后同日学习/重学步进用短时记忆稳定度更新（Again 降低、Good/Easy 不降）
+      if (c.state === 'new' || !(c.fsrsInit)) {
+        c.diff = fsrsInitDifficulty(G);
+        c.stab = fsrsInitStability(G);
+        c.fsrsInit = 1;
+      } else {
+        c.stab = fsrsShortTermStability(c.stab, G);
+      }
+      c.s = Math.max(0, s + (rating === 0 ? -25 : (rating === 3 ? 20 : (rating === 2 ? 12 : -8))));
+      if (rating === 0) { // Again：回第 0 步
+        c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 0;
+        c.state = isRelearn ? 'relearning' : 'learning';
+        c.due = now + steps[0];
         return;
       }
-      if (rating === 1) { // Hard：前进一步（到最后一档后仍要 Good 才能毕业）
-        c.step = Math.min(c.step + 1, LAST_STEP);
-        c.state = 'learning';
-        c.s = Math.max(0, s - 8);
-        c.due = now + STEP_MS[c.step];
+      if (rating === 1) { // Hard：前进一步（不毕业）
+        c.step = Math.min(c.step + 1, lastStep);
+        c.state = isRelearn ? 'relearning' : 'learning';
+        c.due = now + steps[c.step];
         return;
       }
-      if (rating === 2) { // Good：前进一步，超过最后一档 → 毕业
+      if (rating === 2) { // Good：前进一步，超过最后一步 → 毕业
         c.step = c.step + 1;
-        if (c.step > LAST_STEP) {
-          graduateReview(c, 2, s);
+        if (c.step > lastStep) {
+          graduateReview(c, c.stab);
         } else {
-          c.state = 'learning'; c.s = Math.min(100, s + 10);
-          c.due = now + STEP_MS[c.step];
+          c.state = isRelearn ? 'relearning' : 'learning';
+          c.due = now + steps[c.step];
         }
         return;
       }
-      // Easy：直接毕业
-      graduateReview(c, 3, s);
+      graduateReview(c, c.stab); // Easy：直接毕业
       return;
     }
-    // —— 复习阶段（FSRS-4.5：R(t,S) 幂律 + 难度/稳定性更新 + 期望保留率）——
+    // —— 复习阶段（FSRS-6：R(t,S) 遗忘曲线 + 难度/稳定性更新 + 期望保留率）——
     const daysSince = Math.max(0, (now - (c.lastR || c.due)) / DAY);
     const R = fsrsRetention(daysSince, c.stab);
-    if (rating === 0) { // Again：遗忘 → 稳定性下降、难度上升，回到学习阶段重学
-      c.step = 0; c.state = 'learning'; c.grad = 0; c.reps = 0; c.ivl = 0;
+    if (rating === 0) { // Again：遗忘 → 稳定性下降、难度上升，进入 Relearning 重学（10 分钟一步）
+      c.step = 0; c.state = 'relearning'; c.grad = 0; c.reps = 0; c.ivl = 0;
       c.lapses++;
       c.diff = fsrsDifficulty(c.diff, 1);
       c.stab = fsrsLapseStability(c.diff, c.stab, R);
       c.s = Math.max(0, s - 25);
-      c.due = now + STEP_MS[0];
+      c.due = now + RELEARN_MS[0];
       return;
     }
     if (rating === 1) { // Hard
@@ -945,7 +1062,7 @@
     const incNew = incompleteNewCount();
     const bar = el('div', 'stats-bar');
     bar.appendChild(el('span', 'stat', '今天已学习 ' + todayReviewed() + ' 张'));
-    bar.appendChild(el('span', 'stat', '⏱ 今日 ' + todayCostMin() + ' / 预算 ' + budgetMin() + ' 分'));
+    bar.appendChild(el('span', 'stat', '⏱ 今日 ' + todayCostMin() + ' / 预算 ' + budgetMin() + ' 分' + (todayCostSec() > budgetSec() ? '（已超出，可继续）' : '')));
     bar.appendChild(el('span', 'stat', '待复习 ' + s.due + ' 张'));
     bar.appendChild(el('span', 'stat', '未学完新卡 ' + incNew + ' 张'));
     bar.appendChild(el('span', 'stat', '平均掌握 ' + s.avg + '%'));
@@ -994,17 +1111,16 @@
   }
   // 未完全学习的新卡：处于学习阶段、尚未毕业（曾经点过「忘记」）
   function incompleteNewCount() {
-    return DATA.filter(function (f) { const c = card(f.id); return c.state === 'learning' && (c.grad | 0) === 0; }).length;
+    return DATA.filter(function (f) { const c = card(f.id); return (c.state === 'learning' || c.state === 'relearning') && (c.grad | 0) === 0; }).length;
   }
 
   function buildSession() {
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
     const st = introState();
-    // 首次进入该学科：先引入第一批新卡（软上限 NEW_WAVE 张，且受今日剩余时间预算约束）
+    // 首次进入该学科：先引入第一批新卡（软上限 NEW_WAVE 张；时间预算为软提示，不限制）
     if (st.ids.length === 0) {
-      const cap = Math.min(NEW_WAVE, waveBudgetCap());
-      const firstWave = shuffle(all.filter(function (id) { return card(id).state === 'new'; })).slice(0, cap);
+      const firstWave = shuffle(all.filter(function (id) { return card(id).state === 'new'; })).slice(0, NEW_WAVE);
       st.ids = firstWave;
       saveDB();
     }
@@ -1019,7 +1135,7 @@
       return card(a).due - card(b).due;
     });
     // 学习阶段（时间步进到点）的卡：新卡被遗忘 / 复习卡被遗忘，都在等计时器，到点才回来
-    const resumeLearning = interleave(all.filter(function (id) { return card(id).state === 'learning' && card(id).due <= now; }));
+    const resumeLearning = interleave(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
     // 当前批新卡（本波次里仍未学的，完全随机序）
     const waveIds = curWaveNewIds();
     const newToStudy = shuffle(waveIds.filter(function (id) { return card(id).state === 'new'; }));
@@ -1039,7 +1155,7 @@
     const tail = deck.slice(frontier);
     const due = tail.filter(function (id) {
       const c = card(id);
-      return (c.state === 'review' || c.state === 'learning') && c.due <= now;
+      return (c.state === 'review' || (c.state === 'learning' || c.state === 'relearning')) && c.due <= now;
     });
     if (!due.length) return;
     const rest = tail.filter(function (id) { return due.indexOf(id) === -1; });
@@ -1056,14 +1172,12 @@
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
       const moreNew = unstartedNewCount();
-      const cap = Math.min(NEW_WAVE, waveBudgetCap());
-      if (moreNew > 0 && cap > 0) {
-        wrap.appendChild(el('p', 'muted', '已完成本批学习。还有 ' + moreNew + ' 张新知识点未学，今日时间预算剩余约 ' + Math.round(remainingBudgetSec() / 60) + ' 分钟，可再续一批（每批 ' + NEW_WAVE + ' 张，受预算约束）。'));
-        const more = el('button', 'btn primary', '再来 ' + cap + ' 张新卡');
+      const overBudget = todayCostSec() > budgetSec();
+      if (moreNew > 0) {
+        wrap.appendChild(el('p', 'muted', '已完成本批学习。还有 ' + moreNew + ' 张新知识点未学，可再续一批（每批 ' + NEW_WAVE + ' 张）。' + (overBudget ? '（今日已超出时间预算 ' + (todayCostMin() - budgetMin()) + ' 分钟，仍可继续学习）' : '')));
+        const more = el('button', 'btn primary', '再来 ' + NEW_WAVE + ' 张新卡');
         more.setAttribute('data-action', 'newwave');
         wrap.appendChild(more);
-      } else if (moreNew > 0) {
-        wrap.appendChild(el('p', 'muted', '今日复习时间预算已用尽（今日 ' + todayCostMin() + ' / 预算 ' + budgetMin() + ' 分钟）。还有 ' + moreNew + ' 张新知识点未学，明天会自动继续；也可在「设置」中调高每日时间预算。'));
       } else {
         wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
       }
@@ -1138,7 +1252,6 @@
 
     const top = el('div', 'learn-top');
     top.appendChild(el('span', 'badge', CATS[f.cat]));
-    top.appendChild(texEl('span', 'muted', f.title));
     wrap.appendChild(top);
 
     const m = mastery(id);
@@ -1152,7 +1265,7 @@
     bar.appendChild(fill);
     meta.appendChild(bar);
     meta.appendChild(el('span', 'muted',
-      st.state === 'new' ? '尚未学习' : (st.state === 'learning' ? '学习中' : ('间隔 ' + st.ivl + ' 天' + (st.lapses > 0 ? ' · 遗忘 ' + st.lapses + ' 次' : '') + ' · ' + memoryStrengthText(st)))));
+      st.state === 'new' ? '尚未学习' : ((st.state === 'learning' || st.state === 'relearning') ? '学习中' : ('间隔 ' + st.ivl + ' 天' + (st.lapses > 0 ? ' · 遗忘 ' + st.lapses + ' 次' : '') + ' · ' + memoryStrengthText(st)))));
     wrap.appendChild(meta);
 
     const cardEl = el('div', 'card');
@@ -1295,7 +1408,7 @@
       c.ivlR = c.ivl || 0;
     }
     // 时间步进：学习中的卡按计时器到点重现（推回队尾，由 surfaceDue 在其 due 到达时提前）
-    if (card(id).state === 'learning') {
+    if (card(id).state === 'learning' || card(id).state === 'relearning') {
       deck.push(id);
     }
     frontier++;
@@ -2260,11 +2373,10 @@
         renderApp();
         break;
       case 'newwave': {
-        // 每科软上限：学习完本批后，再引入下一批新卡（受今日剩余时间预算约束）
+        // 每科软上限：学习完本批后，再引入下一批新卡（时间预算为软提示，不限制）
         const st = introState();
         const pool = DATA.filter(function (f) { return card(f.id).state === 'new' && st.ids.indexOf(f.id) === -1; });
-        const cap = Math.min(NEW_WAVE, waveBudgetCap());
-        if (cap > 0) st.ids = st.ids.concat(shuffle(pool.map(function (f) { return f.id; })).slice(0, cap));
+        st.ids = st.ids.concat(shuffle(pool.map(function (f) { return f.id; })).slice(0, NEW_WAVE));
         saveDB();
         buildSession();
         renderApp();
@@ -2536,4 +2648,92 @@
 
   initApp();
   bootKatex(0);
+
+  // ---------------- 自检钩子（?selftest=1 时全量渲染校验，供 tools/check_render.mjs 使用；正常使用零影响） ----------------
+  (function maybeSelftest() {
+    if (typeof location === 'undefined') return;
+    let want = false;
+    try { want = new URLSearchParams(location.search).has('selftest'); } catch (e) { return; }
+    if (!want) return;
+    window.__selftestReady = false;
+    window.__selftestResult = null;
+
+    function checkField(sid, id, field, str, holder, problems, stats) {
+      if (typeof str !== 'string' || str.length === 0) return;
+      stats.fields++;
+      const el = document.createElement('div');
+      holder.appendChild(el);
+      renderTex(el, str);
+      // KaTeX 渲染错误（throwOnError:false 时以 .katex-error 标记）
+      const kerr = el.querySelectorAll('.katex-error').length;
+      // 只检查「散文文本节点」：排除 .katex 子树（其 MathML <annotation> 含原始 TeX 源码，
+      // textContent 必然包含 \frac/\text 等命令，属正常现象，不能据此判错）
+      let prose = '';
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = walker.nextNode()) !== null) {
+        const pEl = n.parentElement;
+        if (pEl && pEl.closest && pEl.closest('.katex')) continue;
+        prose += n.textContent;
+      }
+      const litStar = /\*\*/.test(prose);
+      // 散文中残留任意 \命令 都算未渲染（renderProse 只把 textbf/underline 等转 HTML，
+      // 其余 \xxx 若漏进散文就是没被处理的 LaTeX）
+      const litCmd = /\\([A-Za-z]+)/.test(prose);
+      if (kerr || litStar || litCmd) {
+        problems.push({ sid: sid, id: id, field: field, kerr: kerr, litStar: litStar, litCmd: litCmd, snippet: prose.slice(0, 80) });
+      }
+      holder.removeChild(el);
+    }
+
+    function run() {
+      const subs = subjectList();
+      const holder = document.createElement('div');
+      holder.style.cssText = 'position:absolute;left:-99999px;top:0;';
+      document.body.appendChild(holder);
+      const problems = [];
+      const stats = { cards: 0, fields: 0 };
+      for (const sid of Object.keys(subs)) {
+        const mod = subs[sid];
+        const data = (mod.DATA || mod.data) || [];
+        for (const c of data) {
+          if (!c || !c.id) continue;
+          stats.cards++;
+          checkField(sid, c.id, 'title', c.title, holder, problems, stats);
+          checkField(sid, c.id, 'front', c.front, holder, problems, stats);
+          checkField(sid, c.id, 'back', c.back, holder, problems, stats);
+        }
+        const ex = mod.EXAMPLE || {};
+        for (const id of Object.keys(ex)) {
+          const arr = Array.isArray(ex[id]) ? ex[id] : [ex[id]];
+          arr.forEach(function (e, i) {
+            if (!e) return;
+            checkField(sid, id, 'ex' + i + '.q', e.q, holder, problems, stats);
+            checkField(sid, id, 'ex' + i + '.a', e.a, holder, problems, stats);
+            checkField(sid, id, 'ex' + i + '.a2', e.a2, holder, problems, stats);
+          });
+        }
+        const pf = mod.PITFALL || {};
+        for (const id of Object.keys(pf)) checkField(sid, id, 'pitfall', pf[id], holder, problems, stats);
+        const mn = mod.MNEM || {};
+        for (const id of Object.keys(mn)) checkField(sid, id, 'mnem', mn[id], holder, problems, stats);
+      }
+      document.body.removeChild(holder);
+      window.__selftestResult = {
+        katexOk: typeof window.katex !== 'undefined' && !!window.katex.render,
+        cards: stats.cards,
+        fields: stats.fields,
+        problems: problems
+      };
+      window.__selftestReady = true;
+    }
+
+    // 等 KaTeX 就绪（bootKatex 本地优先；最多等 15s）
+    const t0 = Date.now();
+    (function waitKatex() {
+      if (typeof window.katex !== 'undefined' && window.katex.render) { run(); return; }
+      if (Date.now() - t0 > 15000) { run(); return; }
+      setTimeout(waitKatex, 120);
+    })();
+  })();
 })();

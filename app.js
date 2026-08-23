@@ -5,10 +5,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.4.3';
+  const VERSION = '1.4.4';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.4.4', date: '2026-08', items: ['渲染器重构为字符级扫描器：`\\textbf{…}`/`\\underline{…}` 等文本命令改用括号配对读取（支持嵌套花括号如 `\\chi^{2}` 的 `{2}`）、`**…**`/`$…$`/`$$…$$` 作为整体 token 递归渲染——修复「命令内嵌数学」被 `$` 拆分截断导致 `\\textbf` 字面残留的一类 bug；`renderProse` 同时支持 markdown `**…**`→`<b>`', '毕业目标与掌握度量纲从「半衰期 h」改为「稳定度 S（天）」：毕业目标 `targetS()=剩余天数`（语义「停止复习后仍 ≥90% 记得」，毕业时机不变）；掌握度 `ln(1+S)/ln(1+S_N)` 不再虚高；学习阶段掌握度改用 FSRS 短时稳定度（随评分真实变化，非固定挡位）', '删除正文里泄漏的内部卡片编号（如 `（gm16）`/`（we11）`，共 11 处，全在微观）；修复 zb19/mk10/jj01/jj11 等 4 处数据渲染 bug（inline 矩阵 `\\`、漏 `$` 包裹、JSON 字面 `\\n`）', '工程校验工具化（tools/ 三道闸，零 npm 依赖）：`check_data.mjs`（数据完整性+内容不变量）、`check_render.mjs`（headless Chrome 跑真实渲染、断言 0 katex-error/0 残留命令）、`check_version.mjs`（版本标记一致性）；数据备份归档至 backup/'] },
     { v: '1.4.3', date: '2026-08', items: ['长答案按分点分段可视化：`renderTex` 检测 `①②③…`/全角`（1）（2）…` 分点，自动拆成带左侧竖线的段落块 `.ans-point`（跳过数学下标/命令内标记如 `X_{(1)}`、`\\textbf{①…` 以免破坏结构）；长答案更清晰分层' , '将目前确立的内容与文本规范固化为「开发标准」（见 PROGRESS）：算法来源（核心=FSRS 官方，自创需标注⚠️并请示）、内容范围（光华431=微观+统计·无宏观金融；数三=高数+线代）、例题仅真实真题且可跨知识点复用、标题公式用原始模板、正文加粗/下划线用应用字体、长答案分点分段、时间预算软上限、改数据文件禁用 PowerShell GBK 读写'] },
     { v: '1.4.2', date: '2026-08', items: ['正文文本模式命令改为**HTML 渲染**（彻底用应用字体，不再经 KaTeX 字体）：`\\textbf{…}`→`<b>`、`\\underline{…}`→`<u>`、`\\textit{…}`→`<i>`、`\\textrm`/`\\textsf`/`\\mathrm`/`\\text`→（默认字体）仅渲染内部文本；命令内部若含 `$..$` 数学则递归交给 KaTeX。→ 加粗/下划线不再出现字体不一致，也无 `\\textbf`/`\\n` 字面残留'] },
     { v: '1.4.1', date: '2026-08', items: ['修复正文渲染：此前用 \\text{} 包裹整段正文，导致（a）正文内出现 \\textbf 加粗/\\underline 下划线时字体不一致（KaTeX 字体 vs 应用字体）、（b）跨行正文（真实换行）被 KaTeX 报错、显示字面 \\\\n 等。改为「普通正文（含换行）保留为文本节点（应用字体），仅把 \\textbf{}/\\underline{}/\\textit{} 等文本模式命令片段单独交给 KaTeX」——字体统一、无 \\n/\\textbf 字面残留'] },
@@ -315,7 +316,10 @@
     if (!DB.settings) DB.settings = {};
     if (DB.settings.dailyNew == null) DB.settings.dailyNew = 10;
     if (DB.settings.minutesPerDay == null) DB.settings.minutesPerDay = MIN_PER_DAY_DEFAULT;
-    if (DB.settings.targetH == null) DB.settings.targetH = TARGET_H_DEFAULT;
+    // 旧版本用 targetH（半衰期天）作为固定毕业目标；迁移到 targetS（稳定度天）。
+    //   旧 90 天半衰期 ≈ 90/K ≈ 1 天稳定度，语义已变：直接采用新默认值（不再沿用旧数值，避免误把「半衰期天」当「稳定度天」）。
+    if (DB.settings.targetS == null) DB.settings.targetS = TARGET_S_DEFAULT;
+    if (DB.settings.targetH != null) delete DB.settings.targetH;
     if (DB.settings.targetLinkExam == null) DB.settings.targetLinkExam = true;
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (!DB.log) DB.log = {};
@@ -391,8 +395,8 @@
     if (payload.settings && typeof payload.settings.minutesPerDay === 'number') {
       fresh.settings.minutesPerDay = Math.max(5, Math.min(120, Math.round(payload.settings.minutesPerDay)));
     }
-    if (payload.settings && typeof payload.settings.targetH === 'number') {
-      fresh.settings.targetH = Math.max(7, Math.min(730, Math.round(payload.settings.targetH)));
+    if (payload.settings && typeof payload.settings.targetS === 'number') {
+      fresh.settings.targetS = Math.max(7, Math.min(730, Math.round(payload.settings.targetS)));
     }
     if (payload.settings && typeof payload.settings.targetLinkExam === 'boolean') {
       fresh.settings.targetLinkExam = payload.settings.targetLinkExam;
@@ -591,15 +595,13 @@
     let score;
     if (c.state === 'new') {
       score = 0;
-    } else if ((c.state === 'learning' || c.state === 'relearning')) {
-      score = Math.round(10 + (c.step | 0) * 5); // 学习阶段较低，随步进略升（无稳定性，仅占位）
     } else {
-      // 复习阶段：掌握度 = 存储强度到目标的比例（⚠️自设计，依据论文「存储强度」概念 + 对数压缩）
-      //   h = 半衰期（存储强度）；H = 目标半衰期（默认随目标倒计时变化）
-      //   s = ln(1+h)/ln(1+H)，毕业(h≥H) 即 s=1 ⇒ 100%；对数使「记忆强度增长先快后慢」更符合直觉、避免早期全 0
-      const h = cardHalflife(c);
-      const H = targetH();
-      const s = Math.max(0, Math.min(1, Math.log(1 + h) / Math.log(1 + H)));
+      // 掌握度 = 稳定度 S 到目标 S_N 的比例（⚠️自设计：对数压缩，S 量纲而非半衰期 h 量纲，避免 h=90·S 放大导致虚高）
+      //   学习/重学阶段用短时稳定度（FSRS 已在维护：Again 降、Good/Easy 不降，随评分真实变化）；复习阶段用长期稳定度。
+      //   s = ln(1+S)/ln(1+S_N)，S≥S_N（毕业）即 100%；对数使「记忆强度增长先快后慢」、避免早期全 0。
+      const S = (typeof c.stab === 'number' && c.stab > 0) ? c.stab : 0;
+      const sN = targetS();
+      const s = Math.max(0, Math.min(1, Math.log(1 + S) / Math.log(1 + sN)));
       score = Math.round(100 * s);
     }
     score = Math.max(0, Math.min(100, score));
@@ -716,8 +718,8 @@
       const h = cardHalflife(c);
       const targetText = targetLinked()
         ? ('目标：稳至' + goalTitle() + '(≥' + Math.round(TARGET_CONFIDENCE * 100) + '%) · 距' + goalTitle() + ' ' + countdownDays() + ' 天')
-        : ('目标 h_N=' + Math.round(targetH()) + ' 天');
-      box.appendChild(el('div', 'memory-fsrs muted', '📐 难度 ' + (c.diff || 5).toFixed(1) + ' · 稳定性 ' + (c.stab || 0).toFixed(1) + ' 天 · 半衰期 h=' + h.toFixed(1) + ' 天 · ' + targetText + (isGraduated(c) ? ' · ✔已毕业' : '')));
+        : ('目标 S_N=' + Math.round(targetS()) + ' 天');
+      box.appendChild(el('div', 'memory-fsrs muted', '📐 难度 ' + (c.diff || 5).toFixed(1) + ' · 稳定性 S=' + (c.stab || 0).toFixed(1) + ' 天 · ' + targetText + (isGraduated(c) ? ' · ✔已毕业' : '')));
     }
     box.appendChild(svgMasteryTrend(id));
     return box;
@@ -777,10 +779,10 @@
   const EF_MIN = 1.3; // （保留，向后兼容；FSRS 的易度由难度/稳定性替代）
   // 期望保留率：FSRS 论文标准默认值（0.9，即「到期复习时回忆概率」），不再做自定校准
   const FDR = 0.9;
-  // 目标半衰期（天）：一张卡的可提取性衰到 50% 的记忆强度，达到该值视为「毕业/稳固」（SSP-MMC 的目标态 h_N）
-  const TARGET_H_DEFAULT = 90;
-  // 「毕业目标与目标倒计时挂钩」：保证目标日可提取性（回忆概率）≥ TARGET_CONFIDENCE（默认 90%，沿用 FSRS 期望保留率）
-  // 等价要求：稳定度 S ≥ 剩余天数（因 R(S,S)=0.9）；换算成半衰期目标 targetH = 3·剩余天数/(p0^-2 − 1) ≈ 12.79·剩余天数
+  // 目标稳定度 S（天）：一张卡「停止复习后仍能 ≥90% 记得」的记忆强度，达到该值视为「毕业/稳固」。
+  // 与目标倒计时挂钩时：目标 S = 剩余天数（下限 TARGET_MIN_DAYS）——等价要求「目标日可提取性 ≥ TARGET_CONFIDENCE」，
+  //   因遗忘曲线 R(S,S)=0.9（FSRS_FACTOR 即按 90% 反推），数值即「距目标天数」，直观合理（不再用半衰期 h=90·S 的量纲）。
+  const TARGET_S_DEFAULT = 90;
   const TARGET_CONFIDENCE = 0.9;
   // 剩余天数的下限（天）：备考即将结束/已过考时仍保留一个不坍塌的毕业目标，避免任何卡都被标「已毕业」
   const TARGET_MIN_DAYS = 14;
@@ -847,23 +849,22 @@
   }
 
   // 半衰期 h：可提取性 R 降到 50% 的时间间隔。由 FSRS-6 曲线 R(t,S)=(1+factor·t/S)^{decay} 解 R=0.5 → h=K·S
-  // h 反映「存储强度」：h 越大记忆越牢；FSRS-6 的 curve 较平缓，K≈90
+  // h 反映「记忆强度」（仅作展示参考，不作毕业/掌握度分母——因 K≈90 放大导致目标数值失真）
   function fsrsHalflife(S) { return Math.max(FSRS_S_MIN, S) * FSRS_HALFLIFE_K; }
   function cardHalflife(c) { return (c.state === 'review' && typeof c.stab === 'number') ? fsrsHalflife(c.stab) : 0; }
-  // 毕业目标半衰期（天）：卡片记忆强度达到该值即视为「毕业/稳固」。
-  // 开「与目标倒计时挂钩」：目标 = 保证目标日可提取性 ≥ TARGET_CONFIDENCE（默认 90%），等价要求 S ≥ 剩余天数，
-  //   折算成半衰期 targetH = 3·剩余天数/(p0^-2 − 1) ≈ 12.79·剩余天数（剩余天数有下限 TARGET_MIN_DAYS）。
-  // 关「挂钩」：回退到用户手动填的固定目标值（默认 90 天）。
-  function targetH() {
-    const manual = (DB && DB.settings && typeof DB.settings.targetH === 'number') ? DB.settings.targetH : TARGET_H_DEFAULT;
+  // 毕业目标稳定度 S（天）：卡片稳定度达到该值即视为「毕业/稳固」——语义为「停止复习后仍能 ≥90% 记得」的天数。
+  // 开「与目标倒计时挂钩」：目标 S = 剩余天数（下限 TARGET_MIN_DAYS），等价要求目标日可提取性 ≥ TARGET_CONFIDENCE（90%）。
+  //   因 R(S,S)=0.9，S 目标数值即「距目标天数」，直观合理（不再用半衰期 h=90·S，避免 120 天目标被显示成 1 万多天）。
+  // 关「挂钩」：回退到用户手动填的固定目标稳定度（默认 90 天）。
+  function targetS() {
+    const manual = (DB && DB.settings && typeof DB.settings.targetS === 'number') ? DB.settings.targetS : TARGET_S_DEFAULT;
     const linked = !(DB && DB.settings && DB.settings.targetLinkExam === false); // 默认开启
     if (!linked) return manual;
-    const remain = Math.max(TARGET_MIN_DAYS, countdownDays());
-    return remain * FSRS_HALFLIFE_K; // h_N = K·剩余天数（等价要求 S ≥ 剩余天数，即考试日可提取性 ≥ 90%）
+    return Math.max(TARGET_MIN_DAYS, countdownDays()); // S_N = 剩余天数（等价目标日可提取性 ≥ 90%）
   }
   // 是否与目标倒计时挂钩（用于记忆框/设置页文案）
   function targetLinked() { return !(DB && DB.settings && DB.settings.targetLinkExam === false); }
-  function isGraduated(c) { return c.state === 'review' && cardHalflife(c) >= targetH(); }
+  function isGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
 
   // 每日时间预算（秒）：按时间而非卡片数安排学习
   function budgetSec() { return Math.max(5, (DB && DB.settings && typeof DB.settings.minutesPerDay === 'number') ? DB.settings.minutesPerDay : MIN_PER_DAY_DEFAULT) * 60; }
@@ -880,11 +881,11 @@
     DB.log.cost[t] = (DB.log.cost[t] || 0) + (RATING_COST_S[r] || 3);
   }
 
-  // 卡面「存储强度 + 提取强度」双维度文本（SSP-MMC：存储强度=S/半衰期 h，提取强度=R）
+  // 卡面「存储强度」文本：以稳定度 S（天）为准（毕业/掌握度均按 S 判），半衰期 h 仅作「遗忘到 50% 耗时」参考展示
   function memoryStrengthText(c) {
     if (c.state !== 'review') return '';
     const h = cardHalflife(c);
-    return '存储强度 S=' + (c.stab || 0).toFixed(1) + '天 · 半衰期 h=' + h.toFixed(1) + '天' + (isGraduated(c) ? ' · ✔已毕业' : '');
+    return '存储强度 S=' + (c.stab || 0).toFixed(1) + '天（半衰期 h=' + h.toFixed(1) + '天，仅供参考）' + (isGraduated(c) ? ' · ✔已毕业' : '');
   }
 
   // 学习毕业：毕业时用「当前稳定度」（可能已被短时记忆 / 学习期遗忘压低）确定间隔
@@ -1738,7 +1739,7 @@
     wrap.appendChild(el('p', 'muted', '按「时间」而非「卡片数」安排学习：到期复习优先，复习实际用时计入预算，剩余时间用来引入新卡——最小化记忆成本（SSP-MMC 成本约束）。'));
 
     const s7 = el('div', 'setting-row');
-    s7.appendChild(el('span', null, '毕业目标半衰期'));
+    s7.appendChild(el('span', null, '毕业目标稳定度'));
     const linkedCb = el('input', 'chk');
     linkedCb.type = 'checkbox';
     linkedCb.checked = targetLinked();
@@ -1757,23 +1758,23 @@
     tInput.type = 'number';
     tInput.min = '7'; tInput.max = '730'; tInput.step = '1';
     tInput.style.width = '96px';
-    tInput.value = (DB.settings && typeof DB.settings.targetH === 'number') ? DB.settings.targetH : TARGET_H_DEFAULT;
-    tInput.title = '关闭「与倒计时挂钩」时使用的固定目标值（天）';
+    tInput.value = (DB.settings && typeof DB.settings.targetS === 'number') ? DB.settings.targetS : TARGET_S_DEFAULT;
+    tInput.title = '关闭「与倒计时挂钩」时使用的固定目标稳定度（天）';
     tInput.addEventListener('change', function () {
       let v = parseInt(tInput.value, 10);
-      if (isNaN(v)) v = TARGET_H_DEFAULT;
+      if (isNaN(v)) v = TARGET_S_DEFAULT;
       v = Math.max(7, Math.min(730, v));
-      DB.settings.targetH = v;
+      DB.settings.targetS = v;
       saveDB();
       tInput.value = v;
-      toast('固定毕业目标半衰期 ' + v + ' 天');
+      toast('固定毕业目标稳定度 ' + v + ' 天');
       renderApp();
     });
     s7.appendChild(tInput);
     wrap.appendChild(s7);
     wrap.appendChild(el('p', 'muted', targetLinked()
-      ? '毕业目标自动随目标倒计时变化：要求「' + goalTitle() + '日仍能 ≥90% 记得」（等价稳定度 S ≥ 剩余天数，即半衰期 h ≥ 12.79×剩余天数）。距' + goalTitle() + ' ' + countdownDays() + ' 天 → 目标 h_N ≈ ' + Math.round(targetH()) + ' 天。'
-      : '记忆强度达到该半衰期即「毕业/稳固」。半衰期 h=3·S/F，由 FSRS 稳定性 S 换算（固定值 ' + Math.round(targetH()) + ' 天；SSP-MMC 目标态 h_N）。勾选上方的「与目标倒计时挂钩」可改为随倒计时动态变化。'));
+      ? '毕业目标自动随目标倒计时变化：要求「' + goalTitle() + '日仍能 ≥90% 记得」（等价稳定度 S ≥ 剩余天数）。距' + goalTitle() + ' ' + countdownDays() + ' 天 → 目标 S_N ≈ ' + Math.round(targetS()) + ' 天。'
+      : '稳定度 S 达到该值即「毕业/稳固」——表示「停止复习后仍能 ≥90% 记得」的天数（固定值 ' + Math.round(targetS()) + ' 天）。勾选上方的「与目标倒计时挂钩」可改为随倒计时动态变化。'));
 
     const s2 = el('div', 'setting-row');
     s2.appendChild(el('span', null, '备份 / 迁移进度'));

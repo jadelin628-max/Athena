@@ -7,14 +7,12 @@
  *   2. app.js  的 CHANGELOG 最新一条 .v
  *   3. sw.js   的 VERSION（Service Worker 缓存版本，独立命名空间 ms3-vN）
  *   4. index.html 里 ?v= 的缓存戳（manifest / 图标）
- *   5. PROGRESS.md 最新的「## 版本 vX.Y.Z」小节
  *
  * 规则：
  *   - app.js VERSION 必须等于 CHANGELOG 最新 .v（应用语义版本一致）
- *   - app.js VERSION 必须等于 PROGRESS.md 最新版本节（文档同步）
  *   - index.html 的所有 ?v= 必须一致（缓存戳内部一致）
  *   - sw.js 版本与 index.html ?v= 是「发布时需一起 bump」的提示，不作强相等判定
- *     （因为 sw 缓存版本 ms3-v25 与应用版本 1.4.3 是两个独立体系）
+ *     （因为 sw 缓存版本 ms3-v26 与应用版本 1.4.4 是两个独立体系）
  *
  * 用法：  node tools/check_version.mjs
  * 退出码：0 = 一致；1 = 不一致（改版本时漏了某处）
@@ -46,21 +44,14 @@ const swVer = (sw.match(/const VERSION = '([^']+)'/) || [])[1];
 const html = read('index.html');
 const cacheStamps = [...html.matchAll(/\?v=(\d+)/g)].map((m) => m[1]);
 
-// 5: PROGRESS.md 最新版本节
-const prog = read('PROGRESS.md');
-const progVers = [...prog.matchAll(/^## 版本 v([0-9]+\.[0-9]+\.[0-9]+)/gm)].map((m) => m[1]);
-const progLatest = progVers[0];
-
 console.log('=== 版本标记一致性校验 ===\n');
 console.log('app.js VERSION :', appVer || '(未找到)');
 console.log('CHANGELOG 最新 :', changelogVer || '(未找到)');
 console.log('sw.js VERSION  :', swVer || '(未找到)');
 console.log('index.html ?v= :', cacheStamps.join(', ') || '(无)');
-console.log('PROGRESS 最新  :', progLatest || '(未找到)');
 console.log('');
 
 if (appVer !== changelogVer) err(`app.js VERSION(${appVer}) ≠ CHANGELOG 最新(${changelogVer})`);
-if (appVer !== progLatest) err(`app.js VERSION(${appVer}) ≠ PROGRESS 最新版本节(${progLatest})`);
 if (cacheStamps.length && new Set(cacheStamps).size !== 1) err(`index.html ?v= 不一致: ${cacheStamps.join(', ')}`);
 
 // 提示性（不强判）：sw 缓存版本与 index.html ?v= 都应在发布时一起 bump

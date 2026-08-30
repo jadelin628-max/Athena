@@ -25,11 +25,3 @@ node tools/check_version.mjs   # 版本标记一致性
 ```
 
 详见 `tools/README.md`。
-
-## 开发规范
-
-完整开发标准见 `PROGRESS.md`（算法来源、内容范围、例题规范、文本/公式渲染、数据安全、版本号管理等）。
-
-## 版本
-
-见 `app.js` 的 `VERSION` 常量与设置页「更新日志」。

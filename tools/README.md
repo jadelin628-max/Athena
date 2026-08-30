@@ -6,7 +6,7 @@
 |---|---|---|
 | `check_data.mjs` | 数据完整性 & 内容不变量（结构 + 正文泄漏内部编号 + `**`/`$` 未闭合） | `node tools/check_data.mjs` |
 | `check_render.mjs` | 渲染不变量：headless Chrome 跑真实 `renderTex`+KaTeX，断言 0 katex-error / 0 字面 `**` / 0 残留 LaTeX 命令 | `node tools/check_render.mjs` |
-| `check_version.mjs` | 版本标记一致性（app.js VERSION / CHANGELOG / sw.js / index.html ?v= / PROGRESS） | `node tools/check_version.mjs` |
+| `check_version.mjs` | 版本标记一致性（app.js VERSION / CHANGELOG / sw.js / index.html ?v=） | `node tools/check_version.mjs` |
 | `check_math3.py` | 历史遗留的一次性数三例题核对脚本（已由 check_data.mjs 取代，保留备查） | `python tools/check_math3.py` |
 
 ## 何时跑

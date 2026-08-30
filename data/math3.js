@@ -652,7 +652,7 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
       R`$n$ 年年金现值 $\sum_{k=1}^n\frac{a}{(1+r)^k}=a\cdot\frac{1-(1+r)^{-n}}{r}$；永续年金（$n\to\infty$）现值$$\sum_{k=1}^{\infty}\frac{a}{(1+r)^k}=\frac{a}{r}$$`),
     F('ext19', 'ode', R`差分方程非齐次特解设法`,
       R`一阶常系数差分方程 $y_{t+1}-ay_t=f(t)$ 的非齐次特解设法`,
-      R`齐次通解 $y_t=Ca^t$。特解：$f(t)=d$（常数）且 $a\ne1$ 时 $y_t^*=\frac{d}{1-a}$，$a=1$ 时 $y_t^*=dt$；$f(t)=d\,b^t$ 且 $b\ne a$ 时 $y_t^*=\frac{d}{b-a}b^t$，$b=a$（共振）时 $y_t^*=dt\,a^t$；多项式设同次多项式。通解＝齐次通解＋特解。`),
+      R`齐次通解 $y_t=Ca^t$。特解：$f(t)=d$（常数）且 $a\ne1$ 时 $y_t^*=\frac{d}{1-a}$，$a=1$ 时 $y_t^*=dt$；$f(t)=d\,b^t$ 且 $b\ne a$ 时 $y_t^*=\frac{d}{b-a}b^t$，$b=a$（共振）时 $y_t^*=\frac{d}{a}t\,a^t=d\,t\,a^{t-1}$；多项式设同次多项式。通解＝齐次通解＋特解。`),
     F('ext20', 'ode', R`微分方程的经济应用`,
       R`连续复利增长与价格调整两类经济建模模型`,
       R`连续复利增长：$\frac{dA}{dt}=rA\Rightarrow A(t)=A_0e^{rt}$。价格调整：$\frac{dp}{dt}=k(Q_D-Q_S)$，代入线性供需函数化为可分离变量方程；均衡价格由 $Q_D=Q_S$ 解得，解 $p(t)$ 随时间趋于均衡价格。`),

@@ -6,14 +6,15 @@ node_modules/
 .DS_Store
 Thumbs.db
 desktop.ini
-.zcode/
-tools/
 
-# 临时与备份文件
+# 临时与备份文件（含 app.js.bak.xxx、data/xxx.js.bak.xxx 等）
 *.bak
+*.bak.*
 *.tmp
 *~
 backup/
 
-#参考文件
+# 参考文件（真题提取文本，体量大且非运行所需）
 真题/
+
+# 注意：tools/ 为工程校验脚本，需要纳入版本控制，故不忽略。

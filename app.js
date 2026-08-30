@@ -385,7 +385,7 @@
     if (target !== currentSubjectId) {
       if (!setSubject(target)) throw new Error('备份中的学科不受支持');
       deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
-      browseCat = 'all'; browseQuery = ''; browseExpanded = {}; searchRefocus = false; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
+      browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
     }
     const fresh = { cards: {}, settings: {}, log: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
@@ -1091,39 +1091,33 @@
     return out;
   }
 
-  // 新卡摄入：每科「软上限 10 张」一批，学习完后用按钮加载下一批（非每日硬限制）
-  const NEW_WAVE = 10;
+  // 新卡摄入：按「每日时间预算」自动引入（每张约 EST_NEW_CARD_SEC 秒），不再手动「一组 10 张」分批
   function introState() {
     if (!DB.log) DB.log = {};
     if (!DB.log.newIntro || !Array.isArray(DB.log.newIntro.ids)) DB.log.newIntro = { ids: [] };
     return DB.log.newIntro;
   }
-  function curWaveNewIds() {
-    const st = introState();
-    if (!st.ids.length) return [];
-    const last = st.ids.length - 1;
-    const start = Math.floor(last / NEW_WAVE) * NEW_WAVE;
-    return st.ids.slice(start, start + NEW_WAVE);
-  }
-  // 尚未引入的新卡数（可继续点「再来 N 张」）
-  function unstartedNewCount() {
-    const st = introState();
-    return DATA.filter(function (f) { return card(f.id).state === 'new' && st.ids.indexOf(f.id) === -1; }).length;
-  }
   // 未完全学习的新卡：处于学习阶段、尚未毕业（曾经点过「忘记」）
   function incompleteNewCount() {
     return DATA.filter(function (f) { const c = card(f.id); return (c.state === 'learning' || c.state === 'relearning') && (c.grad | 0) === 0; }).length;
+  }
+  // 尚未引入的新卡数（按时间预算，本日预算用尽后不再引入）
+  function unstartedNewCount() {
+    const st = introState();
+    return DATA.filter(function (f) { return card(f.id).state === 'new' && st.ids.indexOf(f.id) === -1; }).length;
   }
 
   function buildSession() {
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
     const st = introState();
-    // 首次进入该学科：先引入第一批新卡（软上限 NEW_WAVE 张；时间预算为软提示，不限制）
-    if (st.ids.length === 0) {
-      const firstWave = shuffle(all.filter(function (id) { return card(id).state === 'new'; })).slice(0, NEW_WAVE);
-      st.ids = firstWave;
-      saveDB();
+    // 按时间预算引入新卡：保证「已引入且未学」的新卡数达到预算上限（每张约 10 秒）；预算随学习消耗，用尽即停
+    const cap = waveBudgetCap();
+    const introducedNew = st.ids.filter(function (id) { return card(id).state === 'new'; }).length;
+    const slot = Math.max(0, cap - introducedNew);
+    if (slot > 0) {
+      const pending = shuffle(all.filter(function (id) { return card(id).state === 'new' && st.ids.indexOf(id) === -1; })).slice(0, slot);
+      if (pending.length) { st.ids = st.ids.concat(pending); saveDB(); }
     }
     // 到期复习（review 且到期）
     const due = all.filter(function (id) {
@@ -1137,10 +1131,9 @@
     });
     // 学习阶段（时间步进到点）的卡：新卡被遗忘 / 复习卡被遗忘，都在等计时器，到点才回来
     const resumeLearning = interleave(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
-    // 当前批新卡（本波次里仍未学的，完全随机序）
-    const waveIds = curWaveNewIds();
-    const newToStudy = shuffle(waveIds.filter(function (id) { return card(id).state === 'new'; }));
-    // 队列 = 到期复习 + 续学 + 本批新卡
+    // 已引入但仍未学的新卡（完全随机序）
+    const newToStudy = shuffle(st.ids.filter(function (id) { return card(id).state === 'new'; }));
+    // 队列 = 到期复习 + 续学 + 已引入新卡
     deck = due.concat(resumeLearning, newToStudy);
     pos = 0;
     frontier = 0;
@@ -1175,10 +1168,7 @@
       const moreNew = unstartedNewCount();
       const overBudget = todayCostSec() > budgetSec();
       if (moreNew > 0) {
-        wrap.appendChild(el('p', 'muted', '已完成本批学习。还有 ' + moreNew + ' 张新知识点未学，可再续一批（每批 ' + NEW_WAVE + ' 张）。' + (overBudget ? '（今日已超出时间预算 ' + (todayCostMin() - budgetMin()) + ' 分钟，仍可继续学习）' : '')));
-        const more = el('button', 'btn primary', '再来 ' + NEW_WAVE + ' 张新卡');
-        more.setAttribute('data-action', 'newwave');
-        wrap.appendChild(more);
+        wrap.appendChild(el('p', 'muted', '还有 ' + moreNew + ' 张新知识点未学，但按每日时间预算暂不引入。' + (overBudget ? '（今日已超出时间预算 ' + (todayCostMin() - budgetMin()) + ' 分钟）' : '（今日时间预算已用完，明日再继续）')));
       } else {
         wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
       }
@@ -1237,7 +1227,6 @@
     browseMastery = 'all'; browseStars = 'all';
     browseExpanded = {};
     browseExpanded[id] = true;
-    searchRefocus = false;
     renderApp();
     setTimeout(function () {
       const node = document.querySelector('[data-card="' + id + '"]');
@@ -1300,15 +1289,13 @@
       cardEl.appendChild(pfb);
     }
 
-    const extras = buildExtras(id, reviewed ? '' : ' hidden');
-    if (extras) cardEl.appendChild(extras);
-
     const hint = el('div', 'hint muted' + (reviewed ? '' : ' hidden'),
       reviewed
         ? (pendingAdvance ? '✅ ' + masteryDeltaText() + '，' + scheduleText(st) + '，点击「下一张」继续。' : '这是你已复习过的卡片（答案已展示），点「回到当前卡片」继续。')
         : '回想后再点击「显示答案」核对，主动回忆效果最佳。');
     cardEl.appendChild(hint);
 
+    // 笔记模块置于真题/相关知识点模块之前
     const notesBox = el('div', 'notes-box' + (reviewed ? '' : ' hidden'));
     notesBox.appendChild(el('div', 'mini-label', '📝 我的笔记（感想 / 补充 / 易错点）'));
     const notes = el('textarea', 'card-notes');
@@ -1321,9 +1308,11 @@
       notesTimer = setTimeout(saveDB, 400);
     });
     notesBox.appendChild(notes);
-
-    // 笔记在记忆模块之上（记忆可视化揭示答案后才显示）
     cardEl.appendChild(notesBox);
+
+    const extras = buildExtras(id, reviewed ? '' : ' hidden');
+    if (extras) cardEl.appendChild(extras);
+
     cardEl.appendChild(memoryBox(id, reviewed ? '' : ' hidden'));
 
     wrap.appendChild(cardEl);
@@ -1423,7 +1412,6 @@
   let browseCat = 'all';
   let browseQuery = '';
   let browseExpanded = {};
-  let searchRefocus = false;
   let browseMastery = 'all';
   let browseStars = 'all';
 
@@ -1435,7 +1423,12 @@
     search.type = 'search';
     search.placeholder = subjKind() === 'qa' ? '搜索知识点（名称 / 内容）…' : '搜索公式（名称 / 内容）…';
     search.value = browseQuery;
-    search.addEventListener('input', function () { browseQuery = search.value; searchRefocus = true; renderApp(); });
+    // 输入时只重绘列表，不重建整个视图（避免销毁搜索框导致输入/IME 被打断）
+    search.addEventListener('input', function () {
+      browseQuery = search.value;
+      const old = app.querySelector('.browse-list');
+      if (old) old.replaceWith(buildBrowseList());
+    });
     head.appendChild(search);
     app.appendChild(head);
 
@@ -1472,6 +1465,11 @@
     });
     app.appendChild(chipsS);
 
+    app.appendChild(buildBrowseList());
+  }
+
+  // 构建浏览列表（独立函数，供搜索输入时局部重绘，避免整页重建打断输入）
+  function buildBrowseList() {
     const list = el('div', 'browse-list');
     let n = 0;
     DATA.forEach(function (f) {
@@ -1486,14 +1484,7 @@
       list.appendChild(browseItem(f));
     });
     if (n === 0) list.appendChild(el('p', 'muted', subjKind() === 'qa' ? '没有匹配的知识点。' : '没有匹配的公式。'));
-    app.appendChild(list);
-
-    if (searchRefocus) {
-      searchRefocus = false;
-      search.focus();
-      const v = search.value;
-      search.setSelectionRange(v.length, v.length);
-    }
+    return list;
   }
 
   function browseItem(f) {
@@ -1551,9 +1542,7 @@
         pfb.appendChild(texEl('span', null, pf));
         body.appendChild(pfb);
       }
-      const extras = buildExtras(f.id, '');
-      if (extras) body.appendChild(extras);
-      // 笔记模块置于记忆模块之上（与学习页一致）
+      // 笔记模块置于真题/相关知识点模块之前（与学习页一致）
       const notesBox = el('div', 'notes-box');
       notesBox.appendChild(el('div', 'mini-label', '📝 我的笔记（感想 / 补充 / 易错点）'));
       const notes = el('textarea', 'card-notes');
@@ -1567,6 +1556,8 @@
       });
       notesBox.appendChild(notes);
       body.appendChild(notesBox);
+      const extras = buildExtras(f.id, '');
+      if (extras) body.appendChild(extras);
       body.appendChild(memoryBox(f.id));
       const reset = el('button', 'btn small danger', '重置此卡片进度');
       reset.setAttribute('data-action', 'resetcard');
@@ -2373,16 +2364,6 @@
         buildSession();
         renderApp();
         break;
-      case 'newwave': {
-        // 每科软上限：学习完本批后，再引入下一批新卡（时间预算为软提示，不限制）
-        const st = introState();
-        const pool = DATA.filter(function (f) { return card(f.id).state === 'new' && st.ids.indexOf(f.id) === -1; });
-        st.ids = st.ids.concat(shuffle(pool.map(function (f) { return f.id; })).slice(0, NEW_WAVE));
-        saveDB();
-        buildSession();
-        renderApp();
-        break;
-      }
       case 'reveal':
         revealCurrent();
         break;
@@ -2513,18 +2494,29 @@
 
   // 触屏手势：右滑「上一张」，左滑「下一张/回到当前」
   let touchStart = null;
+  // 判断目标是否处于（横向或纵向）可滚动容器内：容器内部滚动时不应触发卡片翻页
   function inScrollable(t) {
     let n = t;
     while (n && n !== document.body && n.nodeType === 1) {
       const cs = getComputedStyle(n);
-      if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true;
+      const ox = cs.overflowX, oy = cs.overflowY;
+      if ((ox === 'auto' || ox === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true;
+      if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 2) return true;
       n = n.parentElement;
     }
     return false;
   }
   document.addEventListener('touchstart', function (e) {
     if (currentView !== 'learn') return;
-    if (e.touches.length === 1) touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, scroll: inScrollable(e.target) };
+    if (e.touches.length === 1) touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, scroll: inScrollable(e.target), locked: false };
+  }, { passive: true });
+  // 滑动过程中一旦出现明显纵向位移（页面/长答案滚动），锁定本次触摸为「滚动」，结束后不再翻页
+  document.addEventListener('touchmove', function (e) {
+    if (currentView !== 'learn' || !touchStart || touchStart.locked) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStart.x;
+    const dy = t.clientY - touchStart.y;
+    if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) touchStart.locked = true;
   }, { passive: true });
   document.addEventListener('touchend', function (e) {
     if (currentView !== 'learn' || !touchStart) return;
@@ -2532,10 +2524,11 @@
     if (d && d.classList.contains('open')) { touchStart = null; return; } // 抽屉打开时不触发翻页
     const dx = e.changedTouches[0].clientX - touchStart.x;
     const dy = e.changedTouches[0].clientY - touchStart.y;
-    const wasScroll = touchStart.scroll;
+    const wasScroll = touchStart.scroll || touchStart.locked;
     touchStart = null;
-    if (wasScroll) return; // 公式/内容横向滚动时，不触发卡片翻页
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return; // 需明显水平滑动
+    if (wasScroll) return; // 公式/长答案滚动时，不触发卡片翻页
+    // 需「明显水平滑动」：水平位移 ≥ 60px 且 ≥ 1.5 倍纵向位移（防止斜滑/轻微横移误翻页）
+    if (Math.abs(dx) < 60 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
     if (dx < 0 && pos < frontier) handleAction('gofront');
     else if (dx > 0 && pos > 0) handleAction('goback');
   }, { passive: true });
@@ -2605,7 +2598,7 @@
     if (id === currentSubjectId || !setSubject(id)) return;
     deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
     mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; heatSel = null;
-    browseCat = 'all'; browseQuery = ''; browseExpanded = {}; searchRefocus = false; browseMastery = 'all'; browseStars = 'all';
+    browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
     loadDBAsync().then(function () {
       if (!loadSession()) buildSession(0);
       currentView = 'learn';

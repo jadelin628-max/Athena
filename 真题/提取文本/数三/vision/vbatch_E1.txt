@@ -1,0 +1,193 @@
+===== 第 38 页 =====
+年份: 续前一页（本页无年份标记；页脚编号为“— 2 —”）
+
+(8) 设随机变量 $X$ 和 $Y$ 相互独立，且 $X$ 和 $Y$ 的概率分布分别为
+$$
+\begin{array}{c|cccc}
+X & 0 & 1 & 2 & 3\\
+\hline
+P & \dfrac{1}{2} & \dfrac{1}{4} & \dfrac{1}{8} & \dfrac{1}{8}
+\end{array}
+\qquad
+\begin{array}{c|ccc}
+Y & -1 & 0 & 1\\
+\hline
+P & \dfrac{1}{3} & \dfrac{1}{3} & \dfrac{1}{3}
+\end{array}
+$$
+则 $P\{X+Y=2\}=(\qquad)$
+$$
+(A)\ \frac{1}{12}\qquad (B)\ \frac{1}{8}\qquad (C)\ \frac{1}{6}\qquad (D)\ \frac{1}{2}
+$$
+
+二、填空题（本题共 6 小题，每小题 4 分，共 24 分，把答案填在题中横线上）
+
+(9) 设曲线 $y=f(x)$ 与 $y=x^2-x$ 在点 $(1,0)$ 处有公共切线，则 $\displaystyle\lim_{n\to\infty}nf\!\left(\frac{n}{n+2}\right)=\underline{\hspace{1.5cm}}$.
+
+(10) 设函数 $z=z(x,y)$ 由方程 $(z+y)^x=xy$ 确定，则 $\left.\dfrac{\partial z}{\partial x}\right|_{(1,2)}=\underline{\hspace{1.5cm}}$.
+
+(11) $\displaystyle\int_1^{+\infty}\frac{\ln x}{(1+x)^2}\,\mathrm{d}x=\underline{\hspace{1.5cm}}$.
+
+(12) 微分方程 $y''-y'+\dfrac{1}{4}y=0$ 的通解为 $y=\underline{\hspace{1.5cm}}$.
+
+(13) 设 $A=(a_{ij})$ 是 3 阶非零矩阵，$|A|$ 为 $A$ 的行列式，$A_{ij}$ 为 $a_{ij}$ 的代数余子式。若 $a_{ij}+A_{ij}=0\ (i,j=1,2,3)$，则 $|A|=\underline{\hspace{1.5cm}}$.
+
+(14) 设随机变量 $X$ 服从标准正态分布 $N(0,1)$，则 $E(Xe^{2X})=\underline{\hspace{1.5cm}}$.
+
+三、解答题（本题共 9 小题，共 94 分，解答应写出文字说明、证明过程或演算步骤）
+
+(15)（本题满分 10 分）
+当 $x\to 0$ 时，$1-\cos x\cdot\cos 2x\cdot\cos 3x$ 与 $ax^n$ 为等价无穷小量，求 $n$ 与 $a$ 的值。
+
+(16)（本题满分 10 分）
+设 $D$ 是由曲线 $y=x^{\frac{1}{3}}$，直线 $x=a\ (a>0)$ 及 $x$ 轴所围成的平面图形，$V_x$，$V_y$ 分别是 $D$ 绕 $x$ 轴、$y$ 轴旋转一周所得旋转体的体积。若 $V_y=10V_x$，求 $a$ 的值。
+
+
+
+===== 第 39 页 =====
+年份: 续前一页（本页无年份标记；页脚编号为“— 3 —”）
+
+(17)（本题满分 10 分）
+设平面区域 $D$ 由直线 $x=3y$，$y=3x$ 及 $x+y=8$ 围成，计算 $\displaystyle\iint_D x^2\,\mathrm{d}x\mathrm{d}y$.
+
+(18)（本题满分 10 分）
+设生产某商品的固定成本为 $60\,000$ 元，可变成本为 $20$ 元/件，价格函数为 $p=60-\dfrac{Q}{1000}$（$p$ 是单价，单位：元；$Q$ 是销量，单位：件）。已知产销平衡，求：
+（Ⅰ）该商品的边际利润；
+（Ⅱ）当 $p=50$ 时的边际利润，并解释其经济意义；
+（Ⅲ）使得利润最大的定价 $p$.
+
+(19)（本题满分 10 分）
+设函数 $f(x)$ 在 $[0,+\infty)$ 上可导，$f(0)=0$ 且 $\displaystyle\lim_{x\to+\infty}f(x)=2$。证明：
+（Ⅰ）存在 $a>0$，使得 $f(a)=1$；
+（Ⅱ）对（Ⅰ）中的 $a$，存在 $\xi\in(0,a)$，使得 $f'(\xi)=\dfrac{1}{a}$.
+
+(20)（本题满分 11 分）
+设 $A=\begin{pmatrix}1&a\\1&0\end{pmatrix}$，$B=\begin{pmatrix}0&1\\1&b\end{pmatrix}$。当 $a,b$ 为何值时，存在矩阵 $C$ 使得 $AC-CA=B$，并求所有矩阵 $C$。
+
+
+
+===== 第 40 页 =====
+年份: 续前一页（本页无年份标记；页脚编号为“— 4 —”）
+
+(21)（本题满分 11 分）
+设二次型 $f(x_1,x_2,x_3)=2(a_1x_1+a_2x_2+a_3x_3)^2+(b_1x_1+b_2x_2+b_3x_3)^2$，记
+$$
+\boldsymbol{\alpha}=\begin{pmatrix}a_1\\a_2\\a_3\end{pmatrix},\qquad
+\boldsymbol{\beta}=\begin{pmatrix}b_1\\b_2\\b_3\end{pmatrix}.
+$$
+（Ⅰ）证明二次型 $f$ 对应的矩阵为 $2\boldsymbol{\alpha}\boldsymbol{\alpha}^{\mathrm{T}}+\boldsymbol{\beta}\boldsymbol{\beta}^{\mathrm{T}}$；
+（Ⅱ）若 $\boldsymbol{\alpha},\boldsymbol{\beta}$ 正交且均为单位向量，证明 $f$ 在正交变换下的标准形为 $2y_1^2+y_2^2$.
+
+(22)（本题满分 11 分）
+设 $(X,Y)$ 是二维随机变量，$X$ 的边缘概率密度为
+$$
+f_X(x)=\begin{cases}3x^2, & 0<x<1,\\0, & \text{其他}.\end{cases}
+$$
+在给定 $X=x\ (0<x<1)$ 的条件下 $Y$ 的条件概率密度为
+$$
+f_{Y|X}(y\,|\,x)=\begin{cases}\dfrac{3y^2}{x^3}, & 0<y<x,\\[6pt]0, & \text{其他}.\end{cases}
+$$
+（Ⅰ）求 $(X,Y)$ 的概率密度 $f(x,y)$；
+（Ⅱ）求 $Y$ 的边缘概率密度 $f_Y(y)$；
+（Ⅲ）求 $P\{X>2Y\}$.
+
+(23)（本题满分 11 分）
+设总体 $X$ 的概率密度为
+$$
+f(x;\theta)=\begin{cases}\dfrac{\theta^2}{x^3}e^{-\frac{\theta}{x}}, & x>0,\\[6pt]0, & \text{其他}.\end{cases}
+$$
+其中 $\theta$ 为未知参数且大于零。$X_1,X_2,\cdots,X_n$ 为来自总体 $X$ 的简单随机样本。
+（Ⅰ）求 $\theta$ 的矩估计量；
+（Ⅱ）求 $\theta$ 的最大似然估计量。
+
+
+
+===== 第 41 页 =====
+年份: 2012
+（页首标题：“2012 年全国硕士研究生招生考试试题”；页脚编号为“— 1 —”）
+
+2012 年全国硕士研究生招生考试试题
+
+一、选择题（本题共 8 小题，每小题 4 分，共 32 分。在每小题给出的四个选项中，只有一项符合题目要求，把所选项前的字母填在题后的括号内。）
+
+(1) 曲线 $y=\dfrac{x^2+x}{x^2-1}$ 的渐近线的条数为（\qquad）
+$$
+(A)\ 0.\qquad (B)\ 1.\qquad (C)\ 2.\qquad (D)\ 3.
+$$
+
+(2) 设函数 $f(x)=(e^x-1)(e^{2x}-2)\cdots(e^{nx}-n)$，其中 $n$ 为正整数，则 $f'(0)=$（\qquad）
+$$
+(A)\ (-1)^{n-1}(n-1)!.\qquad (B)\ (-1)^n(n-1)!.\qquad (C)\ (-1)^{n-1}n!.\qquad (D)\ (-1)^n n!.
+$$
+
+(3) 设函数 $f(t)$ 连续，则二次积分 $\displaystyle\int_0^{\frac{\pi}{2}}\mathrm{d}\theta\int_{2\cos\theta}^{2}f(r^2)\,r\,\mathrm{d}r=$（\qquad）
+$$
+(A)\ \int_0^2\mathrm{d}x\int_{\sqrt{2x-x^2}}^{\sqrt{4-x^2}}\sqrt{x^2+y^2}\,f(x^2+y^2)\,\mathrm{d}y
+$$
+$$
+(B)\ \int_0^2\mathrm{d}x\int_{x}^{\sqrt{4-x^2}}f(x^2+y^2)\,\mathrm{d}y
+$$
+$$
+(C)\ \int_0^2\mathrm{d}y\int_{1+\sqrt{1-y^2}}^{\sqrt{4-y^2}}\sqrt{x^2+y^2}\,f(x^2+y^2)\,\mathrm{d}x
+$$
+$$
+(D)\ \int_0^2\mathrm{d}y\int_{1+\sqrt{1-y^2}}^{\sqrt{4-y^2}}f(x^2+y^2)\,\mathrm{d}x
+$$
+
+(4) 已知级数 $\displaystyle\sum_{n=1}^{\infty}(-1)^n\sqrt{n}\sin\frac{1}{n^{\alpha}}$ 绝对收敛，级数 $\displaystyle\sum_{n=1}^{\infty}\frac{(-1)^n}{n^{2-\alpha}}$ 条件收敛，则（\qquad）
+$$
+(A)\ 0<\alpha\le\frac{1}{2}.\qquad (B)\ \frac{1}{2}<\alpha\le1.\qquad (C)\ 1<\alpha\le\frac{3}{2}.\qquad (D)\ \frac{3}{2}<\alpha<2.
+$$
+
+(5) 设 $\boldsymbol{\alpha}_1=\begin{pmatrix}0\\0\\c_1\end{pmatrix}$，$\boldsymbol{\alpha}_2=\begin{pmatrix}0\\1\\c_2\end{pmatrix}$，$\boldsymbol{\alpha}_3=\begin{pmatrix}1\\-1\\c_3\end{pmatrix}$，$\boldsymbol{\alpha}_4=\begin{pmatrix}-1\\1\\c_4\end{pmatrix}$，其中 $c_1,c_2,c_3,c_4$ 为任意常数，则下列向量组线性相关的为（\qquad）
+$$
+(A)\ \boldsymbol{\alpha}_1,\boldsymbol{\alpha}_2,\boldsymbol{\alpha}_3\qquad (B)\ \boldsymbol{\alpha}_1,\boldsymbol{\alpha}_2,\boldsymbol{\alpha}_4\qquad (C)\ \boldsymbol{\alpha}_1,\boldsymbol{\alpha}_3,\boldsymbol{\alpha}_4\qquad (D)\ \boldsymbol{\alpha}_2,\boldsymbol{\alpha}_3,\boldsymbol{\alpha}_4.
+$$
+
+(6) 设 $A$ 为 3 阶矩阵，$P$ 为 3 阶可逆矩阵，且 $P^{-1}AP=\begin{pmatrix}1&0&0\\0&1&0\\0&0&2\end{pmatrix}$。若 $P=(\boldsymbol{\alpha}_1,\boldsymbol{\alpha}_2,\boldsymbol{\alpha}_3)$，$Q=(\boldsymbol{\alpha}_1+\boldsymbol{\alpha}_2,\boldsymbol{\alpha}_2,\boldsymbol{\alpha}_3)$，则 $Q^{-1}AQ=$（\qquad）
+$$
+(A)\ \begin{pmatrix}1&0&0\\0&2&0\\0&0&1\end{pmatrix}\qquad
+(B)\ \begin{pmatrix}1&0&0\\0&1&0\\0&0&2\end{pmatrix}\qquad
+(C)\ \begin{pmatrix}2&0&0\\0&1&0\\0&0&2\end{pmatrix}\qquad
+(D)\ \begin{pmatrix}2&0&0\\0&2&0\\0&0&1\end{pmatrix}
+$$
+
+(7) 设随机变量 $X$ 与 $Y$ 相互独立，且都服从区间 $(0,1)$ 上的均匀分布，则 $P\{X^2+Y^2\le1\}=$（\qquad）
+$$
+(A)\ \frac{1}{4}.\qquad (B)\ \frac{1}{2}.\qquad (C)\ \frac{\pi}{8}.\qquad (D)\ \frac{\pi}{4}.
+$$
+
+
+
+===== 第 42 页 =====
+年份: 2012（续前一页；页脚编号为“— 2 —”）
+
+(8) 设 $X_1,X_2,X_3,X_4$ 为来自总体 $N(1,\sigma^2)\ (\sigma>0)$ 的简单随机样本，则统计量 $\dfrac{X_1-X_2}{|X_3+X_4-2|}$ 的分布为（\qquad）
+$$
+(A)\ N(0,1).\qquad (B)\ t(1).\qquad (C)\ \chi^2(1).\qquad (D)\ F(1,1).
+$$
+
+二、填空题（本题共 6 小题，每小题 4 分，共 24 分，把答案填在题中横线上）
+
+(9) $\displaystyle\lim_{x\to\frac{\pi}{4}}(\tan x)^{\frac{1}{\cos x-\sin x}}=\underline{\hspace{1.5cm}}$.
+
+(10) 设函数 $f(x)=\begin{cases}\ln\sqrt{x}, & x\ge1,\\2x-1, & x<1,\end{cases}$ $y=f(f(x))$，则 $\left.\dfrac{\mathrm{d}y}{\mathrm{d}x}\right|_{x=e}=\underline{\hspace{1.5cm}}$.
+
+(11) 设连续函数 $z=f(x,y)$ 满足 $\displaystyle\lim_{(x,y)\to(0,1)}\frac{f(x,y)-2x+y-2}{\sqrt{x^2+(y-1)^2}}=0$，则 $\mathrm{d}z|_{(0,1)}=\underline{\hspace{1.5cm}}$.
+
+(12) 由曲线 $y=\dfrac{4}{x}$ 和直线 $y=x$ 及 $y=4x$ 在第一象限中围成的平面图形的面积为 $\underline{\hspace{1.5cm}}$.
+
+(13) 设 $A$ 为 3 阶矩阵，$|A|=3$，$A^*$ 为 $A$ 的伴随矩阵，若交换 $A$ 的第 1 行与第 2 行得矩阵 $B$，则 $|BA^*|=\underline{\hspace{1.5cm}}$.
+
+(14) 设 $A,B,C$ 是随机事件，$A$ 与 $C$ 互不相容，$P(AB)=\dfrac{1}{2}$，$P(C)=\dfrac{1}{3}$，则 $P(AB\,|\,\overline{C})=\underline{\hspace{1.5cm}}$.
+
+三、解答题（本题共 9 小题，共 94 分，解答应写出文字说明、证明过程或演算步骤）
+
+(15)（本题满分 10 分）
+求极限 $\displaystyle\lim_{x\to0}\frac{e^{x^2}-e^{2-2\cos x}}{x^4}$.
+
+(16)（本题满分 10 分）
+计算二重积分 $\displaystyle\iint_D e^x y\,\mathrm{d}x\mathrm{d}y$，其中 $D$ 是以曲线 $y=\sqrt{x}$，$y=\dfrac{1}{\sqrt{x}}$ 及 $y$ 轴为边界的无界区域。
+
+(17)（本题满分 10 分）
+某企业为生产甲、乙两种型号的产品投入的固定成本为 $10\,000$（万元）。设该企业生产甲、乙两种产品的产量分别为 $x$（件）和 $y$（件），且这两种产品的边际成本分别为 $20+\dfrac{x}{2}$（万元/件）与 $30+\dfrac{y}{2}$（万元/件）。（页面在第 17 题中部截断）

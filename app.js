@@ -450,8 +450,17 @@
         const s = JSON.parse(raw);
         if (s && Array.isArray(s.deck) && s.deck.length > 0) {
           deck = s.deck.filter(function (id) { return DATA.some(function (f) { return f.id === id; }); });
-          pos = Math.max(0, Math.min(s.pos | 0, deck.length - 1));
+          if (!deck.length) return false;
+          pos = Math.max(0, Math.min(s.pos | 0, deck.length));
           frontier = Math.max(0, Math.min(s.frontier | 0, deck.length));
+          // 已学完（pos 与 frontier 都越过队尾）的会话不恢复——返回 false 让 buildSession 重建，
+          // 以纳入新到期的复习卡；否则会永远停留在「额度用完」旧队列，第二天到期的卡进不来
+          if (frontier >= deck.length && pos >= frontier) {
+            deck = []; pos = 0; frontier = 0; pendingAdvance = false;
+            return false;
+          }
+          // 防御：pos 越过队尾但 frontier 未学完（不应发生），回退到队尾
+          if (pos >= deck.length) pos = deck.length - 1;
           pendingAdvance = !!s.pendingAdvance;
           seenAgain = s.seenAgain || {};
           return true;
@@ -776,6 +785,13 @@
 
   // ---------------- 记忆算法：两阶段（学习 → 复习）+ SM-2 ----------------
   const DAY = 86400000;
+  // 当天 00:00（本地时区）：复习间隔按「自然日」对齐——间隔 N 天表示「第 N 天」整日可见，
+  // 而非 now+N×24h（否则今天 20:00 复习的卡要到明晚 20:00 才到期，用户白天打开看不到，实际拖到第三天）
+  function dayStart(ts) {
+    const d = new Date(ts);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }
   const EF_MIN = 1.3; // （保留，向后兼容；FSRS 的易度由难度/稳定性替代）
   // 期望保留率：FSRS 论文标准默认值（0.9，即「到期复习时回忆概率」），不再做自定校准
   const FDR = 0.9;
@@ -893,7 +909,7 @@
     c.grad = 1; c.reps = 1; c.state = 'review';
     c.stab = Math.max(FSRS_S_MIN, (typeof stab === 'number') ? stab : c.stab);
     c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-    c.due = Date.now() + c.ivl * DAY;
+    c.due = dayStart(Date.now()) + c.ivl * DAY;
   }
 
   // 学习阶段：时间步进（新卡 Learning 1 分钟 → 10 分钟）；复习遗忘进入 Relearning（10 分钟一步，FSRS-6 默认）
@@ -962,21 +978,21 @@
       c.diff = fsrsDifficulty(c.diff, 2);
       c.stab = fsrsSuccessStability(c.diff, c.stab, R, 2);
       c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-      c.reps++; c.state = 'review'; c.s = Math.max(0, s - 8); c.due = now + c.ivl * DAY;
+      c.reps++; c.state = 'review'; c.s = Math.max(0, s - 8); c.due = dayStart(now) + c.ivl * DAY;
       return;
     }
     if (rating === 2) { // Good
       c.diff = fsrsDifficulty(c.diff, 3);
       c.stab = fsrsSuccessStability(c.diff, c.stab, R, 3);
       c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-      c.reps++; c.state = 'review'; c.s = Math.min(100, s + 12); c.due = now + c.ivl * DAY;
+      c.reps++; c.state = 'review'; c.s = Math.min(100, s + 12); c.due = dayStart(now) + c.ivl * DAY;
       return;
     }
     // Easy
     c.diff = fsrsDifficulty(c.diff, 4);
     c.stab = fsrsSuccessStability(c.diff, c.stab, R, 4);
     c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-    c.reps++; c.state = 'review'; c.s = Math.min(100, s + 20); c.due = now + c.ivl * DAY;
+    c.reps++; c.state = 'review'; c.s = Math.min(100, s + 20); c.due = dayStart(now) + c.ivl * DAY;
   }
 
   function applyRating(id, rating) { applyRatingToCard(card(id), rating); }
@@ -985,6 +1001,9 @@
   function previewNextTime(id, rating) {
     const clone = Object.assign({}, card(id));
     applyRatingToCard(clone, rating);
+    // 毕业后按「自然日」展示整天间隔（与 due 对齐自然日一致，避免显示 0.2 天这种误导）；
+    // 学习/重学阶段仍按精确分钟（1 分钟 / 10 分钟步进）展示。
+    if (clone.state === 'review' && clone.ivl >= 1) return clone.ivl * DAY;
     return clone.due - Date.now(); // 毫秒
   }
   function fmtPreview(ms) {

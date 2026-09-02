@@ -84,7 +84,7 @@ window.SUBJECTS.math3 = (function () {
       R`$$e^{x}-1 \sim x$$`),
     F('inf07', 'infinitesimal', R`等价：$a^{x}-1\sim x\ln a$`,
       R`$$x\to 0:\quad a^{x}-1 \sim\ ?$$`,
-      R`$$a^{x}-1 \sim x\ln a$$`),
+      R`$$a^{x}-1 \sim x\ln a\quad(a>0,\ a\neq1)$$`),
     F('inf08', 'infinitesimal', R`等价：$1-\cos x\sim \frac{x^{2}}{2}$`,
       R`$$x\to 0:\quad 1-\cos x \sim\ ?$$`,
       R`$$1-\cos x \sim \frac{1}{2}x^{2}$$`),
@@ -115,7 +115,7 @@ window.SUBJECTS.math3 = (function () {
 适用：$x\in\mathbb{R}$。易混：$(a^{x})'=a^{x}\ln a$，而 $e^{x}$ 的导数仍为 $e^{x}$（因 $\ln e=1$）；复合 $(e^{u})'=e^{u}\cdot u'$，勿漏内层导数。应用：$e^{x}$ 求导不变，配合泰勒展开、极限 $e^{x}-1\sim x$、解微分方程。`),
     F('d03', 'derivative', R`$(a^{x})$ 求导`,
       R`求导数：$$f(x)=a^{x}$$`,
-      R`$$f'(x)=a^{x}\ln a$$`),
+      R`$$f'(x)=a^{x}\ln a\quad(a>0,\ a\neq1)$$`),
     F('d04', 'derivative', R`$(\ln x)$ 求导`,
       R`求导数：$$f(x)=\ln x$$`,
       R`$$f'(x)=\frac{1}{x}$$
@@ -173,10 +173,10 @@ window.SUBJECTS.math3 = (function () {
       R`$$\frac{dy}{dx}=\frac{dy}{du}\cdot\frac{du}{dx}$$`),
     F('dr05', 'drule', '反函数求导',
       R`写出反函数的求导法则`,
-      R`$$\left[f^{-1}(y)\right]'=\frac{1}{f'(x)}$$`),
+      R`$$\left[f^{-1}(y)\right]'=\frac{1}{f'(x)}\quad\text{其中 }x=f^{-1}(y)$$适用：$f'(x)\neq0$（即 $f$ 在对应点可导且导数非零，反函数在该点可导）；$f$ 在区间上单调连续时反函数存在。`),
     F('dr06', 'drule', '参数方程求导',
       R`参数方程求导：$$x=x(t),\ y=y(t)$$`,
-      R`$$\frac{dy}{dx}=\frac{dy/dt}{dx/dt}$$`),
+      R`$$\frac{dy}{dx}=\frac{dy/dt}{dx/dt}$$适用：$dx/dt\neq0$；二阶导$$\frac{d^{2}y}{dx^{2}}=\frac{d}{dx}\left(\frac{dy}{dx}\right)=\frac{d}{dt}\left(\frac{y'(t)}{x'(t)}\right)\big/ x'(t)$$。`),
 
     // ============ 积分公式 ============
     F('int01', 'integral', R`$\int k\,dx$`,
@@ -194,7 +194,7 @@ window.SUBJECTS.math3 = (function () {
 适用：$\int a^{x}dx=\frac{a^{x}}{\ln a}+C$（$a\neq1$），$e^{x}$ 是其特例（$\ln e=1$）。易混：勿漏任意常数 $C$；$\int e^{x}dx=e^{x}+C$ 与 $(e^{x})'=e^{x}$ 互为逆运算。应用：$\int_{0}^{1}e^{x}dx=e-1$；分部积分时 $e^{x}$ 常作为 $dv$。`),
     F('int05', 'integral', R`$\int a^{x}\,dx$`,
       R`求不定积分：$$\int a^{x}\,dx$$`,
-      R`$$\int a^{x}\,dx=\frac{a^{x}}{\ln a}+C$$`),
+      R`$$\int a^{x}\,dx=\frac{a^{x}}{\ln a}+C\quad(a>0,\ a\neq1)$$`),
     F('int06', 'integral', R`$\int \sin x\,dx$`,
       R`求不定积分：$$\int \sin x\,dx$$`,
       R`$$\int \sin x\,dx=-\cos x+C$$
@@ -235,7 +235,7 @@ window.SUBJECTS.math3 = (function () {
       R`$$\int \frac{1}{\sqrt{1-x^{2}}}\,dx=\arcsin x+C$$`),
     F('int18', 'integral', R`$\int \frac{1}{a^{2}+x^{2}}\,dx$`,
       R`求不定积分：$$\int \frac{1}{a^{2}+x^{2}}\,dx$$`,
-      R`$$\int \frac{1}{a^{2}+x^{2}}\,dx=\frac{1}{a}\arctan\frac{x}{a}+C$$`),
+      R`$$\int \frac{1}{a^{2}+x^{2}}\,dx=\frac{1}{a}\arctan\frac{x}{a}+C\quad(a\neq0)$$`),
     F('int19', 'integral', R`$\int \frac{1}{x^{2}-a^{2}}\,dx$`,
       R`求不定积分：$$\int \frac{1}{x^{2}-a^{2}}\,dx$$`,
       R`$$\int \frac{1}{x^{2}-a^{2}}\,dx=\frac{1}{2a}\ln\left|\frac{x-a}{x+a}\right|+C$$`),
@@ -247,7 +247,7 @@ window.SUBJECTS.math3 = (function () {
       R`$$\int \frac{1}{\sqrt{x^{2}\pm a^{2}}}\,dx=\ln\left|x+\sqrt{x^{2}\pm a^{2}}\right|+C$$`),
     F('int22', 'integral', R`$\int \frac{1}{\sqrt{a^{2}-x^{2}}}\,dx$`,
       R`求不定积分：$$\int \frac{1}{\sqrt{a^{2}-x^{2}}}\,dx$$`,
-      R`$$\int \frac{1}{\sqrt{a^{2}-x^{2}}}\,dx=\arcsin\frac{x}{a}+C$$`),
+      R`$$\int \frac{1}{\sqrt{a^{2}-x^{2}}}\,dx=\arcsin\frac{x}{a}+C\quad(a>0)$$`),
 
     // ============ 泰勒公式 ============
     F('tay01', 'taylor', R`麦克劳林：$e^{x}$`,
@@ -341,7 +341,7 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
       R`$$\sin a+\sin b=2\sin\frac{a+b}{2}\cos\frac{a-b}{2}$$`),
     F('trig13', 'trig', '辅助角公式',
       R`写出辅助角公式 $a\sin x+b\cos x$`,
-      R`$$a\sin x+b\cos x=\sqrt{a^{2}+b^{2}}\,\sin(x+\varphi),\quad \tan\varphi=\frac{b}{a}$$`),
+      R`$$a\sin x+b\cos x=\sqrt{a^{2}+b^{2}}\,\sin(x+\varphi)$$其中 $\varphi$ 由$$\sin\varphi=\frac{b}{\sqrt{a^{2}+b^{2}}},\quad \cos\varphi=\frac{a}{\sqrt{a^{2}+b^{2}}}$$确定（即 $\tan\varphi=\frac{b}{a}$，且 $\varphi$ 所在象限由 $a,b$ 的符号决定）。`),
 
     // ============ 常用不等式 ============
     F('ineq01', 'inequality', R`$|\sin x|\le |x|$`,
@@ -382,7 +382,7 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
       R`$$\sum_{n=1}^{\infty}\frac{1}{n}\ \text{发散}$$`),
     F('ser05', 'series', '交错级数莱布尼茨判别法',
       R`叙述交错级数的莱布尼茨判别法`,
-      R`若 $\{u_{n}\}$ 单调递减趋于 $0$，则 $\sum (-1)^{n}u_{n}$ 收敛。`),
+      R`若 $\{u_{n}\}$ 满足：$u_{n}\ge0$，单调递减（从某项起即可）且 $\lim_{n\to\infty}u_{n}=0$，则 $\sum (-1)^{n}u_{n}$ 收敛。`),
     F('ser06', 'series', '比值判别法',
       R`叙述正项级数的比值（达朗贝尔）判别法`,
       R`设 $\lim_{n\to\infty}\dfrac{u_{n+1}}{u_{n}}=\rho$，则 $\rho<1$ 收敛，$\rho>1$ 发散，$\rho=1$ 无法判定。`),
@@ -416,7 +416,7 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
       R`$$dz=\frac{\partial z}{\partial x}dx+\frac{\partial z}{\partial y}dy$$`),
     F('multi02', 'multi', '隐函数求导公式',
       R`方程 $F(x,y)=0$ 确定的隐函数求导公式`,
-      R`$$\frac{dy}{dx}=-\frac{F_{x}}{F_{y}}$$`),
+      R`$$\frac{dy}{dx}=-\frac{F_{x}}{F_{y}}$$适用：$F$ 有连续一阶偏导且 $F_{y}\neq0$（隐函数存在定理）。`),
     F('multi03', 'multi', '二元极值判别式',
       R`写出二元函数极值的判别式`,
       R`记 $A=f_{xx},\ B=f_{xy},\ C=f_{yy}$，判别式 $\Delta=AC-B^{2}$。驻点处：$\Delta>0$ 且 $A>0$→极小；$\Delta>0$ 且 $A<0$→极大；$\Delta<0$→非极值；$\Delta=0$→无法判定。`),
@@ -452,7 +452,7 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
 适用：$A,B$ 均可逆（从而 $AB$ 可逆）。易混：逆也"反序"；$(A^{-1})^{-1}=A$，$(A^{T})^{-1}=(A^{-1})^{T}$，$(kA)^{-1}=\frac{1}{k}A^{-1}$；$A$ 或 $B$ 不可逆时公式失效。应用：解矩阵方程 $AXB=C\Rightarrow X=A^{-1}CB^{-1}$；与转置的反序律 $(AB)^{T}=B^{T}A^{T}$ 对照记忆。`),
     F('la07', 'linalg', '秩的不等式',
       R`写出矩阵秩的常用不等式`,
-      R`$$r(A)+r(B)-n\ \le\ r(AB)\ \le\ \min\{r(A),\,r(B)\}$$`),
+      R`设 $A$ 为 $m\times n$、$B$ 为 $n\times s$ 矩阵（$n$ 为 $A$ 的列数 = $B$ 的行数），则$$r(A)+r(B)-n\ \le\ r(AB)\ \le\ \min\{r(A),\,r(B)\}$$（Sylvester 不等式）。`),
     F('la08', 'linalg', '行列式按行展开',
       R`$n$ 阶行列式按某行展开`,
       R`$$|A|=\sum_{k=1}^{n}a_{ik}A_{ik}\quad(A_{ik}\ \text{为代数余子式})$$`),
@@ -522,7 +522,7 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
       R`$$\int_{1}^{+\infty}\frac{1}{x^{p}}\,dx\ \text{收敛}\iff p>1$$`),
     F('int28', 'integral', '定积分求面积',
       R`由 $y=f(x),\,y=g(x),\,x=a,\,x=b$ 围成的平面图形面积`,
-      R`$$A=\int_{a}^{b}\left[f(x)-g(x)\right]\,dx$$`),
+      R`$$A=\int_{a}^{b}\left|f(x)-g(x)\right|\,dx$$（若在 $[a,b]$ 上恒有 $f(x)\ge g(x)$，则为$$\int_{a}^{b}[f(x)-g(x)]\,dx$$）`),
     F('int29', 'integral', '旋转体体积',
       R`曲线 $y=f(x)\ (a\le x\le b)$ 绕 $x$ 轴旋转所得旋转体体积`,
       R`$$V=\pi\int_{a}^{b}\left[f(x)\right]^{2}\,dx$$`),
@@ -541,10 +541,10 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
     // ============ 补充：无穷级数 ============
     F('ser10', 'series', '幂级数收敛半径',
       R`幂级数 $\sum a_{n}x^{n}$ 的收敛半径公式`,
-      R`$$R=\frac{1}{\lim_{n\to\infty}\left|\frac{a_{n+1}}{a_{n}}\right|}$$（也可用根值法：$$R=\frac{1}{\lim_{n\to\infty}\sqrt[n]{|a_{n}|}}$$）`),
+      R`当 $\lim_{n\to\infty}\left|\frac{a_{n+1}}{a_{n}}\right|$ 存在（或为 $+\infty$）时，$$R=\frac{1}{\lim_{n\to\infty}\left|\frac{a_{n+1}}{a_{n}}\right|}$$（极限不存在时用根值法或其它方法判断；根值法$$\rho=\lim_{n\to\infty}\sqrt[n]{|a_{n}|}$$ 同理）。`),
     F('ser11', 'series', '阿贝尔定理',
       R`叙述阿贝尔定理（幂级数收敛性）`,
-      R`幂级数在 $|x|<R$ 内绝对收敛，在收敛区间端点处需单独判断（可能条件收敛）。`),
+      R`阿贝尔定理：若幂级数 $\sum a_{n}x^{n}$ 在 $x_0\neq0$ 处收敛，则在 $|x|<|x_0|$ 内绝对收敛；若在 $x_1$ 处发散，则在 $|x|>|x_1|$ 处发散。推论：存在收敛半径 $R$，$|x|<R$ 内绝对收敛、$|x|>R$ 发散；端点 $x=\pm R$ 需单独判断（可能条件收敛）。`),
     F('ser12', 'series', '幂级数逐项求导',
       R`幂级数在收敛区间内的逐项求导与逐项积分性质`,
       R`在收敛区间内可逐项求导与逐项积分，且收敛半径不变——这是求幂级数和函数的常用手段。`),
@@ -569,7 +569,7 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
       R`$$|A|\neq 0\iff A\ \text{可逆}\iff \text{秩为 }n\iff \text{特征值全非零}$$`),
     F('la11', 'linalg', '伴随矩阵性质',
       R`写出伴随矩阵的基本性质`,
-      R`$$AA^{*}=A^{*}A=|A|E,\qquad |A^{*}|=|A|^{n-1}$$`),
+      R`$$AA^{*}=A^{*}A=|A|E,\qquad |A^{*}|=|A|^{n-1}\quad(n\ge2)$$（$n=1$ 时约定 $A^{*}=(1)$，公式另计。）`),
     F('la12', 'linalg', '特征值性质',
       R`写出特征值与迹、行列式的关系`,
       R`$$\sum_{i=1}^{n}\lambda_{i}=\mathrm{tr}(A),\qquad \prod_{i=1}^{n}\lambda_{i}=|A|$$`),
@@ -613,7 +613,7 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
       R`单调性：$f'(x)>0$ ⇒ 递增，$f'(x)<0$ ⇒ 递减。极值必要条件：极值点处 $f'(x_0)=0$ 或不存在。第一充分条件：$x_0$ 两侧 $f'$ 变号（左正右负极大、左负右正极小）。第二充分条件：$f'(x_0)=0$ 且 $f''(x_0)\ne0$，$f''(x_0)<0$ 极大、$f''(x_0)>0$ 极小。`),
     F('ext06', 'derivative', R`凹凸性、拐点与渐近线`,
       R`写出凹凸性判别、拐点定义与三类渐近线的求法`,
-      R`凹凸：$f''>0$ 凹（上凹），$f''<0$ 凸（下凹）。拐点：$f''(x_0)=0$ 或不存在且两侧 $f''$ 变号。渐近线：水平 $\lim_{x\to\infty}f(x)=b$；垂直：无定义点处 $\lim f=\infty$；斜 $y=kx+b$，$k=\lim_{x\to\infty}\frac{f(x)}{x}$，$b=\lim_{x\to\infty}[f(x)-kx]$（$x\to\pm\infty$ 两侧分别讨论）。`),
+      R`凹凸：$f''>0$ 凹（上凹），$f''<0$ 凸（下凹）。拐点：$f$ 在 $x_0$ 连续，$f''(x_0)=0$ 或不存在，且两侧 $f''$ 变号。渐近线：水平 $\lim_{x\to\infty}f(x)=b$；垂直：无定义点处 $\lim f=\infty$；斜 $y=kx+b$，$k=\lim_{x\to\infty}\frac{f(x)}{x}$，$b=\lim_{x\to\infty}[f(x)-kx]$（$x\to\pm\infty$ 两侧分别讨论）。`),
     F('ext07', 'derivative', R`函数的最大值与最小值`,
       R`闭区间上连续函数的最值求法；实际问题最值的要点`,
       R`闭区间 $[a,b]$：比较全部驻点、不可导点、端点处的函数值，最大者为最大值、最小者为最小值。实际问题：若存在唯一驻点且实际意义表明最值存在，则该驻点即最值点。`),
@@ -667,7 +667,7 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
       R`设$$y^{*}=x^{k}e^{\lambda x}\left[Q_m(x)\cos\omega x+R_m(x)\sin\omega x\right],\quad m=\max\{l,n\}$$当 $\lambda+i\omega$ 是特征根时 $k=1$，否则 $k=0$；代入方程比较系数定 $Q_m,R_m$。`),
     F('ext24', 'drule', R`反函数与复合函数`,
       R`反函数存在的条件、求法，以及复合函数定义域的限制`,
-      R`反函数：单调函数必有反函数；$y=f(x)$ 与 $y=f^{-1}(x)$ 的图像关于直线 $y=x$ 对称；求法：由 $y=f(x)$ 解出 $x=g(y)$，再交换 $x,y$ 得 $y=f^{-1}(x)$。复合函数 $f(g(x))$ 要求内层值域 $\subseteq$ 外层定义域。`),
+      R`反函数：严格单调函数必有反函数（非严格单调可能在某区间取常值，无反函数）；$y=f(x)$ 与 $y=f^{-1}(x)$ 的图像关于直线 $y=x$ 对称；求法：由 $y=f(x)$ 解出 $x=g(y)$，再交换 $x,y$ 得 $y=f^{-1}(x)$。复合函数 $f(g(x))$ 要求内层值域 $\subseteq$ 外层定义域。`),
     F('ext25', 'trig', R`反三角恒等式 $\arcsin x+\arccos x$`,
       R`写出常用反三角函数的恒等式`,
       R`$$\arcsin x+\arccos x=\frac{\pi}{2},\qquad \arctan x+\operatorname{arccot}x=\frac{\pi}{2}$$$$\sin(\arcsin x)=x,\quad \cos(\arccos x)=x,\quad \tan(\arctan x)=x$$`),
@@ -773,9 +773,9 @@ $\tan x$ 是奇函数，故只含奇次幂；系数由 $\frac{\sin x}{\cos x}$ �
     // ============ 新增：方向导数与梯度 / 可降阶方程 / 反常积分判别 ============
     F('wr01', 'multi', R`方向导数与梯度`,
       R`写出函数 $f(x,y)$ 在点 $(x_0,y_0)$ 处沿单位方向 $\vec l=(\cos\alpha,\cos\beta)$ 的方向导数公式，以及梯度的定义与性质。`,
-      R`沿单位方向 $\vec l$ 的方向导数：$$\frac{\partial f}{\partial l}=\nabla f\cdot\vec l=\frac{\partial f}{\partial x}\cos\alpha+\frac{\partial f}{\partial y}\cos\beta$$
+      R`设 $f$ 在点 $(x_0,y_0)$ **可微**，沿单位方向 $\vec l=(\cos\alpha,\cos\beta)$ 的方向导数：$$\frac{\partial f}{\partial l}=\nabla f\cdot\vec l=\frac{\partial f}{\partial x}\cos\alpha+\frac{\partial f}{\partial y}\cos\beta$$
 梯度：$$\nabla f=\left(\frac{\partial f}{\partial x},\frac{\partial f}{\partial y}\right)$$（三元：$\nabla f=(f_x,f_y,f_z)$）。
-性质：① 梯度方向为函数增长最快的方向，方向导数的最大值为 $|\nabla f|$；② 方向导数 $=\nabla f\cdot\vec l_0$，其中 $\vec l_0$ 必须**单位化**；③ $|\nabla f|=\sqrt{f_x^{2}+f_y^{2}}$；④ $\nabla f$ 垂直于 $f$ 的等值线。`),
+性质：① 梯度方向为函数增长最快的方向，方向导数的最大值为 $|\nabla f|$；② 方向导数 $=\nabla f\cdot\vec l_0$，其中 $\vec l_0$ 必须**单位化**；③ $|\nabla f|=\sqrt{f_x^{2}+f_y^{2}}$；④ $\nabla f$ 垂直于 $f$ 的等值线。易错：$\frac{\partial f}{\partial l}=\nabla f\cdot\vec l$ 仅在 $f$ **可微**时成立；仅偏导存在时方向导数不一定等于该内积。`),
     F('wr02', 'ode', R`可降阶的高阶微分方程`,
       R`写出三种可降阶高阶微分方程的解法：$y''=f(x)$、$y''=f(x,y')$、$y''=f(y,y')$。`,
       R`① $y''=f(x)$：连续积分两次，$y'=\int f\,dx+C_1$，$y=\int\Bigl[\int f\,dx\Bigr]dx+C_1x+C_2$。
@@ -858,7 +858,7 @@ $\bullet$ $r=r_{b}<n$：无穷多解，通解 $=$ 一个特解 $\eta^{*}$ $+$ �
       R`若 $A$ 可对角化：$A=P\Lambda P^{-1}$，$\Lambda=\operatorname{diag}(\lambda_{1},\dots,\lambda_{n})$，则$$A^{n}=P\Lambda^{n}P^{-1},\qquad \Lambda^{n}=\operatorname{diag}(\lambda_{1}^{n},\dots,\lambda_{n}^{n})$$
 步骤：① 求特征值 $\lambda_{i}$ 与对应的特征向量，构造可逆矩阵 $P$；② 写成 $A=P\Lambda P^{-1}$；③ 计算 $A^{n}=P\Lambda^{n}P^{-1}$。
 适用：求高次幂、研究 $A^{n}$ 的极限或周期性、处理递推数列。
-易混：前提是 $A$ 可对角化（$n$ 个线性无关特征向量）；不可对角化时不能这样写，需把 $A$ 写成"特征值 $+$ 幂零矩阵"（$A=\lambda E+N$，$N$ 幂零）再用二项式定理。`),
+易混：前提是 $A$ 可对角化（$n$ 个线性无关特征向量）；不可对角化时不能这样写。当 $A$ **只有一个特征值 $\lambda$** 时，可写成 $A=\lambda E+N$（$N=A-\lambda E$ 幂零），再用二项式定理求 $A^{n}$；有多个特征值且不可对角化时不能用该整体分解。`),
     F('zb11', 'linalg', R`伴随矩阵的秩与行列式`,
       R`写出 $r(A^{*})$ 与 $r(A)$ 的关系及 $|A^{*}|$`,
       R`设 $A$ 为 $n$ 阶方阵（$n\ge2$），则$$r(A^{*})=\begin{cases}n,&r(A)=n\\1,&r(A)=n-1\\0,&r(A)<n-1\end{cases}$$且 $|A^{*}|=|A|^{n-1}$，$AA^{*}=A^{*}A=|A|E$。
@@ -880,7 +880,7 @@ $\bullet$ $r=r_{b}<n$：无穷多解，通解 $=$ 一个特解 $\eta^{*}$ $+$ �
 ② 用正交变换 $x=Qy$（$Q$ 正交、$Q^{T}AQ=\Lambda$）化标准形，系数即特征值；或用配方法（可逆线性变换）化标准形，再缩放得规范形（系数只取 $1,-1,0$）。
 ③ 正定判定：顺序主子式全 $>0$ $\iff$ 特征值全 $>0$ $\iff$ 正惯性指数 $=n$。
 ④ 惯性指数：正惯性指数 $p=$ 正特征值个数，负惯性指数 $q=$ 负特征值个数；$p+q=$ 秩。
-易错：二次型矩阵必须对称（交叉项系数要写成 $\frac12 a_{ij}$ 分置）；判定正定须用顺序主子式，而非任意主子式。`),
+易错：二次型矩阵必须对称（交叉项系数要写成 $\frac12 a_{ij}$ 分置）；判定正定可用「顺序主子式全 $>0$」，或「**全部**主子式 $>0$」；但只验证**部分/个别**主子式 $>0$ 不足以判定正定。`),
     F('zt03', 'inequality', R`证明不等式套路`,
       R`写出证明 $f(x)\le g(x)$ 类不等式或常数值不等式的完整套路`,
       R`① 移项作差，构造 $F(x)=f(x)-g(x)$，研究 $F$ 的单调性（$F'$ 符号）或最值。
@@ -894,7 +894,7 @@ $\bullet$ $r=r_{b}<n$：无穷多解，通解 $=$ 一个特解 $\eta^{*}$ $+$ �
       R`① 求定义域。
 ② 单调性与极值：解 $f'(x)=0$ 得驻点，列 $f'$ 符号表，左正右负为极大、左负右正为极小；$f'$ 不存在的点也要进表。
 ③ 最值：闭区间比较驻点、不可导点与端点值；实际问题若有唯一驻点且最值存在，则该驻点即最值点。
-④ 凹凸性与拐点：$f''>0$ 凹（上凹）、$f''<0$ 凸；$f''(x_{0})=0$（或不存在）且两侧 $f''$ 变号，则 $(x_{0},f(x_{0}))$ 为拐点。
+④ 凹凸性与拐点：$f''>0$ 凹（上凹）、$f''<0$ 凸；$f$ 在 $x_0$ 连续，$f''(x_{0})=0$（或不存在）且两侧 $f''$ 变号，则 $(x_{0},f(x_{0}))$ 为拐点。
 ⑤ 渐近线：水平 $\lim_{x\to\infty}f(x)=b$；垂直：无定义点处 $\lim f=\infty$；斜 $y=kx+b$，$k=\lim\frac{f(x)}{x}$，$b=\lim[f(x)-kx]$（$x\to\pm\infty$ 分别讨论）。
 易错：勿漏不可导点；拐点看 $f''$ 变号而非仅在 $f''=0$ 处；最值要比较端点。`),
     F('zt05', 'linalg', R`向量组·秩综合套路`,
@@ -911,11 +911,11 @@ $\bullet$ $r=r_{b}<n$：无穷多解，通解 $=$ 一个特解 $\eta^{*}$ $+$ �
     F('zb12', 'limit', R`函数性质（奇偶/单调/有界/周期）`,
       R`写出函数四大性态（奇偶性、单调性、有界性、周期性）的定义与判断要点`,
       R`奇偶：$f(-x)=f(x)$ 偶函数（关于 $y$ 轴对称）；$f(-x)=-f(x)$ 奇函数（关于原点对称），奇函数若定义域含 $0$ 则 $f(0)=0$。
-单调：$x_{1}<x_{2}\Rightarrow f(x_{1})<f(x_{2})$ 增（$f'(x)\ge0$），反之减（$f'(x)\le0$）。
+单调：$x_{1}<x_{2}\Rightarrow f(x_{1})<f(x_{2})$ 严格增（$f'(x)>0$ 或 $f'\ge0$ 且零点不构成区间），反之严格减；$f'(x)\ge0$ 仅保证不减（非严格）。
 有界：存在 $M$ 使 $|f(x)|\le M$；闭区间上连续函数必有界。
-周期：存在 $T>0$ 使 $f(x+T)=f(x)$，最小正周期称周期。
+周期：存在 $T>0$ 使 $f(x+T)=f(x)$，则 $T$ 为周期；其中最小正者称最小正周期（若存在）。
 应用：用奇偶性化简对称区间定积分（奇函数积分为 $0$）、判单调区间、求最值；复合函数定义域见反函数与复合函数卡。
-易混：奇函数在对称区间积分为 $0$（以积分存在为前提）；$f$ 的周期性传递到 $|f|$ 但不一定，需具体看。`),
+易混：奇函数在对称区间积分为 $0$（以积分存在为前提）；$f$ 周期 ⇒ $|f|$ 必周期，但最小正周期可能变小（如 $\sin x\to|\sin x|$，$2\pi\to\pi$）；反之 $|f|$ 周期推不出 $f$ 周期。`),
     F('zb13', 'infinitesimal', R`无穷小的比较与阶`,
       R`写出无穷小比较（同阶/等价/高阶/k 阶）的定义及无穷大比较的要点`,
       R`设 $\alpha,\beta$ 为 $x\to$ 某点时的无穷小，记 $\lim\frac{\beta}{\alpha}=l$：$l=0$ 时 $\beta$ 是比 $\alpha$ 高阶的无穷小（记 $\beta=o(\alpha)$）；$l=\infty$ 时 $\beta$ 是低阶无穷小；$l=c\neq0$ 时同阶；$l=1$ 时等价（$\beta\sim\alpha$）；若 $\beta$ 与 $\alpha^{k}$ 同阶，则 $\beta$ 是 $\alpha$ 的 $k$ 阶无穷小。
@@ -930,7 +930,7 @@ $\bullet$ $r=r_{b}<n$：无穷多解，通解 $=$ 一个特解 $\eta^{*}$ $+$ �
     F('zb15', 'integral', R`定积分求平均值（均值）`,
       R`写出函数 $f(x)$ 在 $[a,b]$ 上的平均值公式`,
       R`$$\bar{f}=\frac{1}{b-a}\int_{a}^{b}f(x)\,dx$$（$f\in C[a,b]$）
-即积分中值定理中的 $f(\xi)$。应用：求变化率的平均水平、平均产品成本/产量、判断 $\bar{f}$ 与某点值的关系（配合中值定理）。易混：平均值是积分值除以区间长度 $b-a$，不是除以端点；$f$ 恒为常数时无需再除。`),
+即积分中值定理中的 $f(\xi)$。应用：求变化率的平均水平、平均产品成本/产量、判断 $\bar{f}$ 与某点值的关系（配合中值定理）。易混：平均值是积分值除以区间长度 $b-a$，不是除以端点；$f\equiv c$ 时$$\bar{f}=\frac{1}{b-a}\int_a^b c\,dx=c$$（仍需除以 $b-a$，结果恰为常数 $c$）。`),
     F('zb16', 'doubleint', R`二重积分的应用（面积/体积）`,
       R`写出用二重积分求平面图形面积与曲面下体积的公式`,
       R`平面区域 $D$ 的面积：$$S=\iint_{D}1\,d\sigma=\iint_{D}d\sigma$$
@@ -993,6 +993,42 @@ $$\begin{pmatrix}A&O\\O&B\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\O&B^{-1}\en
 ③ 化已知型：分母含 $n$ 或 $(2n+1)$ → 先逐项求导消分母（如 $\sum\frac{x^{2n+1}}{2n+1}$ 求导得 $\sum x^{2n}=\frac{1}{1-x^{2}}$）；分子含 $n$ → 先逐项积分消分子。
 ④ 一级处理：先导后积或先积后导，代回 $S(x)$，用 $S(0)$ 定常数；端点的和函数值用极限确定。
 易错：先积后导勿漏 $S(0)$ 常数；注意收敛域端点的和函数取值；分母有阶乘/系数时先归入哪类展开。`),
+    F('zb23', 'linalg', R`特征值的继承性质`,
+      R`写出特征值的「继承」性质（多项式、逆、伴随）`,
+      R`设 $\lambda$ 是 $A$ 的特征值，对应特征向量为 $\xi$：① 多项式 $f(A)$ 有特征值 $f(\lambda)$（特征向量仍为 $\xi$）；② 若 $A$ 可逆，则 $A^{-1}$ 有特征值 $\frac{1}{\lambda}$、$A^{*}$ 有特征值 $\frac{|A|}{\lambda}$（特征向量仍为 $\xi$）。`),
+    F('zb24', 'linalg', R`秩的其余常用不等式`,
+      R`写出秩的几条常用等式与不等式`,
+      R`$$r(A^{T})=r(A)=r(A^{T}A)=r(AA^{T})$$$$r(A+B)\le r(A)+r(B),\qquad r\begin{pmatrix}A\\B\end{pmatrix}\ge \max\{r(A),\,r(B)\}$$`),
+    F('zb25', 'linalg', R`相似矩阵的性质`,
+      R`写出相似矩阵保持的不变量与运算性质`,
+      R`$A\sim B$（即 $B=P^{-1}AP$）⇒ 特征值、特征多项式、迹、行列式、秩相同，且可对角化性相同；$A^{k}\sim B^{k}$、$f(A)\sim f(B)$。注意：相似矩阵的特征向量一般不直接相同（需 $B$ 的向量 $\xi_B=P^{-1}\xi_A$）。`),
+    F('zb26', 'linalg', R`伴随矩阵的运算公式`,
+      R`写出伴随矩阵的运算公式`,
+      R`设 $A$ 为 $n$ 阶可逆方阵：$$(kA)^{*}=k^{n-1}A^{*},\qquad (AB)^{*}=B^{*}A^{*},\qquad (A^{*})^{*}=|A|^{n-2}A\ (n\ge2),\qquad (A^{*})^{-1}=\frac{A}{|A|}$$`),
+    F('zb27', 'linalg', R`拉普拉斯展开（分块行列式）`,
+      R`写出分块对角/反对角行列式的拉普拉斯展开`,
+      R`$$\begin{vmatrix}A&O\\C&B\end{vmatrix}=|A|\,|B|,\qquad \begin{vmatrix}A&C\\O&B\end{vmatrix}=|A|\,|B|$$$$\begin{vmatrix}O&A\\B&O\end{vmatrix}=(-1)^{mn}|A|\,|B|\quad(A\ \text{为}\ m\ \text{阶},\ B\ \text{为}\ n\ \text{阶})$$`),
+    F('zb28', 'series', R`常用数值级数的和`,
+      R`写出几个由幂级数端点代值得出的常用级数和`,
+      R`$$\sum_{n=1}^{\infty}\frac{(-1)^{n-1}}{n}=\ln 2,\qquad \sum_{n=0}^{\infty}\frac{(-1)^{n}}{2n+1}=\frac{\pi}{4},\qquad \sum_{n=1}^{\infty}\frac{1}{n^{2}}=\frac{\pi^{2}}{6},\qquad \sum_{n=1}^{\infty}\frac{1}{(2n)^{2}}=\frac{\pi^{2}}{24}$$`),
+    F('zb29', 'infinitesimal', R`等价：$\tan x-\sin x\sim\frac{x^{3}}{2}$`,
+      R`$$x\to0:\quad \tan x-\sin x \sim\ ?$$`,
+      R`$$\tan x-\sin x \sim \frac{x^{3}}{2}$$`),
+    F('zb30', 'integral', R`极坐标下平面图形面积`,
+      R`写出极坐标曲线围成的平面图形面积公式`,
+      R`$$\rho=\rho(\theta),\ \alpha\le\theta\le\beta$$ 所围扇形区域面积：$$A=\frac12\int_{\alpha}^{\beta}\rho^{2}(\theta)\,d\theta$$`),
+    F('zb31', 'integral', R`柱壳法求旋转体体积`,
+      R`曲线 $y=f(x)\ (0\le a\le x\le b)$ 绕 $y$ 轴旋转的体积（柱壳法）`,
+      R`$$V=2\pi\int_{a}^{b}x\,f(x)\,dx$$（适用：区域绕 $y$ 轴旋转且 $f(x)\ge0$；当 $x$ 不易反解成 $y$ 的函数时比圆盘法更简。）`),
+    F('zb32', 'integral', R`$\int\ln x\,dx$ 与循环分部积分`,
+      R`写出 $\int\ln x\,dx$ 与 $\int e^{ax}\sin bx\,dx$ 的成品结果`,
+      R`$$\int\ln x\,dx=x\ln x-x+C$$$$\int e^{ax}\sin bx\,dx=\frac{e^{ax}(a\sin bx-b\cos bx)}{a^{2}+b^{2}}+C$$$$\int e^{ax}\cos bx\,dx=\frac{e^{ax}(a\cos bx+b\sin bx)}{a^{2}+b^{2}}+C$$`),
+    F('zb33', 'linalg', R`线性方程组同解与公共解`,
+      R`写出两线性方程组同解、公共解的判定`,
+      R`$Ax=b$ 与 $Bx=c$ **同解** $iff$ $r(A)=r(B)=r\begin{pmatrix}A\\B\end{pmatrix}=r\begin{pmatrix}A&b\\B&c\end{pmatrix}$。**公共解**：联立 $\begin{pmatrix}A\\B\end{pmatrix}x=\begin{pmatrix}b\\c\end{pmatrix}$ 解之（公共解即联立方程组的解）。`),
+    F('zb34', 'multi', R`一阶全微分形式不变性`,
+      R`叙述一阶全微分形式不变性`,
+      R`对 $z=f(u,v)$，无论 $u,v$ 是自变量还是中间变量（$u=u(x,y),v=v(x,y)$），都有$$dz=\frac{\partial z}{\partial u}du+\frac{\partial z}{\partial v}dv$$（即一阶全微分的形式不随 $u,v$ 角色改变）。`),
 
   ];
 
@@ -1257,6 +1293,19 @@ $$\begin{pmatrix}A&O\\O&B\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\O&B^{-1}\en
     // 新增：方法/技巧套路卡
     zt06: [5, '极限计算：幂指型 1^∞ / 0^0 / ∞^0'],
     zt07: [4, '级数大题：幂级数求和函数'],
+    // 补缺：特征值继承 / 秩不等式 / 相似性质 / 伴随运算 / 拉普拉斯 / 级数和 / 组合等价无穷小 / 极坐标面积 / 柱壳法 / 分部成品 / 方程组同解 / 全微分不变性
+    zb23: [5, '特征值继承性质（填空/选择高频）'],
+    zb24: [4, '秩的等式与不等式'],
+    zb25: [5, '相似矩阵不变性质'],
+    zb26: [4, '伴随矩阵运算公式'],
+    zb27: [5, '分块行列式（拉普拉斯展开）'],
+    zb28: [4, '幂级数端点求和的常用级数和'],
+    zb29: [4, '组合型等价无穷小'],
+    zb30: [3, '极坐标平面图形面积'],
+    zb31: [4, '旋转体体积（柱壳法）'],
+    zb32: [4, '分部积分成品公式'],
+    zb33: [5, '线性方程组同解/公共解'],
+    zb34: [3, '一阶全微分形式不变性'],
     // 概率论与数理统计
   };
 
@@ -1611,6 +1660,18 @@ $$\begin{pmatrix}A&O\\O&B\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\O&B^{-1}\en
     zb22: [ { to: 'la09', tag: '相关' }, { to: 'ms03', tag: '相关' }, { to: 'la13', tag: '对比' } ],
     zt06: [ { to: 'lim09', tag: '1^∞' }, { to: 'lim10', tag: '相关' }, { to: 'ext02', tag: '洛必达' } ],
     zt07: [ { to: 'ser12', tag: '方法' }, { to: 'ext17', tag: '方法' }, { to: 'ser10', tag: '前置' } ],
+    zb23: [ { to: 'la12', tag: '相关' }, { to: 'la11', tag: '相关' }, { to: 'la04', tag: '前置' } ],
+    zb24: [ { to: 'la07', tag: '相关' }, { to: 'la08', tag: '前置' } ],
+    zb25: [ { to: 'la13', tag: '前置' }, { to: 'zb22', tag: '对比' }, { to: 'la12', tag: '相关' } ],
+    zb26: [ { to: 'la11', tag: '前置' }, { to: 'zb19', tag: '相关' } ],
+    zb27: [ { to: 'zb19', tag: '相关' }, { to: 'la08', tag: '前置' } ],
+    zb28: [ { to: 'zt07', tag: '应用' }, { to: 'ser12', tag: '方法' }, { to: 'ser08', tag: '相关' } ],
+    zb29: [ { to: 'inf10', tag: '相关' }, { to: 'inf11', tag: '相关' } ],
+    zb30: [ { to: 'int28', tag: '类比' }, { to: 'zb16', tag: '相关' } ],
+    zb31: [ { to: 'int29', tag: '类比' }, { to: 'int28', tag: '前置' } ],
+    zb32: [ { to: 'int24', tag: '方法' }, { to: 'int05', tag: '前置' } ],
+    zb33: [ { to: 'zb08', tag: '前置' }, { to: 'la17', tag: '相关' } ],
+    zb34: [ { to: 'multi01', tag: '应用' }, { to: 'multi05', tag: '相关' } ],
   };
 
   // ============ 深度（1~5，5 为满分冲刺） ============
@@ -1650,6 +1711,7 @@ $$\begin{pmatrix}A&O\\O&B\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\O&B^{-1}\en
     zt01: 5, zt02: 5, zt03: 4, zt04: 5, zt05: 5,
     zb12: 3, zb13: 4, zb14: 3, zb15: 3, zb16: 4, zb17: 4, zb18: 4, zb19: 4, zb20: 4, zb21: 3, zb22: 4,
     zt06: 5, zt07: 5,
+    zb23: 5, zb24: 4, zb25: 5, zb26: 4, zb27: 5, zb28: 4, zb29: 4, zb30: 3, zb31: 4, zb32: 4, zb33: 5, zb34: 3,
   };
 
   const PITFALL = {
@@ -1702,7 +1764,7 @@ $$\begin{pmatrix}A&O\\O&B\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\O&B^{-1}\en
     tay04: R`$\ln(1+x)$ 展开收敛域为 $(-1,1]$：$x=-1$ 发散、$x=1$ 收敛（交错调和，和为 $\ln2$）；与 $\frac1{1-x}$ 的收敛域 $|x|<1$ 不同，勿混记。`,
     lim08: R`$(1+x)^{\alpha}-1\sim\alpha x$ 中 $\alpha$ 可为分数或负（如 $\sqrt{1+x}-1\sim\frac{x}{2}$），替换后勿丢 $\alpha$；且等价替换只用于乘除因式，加减式中含它的项不能分别替换。`,
     ser05: R`莱布尼茨判别法需同时满足 $u_n$ 单调递减且 $\lim u_n=0$，两者缺一不可（单调性只需从某一项起成立）；它是充分条件，条件不满足时交错级数仍可能收敛，需另换方法。`,
-    zb01: R`定积分定义求数列和极限时，必须先把和式凑成 $\frac{1}{n}\sum f(\frac{k}{n})$：每项都要有 $\frac{1}{n}$ 因子，$f$ 的自变量是 $\frac{k}{n}$。若写成 $\frac{1}{n^2}\sum k f(\frac{k}{n})$ 要先提出 $\frac{1}{n}$。另注意 $\int_0^1$ 与 $\int_0^1$ 的分点对应关系，勿把上限写错。`,
+    zb01: R`定积分定义求数列和极限时，必须先把和式凑成 $\frac{1}{n}\sum f(\frac{k}{n})$：每项都要有 $\frac{1}{n}$ 因子，$f$ 的自变量是 $\frac{k}{n}$。若写成 $\frac{1}{n^2}\sum k f(\frac{k}{n})$ 要先提出 $\frac{1}{n}$。另注意分点 $\frac{k}{n}$ 与 $x$ 的对应关系（$k$ 从 $0$ 到 $n$ 对应 $x$ 从 $0$ 到 $1$），勿把积分上下限写错。`,
     zb03: R`$|A+B|\neq|A|+|B|$；$|kA|=k^{n}|A|$（$n$ 阶，勿写成 $k|A|$）。用性质④（倍加不改变行列式）化简最安全，但它不改变行列式值。`,
     zb04: R`范德蒙德行列式的值是 $\prod_{i<j}(x_{j}-x_{i})$（后减前），不要写反成 $\prod(x_{i}-x_{j})$ 或漏掉某一对；识别时看每行是否为同一个 $x_i$ 的 $0,1,2,\dots$ 次幂。`,
     zb06: R`极大线性无关组不唯一，但所含向量个数（= 秩）唯一；求它是用行变换找主元列对应的**原**向量，不是行阶梯形里的行向量。`,

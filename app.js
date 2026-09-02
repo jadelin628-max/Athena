@@ -671,46 +671,29 @@
     }
     return '下次复习：' + fmtDayMs(c.due) + '（间隔 ' + c.ivl + ' 天）';
   }
-  // 掌握度趋势：实际曲线（历史）+ 预测曲线（从上次复习按校准目标衰减到下次复习）
+  // 掌握度趋势：实际掌握度历史点（每次评分后跳变）+ 100% 目标参考线
   function svgMasteryTrend(id) {
     const c = card(id);
     const hist = (c.hist || []);
     const wrap = el('div', 'chart-wrap');
-    wrap.appendChild(el('div', 'chart-label muted', '当前可提取性 R 趋势（时间）· — 实际 · - - 预测(FSRS)'));
-    const hasActual = hist.length >= 2;
-    const isReview = c.state === 'review' && c.due > 0 && c.lastR > 0 && c.ivl > 0;
-    if (!hasActual && !isReview) { wrap.appendChild(el('p', 'muted', '📈 数据积累中——学习 2 次后显示趋势。')); return wrap; }
-    let minT = hist.length ? hist[0].t : Date.now();
-    let maxT = hist.length ? hist[hist.length - 1].t : Date.now();
-    if (isReview) maxT = Math.max(maxT, c.due);
+    wrap.appendChild(el('div', 'chart-label muted', '掌握度趋势（时间）· ● 每次评分后的掌握度 · ─ 目标(100%)'));
+    if (hist.length < 2) { wrap.appendChild(el('p', 'muted', '📈 数据积累中——学习 2 次后显示趋势。')); return wrap; }
+    let minT = hist[0].t;
+    let maxT = hist[hist.length - 1].t;
     const spanT = Math.max(1, (maxT - minT) || 1);
     const W = 300, H = 118, padL = 28, padR = 8, padT = 12, padB = 18;
     const X = function (t) { return padL + (t - minT) / spanT * (W - padL - padR); };
     const Y = function (m) { return padT + (1 - m / 100) * (H - padT - padB); };
     const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%' });
     [0, 50, 100].forEach(function (m) { const y = Y(m); svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: y, y2: y, stroke: '#E7E4DD', 'stroke-width': '1' })); svg.appendChild(svgText('text', padL - 4, y + 3, String(m), { 'text-anchor': 'end' })); });
-    // 预测曲线（FSRS 幂律）：从上次复习时刻的 100% 可提取性，按稳定性衰减到下次复习（≈期望保留率）
-    if (isReview && hist.length) {
-      const last = hist[hist.length - 1];
-      const stab = Math.max(0.25, c.stab || c.ivlR || 9);
-      let dstr = ''; const steps = 24;
-      for (let i = 0; i <= steps; i++) {
-        const t = last.t + (c.due - last.t) * i / steps;
-        const days = Math.max(0, (t - last.t) / DAY);
-        const p = 100 * fsrsRetention(days, stab); // 预测可提取性 R(t,S)
-        dstr += (i === 0 ? 'M' : ' L') + X(t) + ' ' + Y(p);
-      }
-      svg.appendChild(svgEl('path', { d: dstr, fill: 'none', stroke: '#B5D4F4', 'stroke-width': '2', 'stroke-dasharray': '4 3' }));
-      svg.appendChild(svgEl('circle', { cx: X(last.t), cy: Y(100 * fsrsRetention(0, c.stab)), r: '3.5', fill: '#B5D4F4' }));
-    }
-    // 实际曲线 + 点
-    if (hasActual) {
-      const pts = hist.map(function (p) { return X(p.t) + ',' + Y(p.m); }).join(' ');
-      svg.appendChild(svgEl('polyline', { points: pts, fill: 'none', stroke: '#D4537E', 'stroke-width': '2' }));
-    }
+    // 目标参考线（100% = 毕业/稳固）
+    svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: Y(100), y2: Y(100), stroke: '#A9C9E8', 'stroke-width': '1', 'stroke-dasharray': '4 3' }));
+    // 实际掌握度曲线 + 点
+    const pts = hist.map(function (p) { return X(p.t) + ',' + Y(p.m); }).join(' ');
+    svg.appendChild(svgEl('polyline', { points: pts, fill: 'none', stroke: '#D4537E', 'stroke-width': '2' }));
     hist.forEach(function (p) {
       const cEl = svgEl('circle', { cx: X(p.t), cy: Y(p.m), r: '3', fill: '#378ADD' });
-      const tt = svgEl('title', {}); tt.textContent = fmtDayMs(p.t) + ' 可提取 ' + p.m + '%';
+      const tt = svgEl('title', {}); tt.textContent = fmtDayMs(p.t) + ' 掌握度 ' + p.m + '%';
       cEl.appendChild(tt); svg.appendChild(cEl);
     });
     // 日期横坐标
@@ -1163,17 +1146,45 @@
   }
 
   function surfaceDue() {
-    if (!deck.length || frontier >= deck.length) return;
     const now = Date.now();
+    const isDue = function (id) {
+      const c = card(id);
+      return (c.state === 'review' || c.state === 'learning' || c.state === 'relearning') && c.due <= now;
+    };
+    // 记住当前 pos 指向的卡，重组后尽量保持/正确回退
+    const curId = (pos >= 0 && pos < deck.length) ? deck[pos] : null;
+    const inDeck = {};
+    deck.forEach(function (id) { inDeck[id] = true; });
+    // deck 外部的到期卡（昨天学完今天到期、但不在当前队列）——吸收进队首
+    const fresh = [];
+    DATA.forEach(function (f) {
+      if (!inDeck[f.id] && isDue(f.id)) fresh.push(f.id);
+    });
+    fresh.sort(function (a, b) {
+      const sa = metaOf(a)[0] || 0, sb = metaOf(b)[0] || 0;
+      if (sb !== sa) return sb - sa;
+      return card(a).due - card(b).due;
+    });
+    // 拆分 head（已学）/tail（待学），把到期卡统一归到「待学区」最前
     const head = deck.slice(0, frontier);
     const tail = deck.slice(frontier);
-    const due = tail.filter(function (id) {
-      const c = card(id);
-      return (c.state === 'review' || (c.state === 'learning' || c.state === 'relearning')) && c.due <= now;
-    });
-    if (!due.length) return;
-    const rest = tail.filter(function (id) { return due.indexOf(id) === -1; });
-    deck = head.concat(due, rest);
+    const dueHead = head.filter(isDue);
+    const keepHead = head.filter(function (id) { return dueHead.indexOf(id) === -1; });
+    const dueTail = tail.filter(isDue);
+    const restTail = tail.filter(function (id) { return dueTail.indexOf(id) === -1; });
+    const front = fresh.concat(dueHead, dueTail);
+    front.sort(function (a, b) { return card(a).due - card(b).due; });
+    deck = keepHead.concat(front, restTail);
+    frontier = keepHead.length;
+    // 恢复 pos：原卡仍在「已学区」（未到期）则保持回看；否则跳到第一张待学卡
+    if (curId != null) {
+      const idx = deck.indexOf(curId);
+      pos = (idx >= 0 && idx < frontier) ? idx : frontier;
+    } else {
+      pos = frontier;
+    }
+    if (pos < 0) pos = 0;
+    if (pos > deck.length) pos = deck.length;
   }
   // 自适应步进：学习阶段的卡若等待过久（超过阈值），把它从队列靠后拉近，尽早重现
   function renderLearn() {
@@ -1400,19 +1411,17 @@
   function doRate(r) {
     if (frontier >= deck.length) return;
     const id = deck[frontier];
-    const wasReview = card(id).state === 'review';
     const beforeM = mastery(id).pct; // 评分前掌握度（存储强度到目标比例）
-    const beforeR = wasReview ? Math.round(fsrsRetention(Math.max(0, (Date.now() - (card(id).lastR || Date.now())) / DAY), card(id).stab) * 100) : null; // 复习时的可提取性 R（供趋势图，与掌握度解耦）
     applyRating(id, r);
     const afterM = mastery(id).pct;
     lastMasteryDelta = afterM - beforeM;
     markReviewed(id);
     addCost(r);
-    // 记录可提取性 R 历史快照（复习卡=复习时真实 R；新/学习卡=掌握度占位），供「R 趋势图」
+    // 记录掌握度历史快照（每次评分后的掌握度，供「掌握度趋势图」）
     {
       const c = card(id);
       if (!Array.isArray(c.hist)) c.hist = [];
-      c.hist.push({ t: Date.now(), m: (wasReview ? beforeR : afterM) == null ? 0 : (wasReview ? beforeR : afterM), ivl: c.ivl || 0 });
+      c.hist.push({ t: Date.now(), m: afterM, ivl: c.ivl || 0 });
       if (c.hist.length > 60) c.hist = c.hist.slice(-60);
       c.lastR = Date.now();
       c.ivlR = c.ivl || 0;

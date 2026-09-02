@@ -9,7 +9,7 @@
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
-    { v: '1.5.1', date: '2026-08', items: ['修复：评分挡位（忘记/困难/良好/简单）在显示答案前错误可见——CSS 特异性导致 `.rating.hidden` 实际显示，违背「先回忆→显示答案→再评分」的标准流程；改为 `.hidden{display:none!important}`，现在未复习卡初始只显示题目与「显示答案」按钮，点开答案后才出现评分挡位'] },
+    { v: '1.5.1', date: '2026-09', items: ['修复：评分挡位（忘记/困难/良好/简单）在显示答案前错误可见——CSS 特异性导致 `.rating.hidden` 实际显示，违背「先回忆→显示答案→再评分」的标准流程；改为 `.hidden{display:none!important}`，现在未复习卡初始只显示题目与「显示答案」按钮，点开答案后才出现评分挡位'] },
     { v: '1.5.0', date: '2026-08', items: ['数三公式库逐卡审读与修正：修正 19 处公式不严谨（反函数/参数方程求导补条件、$a^x$·$\\arcsin$ 补 $a>0$ 条件、辅助角象限、隐函数求导 $F_y\\neq0$、方向导数需可微、面积公式改 $|f-g|$、Sylvester 不等式补 $n$ 定义、伴随 $|A^*|$ 补 $n\\ge2$、莱布尼茨补 $u_n\\ge0$、收敛半径补极限存在、阿贝尔定理前后对齐、拐点补连续、反函数补严格单调、幂零分解限定单特征值、正定/周期/单调口径修正等）', '数三补 12 张高频缺失卡：特征值继承性质、秩的等式不等式、相似矩阵性质、伴随矩阵运算、拉普拉斯分块行列式、常用数值级数和、$\\tan x-\\sin x$ 等价无穷小、极坐标面积、柱壳法体积、分部积分成品（$\\int\\ln x$、$\\int e^{ax}\\sin bx$）、方程组同解/公共解、一阶全微分形式不变性'] },
     { v: '1.4.6', date: '2026-08', items: ['修复：到期复习卡未进入学习队首——重写 surfaceDue，把「到期但不在队列」的卡（含昨天学完、今天到期的复习卡）吸收进队首，并把已学区中到期的卡重新归入待学区，修复「显示待复习好几张却学不到」的问题', '卡片与记忆模块的趋势图从「可提取性 R」改为「掌握度」：历史点统一记录每次评分后的掌握度，图表画掌握度折线 + 100% 目标参考线'] },
     { v: '1.4.5', date: '2026-08', items: ['修复：额度用完后重新打开模块误显示「最后一张卡片」——已学完会话（pos=frontier=deck.length）不再被恢复，而是重建队列，正确进入「额度用完/次日复习」界面', '修复：间隔 1 天的复习卡本应次日出现却拖到第三天——复习到期改为按自然日对齐（due = 当天 00:00 + ivl 天），不再用 now+24h 精确时刻（否则今晚 20:00 复习、明早打开还没到期）', '评分按钮的「下次约 X」对毕业后间隔按整天展示，与自然日到期一致'] },
@@ -793,8 +793,6 @@
   const MIN_PER_DAY_DEFAULT = 20;
   // 各评分档的单次复习成本（秒）：忘记最贵（重新学），简单最快（仅确认）；对齐论文「认识≈3s / 忘记≈9s」
   const RATING_COST_S = [9, 6, 3, 1];
-  // 每张「新卡」的估计学习成本（秒）：用于把剩余时间预算换算成可引入的新卡数
-  const EST_NEW_CARD_SEC = 10;
   // ================= 完整 FSRS-6（2024-2025 最新，来自 open-spaced-repetition 官方训练权重） =================
   // 21 参数默认权重（ts-fsrs / fsrs-rs v6.x DEFAULT_PARAMETERS：w0..w20）
   const FW = [0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542];
@@ -874,9 +872,6 @@
   function budgetMin() { return Math.round(budgetSec() / 60); }
   function todayCostSec() { const t = todayStr(); return (DB && DB.log && DB.log.cost && DB.log.cost[t]) || 0; }
   function todayCostMin() { return Math.round(todayCostSec() / 60); }
-  function remainingBudgetSec() { return Math.max(0, budgetSec() - todayCostSec()); }
-  // 剩余时间预算还能引入几张新卡（每张按 EST_NEW_CARD_SEC 估计）
-  function waveBudgetCap() { return Math.max(0, Math.floor(remainingBudgetSec() / EST_NEW_CARD_SEC)); }
   // 记录本次评分的复习成本（以评分档映射时间），计入今日预算
   function addCost(r) {
     const t = todayStr();
@@ -1097,7 +1092,7 @@
     return out;
   }
 
-  // 新卡摄入：按「每日时间预算」自动引入（每张约 EST_NEW_CARD_SEC 秒），不再手动「一组 10 张」分批
+  // 新卡摄入：一次性引入全部未学新卡（时间预算为软上限，超出仅提示、不封顶引入）
   function introState() {
     if (!DB.log) DB.log = {};
     if (!DB.log.newIntro || !Array.isArray(DB.log.newIntro.ids)) DB.log.newIntro = { ids: [] };
@@ -1107,24 +1102,14 @@
   function incompleteNewCount() {
     return DATA.filter(function (f) { const c = card(f.id); return (c.state === 'learning' || c.state === 'relearning') && (c.grad | 0) === 0; }).length;
   }
-  // 尚未引入的新卡数（按时间预算，本日预算用尽后不再引入）
-  function unstartedNewCount() {
-    const st = introState();
-    return DATA.filter(function (f) { return card(f.id).state === 'new' && st.ids.indexOf(f.id) === -1; }).length;
-  }
 
   function buildSession() {
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
     const st = introState();
-    // 按时间预算引入新卡：保证「已引入且未学」的新卡数达到预算上限（每张约 10 秒）；预算随学习消耗，用尽即停
-    const cap = waveBudgetCap();
-    const introducedNew = st.ids.filter(function (id) { return card(id).state === 'new'; }).length;
-    const slot = Math.max(0, cap - introducedNew);
-    if (slot > 0) {
-      const pending = shuffle(all.filter(function (id) { return card(id).state === 'new' && st.ids.indexOf(id) === -1; })).slice(0, slot);
-      if (pending.length) { st.ids = st.ids.concat(pending); saveDB(); }
-    }
+    // 引入全部「未引入的新卡」（时间预算为软上限：超出仅提示，不封顶新卡引入）
+    const pending = shuffle(all.filter(function (id) { return card(id).state === 'new' && st.ids.indexOf(id) === -1; }));
+    if (pending.length) { st.ids = st.ids.concat(pending); saveDB(); }
     // 到期复习（review 且到期）
     const due = all.filter(function (id) {
       const c = card(id);
@@ -1199,13 +1184,8 @@
     if (done) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
-      const moreNew = unstartedNewCount();
       const overBudget = todayCostSec() > budgetSec();
-      if (moreNew > 0) {
-        wrap.appendChild(el('p', 'muted', '还有 ' + moreNew + ' 张新知识点未学，但按每日时间预算暂不引入。' + (overBudget ? '（今日已超出时间预算 ' + (todayCostMin() - budgetMin()) + ' 分钟）' : '（今日时间预算已用完，明日再继续）')));
-      } else {
-        wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
-      }
+      wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。' + (overBudget ? '（今日已超出时间预算 ' + (todayCostMin() - budgetMin()) + ' 分钟，仍可继续）' : '')));
       app.appendChild(wrap);
       return;
     }
@@ -1809,6 +1789,15 @@
     s2.appendChild(imp);
     wrap.appendChild(s2);
     wrap.appendChild(el('p', 'muted', '换设备或换网址（如本地→线上）时：先「导出」生成备份文件，再到新位置「导入」。'));
+
+    const s8 = el('div', 'setting-row');
+    s8.appendChild(el('span', null, '更新与缓存'));
+    const cc = el('button', 'btn', '强制清除缓存并更新');
+    cc.setAttribute('data-action', 'clearcache');
+    cc.setAttribute('title', '清除 Service Worker 与全部缓存后自动刷新，用于移动端测试最新版本');
+    s8.appendChild(cc);
+    wrap.appendChild(s8);
+    wrap.appendChild(el('p', 'muted', '移动端看不到最新版本时使用：清除浏览器缓存（Service Worker + 静态资源缓存）后重新加载，不丢学习进度。'));
 
     const s3 = el('div', 'setting-row danger-row');
     s3.appendChild(el('span', null, '重置全部学习进度'));
@@ -2495,6 +2484,28 @@
         const hidden = body.classList.toggle('hidden');
         const btn = document.querySelector('[data-action="togglog"]');
         if (btn) btn.textContent = hidden ? '展开' : '收起';
+        break;
+      }
+      case 'clearcache': {
+        // 强制清除 Service Worker 与全部缓存后刷新（用于移动端测试最新版本）
+        toast('正在清除缓存…');
+        const done = function () {
+          if ('caches' in window && window.caches.keys) {
+            window.caches.keys().then(function (keys) {
+              return Promise.all(keys.map(function (k) { return window.caches.delete(k); }));
+            }).then(function () { location.reload(); }).catch(function () { location.reload(); });
+          } else {
+            location.reload();
+          }
+        };
+        if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistration) {
+          navigator.serviceWorker.getRegistration().then(function (reg) {
+            if (reg) { return reg.unregister().then(function () { done(); }); }
+            done();
+          }).catch(function () { done(); });
+        } else {
+          done();
+        }
         break;
       }
     }

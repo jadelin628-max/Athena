@@ -5,10 +5,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.5.2';
+  const VERSION = '1.5.3';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.5.3', date: '2026-09', items: ['修复：复习队列最后一张卡仍显示「回到当前卡片」、无法进入新学习队列——学习/重学卡评「忘记」后被推回队尾等待重现，同时留在已学区供确认展示，同一张卡在队列中出现两份；到期时 surfaceDue 未去重，重复卡使 pos/frontier 错位。现已在归入待学区时按卡去重（队尾副本优先），到期卡唯一进入待学区，队列恢复正确', '修复：「待复习」标签误把今天刚学、仍处学习阶段的卡计入——stats() 曾把 learning/relearning 且到点的卡也算进待复习；现改为 learning/relearning 一律计入「学习中」（未学完新卡），只有 review 状态且到点的卡才计入「待复习」，与建队列时的分类一致'] },
     { v: '1.5.2', date: '2026-09', items: ['修复：复习队列结束后无法进入新学习队列——新卡引入不再被剩余时间预算封顶（此前复习完复习卡后预算耗尽、新卡不引入，导致学完复习卡直接「本轮已完成」进不了新卡），改为一次性引入全部未学新卡；时间预算仍为软上限（超出仅提示、不限制学习）', '设置页新增「强制清除缓存并更新」：注销 Service Worker + 清空全部 CacheStorage 后自动刷新，便于移动端测试最新版本（不丢学习进度）', 'README 移除「北大光华」等具体目标内容，改为通用记忆学习项目描述'] },
     { v: '1.5.1', date: '2026-09', items: ['修复：评分挡位（忘记/困难/良好/简单）在显示答案前错误可见——CSS 特异性导致 `.rating.hidden` 实际显示，违背「先回忆→显示答案→再评分」的标准流程；改为 `.hidden{display:none!important}`，现在未复习卡初始只显示题目与「显示答案」按钮，点开答案后才出现评分挡位'] },
     { v: '1.5.0', date: '2026-08', items: ['数三公式库逐卡审读与修正：修正 19 处公式不严谨（反函数/参数方程求导补条件、$a^x$·$\\arcsin$ 补 $a>0$ 条件、辅助角象限、隐函数求导 $F_y\\neq0$、方向导数需可微、面积公式改 $|f-g|$、Sylvester 不等式补 $n$ 定义、伴随 $|A^*|$ 补 $n\\ge2$、莱布尼茨补 $u_n\\ge0$、收敛半径补极限存在、阿贝尔定理前后对齐、拐点补连续、反函数补严格单调、幂零分解限定单特征值、正定/周期/单调口径修正等）', '数三补 12 张高频缺失卡：特征值继承性质、秩的等式不等式、相似矩阵性质、伴随矩阵运算、拉普拉斯分块行列式、常用数值级数和、$\\tan x-\\sin x$ 等价无穷小、极坐标面积、柱壳法体积、分部积分成品（$\\int\\ln x$、$\\int e^{ax}\\sin bx$）、方程组同解/公共解、一阶全微分形式不变性'] },
@@ -729,7 +730,7 @@
       const c = card(f.id);
       pctSum += mastery(f.id).pct;
       if (c.state === 'new') fresh++;
-      else if ((c.state === 'learning' || c.state === 'relearning')) { if (c.due <= now) due++; else learn++; }
+      else if ((c.state === 'learning' || c.state === 'relearning')) { learn++; }
       else { if (c.due <= now) due++; else { review++; if (isGraduated(c)) mature++; } }
     });
     return { due: due, learn: learn, review: review, fresh: fresh, mature: mature, total: DATA.length, avg: Math.round(pctSum / DATA.length) };
@@ -1157,10 +1158,19 @@
     // 拆分 head（已学）/tail（待学），把到期卡统一归到「待学区」最前
     const head = deck.slice(0, frontier);
     const tail = deck.slice(frontier);
-    const dueHead = head.filter(isDue);
-    const keepHead = head.filter(function (id) { return dueHead.indexOf(id) === -1; });
-    const dueTail = tail.filter(isDue);
-    const restTail = tail.filter(function (id) { return dueTail.indexOf(id) === -1; });
+    // 学习/重学卡评分后会被推回队尾等待重现，同时留在「已学区」供确认展示；
+    // 二者指向同一张卡，到期时必须去重（队尾副本优先），否则 front 会出现重复卡、打乱队列。
+    const surfaced = {};              // 已确定要进入 front 的卡（去重键）
+    const dueTail = [];
+    tail.forEach(function (id) {
+      if (isDue(id) && !surfaced[id]) { surfaced[id] = true; dueTail.push(id); }
+    });
+    const dueHead = [];
+    head.forEach(function (id) {
+      if (isDue(id) && !surfaced[id]) { surfaced[id] = true; dueHead.push(id); }
+    });
+    const keepHead = head.filter(function (id) { return !surfaced[id]; });
+    const restTail = tail.filter(function (id) { return !surfaced[id]; });
     const front = fresh.concat(dueHead, dueTail);
     front.sort(function (a, b) { return card(a).due - card(b).due; });
     deck = keepHead.concat(front, restTail);

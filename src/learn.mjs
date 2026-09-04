@@ -90,8 +90,6 @@
   }
 
   // ---------------- 目标倒计时（原「考研倒计时」，目标名可编辑文本，便于考研后复用） ----------------
-  const GOAL_DEFAULT = '考研';
-  const EXAM_AUTO_MONTH = 12, EXAM_AUTO_DAY = 20; // 默认按每年 12 月 20 日（考研初试通常在 12 月下旬）
   function goalTitle() { return (DB && DB.settings && typeof DB.settings.goalTitle === 'string' && DB.settings.goalTitle.trim()) ? DB.settings.goalTitle.trim() : GOAL_DEFAULT; }
   function examDateObj() {
     const s = (DB && DB.settings && DB.settings.examDate) || '';

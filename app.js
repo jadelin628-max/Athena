@@ -1,4 +1,24 @@
 /* 本文件由 tools/build.mjs 自动生成，请勿手改；修改 src/ 后运行 node tools/build.mjs 重新生成。 */
+  // ---------------- 全局配置常量（各模块共享，须最先拼接） ----------------
+  // 目标倒计时
+  const GOAL_DEFAULT = '考研';
+  const EXAM_AUTO_MONTH = 12, EXAM_AUTO_DAY = 20; // 默认每年 12 月 20 日（0-based：12 月）
+  // 每日复习时间预算（分钟）
+  const MIN_PER_DAY_DEFAULT = 20;
+  // 各评分档单次复习成本（秒）
+  const RATING_COST_S = [9, 6, 3, 1];
+  // 毕业目标稳定度与目标日可提取性
+  const TARGET_S_DEFAULT = 90;
+  const TARGET_CONFIDENCE = 0.9;
+  const TARGET_MIN_DAYS = 14;
+  // 一天毫秒数 + 自然日对齐（复习间隔按整天）
+  const DAY = 86400000;
+  function dayStart(ts) {
+    const d = new Date(ts);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }
+  const EF_MIN = 1.3; // 向后兼容保留（FSRS 易度已由难度/稳定性替代）
 /*
  * 考研数学三 · 公式记忆应用 — 核心逻辑
  * 记忆原理：主动回忆（先看提示→自行回想→再核对答案）
@@ -6,10 +26,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.5.5';
+  const VERSION = '1.5.6';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.5.6', date: '2026-09', items: ['修复：拆分模块时遗漏共享常量（DAY/dayStart/EF_MIN/每日预算/目标稳定度）导致启动 ReferenceError、页面空白——新增 src/config.mjs 最先拼接统一声明'] },
     { v: '1.5.5', date: '2026-09', items: ['性能：合并持久化写盘（同一轮多次评分只序列化并写一次，IndexedDB 低频备份，pagehide/visibilitychange 兜底 flush），修复统计页半衰期分布重复计算的 O(n²)'] },
     { v: '1.5.4', date: '2026-09', items: ['工程：app.js 拆分为 src/ 模块并由 tools/build.mjs 零依赖拼接构建，FSRS 纯函数抽离为 fsrs-core.mjs 并新增对拍测试；修正默认目标日期为 12 月 20 日、记忆原理文案统一为 FSRS-6'] },
     { v: '1.5.3', date: '2026-09', items: ['修复：复习队列最后一张卡仍显示「回到当前卡片」、无法进入新学习队列——学习/重学卡评「忘记」后被推回队尾等待重现，同时留在已学区供确认展示，同一张卡在队列中出现两份；到期时 surfaceDue 未去重，重复卡使 pos/frontier 错位。现已在归入待学区时按卡去重（队尾副本优先），到期卡唯一进入待学区，队列恢复正确', '修复：「待复习」标签误把今天刚学、仍处学习阶段的卡计入——stats() 曾把 learning/relearning 且到点的卡也算进待复习；现改为 learning/relearning 一律计入「学习中」（未学完新卡），只有 review 状态且到点的卡才计入「待复习」，与建队列时的分类一致'] },
@@ -618,8 +639,6 @@
   }
 
   // ---------------- 目标倒计时（原「考研倒计时」，目标名可编辑文本，便于考研后复用） ----------------
-  const GOAL_DEFAULT = '考研';
-  const EXAM_AUTO_MONTH = 12, EXAM_AUTO_DAY = 20; // 默认按每年 12 月 20 日（考研初试通常在 12 月下旬）
   function goalTitle() { return (DB && DB.settings && typeof DB.settings.goalTitle === 'string' && DB.settings.goalTitle.trim()) ? DB.settings.goalTitle.trim() : GOAL_DEFAULT; }
   function examDateObj() {
     const s = (DB && DB.settings && DB.settings.examDate) || '';

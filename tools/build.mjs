@@ -10,6 +10,7 @@ const SRC = path.join(ROOT, 'src');
 const OUT = path.join(ROOT, 'app.js');
 
 const ORDER = [
+  'config.mjs',
   'app.mjs',
   'fsrs-core.mjs',
   'store.mjs',

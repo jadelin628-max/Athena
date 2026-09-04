@@ -308,6 +308,11 @@
       back.setAttribute('data-action', 'goback');
       nav.appendChild(back);
     }
+    if (reviewed && lastRatingUndo) {
+      const undo = el('button', 'btn small', '↩ 撤销评分');
+      undo.setAttribute('data-action', 'undo');
+      nav.appendChild(undo);
+    }
     if (reviewed) {
       const go = el('button', 'btn small primary', pendingAdvance ? '下一张 ▶' : '回到当前卡片 →');
       go.setAttribute('data-action', 'gofront');
@@ -329,6 +334,7 @@
         b.setAttribute('data-action', 'rate');
         b.setAttribute('data-arg', String(r));
         b.setAttribute('title', sub + ' · 下次约 ' + prev);
+        b.setAttribute('aria-label', label + '：' + sub + '，下次约 ' + prev);
         b.appendChild(el('span', null, label));
         b.appendChild(el('small', 'rate-prev', prev));
         rating.appendChild(b);
@@ -337,6 +343,8 @@
       mk('困难', '有印象但吃力', 1);
       mk('良好', '能想起，正常间隔', 2);
       mk('简单', '很轻松，拉长间隔', 3);
+      const kbd = el('div', 'keyboard-hint muted', '1 忘记 · 2 困难 · 3 良好 · 4 简单 · Space/Enter 显示答案');
+      rating.appendChild(kbd);
       wrap.appendChild(rating);
     }
 
@@ -366,6 +374,15 @@
     if (frontier >= deck.length) return;
     const id = deck[frontier];
     const beforeM = mastery(id).pct; // 评分前掌握度（存储强度到目标比例）
+    // 撤销快照：卡片状态 + 今日统计计数，供评分后单步回退
+    lastRatingUndo = {
+      id: id,
+      card: JSON.parse(JSON.stringify(card(id))),
+      costBefore: todayCostSec(),
+      pushed: false,
+      dailyBefore: (DB.log && DB.log.daily && DB.log.daily[todayStr()]) || 0,
+      detailBefore: (DB.log && DB.log.detail && DB.log.detail[todayStr()] && DB.log.detail[todayStr()][id]) || 0
+    };
     applyRating(id, r);
     const afterM = mastery(id).pct;
     lastMasteryDelta = afterM - beforeM;
@@ -383,9 +400,35 @@
     // 时间步进：学习中的卡按计时器到点重现（推回队尾，由 surfaceDue 在其 due 到达时提前）
     if (card(id).state === 'learning' || card(id).state === 'relearning') {
       deck.push(id);
+      lastRatingUndo.pushed = true;
     }
     frontier++;
     pendingAdvance = true;
+    saveDB();
+    saveSession();
+    renderApp();
+  }
+
+  function undoLastRating() {
+    if (!lastRatingUndo) return;
+    const u = lastRatingUndo;
+    lastRatingUndo = null;
+    const id = u.id;
+    DB.cards[id] = u.card;
+    const t = todayStr();
+    if (DB.log && DB.log.daily && typeof DB.log.daily[t] === 'number') {
+      DB.log.daily[t] = Math.max(0, DB.log.daily[t] - 1);
+    }
+    if (DB.log && DB.log.detail && DB.log.detail[t] && typeof DB.log.detail[t][id] === 'number') {
+      DB.log.detail[t][id] = Math.max(0, DB.log.detail[t][id] - 1);
+    }
+    if (!DB.log.cost) DB.log.cost = {};
+    DB.log.cost[t] = Math.max(0, u.costBefore);
+    if (u.pushed) {
+      for (let i = deck.length - 1; i >= 0; i--) { if (deck[i] === id) { deck.splice(i, 1); break; } }
+    }
+    if (frontier > 0) frontier--;
+    pendingAdvance = false;
     saveDB();
     saveSession();
     renderApp();

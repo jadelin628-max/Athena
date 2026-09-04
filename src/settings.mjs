@@ -28,16 +28,16 @@
     examInput.type = 'date';
     examInput.style.width = '158px';
     examInput.value = (DB.settings && DB.settings.examDate) || '';
-    examInput.title = '留空则自动按每年 12 月 20 日（原考研初试日，可改）';
+    examInput.title = '留空则不显示倒计时与每日弹窗';
     examInput.addEventListener('change', function () {
       DB.settings.examDate = examInput.value || '';
       saveDB();
       updateCountdown();
-      toast(examInput.value ? '目标日期已设为 ' + examInput.value : '已恢复自动（每年 12 月 20 日）');
+      toast(examInput.value ? '目标日期已设为 ' + examInput.value : '已清除目标日期（倒计时关闭）');
     });
     s4b.appendChild(examInput);
     wrap.appendChild(s4b);
-    wrap.appendChild(el('p', 'muted', '用于顶部「目标倒计时」与每日首启弹窗。目标名称与日期都可编辑——考研后可改成四六级/教资等，App 继续可用（复习排期不受影响，仅倒计时/毕业目标/掌握度随之更新）。留空日期 = 自动取最近一个 12 月 20 日。'));
+    wrap.appendChild(el('p', 'muted', '设置目标日期后，顶部才会显示倒计时，并在每天首次打开时弹出提醒。留空则关闭倒计时与每日弹窗；毕业目标自动回退到固定稳定度。'));
 
     const s6 = el('div', 'setting-row');
     s6.appendChild(el('span', null, '每日复习时间预算'));
@@ -66,7 +66,9 @@
     const linkedCb = el('input', 'chk');
     linkedCb.type = 'checkbox';
     linkedCb.checked = targetLinked();
-    linkedCb.title = '开启后：毕业目标随目标倒计时自动变化（要求目标日可提取性 ≥ 90%）';
+    linkedCb.disabled = (countdownDays() == null);
+    if (linkedCb.disabled) linkedCb.checked = false;
+    linkedCb.title = '开启后：毕业目标随目标倒计时自动变化（要求目标日可提取性 ≥ 90%）；需先设置目标日期';
     linkedCb.addEventListener('change', function () {
       DB.settings.targetLinkExam = linkedCb.checked;
       saveDB();

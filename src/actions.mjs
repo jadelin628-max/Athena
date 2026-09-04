@@ -53,6 +53,9 @@
       case 'rate':
         doRate(parseInt(arg, 10));
         break;
+      case 'undo':
+        undoLastRating();
+        break;
       case 'bcat':
         browseCat = arg;
         browseExpanded = {};
@@ -283,7 +286,7 @@
   }
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { document.body.classList.remove('immersive'); closeDrawer(); }
+    if (e.key === 'Escape') { document.body.classList.remove('immersive'); closeDrawer(); const cm = document.querySelector('.countdown-modal'); if (cm) cm.remove(); }
   });
 
   // 导图 Ctrl+滚轮缩放

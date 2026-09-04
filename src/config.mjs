@@ -1,7 +1,6 @@
   // ---------------- 全局配置常量（各模块共享，须最先拼接） ----------------
   // 目标倒计时
   const GOAL_DEFAULT = '考研';
-  const EXAM_AUTO_MONTH = 12, EXAM_AUTO_DAY = 20; // 默认每年 12 月 20 日（0-based：12 月）
   // 每日复习时间预算（分钟）
   const MIN_PER_DAY_DEFAULT = 20;
   // 各评分档单次复习成本（秒）

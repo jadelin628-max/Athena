@@ -475,7 +475,15 @@ body.immersive #immersiveExit { display: block; }
   padding: 4px 12px; font-size: 12px;
 }
 
-@media (max-width: 520px) {
+/* 桌面端键盘提示：触屏/移动端隐藏 */
+.keyboard-hint { display: none; width: 100%; margin-top: 7px; text-align: center; font-size: 11.5px; }
+@media (hover:hover) and (pointer:fine) {
+  .keyboard-hint { display: block; }
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}@media (max-width: 520px) {
   .rating { gap: 6px; }
   .brand { font-size: 16px; }
   header { padding: calc(10px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); }

@@ -97,14 +97,11 @@
       const d = new Date(s + 'T00:00:00');
       if (!isNaN(d.getTime())) return d;
     }
-    const now = new Date();
-    let d = new Date(now.getFullYear(), EXAM_AUTO_MONTH, EXAM_AUTO_DAY);
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (d < today) d = new Date(now.getFullYear() + 1, EXAM_AUTO_MONTH, EXAM_AUTO_DAY);
-    return d;
+    return null;
   }
   function countdownDays() {
     const exam = examDateObj();
+    if (!exam) return null;
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     return Math.max(0, Math.round((exam - today) / 86400000));
@@ -113,13 +110,16 @@
     const badge = document.getElementById('countdownBadge');
     if (!badge || !DB) return;
     const d = countdownDays();
+    if (d == null) { badge.classList.add('hidden'); return; }
+    badge.classList.remove('hidden');
     const g = goalTitle();
     badge.textContent = d === 0 ? '🎯 今天是' + g : '📅 距' + g + ' ' + d + ' 天';
-    badge.title = '目标日期：' + fmtDate(examDateObj()) + (DB.settings && DB.settings.examDate ? '（手动设置，可在设置中修改）' : '（默认每年 12 月 20 日，可在设置中修改）');
+    badge.title = '目标日期：' + fmtDate(examDateObj()) + '（可在设置中修改）';
     badge.classList.toggle('urgent', d > 0 && d <= 30);
   }
   const COUNTDOWN_SEEN_KEY = 'athena_countdown_seen';
   function maybeShowCountdownPopup() {
+    if (countdownDays() == null) return;
     try {
       if (localStorage.getItem(COUNTDOWN_SEEN_KEY) === todayStr()) return;
       localStorage.setItem(COUNTDOWN_SEEN_KEY, todayStr());
@@ -128,6 +128,7 @@
   }
   function showCountdownPopup() {
     const d = countdownDays();
+    if (d == null) return;
     const exam = examDateObj();
     const g = goalTitle();
     const modal = el('div', 'countdown-modal');
@@ -143,7 +144,7 @@
       days.appendChild(el('span', 'countdown-unit', '天'));
       card.appendChild(days);
     }
-    card.appendChild(el('p', 'muted', '目标日期：' + fmtDate(exam) + (DB.settings && DB.settings.examDate ? '（手动设置）' : '（默认每年 12 月 20 日）')));
+    card.appendChild(el('p', 'muted', '目标日期：' + fmtDate(exam) + '（手动设置）'));
     if (d > 0 && d <= 30) {
       card.appendChild(el('p', 'countdown-tip', '已进入冲刺阶段：稳住节奏，坚持每天复习，优先攻克高频与薄弱知识点。'));
     }
@@ -340,12 +341,13 @@
   // 关「挂钩」：回退到用户手动填的固定目标稳定度（默认 90 天）。
   function targetS() {
     const manual = (DB && DB.settings && typeof DB.settings.targetS === 'number') ? DB.settings.targetS : TARGET_S_DEFAULT;
-    const linked = !(DB && DB.settings && DB.settings.targetLinkExam === false); // 默认开启
-    if (!linked) return manual;
-    return Math.max(TARGET_MIN_DAYS, countdownDays()); // S_N = 剩余天数（等价目标日可提取性 ≥ 90%）
+    if (!targetLinked()) return manual;
+    const days = countdownDays();
+    if (days == null) return manual;
+    return Math.max(TARGET_MIN_DAYS, days);
   }
   // 是否与目标倒计时挂钩（用于记忆框/设置页文案）
-  function targetLinked() { return !(DB && DB.settings && DB.settings.targetLinkExam === false); }
+  function targetLinked() { return !(DB && DB.settings && DB.settings.targetLinkExam === false) && countdownDays() != null; }
   function isGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
 
   // 每日时间预算（秒）：按时间而非卡片数安排学习
@@ -484,6 +486,7 @@
   let frontier = 0;
   let pendingAdvance = false;
   let lastMasteryDelta = null;
+  let lastRatingUndo = null;
   let seenAgain = {};
   let quiz = null;
   let mapCat = null, mapSel = null;

@@ -6,10 +6,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.5.4';
+  const VERSION = '1.5.5';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.5.5', date: '2026-09', items: ['性能：合并持久化写盘（同一轮多次评分只序列化并写一次，IndexedDB 低频备份，pagehide/visibilitychange 兜底 flush），修复统计页半衰期分布重复计算的 O(n²)'] },
     { v: '1.5.4', date: '2026-09', items: ['工程：app.js 拆分为 src/ 模块并由 tools/build.mjs 零依赖拼接构建，FSRS 纯函数抽离为 fsrs-core.mjs 并新增对拍测试；修正默认目标日期为 12 月 20 日、记忆原理文案统一为 FSRS-6'] },
     { v: '1.5.3', date: '2026-09', items: ['修复：复习队列最后一张卡仍显示「回到当前卡片」、无法进入新学习队列——学习/重学卡评「忘记」后被推回队尾等待重现，同时留在已学区供确认展示，同一张卡在队列中出现两份；到期时 surfaceDue 未去重，重复卡使 pos/frontier 错位。现已在归入待学区时按卡去重（队尾副本优先），到期卡唯一进入待学区，队列恢复正确', '修复：「待复习」标签误把今天刚学、仍处学习阶段的卡计入——stats() 曾把 learning/relearning 且到点的卡也算进待复习；现改为 learning/relearning 一律计入「学习中」（未学完新卡），只有 review 状态且到点的卡才计入「待复习」，与建队列时的分类一致'] },
     { v: '1.5.2', date: '2026-09', items: ['修复：复习队列结束后无法进入新学习队列——新卡引入不再被剩余时间预算封顶（此前复习完复习卡后预算耗尽、新卡不引入，导致学完复习卡直接「本轮已完成」进不了新卡），改为一次性引入全部未学新卡；时间预算仍为软上限（超出仅提示、不限制学习）', '设置页新增「强制清除缓存并更新」：注销 Service Worker + 清空全部 CacheStorage 后自动刷新，便于移动端测试最新版本（不丢学习进度）', 'README 移除「北大光华」等具体目标内容，改为通用记忆学习项目描述'] },
@@ -287,10 +288,34 @@
       }).catch(function () { normalizeDB(null); resolve(); });
     });
   }
-  function saveDB() {
+  // 合并写：同一轮事件里的多次 saveDB 只落一次盘（iOS 稳定性优先）。
+  let saveDirty = false;
+  let saveFlushScheduled = false;
+  let idbBackupTimer = null;
+  function flushSave() {
+    if (!DB) return;
+    saveDirty = false;
+    saveFlushScheduled = false;
     const json = JSON.stringify(DB);
     try { localStorage.setItem(dbKey(), json); } catch (e) {}
-    try { idbSet(dbKey(), DB); } catch (e) {}
+    // IndexedDB 作为低频备份：防抖 2s，避免每次评分都全量写 IDB
+    if (idbBackupTimer) clearTimeout(idbBackupTimer);
+    idbBackupTimer = setTimeout(function () {
+      idbBackupTimer = null;
+      try { idbSet(dbKey(), DB); } catch (e) {}
+    }, 2000);
+  }
+  function saveDB() {
+    if (saveFlushScheduled) { saveDirty = true; return; }
+    saveDirty = true;
+    saveFlushScheduled = true;
+    if (typeof queueMicrotask === 'function') {
+      queueMicrotask(function () { if (saveDirty) flushSave(); });
+    } else {
+      Promise.resolve().then(function () { if (saveDirty) flushSave(); });
+    }
+    // 兜底：即使微任务被推迟，也保证在下一轮 timer 里落盘
+    setTimeout(function () { if (saveDirty) flushSave(); }, 0);
   }
 
   function sanitizeCard(c) {
@@ -1992,12 +2017,13 @@
     // —— 记忆强度（半衰期 h）分布 ——
     wrap.appendChild(el('h3', null, '💪 记忆强度分布（半衰期 h）'));
     const hb2 = el('div', 'stat-card');
-    halflifeHistogram().forEach(function (b) {
+    const hist = halflifeHistogram();
+    const maxH = Math.max.apply(null, hist.map(function (x) { return x[1]; }).concat([1]));
+    hist.forEach(function (b) {
       const row = el('div', 'cat-bar-row');
       row.appendChild(el('span', 'cat-bar-name', b[0]));
       const bar = el('div', 'cat-bar');
       const fill = el('div', 'cat-bar-fill');
-      const maxH = Math.max.apply(null, halflifeHistogram().map(function (x) { return x[1]; }).concat([1]));
       fill.style.width = Math.round(b[1] / maxH * 100) + '%';
       fill.style.background = masteryColor(b[1] ? 70 : 10);
       bar.appendChild(fill);
@@ -2576,6 +2602,10 @@
     if (dx < 0 && pos < frontier) handleAction('gofront');
     else if (dx > 0 && pos > 0) handleAction('goback');
   }, { passive: true });
+
+  // iOS/移动端稳定性：切后台或关页前强制落盘，避免合并写尚未 flush 就丢进度
+  window.addEventListener('pagehide', function () { if (typeof flushSave === 'function') flushSave(); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden' && typeof flushSave === 'function') flushSave(); });
 
   // ---------------- 主题 ----------------
   function applyTheme() {

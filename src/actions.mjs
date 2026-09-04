@@ -238,6 +238,10 @@
     else if (dx > 0 && pos > 0) handleAction('goback');
   }, { passive: true });
 
+  // iOS/移动端稳定性：切后台或关页前强制落盘，避免合并写尚未 flush 就丢进度
+  window.addEventListener('pagehide', function () { if (typeof flushSave === 'function') flushSave(); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden' && typeof flushSave === 'function') flushSave(); });
+
   // ---------------- 主题 ----------------
   function applyTheme() {
     const t = localStorage.getItem(THEME_KEY) || 'light';

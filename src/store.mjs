@@ -120,10 +120,34 @@
       }).catch(function () { normalizeDB(null); resolve(); });
     });
   }
-  function saveDB() {
+  // 合并写：同一轮事件里的多次 saveDB 只落一次盘（iOS 稳定性优先）。
+  let saveDirty = false;
+  let saveFlushScheduled = false;
+  let idbBackupTimer = null;
+  function flushSave() {
+    if (!DB) return;
+    saveDirty = false;
+    saveFlushScheduled = false;
     const json = JSON.stringify(DB);
     try { localStorage.setItem(dbKey(), json); } catch (e) {}
-    try { idbSet(dbKey(), DB); } catch (e) {}
+    // IndexedDB 作为低频备份：防抖 2s，避免每次评分都全量写 IDB
+    if (idbBackupTimer) clearTimeout(idbBackupTimer);
+    idbBackupTimer = setTimeout(function () {
+      idbBackupTimer = null;
+      try { idbSet(dbKey(), DB); } catch (e) {}
+    }, 2000);
+  }
+  function saveDB() {
+    if (saveFlushScheduled) { saveDirty = true; return; }
+    saveDirty = true;
+    saveFlushScheduled = true;
+    if (typeof queueMicrotask === 'function') {
+      queueMicrotask(function () { if (saveDirty) flushSave(); });
+    } else {
+      Promise.resolve().then(function () { if (saveDirty) flushSave(); });
+    }
+    // 兜底：即使微任务被推迟，也保证在下一轮 timer 里落盘
+    setTimeout(function () { if (saveDirty) flushSave(); }, 0);
   }
 
   function sanitizeCard(c) {

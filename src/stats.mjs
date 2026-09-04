@@ -159,12 +159,13 @@
     // —— 记忆强度（半衰期 h）分布 ——
     wrap.appendChild(el('h3', null, '💪 记忆强度分布（半衰期 h）'));
     const hb2 = el('div', 'stat-card');
-    halflifeHistogram().forEach(function (b) {
+    const hist = halflifeHistogram();
+    const maxH = Math.max.apply(null, hist.map(function (x) { return x[1]; }).concat([1]));
+    hist.forEach(function (b) {
       const row = el('div', 'cat-bar-row');
       row.appendChild(el('span', 'cat-bar-name', b[0]));
       const bar = el('div', 'cat-bar');
       const fill = el('div', 'cat-bar-fill');
-      const maxH = Math.max.apply(null, halflifeHistogram().map(function (x) { return x[1]; }).concat([1]));
       fill.style.width = Math.round(b[1] / maxH * 100) + '%';
       fill.style.background = masteryColor(b[1] ? 70 : 10);
       bar.appendChild(fill);

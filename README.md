@@ -19,6 +19,8 @@
 卡片数据在 `data/*.js`。改完代码或数据后跑校验（零 npm 依赖）：
 
 ```bash
+node tools/build.mjs           # 由 src/ 重新生成 app.js（改 app 代码后先跑）
+node --test tests/fsrs.test.mjs  # FSRS 纯函数对拍测试
 node tools/check_data.mjs      # 数据完整性 + 内容不变量
 node tools/check_render.mjs    # headless 渲染不变量（需本机 Chrome/Edge）
 node tools/check_version.mjs   # 版本标记一致性

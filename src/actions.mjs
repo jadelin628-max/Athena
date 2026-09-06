@@ -130,6 +130,50 @@
         input.click();
         break;
       }
+      case 'exportall': {
+        if (typeof flushSave === 'function') flushSave();
+        const payload = { format: 'athena-all-backup', version: 1, subjects: exportAllSubjects() };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Athena-全部科目备份.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast('已导出全部科目');
+        break;
+      }
+      case 'importall': {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json,.json';
+        input.onchange = function () {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function () {
+            try {
+              let data;
+              try { data = JSON.parse(String(reader.result)); } catch (e) { throw new Error('不是有效的 JSON 文件'); }
+              const n = importAllSubjects(data);
+              if (n === 0) throw new Error('文件中没有可导入的科目');
+              loadDBAsync().then(function () {
+                buildSession(0);
+                currentView = 'learn';
+                renderApp();
+                toast('已导入全部科目（' + n + ' 个）');
+              });
+            } catch (err) {
+              toast(err.message || '导入失败');
+            }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+        break;
+      }
       case 'resetall':
         if (confirm('确定要清空全部学习进度吗？（清空后学习统计与记忆安排一并归零，便于重新测试）')) {
           DB.cards = {};

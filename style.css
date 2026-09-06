@@ -479,6 +479,9 @@ body.immersive #immersiveExit { display: block; }
 .keyboard-hint { display: none; width: 100%; margin-top: 7px; text-align: center; font-size: 11.5px; }
 @media (hover:hover) and (pointer:fine) {
   .keyboard-hint { display: block; }
+  /* PC 端评分四挡竖着排布（全宽、纵向堆叠） */
+  .rating { flex-direction: column; }
+  .rating .btn { flex: none; width: 100%; }
 }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {

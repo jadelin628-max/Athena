@@ -112,6 +112,17 @@
     wrap.appendChild(s2);
     wrap.appendChild(el('p', 'muted', '换设备或换网址（如本地→线上）时：先「导出」生成备份文件，再到新位置「导入」。'));
 
+    const s2b = el('div', 'setting-row');
+    s2b.appendChild(el('span', null, '全部科目互通'));
+    const expAll = el('button', 'btn', '导出全部');
+    expAll.setAttribute('data-action', 'exportall');
+    s2b.appendChild(expAll);
+    const impAll = el('button', 'btn primary', '导入全部');
+    impAll.setAttribute('data-action', 'importall');
+    s2b.appendChild(impAll);
+    wrap.appendChild(s2b);
+    wrap.appendChild(el('p', 'muted', '把四个学科的学习进度与统计打包成单个 JSON 文件，一键迁移到另一台设备或平台（手机 / 平板 / 电脑 / 网页版）。'));
+
     const s8 = el('div', 'setting-row');
     s8.appendChild(el('span', null, '更新与缓存'));
     const cc = el('button', 'btn', '强制清除缓存并更新');

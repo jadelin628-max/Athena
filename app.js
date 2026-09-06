@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.6.1';
+  const VERSION = '1.7.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.7.0', date: '2026-09', items: ['新增「全部科目互通」：一键导出/导入四个学科的学习进度与统计（打包为单个 JSON），便于多平台 / 多设备迁移', '修复：PC 端四个评分挡位改为竖向全宽排布'] },
     { v: '1.6.1', date: '2026-09', items: ['移除早已弃用的「知识深度 DEPTH」残留（4 个学科数据块 + src 载入 + 校验脚本）', '工程清理：删除遗留死代码（EF_MIN、卡片 ef 字段、旧 SM-2 掌握分 s 与 initialStrength），并化简两处重复的 relearning 状态判断'] },
     { v: '1.6.0', date: '2026-09', items: ['倒计时完全用户化：删除默认 12 月 20 日兜底，未设目标日期时徽标隐藏、每日弹窗关闭、毕业目标回退固定稳定度', '学习页新增评分撤销（单步）、桌面端键盘提示、评分按钮 aria-label 与 focus-visible/reduced-motion 无障碍'] },
     { v: '1.5.6', date: '2026-09', items: ['修复：拆分模块时遗漏共享常量（DAY/dayStart/EF_MIN/每日预算/目标稳定度）导致启动 ReferenceError、页面空白——新增 src/config.mjs 最先拼接统一声明'] },
@@ -416,6 +417,35 @@
     }
     DB = fresh;
     saveDB();
+  }
+
+  // 导出全部科目：把每个学科的 DB 序列化到单个对象（多平台互通备份）
+  function exportAllSubjects() {
+    const out = {};
+    Object.keys(subjectList()).forEach(function (sid) {
+      const key = sid + '_formula_srs_v1';
+      let db = null;
+      try { db = JSON.parse(localStorage.getItem(key)); } catch (e) {}
+      out[sid] = (db && typeof db === 'object') ? db : { cards: {}, settings: {}, log: {} };
+    });
+    return out;
+  }
+  // 导入全部科目：把 { sid: db } 写入各科 localStorage + IndexedDB；返回成功写入的科目数
+  function importAllSubjects(data) {
+    const subs = data && data.subjects;
+    if (!subs || typeof subs !== 'object') throw new Error('文件格式不正确（缺少 subjects 数据）');
+    const list = subjectList();
+    let count = 0;
+    Object.keys(subs).forEach(function (sid) {
+      if (!list[sid]) return; // 跳过本应用不认识的学科
+      const db = subs[sid];
+      if (!db || typeof db !== 'object' || typeof db.cards !== 'object') return;
+      const key = sid + '_formula_srs_v1';
+      try { localStorage.setItem(key, JSON.stringify(db)); } catch (e) {}
+      try { idbSet(key, db); } catch (e) {}
+      count++;
+    });
+    return count;
   }
 
   function renderTex(el, str) {
@@ -1863,6 +1893,17 @@
     wrap.appendChild(s2);
     wrap.appendChild(el('p', 'muted', '换设备或换网址（如本地→线上）时：先「导出」生成备份文件，再到新位置「导入」。'));
 
+    const s2b = el('div', 'setting-row');
+    s2b.appendChild(el('span', null, '全部科目互通'));
+    const expAll = el('button', 'btn', '导出全部');
+    expAll.setAttribute('data-action', 'exportall');
+    s2b.appendChild(expAll);
+    const impAll = el('button', 'btn primary', '导入全部');
+    impAll.setAttribute('data-action', 'importall');
+    s2b.appendChild(impAll);
+    wrap.appendChild(s2b);
+    wrap.appendChild(el('p', 'muted', '把四个学科的学习进度与统计打包成单个 JSON 文件，一键迁移到另一台设备或平台（手机 / 平板 / 电脑 / 网页版）。'));
+
     const s8 = el('div', 'setting-row');
     s8.appendChild(el('span', null, '更新与缓存'));
     const cc = el('button', 'btn', '强制清除缓存并更新');
@@ -2536,6 +2577,50 @@
               currentView = 'learn';
               renderApp();
               toast('导入成功');
+            } catch (err) {
+              toast(err.message || '导入失败');
+            }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+        break;
+      }
+      case 'exportall': {
+        if (typeof flushSave === 'function') flushSave();
+        const payload = { format: 'athena-all-backup', version: 1, subjects: exportAllSubjects() };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Athena-全部科目备份.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast('已导出全部科目');
+        break;
+      }
+      case 'importall': {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json,.json';
+        input.onchange = function () {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function () {
+            try {
+              let data;
+              try { data = JSON.parse(String(reader.result)); } catch (e) { throw new Error('不是有效的 JSON 文件'); }
+              const n = importAllSubjects(data);
+              if (n === 0) throw new Error('文件中没有可导入的科目');
+              loadDBAsync().then(function () {
+                buildSession(0);
+                currentView = 'learn';
+                renderApp();
+                toast('已导入全部科目（' + n + ' 个）');
+              });
             } catch (err) {
               toast(err.message || '导入失败');
             }

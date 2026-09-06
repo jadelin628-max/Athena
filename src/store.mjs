@@ -227,3 +227,32 @@
     DB = fresh;
     saveDB();
   }
+
+  // 导出全部科目：把每个学科的 DB 序列化到单个对象（多平台互通备份）
+  function exportAllSubjects() {
+    const out = {};
+    Object.keys(subjectList()).forEach(function (sid) {
+      const key = sid + '_formula_srs_v1';
+      let db = null;
+      try { db = JSON.parse(localStorage.getItem(key)); } catch (e) {}
+      out[sid] = (db && typeof db === 'object') ? db : { cards: {}, settings: {}, log: {} };
+    });
+    return out;
+  }
+  // 导入全部科目：把 { sid: db } 写入各科 localStorage + IndexedDB；返回成功写入的科目数
+  function importAllSubjects(data) {
+    const subs = data && data.subjects;
+    if (!subs || typeof subs !== 'object') throw new Error('文件格式不正确（缺少 subjects 数据）');
+    const list = subjectList();
+    let count = 0;
+    Object.keys(subs).forEach(function (sid) {
+      if (!list[sid]) return; // 跳过本应用不认识的学科
+      const db = subs[sid];
+      if (!db || typeof db !== 'object' || typeof db.cards !== 'object') return;
+      const key = sid + '_formula_srs_v1';
+      try { localStorage.setItem(key, JSON.stringify(db)); } catch (e) {}
+      try { idbSet(key, db); } catch (e) {}
+      count++;
+    });
+    return count;
+  }

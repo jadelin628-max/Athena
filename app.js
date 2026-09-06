@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.8.3';
+  const VERSION = '1.8.4';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.8.4', date: '2026-09', items: ['补全四个学科的「同类」标签（新增 458 条边）：同类辨别卡真正成组出现（数三 93% / 微观 73% / 统计 82% / 政治 93% 的卡进入同类型簇）', '大簇切成小段（每段 ≤6 张），避免同类卡整章连排成「分块」'] },
     { v: '1.8.3', date: '2026-09', items: ['交错簇改为「辨析聚类」：只把 REL 中「同类/对比/类比」的相关卡聚成簇，无关联的卡不再被硬凑进同一簇'] },
     { v: '1.8.2', date: '2026-09', items: ['交错练习改为「分块交错」：同一章节的卡成组（每块 3 张）出现、章节之间轮流，让同类辨别卡真正在一起', '修复：学习中的卡被推回队尾造成「同卡两份」，学完新卡后 pos 跳回、只剩「回到当前卡片」——改为不再推回队尾，到期卡由 surfaceDue 按需重现'] },
     { v: '1.8.1', date: '2026-09', items: ['修复：新学卡交错失效——「同类」标签实为同一章节的变体，聚类后反而变成「分块」；现仅「对比/类比」参与辨析聚类，新学卡恢复按章节交错（相关跨章卡仍较近出现）'] },
@@ -199,6 +200,7 @@
   // 纯函数（依赖注入 rel / catOf），便于 tools 对拍测试，不碰任何运行时全局。
 
   const DISCRIM_TAGS = { '同类': 1, '对比': 1, '类比': 1 };
+  const MAX_CLUSTER = 6; // 簇过大时切成小段，避免同类卡整章连排成「分块」
 
   // 并查集：把「辨析相关」的卡片聚成同一簇；簇内保持输入顺序
   function buildClusters(ids, rel) {
@@ -235,13 +237,20 @@
     return a;
   }
 
-  // 辨析交错：相关卡聚成簇、簇内相邻出现；簇/单卡按章节轮转（同章不连续）
+  // 辨析交错：相关卡聚成簇、簇内相邻出现；大簇切成小段；簇/单卡按章节轮转（同章不连续）
   function interleaveRelated(ids, rel, catOf) {
     const clusters = buildClusters(ids, rel);
-    const byCat = {};
+    // 大簇切成小段（每段 ≤ MAX_CLUSTER），相关卡仍较近、又不至于整章连排
+    const segments = [];
     clusters.forEach(function (cluster) {
-      const c = catOf(cluster[0]) || '?';
-      (byCat[c] = byCat[c] || []).push(cluster);
+      for (let i = 0; i < cluster.length; i += MAX_CLUSTER) {
+        segments.push(cluster.slice(i, i + MAX_CLUSTER));
+      }
+    });
+    const byCat = {};
+    segments.forEach(function (seg) {
+      const c = catOf(seg[0]) || '?';
+      (byCat[c] = byCat[c] || []).push(seg);
     });
     const groups = Object.keys(byCat).map(function (k) { return shuffleArr(byCat[k]); });
     const out = [];
@@ -250,8 +259,8 @@
       added = false;
       for (let i = 0; i < groups.length; i++) {
         if (groups[i].length) {
-          const cluster = groups[i].shift();
-          for (let j = 0; j < cluster.length; j++) out.push(cluster[j]);
+          const seg = groups[i].shift();
+          for (let j = 0; j < seg.length; j++) out.push(seg[j]);
           added = true;
         }
       }

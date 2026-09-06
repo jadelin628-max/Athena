@@ -4,6 +4,7 @@
   // 纯函数（依赖注入 rel / catOf），便于 tools 对拍测试，不碰任何运行时全局。
 
   const DISCRIM_TAGS = { '同类': 1, '对比': 1, '类比': 1 };
+  const MAX_CLUSTER = 6; // 簇过大时切成小段，避免同类卡整章连排成「分块」
 
   // 并查集：把「辨析相关」的卡片聚成同一簇；簇内保持输入顺序
   function buildClusters(ids, rel) {
@@ -40,13 +41,20 @@
     return a;
   }
 
-  // 辨析交错：相关卡聚成簇、簇内相邻出现；簇/单卡按章节轮转（同章不连续）
+  // 辨析交错：相关卡聚成簇、簇内相邻出现；大簇切成小段；簇/单卡按章节轮转（同章不连续）
   function interleaveRelated(ids, rel, catOf) {
     const clusters = buildClusters(ids, rel);
-    const byCat = {};
+    // 大簇切成小段（每段 ≤ MAX_CLUSTER），相关卡仍较近、又不至于整章连排
+    const segments = [];
     clusters.forEach(function (cluster) {
-      const c = catOf(cluster[0]) || '?';
-      (byCat[c] = byCat[c] || []).push(cluster);
+      for (let i = 0; i < cluster.length; i += MAX_CLUSTER) {
+        segments.push(cluster.slice(i, i + MAX_CLUSTER));
+      }
+    });
+    const byCat = {};
+    segments.forEach(function (seg) {
+      const c = catOf(seg[0]) || '?';
+      (byCat[c] = byCat[c] || []).push(seg);
     });
     const groups = Object.keys(byCat).map(function (k) { return shuffleArr(byCat[k]); });
     const out = [];
@@ -55,8 +63,8 @@
       added = false;
       for (let i = 0; i < groups.length; i++) {
         if (groups[i].length) {
-          const cluster = groups[i].shift();
-          for (let j = 0; j < cluster.length; j++) out.push(cluster[j]);
+          const seg = groups[i].shift();
+          for (let j = 0; j < seg.length; j++) out.push(seg[j]);
           added = true;
         }
       }
@@ -64,4 +72,4 @@
     return out;
   }
 
-  export { DISCRIM_TAGS, buildClusters, interleaveRelated };
+  export { DISCRIM_TAGS, MAX_CLUSTER, buildClusters, interleaveRelated };

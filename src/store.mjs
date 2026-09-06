@@ -11,6 +11,7 @@
     currentSubjectId = subj.id;
     CATS = subj.CATS;
     DATA = subj.DATA;
+    BASE_DATA = subj.DATA;
     META = subj.META;
     EXAMPLES = subj.EXAMPLE || {};
     REL = subj.REL || {};
@@ -122,6 +123,8 @@
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
     if (!DB.wrongs) DB.wrongs = {};
+    if (!DB.custom) DB.custom = {};
+    refreshData();
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
@@ -140,6 +143,44 @@
       }).catch(function () { normalizeDB(null); resolve(); });
     });
   }
+  // 把静态卡片 + 用户自建卡片合成当前 DATA（学习/浏览/导图/统计/自测共用）
+  function refreshData() {
+    DATA = (BASE_DATA || []).slice();
+    if (DB && DB.custom) {
+      Object.keys(DB.custom).forEach(function (id) {
+        const c = DB.custom[id];
+        if (c && c.id && typeof c.title === 'string' && typeof c.front === 'string' && typeof c.back === 'string') {
+          DATA.push({ id: c.id, cat: c.cat || '?', title: c.title, front: c.front, back: c.back });
+        }
+      });
+    }
+  }
+
+  function sanitizeCustomCard(c) {
+    if (!c || typeof c !== 'object' || typeof c.id !== 'string' || !c.id) return null;
+    return {
+      id: c.id,
+      cat: (typeof c.cat === 'string') ? c.cat : '?',
+      title: (typeof c.title === 'string') ? c.title : '',
+      front: (typeof c.front === 'string') ? c.front : '',
+      back: (typeof c.back === 'string') ? c.back : ''
+    };
+  }
+
+  // 手动录入知识点（自建卡）：写入 DB.custom + DB.cards，立即合成进 DATA
+  function saveCustomCard(title, front, back, cat) {
+    const t = (title || '').trim(), f = (front || '').trim(), b = (back || '').trim();
+    if (!t || !f || !b) { toast('标题、提示、答案不能为空'); return false; }
+    const id = 'cu_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    DB.custom[id] = { id: id, cat: cat || Object.keys(CATS)[0], title: t, front: f, back: b };
+    DB.cards[id] = defaultCard();
+    refreshData();
+    saveDB();
+    renderApp();
+    toast('已录入知识点');
+    return true;
+  }
+
   // 合并写：同一轮事件里的多次 saveDB 只落一次盘（iOS 稳定性优先）。
   let saveDirty = false;
   let saveFlushScheduled = false;
@@ -207,7 +248,7 @@
       deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
       browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
     }
-    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {} };
+    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
@@ -256,7 +297,14 @@
         }
       });
     }
+    if (payload.custom && typeof payload.custom === 'object') {
+      Object.keys(payload.custom).forEach(function (id) {
+        const c = sanitizeCustomCard(payload.custom[id]);
+        if (c) fresh.custom[id] = c;
+      });
+    }
     DB = fresh;
+    refreshData();
     saveDB();
   }
 

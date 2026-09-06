@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.10.0';
+  const VERSION = '1.11.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.11.0', date: '2026-09', items: ['学习界面新增「手动录入知识点」：可自建卡片（标题/分类/提示/答案），自建卡与内置卡一起参与学习、交错与统计'] },
     { v: '1.10.0', date: '2026-09', items: ['错题本新增「手动录入」：可粘贴题目 + 解析并搜索关联知识点', '新增「标记为难题」：难题间隔更疏（×1.4），与错题区分', '错题重做计入每日时间预算（每题约 4 分钟）'] },
     { v: '1.9.0', date: '2026-09', items: ['新增「错题本」模块：把做错的真题/例题标记进错题本，按记忆算法重现，需动手重做后按「不会/思路错/算错/会做对」评分', '错题评分四档与 FSRS 四档一一对应，学习步进改为按天；毕业=稳定度达目标（与知识卡一致，无退出，间隔随算法延长）', '错题失败（不会/思路错）会联动降级关联的知识点卡片，提前重现补漏'] },
     { v: '1.8.4', date: '2026-09', items: ['补全四个学科的「同类」标签（新增 458 条边）：同类辨别卡真正成组出现（数三 93% / 微观 73% / 统计 82% / 政治 93% 的卡进入同类型簇）', '大簇切成小段（每段 ≤6 张），避免同类卡整章连排成「分块」'] },
@@ -79,6 +80,7 @@
   let currentSubjectId = null;
   let CATS = null, DATA = null, META = null;
   let EXAMPLES = {}, REL = {}, PITFALL = {}, MNEM = {};
+  let BASE_DATA = []; // 静态卡片基准（用户自建卡在其上追加）
 
   const KATEX_SOURCES = [
     { js: 'katex/katex.min.js', css: 'katex/katex.min.css' },
@@ -284,6 +286,7 @@
     currentSubjectId = subj.id;
     CATS = subj.CATS;
     DATA = subj.DATA;
+    BASE_DATA = subj.DATA;
     META = subj.META;
     EXAMPLES = subj.EXAMPLE || {};
     REL = subj.REL || {};
@@ -395,6 +398,8 @@
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
     if (!DB.wrongs) DB.wrongs = {};
+    if (!DB.custom) DB.custom = {};
+    refreshData();
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
@@ -413,6 +418,44 @@
       }).catch(function () { normalizeDB(null); resolve(); });
     });
   }
+  // 把静态卡片 + 用户自建卡片合成当前 DATA（学习/浏览/导图/统计/自测共用）
+  function refreshData() {
+    DATA = (BASE_DATA || []).slice();
+    if (DB && DB.custom) {
+      Object.keys(DB.custom).forEach(function (id) {
+        const c = DB.custom[id];
+        if (c && c.id && typeof c.title === 'string' && typeof c.front === 'string' && typeof c.back === 'string') {
+          DATA.push({ id: c.id, cat: c.cat || '?', title: c.title, front: c.front, back: c.back });
+        }
+      });
+    }
+  }
+
+  function sanitizeCustomCard(c) {
+    if (!c || typeof c !== 'object' || typeof c.id !== 'string' || !c.id) return null;
+    return {
+      id: c.id,
+      cat: (typeof c.cat === 'string') ? c.cat : '?',
+      title: (typeof c.title === 'string') ? c.title : '',
+      front: (typeof c.front === 'string') ? c.front : '',
+      back: (typeof c.back === 'string') ? c.back : ''
+    };
+  }
+
+  // 手动录入知识点（自建卡）：写入 DB.custom + DB.cards，立即合成进 DATA
+  function saveCustomCard(title, front, back, cat) {
+    const t = (title || '').trim(), f = (front || '').trim(), b = (back || '').trim();
+    if (!t || !f || !b) { toast('标题、提示、答案不能为空'); return false; }
+    const id = 'cu_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    DB.custom[id] = { id: id, cat: cat || Object.keys(CATS)[0], title: t, front: f, back: b };
+    DB.cards[id] = defaultCard();
+    refreshData();
+    saveDB();
+    renderApp();
+    toast('已录入知识点');
+    return true;
+  }
+
   // 合并写：同一轮事件里的多次 saveDB 只落一次盘（iOS 稳定性优先）。
   let saveDirty = false;
   let saveFlushScheduled = false;
@@ -480,7 +523,7 @@
       deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
       browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
     }
-    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {} };
+    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
@@ -529,7 +572,14 @@
         }
       });
     }
+    if (payload.custom && typeof payload.custom === 'object') {
+      Object.keys(payload.custom).forEach(function (id) {
+        const c = sanitizeCustomCard(payload.custom[id]);
+        if (c) fresh.custom[id] = c;
+      });
+    }
     DB = fresh;
+    refreshData();
     saveDB();
   }
 
@@ -1352,6 +1402,11 @@
   function renderLearn() {
     const app = document.getElementById('app');
     surfaceDue();
+    const tb = el('div', 'learn-top');
+    const add = el('button', 'btn small', '➕ 录入知识点');
+    add.addEventListener('click', openCardInput);
+    tb.appendChild(add);
+    app.appendChild(tb);
     app.appendChild(statsBar());
 
     const done = (deck.length === 0) || (frontier >= deck.length && pos >= frontier);
@@ -1364,6 +1419,58 @@
       return;
     }
     renderLearnCard(deck[pos]);
+  }
+
+  // —— 手动录入知识点（自建卡）——
+  function openCardInput() {
+    const modal = el('div', 'map-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', closeCardInput);
+    modal.appendChild(backdrop);
+
+    const cardBox = el('div', 'map-modal-card wrong-input-card');
+    cardBox.appendChild(el('h3', null, '➕ 手动录入知识点'));
+
+    const title = el('input', 'wrong-input');
+    title.type = 'text';
+    title.placeholder = '标题 / 名称（必填）…';
+    cardBox.appendChild(wrongField('标题', title));
+
+    const catSel = el('select', 'wrong-input');
+    Object.keys(CATS).forEach(function (k) {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = CATS[k];
+      catSel.appendChild(opt);
+    });
+    cardBox.appendChild(wrongField('分类', catSel));
+
+    const front = el('textarea', 'wrong-input');
+    front.placeholder = '提示 / 正面（必填，可含公式 $..$）…';
+    cardBox.appendChild(wrongField('提示（正面）', front));
+
+    const back = el('textarea', 'wrong-input');
+    back.placeholder = '答案（必填，可含公式 $..$）…';
+    cardBox.appendChild(wrongField('答案', back));
+
+    const btns = el('div', 'wrong-input-btns');
+    const save = el('button', 'btn primary', '保存');
+    save.addEventListener('click', function () {
+      if (saveCustomCard(title.value, front.value, back.value, catSel.value)) closeCardInput();
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', closeCardInput);
+    btns.appendChild(save);
+    btns.appendChild(cancel);
+    cardBox.appendChild(btns);
+
+    modal.appendChild(cardBox);
+    document.body.appendChild(modal);
+  }
+
+  function closeCardInput() {
+    const m = document.querySelector('.map-modal');
+    if (m) m.remove();
   }
 
   // 例题 + 相关知识点（答案区附加内容，hiddenClass 为空字符串时可见）

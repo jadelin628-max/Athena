@@ -152,6 +152,11 @@
   function renderLearn() {
     const app = document.getElementById('app');
     surfaceDue();
+    const tb = el('div', 'learn-top');
+    const add = el('button', 'btn small', '➕ 录入知识点');
+    add.addEventListener('click', openCardInput);
+    tb.appendChild(add);
+    app.appendChild(tb);
     app.appendChild(statsBar());
 
     const done = (deck.length === 0) || (frontier >= deck.length && pos >= frontier);
@@ -164,6 +169,58 @@
       return;
     }
     renderLearnCard(deck[pos]);
+  }
+
+  // —— 手动录入知识点（自建卡）——
+  function openCardInput() {
+    const modal = el('div', 'map-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', closeCardInput);
+    modal.appendChild(backdrop);
+
+    const cardBox = el('div', 'map-modal-card wrong-input-card');
+    cardBox.appendChild(el('h3', null, '➕ 手动录入知识点'));
+
+    const title = el('input', 'wrong-input');
+    title.type = 'text';
+    title.placeholder = '标题 / 名称（必填）…';
+    cardBox.appendChild(wrongField('标题', title));
+
+    const catSel = el('select', 'wrong-input');
+    Object.keys(CATS).forEach(function (k) {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = CATS[k];
+      catSel.appendChild(opt);
+    });
+    cardBox.appendChild(wrongField('分类', catSel));
+
+    const front = el('textarea', 'wrong-input');
+    front.placeholder = '提示 / 正面（必填，可含公式 $..$）…';
+    cardBox.appendChild(wrongField('提示（正面）', front));
+
+    const back = el('textarea', 'wrong-input');
+    back.placeholder = '答案（必填，可含公式 $..$）…';
+    cardBox.appendChild(wrongField('答案', back));
+
+    const btns = el('div', 'wrong-input-btns');
+    const save = el('button', 'btn primary', '保存');
+    save.addEventListener('click', function () {
+      if (saveCustomCard(title.value, front.value, back.value, catSel.value)) closeCardInput();
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', closeCardInput);
+    btns.appendChild(save);
+    btns.appendChild(cancel);
+    cardBox.appendChild(btns);
+
+    modal.appendChild(cardBox);
+    document.body.appendChild(modal);
+  }
+
+  function closeCardInput() {
+    const m = document.querySelector('.map-modal');
+    if (m) m.remove();
   }
 
   // 例题 + 相关知识点（答案区附加内容，hiddenClass 为空字符串时可见）

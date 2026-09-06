@@ -3,7 +3,7 @@
  * tools/check_data.mjs —— 数据完整性 & 内容不变量校验
  *
  * 零依赖（Node ≥18）。加载 data/ 下所有学科脚本，静态校验：
- *   结构：重复 id / REL 目标存在 / META 覆盖 / cat 合法 / EXAMPLE·DEPTH·PITFALL·MNEM key 存在
+ *   结构：重复 id / REL 目标存在 / META 覆盖 / cat 合法 / EXAMPLE·PITFALL·MNEM key 存在
  *   内容：面向用户文本（title/front/back）里不得泄漏「内部卡片编号」（如（cu26））
  *         markdown `**` 必须成对、数学定界 `$` 必须成对（奇偶校验，通用不变量）
  *
@@ -57,7 +57,6 @@ for (const [sid, { mod, data, ids }] of Object.entries(bySubject)) {
   const meta = mod.META || {};
   const rel = mod.REL || {};
   const example = mod.EXAMPLE || {};
-  const depth = mod.DEPTH || {};
   const pitfall = mod.PITFALL || {};
   const mnem = mod.MNEM || {};
   const title = '[' + name + '] ' + sid;
@@ -85,7 +84,6 @@ for (const [sid, { mod, data, ids }] of Object.entries(bySubject)) {
   // 5) 辅助映射 key 存在
   const auxCheck = (obj, label) => { for (const k of Object.keys(obj)) if (!ids.has(k)) report('ERR', title + ' ' + label + ' 引用不存在的 id: ' + k); };
   auxCheck(example, 'EXAMPLE');
-  auxCheck(depth, 'DEPTH');
   auxCheck(pitfall, 'PITFALL');
   auxCheck(mnem, 'MNEM');
 

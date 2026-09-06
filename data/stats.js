@@ -1288,27 +1288,6 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
     jj12: [ { to: 'jj07', tag: '相关' }, { to: 'reg08', tag: '相关' }, { to: 'reg04', tag: '相关' } ],
   };
 
-  // ============ 深度（1~5） ============
-  const DEPTH = {
-    pb01: 2, pb02: 2, pb03: 3, pb04: 3, pb05: 3, pb06: 4, pb07: 4, pb08: 3, pb09: 2, pb10: 2, pb11: 2,
-    rv01: 2, rv02: 2, rv03: 2, rv04: 2, rv05: 2, rv06: 4, rv07: 3, rv08: 2, rv09: 3, rv10: 3, rv11: 4, rv12: 4, rv13: 2, rv14: 3, rv15: 4, rv16: 3, rv17: 2, rv18: 2, rv19: 2, rv20: 3,
-    mv01: 2, mv02: 3, mv03: 3, mv04: 3, mv05: 3, mv06: 4, mv07: 3, mv08: 2, mv09: 2, mv10: 3, mv11: 3,
-    nc01: 2, nc02: 3, nc03: 2, nc04: 3, nc05: 3, nc06: 3, nc07: 2, nc08: 2, nc09: 4, nc10: 3, nc11: 2, nc12: 2, nc13: 2, nc14: 2, nc15: 2, nc16: 2,
-    ll01: 3, ll02: 4, ll03: 3, ll04: 5, ll05: 4, ll06: 2, ll07: 2,
-    sm01: 2, sm02: 2, sm03: 3, sm04: 4, sm05: 3, sm06: 4, sm07: 3, sm08: 3, sm09: 2, sm10: 3, sm11: 3,
-    est01: 2, est02: 3, est03: 2, est04: 2, est05: 4, est06: 5, est07: 3, est08: 5, est09: 4, est10: 3, est11: 3, est12: 3, est13: 2, est14: 3, est15: 3, est16: 4, est17: 4, est18: 4, est19: 3, est20: 3, est21: 3,
-    test01: 2, test02: 2, test03: 4, test04: 2, test05: 2, test06: 4, test07: 4, test08: 3, test09: 3, test10: 2, test11: 4, test12: 4, test13: 3, test14: 3, test15: 3, test16: 2,
-    reg01: 3, reg02: 3, reg03: 3, reg04: 3, reg05: 4, reg06: 3, reg07: 3, reg08: 3, reg09: 4, reg10: 3,
-    sx01: 4, sx02: 3, sx03: 3, sx04: 3,
-    sy01: 4, sy02: 4, sy03: 4, sy04: 3, sy05: 4, sy06: 3, sy07: 4, sy08: 3, sy09: 3,
-    ts01: 3, ts02: 3, ts03: 4, ts04: 4, ts05: 4, ts06: 4,
-    ts07: 4, ts08: 4, ts09: 4,
-    xr01: 3, xr02: 4, xr03: 5,
-    xt01: 4, xt02: 4, xt03: 4, xt04: 3, xt05: 4, xt06: 5, xt07: 4, xt08: 3, xt09: 4, xt10: 4, xt11: 3, xt12: 4, xt13: 4, xt14: 4, xt15: 3,
-    ys01: 4, ys02: 4, ys03: 4, ys04: 4, ys05: 4,
-    jj01: 4, jj02: 4, jj03: 4, jj04: 3, jj05: 3, jj06: 4, jj07: 4, jj08: 4, jj09: 4, jj10: 4, jj11: 4, jj12: 3
-  };
-
   const PITFALL = {
     pb03: R`求 $P(A\cup B)$ 当 $A,B$ 不相交时才省略 $-P(AB)$；有交集时必须减去交叉项，避免重复计数。`,
     pb04: R`条件概率分母是“条件事件”的概率：$P(B|A)$ 分母为 $P(A)$，勿把 $P(AB)$ 与 $P(B|A)$ 混淆。`,
@@ -1366,5 +1345,5 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
     jj08: R`WLS 权重 = 「方差之倒数」$\frac{1}{w_i}$；异方差不坏无偏性、只坏有效性（与标准误），故用 GLS/稳健标准误。`,
   };
 
-  return { id: 'stats', name: '统计学', short: '统计', icon: '📊', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, DEPTH: DEPTH, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['prob_basic', 'dist', 'multidim', 'numchar', 'limit', 'sampling', 'estimation', 'testing', 'regress'] };
+  return { id: 'stats', name: '统计学', short: '统计', icon: '📊', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['prob_basic', 'dist', 'multidim', 'numchar', 'limit', 'sampling', 'estimation', 'testing', 'regress'] };
 })();

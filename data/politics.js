@@ -1,7 +1,7 @@
 /*
  * 思想政治理论（考研政治）· 知识点记忆数据库
  * 依据：考研思想政治理论考试大纲；「时政」分类仅收录 2026 年时政大事（2027 考研时政范围）
- * 结构与其他学科一致：id / cat / title / front / back + META / REL / DEPTH / PITFALL / MNEM
+ * 结构与其他学科一致：id / cat / title / front / back + META / REL / PITFALL / MNEM
  * 说明：政治不需要例题与真题，卡片即大纲要求掌握背诵的知识点；
  *       「分析题答题套路」分类为论述题常见答题套路与方法（kind: 'qa' 驱动 UI 适配）。
  */
@@ -726,20 +726,6 @@ window.SUBJECTS.politics = (function () {
     sz07: [ { to: 'mt31', tag: '相关' } ],
   };
 
-  // ============ 深度（1~5） ============
-  const DEPTH = {
-    mz01: 4, mz02: 3, mz03: 3, mz04: 4, mz05: 4, mz06: 4, mz07: 3, mz08: 3, mz09: 3, mz10: 5, mz11: 5, mz12: 3, mz13: 3, mz14: 4, mz15: 5, mz16: 5,
-    mz17: 4, mz18: 4, mz19: 5, mz20: 5, mz21: 5, mz22: 4, mz23: 4, mz24: 4, mz25: 5, mz26: 4, mz27: 5, mz28: 3, mz29: 3, mz30: 3, mz31: 3, mz32: 3, mz33: 4,
-    mz34: 5, mz35: 4, mz36: 5, mz37: 5, mz38: 5, mz39: 4, mz40: 5, mz41: 4, mz42: 5, mz43: 4, mz44: 5, mz45: 5, mz46: 5, mz47: 5, mz48: 3, mz49: 3, mz50: 4, mz51: 5, mz52: 4,
-    mg01: 4, mg02: 4, mg03: 4, mg04: 4, mg05: 5, mg06: 3, mg07: 3, mg08: 4, mg09: 5, mg10: 4, mg11: 4, mg12: 3, mg13: 3, mg14: 3, mg15: 4, mg16: 4, mg17: 3, mg18: 4,
-    ms01: 3, ms02: 4, ms03: 3, ms04: 4, ms05: 5,
-    mt01: 3, mt02: 4, mt03: 4, mt04: 4, mt05: 4, mt06: 4, mt07: 4, mt08: 4, mt09: 4, mt10: 3, mt11: 5, mt12: 4, mt13: 4, mt14: 5, mt15: 5, mt16: 4, mt17: 4, mt18: 4, mt19: 4, mt20: 5, mt21: 5, mt22: 3, mt23: 4, mt24: 5, mt25: 5, mt26: 4, mt27: 4, mt28: 4, mt29: 3, mt30: 4, mt31: 4, mt32: 5, mt33: 4, mt34: 4, mt35: 5, mt36: 5, mt37: 5, mt38: 4,
-    hs01: 5, hs02: 3, hs03: 4, hs04: 4, hs05: 4, hs06: 5, hs07: 4, hs08: 3, hs09: 5, hs10: 3, hs11: 5, hs12: 3, hs13: 3, hs14: 4, hs15: 4, hs16: 5, hs17: 3, hs18: 5, hs19: 4, hs20: 3, hs21: 2, hs22: 3, hs23: 4, hs24: 5, hs25: 4, hs26: 4, hs27: 5, hs28: 3, hs29: 4, hs30: 4, hs31: 3, hs32: 3, hs33: 4, hs34: 5, hs35: 4, hs36: 5,
-    mo01: 5, mo02: 4, mo03: 5, mo04: 5, mo05: 4, mo06: 5, mo07: 4, mo08: 4, mo09: 3, mo10: 5, mo11: 4, mo12: 4, mo13: 3, mo14: 3, mo15: 5, mo16: 4, mo17: 4, mo18: 4, mo19: 4, mo20: 4, mo21: 3, mo22: 3, mo23: 5,
-    tl01: 5, tl02: 5, tl03: 5, tl04: 5, tl05: 5, tl06: 5, tl07: 5, tl08: 4,
-    sz01: 5, sz02: 4, sz03: 5, sz04: 5, sz05: 3, sz06: 4, sz07: 3
-  };
-
   const PITFALL = {
     mz02: R`判断唯物/唯心看「何者为第一性」，与「是否承认运动、联系」无关；近代形而上学唯物主义错在把物质等同于原子。`,
     mz03: R`主观唯心主义以人的感觉/心为本原（心外无物），客观唯心主义以「理」「绝对精神」为本原（理在事先）——不要因「唯心」二字混淆。`,
@@ -836,5 +822,5 @@ window.SUBJECTS.politics = (function () {
     tl08: R`万能兜底：「是什么 → 为什么 → 怎么办」；一定先定义、再原理、后对策。`,
   };
 
-  return { id: 'politics', name: '思想政治理论', short: '政治', icon: '🏛️', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: REL, DEPTH: DEPTH, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['philo', 'pecon', 'soc', 'maozt', 'hist', 'morality', 'shizheng', 'taolu'] };
+  return { id: 'politics', name: '思想政治理论', short: '政治', icon: '🏛️', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: REL, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['philo', 'pecon', 'soc', 'maozt', 'hist', 'morality', 'shizheng', 'taolu'] };
 })();

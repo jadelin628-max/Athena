@@ -16,4 +16,3 @@
     d.setHours(0, 0, 0, 0);
     return d.getTime();
   }
-  const EF_MIN = 1.3; // 向后兼容保留（FSRS 易度已由难度/稳定性替代）

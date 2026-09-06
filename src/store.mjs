@@ -14,7 +14,6 @@
     META = subj.META;
     EXAMPLES = subj.EXAMPLE || {};
     REL = subj.REL || {};
-    DEPTH = subj.DEPTH || {};
     PITFALL = subj.PITFALL || {};
     MNEM = subj.MNEM || {};
     try { localStorage.setItem(SUBJECT_KEY, subj.id); } catch (e) {}
@@ -55,7 +54,7 @@
   const THEME_KEY = 'ms3_formula_theme';
   let DB = null;
 
-  function defaultCard() { return { reps: 0, ef: 2.5, ivl: 0, due: 0, lapses: 0, state: 'new', s: 0, grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, notes: '', hist: [], lastR: 0, ivlR: 0 }; }
+  function defaultCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, notes: '', hist: [], lastR: 0, ivlR: 0 }; }
 
   // IndexedDB（作为更持久的数据备份；localStorage 仍为主存储）
   function idbOpen() {
@@ -104,7 +103,6 @@
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
-      if (typeof c.s !== 'number') c.s = initialStrength(c);
       if (typeof c.notes !== 'string') c.notes = '';
     });
     saveDB();
@@ -154,11 +152,9 @@
     const out = defaultCard();
     if (c && typeof c === 'object') {
       if (typeof c.reps === 'number') out.reps = c.reps;
-      if (typeof c.ef === 'number') out.ef = c.ef;
       if (typeof c.ivl === 'number') out.ivl = c.ivl;
       if (typeof c.due === 'number') out.due = c.due;
       if (typeof c.lapses === 'number') out.lapses = c.lapses;
-      if (typeof c.s === 'number') out.s = c.s;
       if (typeof c.grad === 'number') out.grad = c.grad;
       if (typeof c.step === 'number') out.step = c.step;
       if (typeof c.diff === 'number') out.diff = c.diff;
@@ -167,7 +163,7 @@
       if (Array.isArray(c.hist)) out.hist = c.hist.map(function (h) { return { t: h.t, m: h.m, ivl: h.ivl || 0 }; });
       if (typeof c.lastR === 'number') out.lastR = c.lastR;
       if (typeof c.ivlR === 'number') out.ivlR = c.ivlR;
-      if (c.state === 'new' || (c.state === 'learning' || c.state === 'relearning') || c.state === 'relearning' || c.state === 'review') out.state = c.state;
+      if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning' || c.state === 'review') out.state = c.state;
       if (typeof c.notes === 'string') out.notes = c.notes;
     }
     return out;

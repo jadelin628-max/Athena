@@ -5,10 +5,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.6.0';
+  const VERSION = '1.6.1';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.6.1', date: '2026-09', items: ['移除早已弃用的「知识深度 DEPTH」残留（4 个学科数据块 + src 载入 + 校验脚本）', '工程清理：删除遗留死代码（EF_MIN、卡片 ef 字段、旧 SM-2 掌握分 s 与 initialStrength），并化简两处重复的 relearning 状态判断'] },
     { v: '1.6.0', date: '2026-09', items: ['倒计时完全用户化：删除默认 12 月 20 日兜底，未设目标日期时徽标隐藏、每日弹窗关闭、毕业目标回退固定稳定度', '学习页新增评分撤销（单步）、桌面端键盘提示、评分按钮 aria-label 与 focus-visible/reduced-motion 无障碍'] },
     { v: '1.5.6', date: '2026-09', items: ['修复：拆分模块时遗漏共享常量（DAY/dayStart/EF_MIN/每日预算/目标稳定度）导致启动 ReferenceError、页面空白——新增 src/config.mjs 最先拼接统一声明'] },
     { v: '1.5.5', date: '2026-09', items: ['性能：合并持久化写盘（同一轮多次评分只序列化并写一次，IndexedDB 低频备份，pagehide/visibilitychange 兜底 flush），修复统计页半衰期分布重复计算的 O(n²)'] },
@@ -49,7 +50,7 @@
   const SUBJECT_KEY = 'formula_app_subject';
   let currentSubjectId = null;
   let CATS = null, DATA = null, META = null;
-  let EXAMPLES = {}, REL = {}, DEPTH = {}, PITFALL = {}, MNEM = {};
+  let EXAMPLES = {}, REL = {}, PITFALL = {}, MNEM = {};
 
   const KATEX_SOURCES = [
     { js: 'katex/katex.min.js', css: 'katex/katex.min.css' },

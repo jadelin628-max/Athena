@@ -1625,49 +1625,6 @@ window.SUBJECTS.econ = (function () {
     ad10: [ { to: 'fl15', tag: '对比' }, { to: 'fl12', tag: '应用' }, { to: 'gm14', tag: '相关' }, { to: 'we01', tag: '应用' } ],
   };
 
-  // ============ 深度（1~5） ============
-  const DEPTH = {
-    pd01: 3, pd02: 3, pd03: 2, pd04: 3, pd07: 4, pd09: 4, pd10: 3,
-    pd11: 2, pd12: 4, ct01: 2, ct02: 2, ct05: 3, ct06: 2, ct14: 4, ct15: 4, pd18: 3,
-    pd20: 4, rv01: 1, rv02: 2, rv03: 3, rv04: 2, rv05: 3, rv06: 4,
-    cu01: 2, cu02: 3, cu04: 4, cu05: 2, cu08: 3, cu10: 5, cu11: 4, cu14: 4, cu16: 3, cu24: 4,
-    el01: 2, el02: 2, el03: 3, el04: 4, el05: 3, el06: 3, el07: 3, el13: 3, el14: 4,
-    cu29: 4, cu30: 4, un01: 4, un05: 3, un06: 3,
-    mk03: 4, mk04: 4, rv08: 2, rv11: 4, rv13: 3,
-    mk06: 5, mk07: 4, mk08: 3, mk09: 3, rv09: 4, mk10: 3,
-    gm04: 4, gm05: 4, mk18: 4, mk20: 4, mk21: 4, wf02: 4, wf11: 3,
-    pd05: 3, pd06: 2, pd08: 2, pd14: 3, pd16: 3, pd17: 2,
-    ct03: 2, ct04: 2, ct07: 3, ct08: 3, ct09: 2, ct10: 3, ct11: 3, ct12: 2, ct13: 3, ct16: 2, ct17: 3, pd15: 2, pd21: 3, pd22: 3,
-    pd19: 3, rv07: 3, rv10: 3,
-    el08: 2, el09: 2, el10: 3, el11: 3, el12: 3, el15: 2, el16: 2, el17: 2, el18: 3, cu37: 3, cu38: 3,
-    mk01: 2, mk02: 2, rv12: 3,
-    mk05: 2, mk11: 4, mk12: 3, mk13: 2, mk26: 4, mk27: 3, mk30: 3,
-    wf03: 3, wf04: 4, wf05: 4, wf06: 4, wf09: 4, wf10: 3, wf12: 3, wf14: 2, wf23: 2, wf24: 2,
-    gm01: 2, gm02: 3, gm03: 3, gm06: 3, gm07: 3, gm08: 4, gm09: 4, gm12: 3, gm13: 4, gm20: 4,
-    pd13: 3,
-    cu03: 3, cu06: 2, cu07: 2, cu09: 2, cu13: 3, cu15: 2, cu17: 3, cu18: 3, cu19: 3, cu21: 3, cu22: 3, cu23: 3, cu25: 3, cu26: 2, cu27: 2, cu28: 3, cu40: 3,
-    it01: 3, it02: 4, it03: 2, it04: 2, it05: 2, it06: 3, it07: 2, it08: 3,
-    cu12: 4, cu20: 3, cu31: 3, cu32: 3, cu33: 3, cu39: 2,
-    un02: 2, un03: 4, un04: 3, un07: 3, un08: 2, un09: 4, un10: 3, un11: 3, un12: 2, un13: 3, un14: 3, un15: 3, un16: 2,
-    wf01: 3, wf07: 3, wf08: 3, wf13: 3, wf15: 4, wf16: 3, wf17: 4, wf18: 4, wf19: 4, wf20: 4, wf21: 3, pd23: 3,
-    mk17: 2, mk19: 4, mk22: 4, mk23: 3, mk24: 2, mk25: 2, mk31: 4, mk32: 3, mk33: 2, mk34: 2, mk35: 3,
-    gm10: 3, gm11: 2, gm18: 3, gm19: 3,
-    mk14: 2, mk15: 3, mk16: 4,
-    cu34: 3, cu35: 4, cu36: 3, rv14: 3, rv15: 3, rv16: 3, mk28: 3, mk29: 3,
-    fl01: 2, fl02: 3, fl03: 4, fl04: 3, fl05: 3, fl06: 4, fl07: 3, fl08: 4, fl09: 3, fl10: 4, fl11: 3, wf22: 3,
-    fl12: 4, fl13: 4, fl14: 3, fl15: 3, gm14: 4,
-    gm15: 3, gm16: 4, gm17: 4,
-    nx01: 4, nx02: 4, nx03: 4, nx04: 3, nx05: 4,
-    my01: 4, my02: 4, my03: 3, my04: 4, my05: 3, my06: 3,
-    te01: 4, te02: 4, te03: 4, te04: 4, te05: 4, te06: 4,
-    te07: 4, te08: 4, te09: 4,
-    xr01: 3, xr02: 4, xr03: 5,
-    we01: 5, we02: 4, we03: 4, we04: 4, we05: 3, we06: 3, we07: 4, we08: 4, we09: 2, we10: 4, we11: 4, we12: 3, we13: 2, we14: 4,
-    ta01: 5, ta02: 5, ta03: 5, ta04: 4, ta05: 5, ta06: 4,
-    ad01: 4, ad02: 4, ad03: 4, ad04: 4, ad05: 3,
-    ta07: 4, ad06: 3, ad07: 4, ad08: 4, ad09: 4, ad10: 4
-  };
-
   const PITFALL = {
     el03: '征税时区分消费者支付价 P 与生产者实得价 P−t，勿把供给曲线平移方向弄反；补贴方向与征税相反',
     el04: '区分点弹性与弧弹性、莫忘取绝对值；点弹性代入 (P,Q) 而非 (dP/dQ)',
@@ -1719,5 +1676,5 @@ window.SUBJECTS.econ = (function () {
     ad10: '筛选（劣势方设计菜单）与信号（优势方发信号）方向相反；类型差异不足时出现混同、筛选失效',
   };
 
-  return { id: 'econ', name: '微观经济学', short: '微观', icon: '📈', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, DEPTH: DEPTH, PITFALL: PITFALL, ORDER: ['consumer', 'demand', 'slutsky', 'uncertainty', 'production', 'cost', 'profit', 'competition', 'monopoly', 'oligopoly', 'game', 'moncomp', 'factor', 'equilibrium', 'welfare', 'externality', 'information', 'auction'] };
+  return { id: 'econ', name: '微观经济学', short: '微观', icon: '📈', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, PITFALL: PITFALL, ORDER: ['consumer', 'demand', 'slutsky', 'uncertainty', 'production', 'cost', 'profit', 'competition', 'monopoly', 'oligopoly', 'game', 'moncomp', 'factor', 'equilibrium', 'welfare', 'externality', 'information', 'auction'] };
 })();

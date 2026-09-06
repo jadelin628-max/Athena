@@ -156,17 +156,6 @@
   }
 
   // ---------------- 统计与掌握度 ----------------
-  function initialStrength(c) {
-    if (c.state === 'new') return 0;
-    if ((c.state === 'learning' || c.state === 'relearning')) return 15;
-    const d = c.ivl;
-    if (d < 1) return 25;
-    if (d < 7) return 45;
-    if (d < 21) return 65;
-    if (d < 60) return 85;
-    return 95;
-  }
-
   function mastery(id) {
     const c = card(id);
     let score;
@@ -386,10 +375,9 @@
   function applyRatingToCard(c, rating) {
     const now = Date.now();
     const G = rating + 1; // 0=Again→1, 1=Hard→2, 2=Good→3, 3=Easy→4
-    const s = (typeof c.s === 'number') ? c.s : initialStrength(c);
     if (typeof c.step !== 'number') c.step = 0;
     // —— 学习 / 重学阶段（FSRS-6：Learning=[1m,10m]，Relearning=[10m]；短时记忆稳定度）——
-    if (c.state === 'new' || (c.state === 'learning' || c.state === 'relearning') || c.state === 'relearning') {
+    if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning') {
       const isRelearn = (c.state === 'relearning');
       const steps = isRelearn ? RELEARN_MS : STEP_MS;
       const lastStep = isRelearn ? RELEARN_LAST_STEP : LAST_STEP;
@@ -401,7 +389,6 @@
       } else {
         c.stab = fsrsShortTermStability(c.stab, G);
       }
-      c.s = Math.max(0, s + (rating === 0 ? -25 : (rating === 3 ? 20 : (rating === 2 ? 12 : -8))));
       if (rating === 0) { // Again：回第 0 步
         c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 0;
         c.state = isRelearn ? 'relearning' : 'learning';
@@ -435,7 +422,6 @@
       c.lapses++;
       c.diff = fsrsDifficulty(c.diff, 1);
       c.stab = fsrsLapseStability(c.diff, c.stab, R);
-      c.s = Math.max(0, s - 25);
       c.due = now + RELEARN_MS[0];
       return;
     }
@@ -443,21 +429,21 @@
       c.diff = fsrsDifficulty(c.diff, 2);
       c.stab = fsrsSuccessStability(c.diff, c.stab, R, 2);
       c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-      c.reps++; c.state = 'review'; c.s = Math.max(0, s - 8); c.due = dayStart(now) + c.ivl * DAY;
+      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
       return;
     }
     if (rating === 2) { // Good
       c.diff = fsrsDifficulty(c.diff, 3);
       c.stab = fsrsSuccessStability(c.diff, c.stab, R, 3);
       c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-      c.reps++; c.state = 'review'; c.s = Math.min(100, s + 12); c.due = dayStart(now) + c.ivl * DAY;
+      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
       return;
     }
     // Easy
     c.diff = fsrsDifficulty(c.diff, 4);
     c.stab = fsrsSuccessStability(c.diff, c.stab, R, 4);
     c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-    c.reps++; c.state = 'review'; c.s = Math.min(100, s + 20); c.due = dayStart(now) + c.ivl * DAY;
+    c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
   }
 
   function applyRating(id, rating) { applyRatingToCard(card(id), rating); }

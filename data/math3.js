@@ -1674,46 +1674,6 @@ $$\begin{pmatrix}A&O\\O&B\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\O&B^{-1}\en
     zb34: [ { to: 'multi01', tag: '应用' }, { to: 'multi05', tag: '相关' } ],
   };
 
-  // ============ 深度（1~5，5 为满分冲刺） ============
-  const DEPTH = {
-    lim01: 4, lim09: 4, inf08: 4, dr04: 3, d14: 3, int16: 3, int24: 4, int25: 4, int28: 4,
-    tay01: 4, tay04: 4, mvt02: 5, ser10: 5, ode02: 4, dbi02: 5, la04: 4, multi03: 4,
-    lim05: 4, lim07: 4, lim11: 4, lim12: 4, inf01: 4, inf06: 4, d01: 3, d04: 3, d07: 3,
-    dr02: 4, dr03: 4, dr07: 4, int02: 3, int03: 4, int23: 4, int26: 4, int27: 4, int29: 4,
-    tay02: 5, tay05: 4, mvt01: 4, ser01: 4, ser02: 4, ser03: 3, ser06: 5, ode01: 4, ode03: 5,
-    ode05: 5, multi01: 4, multi02: 4, dbi01: 5, la01: 4, la02: 4, la13: 4,
-    d02: 3, d03: 2, d05: 2, d06: 3, d08: 3, d12: 4, dr01: 2, dr05: 3, dr08: 3, dr09: 3,
-    int04: 3, int06: 3, int07: 3, int17: 3, int18: 3, int19: 3, int21: 3,
-    tay03: 4, tay06: 3, ser04: 3, ser05: 4, ser07: 3, ser08: 3, ser12: 5,
-    ode04: 4, ode06: 4, ode07: 3, multi04: 5, multi05: 4, dbi03: 4,
-    la03: 3, la08: 4, la10: 3, la12: 3, la14: 4, la17: 4,
-    trig01: 2, trig06: 4, trig07: 4, trig13: 3, ineq03: 4, ineq04: 4, ineq05: 3,
-    lim02: 3, lim03: 3, lim04: 3, lim06: 4, lim08: 4, lim10: 4, lim13: 4, lim14: 2, lim15: 2, lim16: 3, lim17: 3,
-    inf02: 3, inf03: 3, inf04: 3, inf05: 4, inf07: 3, inf09: 4, inf10: 4, inf11: 3, inf12: 3, inf13: 3,
-    d09: 3, d10: 2, d11: 2, d13: 3, d15: 2,
-    dr06: 3, dr10: 3, dr11: 3, dr12: 2,
-    int01: 2, int05: 3, int08: 3, int09: 2, int10: 3, int11: 3, int12: 3, int13: 2, int14: 3, int15: 2, int20: 3, int22: 3,
-    tay07: 3, tay08: 3, tay09: 3, tay10: 3,
-    mvt03: 3, mvt04: 4,
-    trig02: 3, trig03: 2, trig04: 3, trig05: 3, trig08: 3, trig09: 3, trig10: 3, trig11: 3, trig12: 3,
-    ineq01: 2, ineq02: 3, ineq06: 3,
-    ser09: 3, ser11: 3, ser13: 2,
-    la05: 2, la06: 2, la07: 3, la09: 4, la11: 3, la15: 3, la16: 3, la18: 2,
-    tp01: 5, tp02: 5, tp03: 5, tp04: 5, tp05: 5, tp06: 4, tp07: 5,
-    tp08: 5, tp09: 5, tp10: 5,
-    ext01: 3, ext02: 5, ext03: 4, ext04: 4, ext05: 4, ext06: 4, ext07: 4, ext08: 3,
-    ext09: 4, ext10: 3, ext11: 4, ext12: 3, ext13: 4, ext14: 4, ext15: 4, ext16: 4,
-    ext17: 4, ext18: 3, ext19: 3, ext20: 3, ext21: 3, ext22: 4, ext23: 4, ext24: 2,
-    ext25: 2, ext26: 4, ext27: 4, ext28: 3,
-    ms01: 3, ms02: 4, ms03: 4,
-    wr01: 4, wr02: 4, wr03: 5,
-    zb01: 5, zb02: 4, zb03: 5, zb04: 4, zb05: 5, zb06: 5, zb07: 4, zb08: 5, zb09: 4, zb10: 4, zb11: 4,
-    zt01: 5, zt02: 5, zt03: 4, zt04: 5, zt05: 5,
-    zb12: 3, zb13: 4, zb14: 3, zb15: 3, zb16: 4, zb17: 4, zb18: 4, zb19: 4, zb20: 4, zb21: 3, zb22: 4,
-    zt06: 5, zt07: 5,
-    zb23: 5, zb24: 4, zb25: 5, zb26: 4, zb27: 5, zb28: 4, zb29: 4, zb30: 3, zb31: 4, zb32: 4, zb33: 5, zb34: 3,
-  };
-
   const PITFALL = {
     // —— 极限 ——
     lim01: R`$\frac{\sin x}{x}\to1$ 只对 $x\to0$；$\lim\frac{\sin 2x}{x}$ 要先凑成 $2\cdot\frac{\sin 2x}{2x}$，勿直接写 $=1$。`,
@@ -1801,5 +1761,5 @@ $$\begin{pmatrix}A&O\\O&B\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\O&B^{-1}\en
     zt07: R`幂级数求和目标：凑成 $\frac{1}{1-x}$、$\ln(1-x)$、$\arctan x$ 等已知展开；"分母有 n 先求导、分子有 n 先积分"。`,
   };
 
-  return { id: 'math3', name: '考研数学三', short: '数三', icon: '📐', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, DEPTH: DEPTH, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['limit', 'infinitesimal', 'derivative', 'drule', 'taylor', 'mvt', 'integral', 'multi', 'doubleint', 'series', 'ode', 'trig', 'inequality', 'linalg'] };
+  return { id: 'math3', name: '考研数学三', short: '数三', icon: '📐', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['limit', 'infinitesimal', 'derivative', 'drule', 'taylor', 'mvt', 'integral', 'multi', 'doubleint', 'series', 'ode', 'trig', 'inequality', 'linalg'] };
 })();

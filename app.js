@@ -17,7 +17,6 @@
     d.setHours(0, 0, 0, 0);
     return d.getTime();
   }
-  const EF_MIN = 1.3; // 向后兼容保留（FSRS 易度已由难度/稳定性替代）
 
 /*
  * 考研数学三 · 公式记忆应用 — 核心逻辑
@@ -26,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.6.0';
+  const VERSION = '1.6.1';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.6.1', date: '2026-09', items: ['移除早已弃用的「知识深度 DEPTH」残留（4 个学科数据块 + src 载入 + 校验脚本）', '工程清理：删除遗留死代码（EF_MIN、卡片 ef 字段、旧 SM-2 掌握分 s 与 initialStrength），并化简两处重复的 relearning 状态判断'] },
     { v: '1.6.0', date: '2026-09', items: ['倒计时完全用户化：删除默认 12 月 20 日兜底，未设目标日期时徽标隐藏、每日弹窗关闭、毕业目标回退固定稳定度', '学习页新增评分撤销（单步）、桌面端键盘提示、评分按钮 aria-label 与 focus-visible/reduced-motion 无障碍'] },
     { v: '1.5.6', date: '2026-09', items: ['修复：拆分模块时遗漏共享常量（DAY/dayStart/EF_MIN/每日预算/目标稳定度）导致启动 ReferenceError、页面空白——新增 src/config.mjs 最先拼接统一声明'] },
     { v: '1.5.5', date: '2026-09', items: ['性能：合并持久化写盘（同一轮多次评分只序列化并写一次，IndexedDB 低频备份，pagehide/visibilitychange 兜底 flush），修复统计页半衰期分布重复计算的 O(n²)'] },
@@ -70,7 +70,7 @@
   const SUBJECT_KEY = 'formula_app_subject';
   let currentSubjectId = null;
   let CATS = null, DATA = null, META = null;
-  let EXAMPLES = {}, REL = {}, DEPTH = {}, PITFALL = {}, MNEM = {};
+  let EXAMPLES = {}, REL = {}, PITFALL = {}, MNEM = {};
 
   const KATEX_SOURCES = [
     { js: 'katex/katex.min.js', css: 'katex/katex.min.css' },
@@ -204,7 +204,6 @@
     META = subj.META;
     EXAMPLES = subj.EXAMPLE || {};
     REL = subj.REL || {};
-    DEPTH = subj.DEPTH || {};
     PITFALL = subj.PITFALL || {};
     MNEM = subj.MNEM || {};
     try { localStorage.setItem(SUBJECT_KEY, subj.id); } catch (e) {}
@@ -245,7 +244,7 @@
   const THEME_KEY = 'ms3_formula_theme';
   let DB = null;
 
-  function defaultCard() { return { reps: 0, ef: 2.5, ivl: 0, due: 0, lapses: 0, state: 'new', s: 0, grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, notes: '', hist: [], lastR: 0, ivlR: 0 }; }
+  function defaultCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, notes: '', hist: [], lastR: 0, ivlR: 0 }; }
 
   // IndexedDB（作为更持久的数据备份；localStorage 仍为主存储）
   function idbOpen() {
@@ -294,7 +293,6 @@
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
-      if (typeof c.s !== 'number') c.s = initialStrength(c);
       if (typeof c.notes !== 'string') c.notes = '';
     });
     saveDB();
@@ -344,11 +342,9 @@
     const out = defaultCard();
     if (c && typeof c === 'object') {
       if (typeof c.reps === 'number') out.reps = c.reps;
-      if (typeof c.ef === 'number') out.ef = c.ef;
       if (typeof c.ivl === 'number') out.ivl = c.ivl;
       if (typeof c.due === 'number') out.due = c.due;
       if (typeof c.lapses === 'number') out.lapses = c.lapses;
-      if (typeof c.s === 'number') out.s = c.s;
       if (typeof c.grad === 'number') out.grad = c.grad;
       if (typeof c.step === 'number') out.step = c.step;
       if (typeof c.diff === 'number') out.diff = c.diff;
@@ -357,7 +353,7 @@
       if (Array.isArray(c.hist)) out.hist = c.hist.map(function (h) { return { t: h.t, m: h.m, ivl: h.ivl || 0 }; });
       if (typeof c.lastR === 'number') out.lastR = c.lastR;
       if (typeof c.ivlR === 'number') out.ivlR = c.ivlR;
-      if (c.state === 'new' || (c.state === 'learning' || c.state === 'relearning') || c.state === 'relearning' || c.state === 'review') out.state = c.state;
+      if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning' || c.state === 'review') out.state = c.state;
       if (typeof c.notes === 'string') out.notes = c.notes;
     }
     return out;
@@ -706,17 +702,6 @@
   }
 
   // ---------------- 统计与掌握度 ----------------
-  function initialStrength(c) {
-    if (c.state === 'new') return 0;
-    if ((c.state === 'learning' || c.state === 'relearning')) return 15;
-    const d = c.ivl;
-    if (d < 1) return 25;
-    if (d < 7) return 45;
-    if (d < 21) return 65;
-    if (d < 60) return 85;
-    return 95;
-  }
-
   function mastery(id) {
     const c = card(id);
     let score;
@@ -936,10 +921,9 @@
   function applyRatingToCard(c, rating) {
     const now = Date.now();
     const G = rating + 1; // 0=Again→1, 1=Hard→2, 2=Good→3, 3=Easy→4
-    const s = (typeof c.s === 'number') ? c.s : initialStrength(c);
     if (typeof c.step !== 'number') c.step = 0;
     // —— 学习 / 重学阶段（FSRS-6：Learning=[1m,10m]，Relearning=[10m]；短时记忆稳定度）——
-    if (c.state === 'new' || (c.state === 'learning' || c.state === 'relearning') || c.state === 'relearning') {
+    if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning') {
       const isRelearn = (c.state === 'relearning');
       const steps = isRelearn ? RELEARN_MS : STEP_MS;
       const lastStep = isRelearn ? RELEARN_LAST_STEP : LAST_STEP;
@@ -951,7 +935,6 @@
       } else {
         c.stab = fsrsShortTermStability(c.stab, G);
       }
-      c.s = Math.max(0, s + (rating === 0 ? -25 : (rating === 3 ? 20 : (rating === 2 ? 12 : -8))));
       if (rating === 0) { // Again：回第 0 步
         c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 0;
         c.state = isRelearn ? 'relearning' : 'learning';
@@ -985,7 +968,6 @@
       c.lapses++;
       c.diff = fsrsDifficulty(c.diff, 1);
       c.stab = fsrsLapseStability(c.diff, c.stab, R);
-      c.s = Math.max(0, s - 25);
       c.due = now + RELEARN_MS[0];
       return;
     }
@@ -993,21 +975,21 @@
       c.diff = fsrsDifficulty(c.diff, 2);
       c.stab = fsrsSuccessStability(c.diff, c.stab, R, 2);
       c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-      c.reps++; c.state = 'review'; c.s = Math.max(0, s - 8); c.due = dayStart(now) + c.ivl * DAY;
+      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
       return;
     }
     if (rating === 2) { // Good
       c.diff = fsrsDifficulty(c.diff, 3);
       c.stab = fsrsSuccessStability(c.diff, c.stab, R, 3);
       c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-      c.reps++; c.state = 'review'; c.s = Math.min(100, s + 12); c.due = dayStart(now) + c.ivl * DAY;
+      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
       return;
     }
     // Easy
     c.diff = fsrsDifficulty(c.diff, 4);
     c.stab = fsrsSuccessStability(c.diff, c.stab, R, 4);
     c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-    c.reps++; c.state = 'review'; c.s = Math.min(100, s + 20); c.due = dayStart(now) + c.ivl * DAY;
+    c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
   }
 
   function applyRating(id, rating) { applyRatingToCard(card(id), rating); }

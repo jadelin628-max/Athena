@@ -2,7 +2,7 @@
  * Service Worker：缓存应用与 KaTeX，实现离线可用
  * 说明：仅在 http(s) 环境下生效（file:// 下浏览器不注册 SW）。
  */
-const VERSION = 'ms3-v51';
+const VERSION = 'ms3-v52';
 const APP_CACHE = VERSION + '-app';
 const KATEX_CACHE = VERSION + '-katex';
 
@@ -23,10 +23,15 @@ const APP_ASSETS = [
   './icons/icon-512-maskable.png',
   './icons/apple-touch-icon.png',
   './icons/favicon.png',
-  './assets/subject_icon/icon-math.png',
-  './assets/subject_icon/icon-economics.png',
-  './assets/subject_icon/icon-statistics.png',
-  './assets/subject_icon/icon-politics.png'
+  './assets/subject_icon/icon-math.svg',
+  './assets/subject_icon/icon-economics.svg',
+  './assets/subject_icon/icon-statistics.svg',
+  './assets/subject_icon/icon-politics.svg',
+  './assets/countdown.png',
+  './assets/empty-search.png',
+  './assets/empty-wrong.png',
+  './assets/learn-done.png',
+  './assets/stats-growing.png'
 ];
 
 self.addEventListener('install', function (e) {

@@ -26,7 +26,7 @@
     head.appendChild(el('strong', null, title));
     if (items.length) head.appendChild(el('span', 'trend-latest muted', '最新 ' + items[items.length - 1].value + (unit || '')));
     box.appendChild(head);
-    if (items.length < 2) { box.appendChild(el('p', 'muted', '数据积累中——每天打开应用记录一次，几天后显示趋势。')); return box; }
+    if (items.length < 2) { box.appendChild(illus('stats-growing')); box.appendChild(el('p', 'muted', '数据积累中——每天打开应用记录一次，几天后显示趋势。')); return box; }
     const W = 680, H = 150, pad = 30;
     const vals = items.map(function (i) { return i.value; });
     let mn = (fixedMax != null) ? 0 : Math.min.apply(null, vals);

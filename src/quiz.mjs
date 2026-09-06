@@ -66,7 +66,7 @@
       n++;
       list.appendChild(browseItem(f));
     });
-    if (n === 0) list.appendChild(el('p', 'muted', subjKind() === 'qa' ? '没有匹配的知识点。' : '没有匹配的公式。'));
+    if (n === 0) { list.appendChild(illus('empty-search')); list.appendChild(el('p', 'muted', subjKind() === 'qa' ? '没有匹配的知识点。' : '没有匹配的公式。')); }
     return list;
   }
 

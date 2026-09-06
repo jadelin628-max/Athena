@@ -164,6 +164,7 @@
     if (done) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
+      wrap.appendChild(illus('learn-done'));
       const overBudget = todayCostSec() > budgetSec();
       wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。' + (overBudget ? '（今日已超出时间预算 ' + (todayCostMin() - budgetMin()) + ' 分钟，仍可继续）' : '')));
       app.appendChild(wrap);

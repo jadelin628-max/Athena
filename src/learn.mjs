@@ -136,7 +136,7 @@
     backdrop.setAttribute('data-action', 'countdown-close');
     modal.appendChild(backdrop);
     const card = el('div', 'countdown-card');
-    card.appendChild(el('div', 'countdown-hero', '📚'));
+    card.appendChild(illus('countdown'));
     card.appendChild(el('div', 'countdown-title', d === 0 ? '今天是' + g + '日！' : '距离' + g + '还有'));
     if (d > 0) {
       const days = el('div', 'countdown-days');
@@ -496,6 +496,15 @@
     if (cls) e.className = cls;
     if (text != null) renderTex(e, text);
     return e;
+  }
+
+  // 插画（assets/ 下的空状态/弹窗配图）
+  function illus(name) {
+    const img = document.createElement('img');
+    img.src = 'assets/' + name + '.png';
+    img.className = 'illus';
+    img.alt = '';
+    return img;
   }
 
   function toast(msg) {

@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Athena">
-  <link rel="manifest" href="manifest.webmanifest?v=31">
-  <link rel="icon" type="image/png" href="icons/favicon.png?v=31">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=31">
+  <link rel="manifest" href="manifest.webmanifest?v=32">
+  <link rel="icon" type="image/png" href="icons/favicon.png?v=32">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=32">
   <title>Athena · 考研知识点记忆</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -21,7 +21,10 @@
       <span id="brandText"></span>
     </div>
     <nav>
-      <select class="subject-select" id="subjectSelect" title="切换学科" aria-label="切换学科"></select>
+      <div class="subject-dd" id="subjectDropdown">
+        <button class="subject-dd-current" id="subjectCurrent" type="button" aria-haspopup="listbox" aria-expanded="false" title="切换学科"></button>
+        <div class="subject-dd-menu hidden" id="subjectMenu" role="listbox"></div>
+      </div>
       <button class="nav-btn module-tab" data-action="module" data-arg="cards">📚 知识卡</button>
       <button class="nav-btn module-tab" data-action="module" data-arg="wrong">📕 错题本</button>
       <button class="icon-btn" id="themeToggle" title="切换明暗主题">🌓</button>

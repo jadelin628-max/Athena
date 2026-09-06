@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.13.3';
+  const VERSION = '1.13.4';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.13.4', date: '2026-09', items: ['修复学科图标渲染失败（SVG 内容误存为 .png → 改为 .svg）', '学科切换改为自定义图片下拉组件；顶栏背景水印改用学科图标', '沉浸模式收起二级菜单；桌面端显示 ☰ 菜单入口', '空状态与倒计时弹窗接入插画'] },
     { v: '1.13.3', date: '2026-09', items: ['学科图标改用 assets/subject_icon/ 下的自定义图片（品牌栏），并纳入离线缓存'] },
     { v: '1.13.2', date: '2026-09', items: ['更换正式 Logo 图标（深色底 + 右侧粉色卡片滑入的中间态）'] },
     { v: '1.13.1', date: '2026-09', items: ['修复：新添加的错题默认为「已做过一次」——初始即进入学习态、次日重现，并初始化 FSRS 难度/稳定性（等价首次「不会」评分）'] },
@@ -281,10 +282,10 @@
   function subjectList() { return window.SUBJECTS || {}; }
   // 学科图标（assets/subject_icon/，无对应图则回退 emoji）
   const SUBJECT_ICON_URLS = {
-    math3: 'assets/subject_icon/icon-math.png',
-    econ: 'assets/subject_icon/icon-economics.png',
-    stats: 'assets/subject_icon/icon-statistics.png',
-    politics: 'assets/subject_icon/icon-politics.png'
+    math3: 'assets/subject_icon/icon-math.svg',
+    econ: 'assets/subject_icon/icon-economics.svg',
+    stats: 'assets/subject_icon/icon-statistics.svg',
+    politics: 'assets/subject_icon/icon-politics.svg'
   };
   function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
   // 把学科图标（图片）填进元素，suffix 为追加文本
@@ -324,11 +325,10 @@
     document.title = subj.name;
     const b = document.getElementById('brandText');
     if (b) setBrand(b, subj, '');
-    const sel = document.getElementById('subjectSelect');
-    if (sel) sel.value = subj.id;
+    renderSubjectDropdown();
     document.body.setAttribute('data-subject', subj.id);
-    const hdr = document.querySelector('header');
-    if (hdr) hdr.setAttribute('data-subject-icon', subj.icon);
+    const url = subjectIconUrl(subj.id);
+    document.body.style.setProperty('--subject-watermark', url ? 'url("' + url + '")' : 'none');
     return true;
   }
   function dbKey() { return currentSubjectId + '_formula_srs_v1'; }
@@ -995,7 +995,7 @@
     backdrop.setAttribute('data-action', 'countdown-close');
     modal.appendChild(backdrop);
     const card = el('div', 'countdown-card');
-    card.appendChild(el('div', 'countdown-hero', '📚'));
+    card.appendChild(illus('countdown'));
     card.appendChild(el('div', 'countdown-title', d === 0 ? '今天是' + g + '日！' : '距离' + g + '还有'));
     if (d > 0) {
       const days = el('div', 'countdown-days');
@@ -1357,6 +1357,15 @@
     return e;
   }
 
+  // 插画（assets/ 下的空状态/弹窗配图）
+  function illus(name) {
+    const img = document.createElement('img');
+    img.src = 'assets/' + name + '.png';
+    img.className = 'illus';
+    img.alt = '';
+    return img;
+  }
+
   function toast(msg) {
     let t = document.getElementById('toast');
     if (!t) { t = el('div', 'toast'); t.id = 'toast'; document.body.appendChild(t); }
@@ -1550,6 +1559,7 @@
     if (done) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
+      wrap.appendChild(illus('learn-done'));
       const overBudget = todayCostSec() > budgetSec();
       wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。' + (overBudget ? '（今日已超出时间预算 ' + (todayCostMin() - budgetMin()) + ' 分钟，仍可继续）' : '')));
       app.appendChild(wrap);
@@ -2411,6 +2421,7 @@
     if (!ids.length) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '📕 错题本'));
+      wrap.appendChild(illus('empty-wrong'));
       wrap.appendChild(el('p', 'muted', '还没有错题。可在「知识卡·浏览」页的真题处标记，或点上方「手动录入」。'));
       app.appendChild(wrap);
       return;
@@ -2731,7 +2742,7 @@
       n++;
       list.appendChild(browseItem(f));
     });
-    if (n === 0) list.appendChild(el('p', 'muted', subjKind() === 'qa' ? '没有匹配的知识点。' : '没有匹配的公式。'));
+    if (n === 0) { list.appendChild(illus('empty-search')); list.appendChild(el('p', 'muted', subjKind() === 'qa' ? '没有匹配的知识点。' : '没有匹配的公式。')); }
     return list;
   }
 
@@ -3133,7 +3144,7 @@
     head.appendChild(el('strong', null, title));
     if (items.length) head.appendChild(el('span', 'trend-latest muted', '最新 ' + items[items.length - 1].value + (unit || '')));
     box.appendChild(head);
-    if (items.length < 2) { box.appendChild(el('p', 'muted', '数据积累中——每天打开应用记录一次，几天后显示趋势。')); return box; }
+    if (items.length < 2) { box.appendChild(illus('stats-growing')); box.appendChild(el('p', 'muted', '数据积累中——每天打开应用记录一次，几天后显示趋势。')); return box; }
     const W = 680, H = 150, pad = 30;
     const vals = items.map(function (i) { return i.value; });
     let mn = (fixedMax != null) ? 0 : Math.min.apply(null, vals);
@@ -4002,28 +4013,69 @@
       renderApp();
     });
   }
-  function renderSubjectSelect() {
-    const sel = document.getElementById('subjectSelect');
-    if (!sel) return;
-    sel.innerHTML = '';
-    Object.keys(subjectList()).forEach(function (id) {
-      const s = subjectList()[id];
-      const opt = document.createElement('option');
-      opt.value = id;
-      opt.textContent = s.icon + ' ' + s.short;
-      sel.appendChild(opt);
+  function renderSubjectDropdown() {
+    const cur = document.getElementById('subjectCurrent');
+    const menu = document.getElementById('subjectMenu');
+    if (!cur || !menu) return;
+    cur.innerHTML = '';
+    menu.innerHTML = '';
+    const list = subjectList();
+    Object.keys(list).forEach(function (id) {
+      const s = list[id];
+      const item = el('button', 'subject-dd-item' + (id === currentSubjectId ? ' active' : ''), '');
+      item.type = 'button';
+      const img = document.createElement('img');
+      img.src = subjectIconUrl(id) || '';
+      img.className = 'subject-icon';
+      img.alt = '';
+      item.appendChild(img);
+      item.appendChild(document.createTextNode(s.short));
+      item.addEventListener('click', function () {
+        closeSubjectDropdown();
+        switchSubject(id);
+      });
+      menu.appendChild(item);
     });
-    sel.value = currentSubjectId;
+    const cs = list[currentSubjectId];
+    if (cs) {
+      const cimg = document.createElement('img');
+      cimg.src = subjectIconUrl(currentSubjectId) || '';
+      cimg.className = 'subject-icon';
+      cimg.alt = '';
+      cur.appendChild(cimg);
+      cur.appendChild(document.createTextNode(cs.short));
+    }
+  }
+
+  function setupSubjectDropdown() {
+    const cur = document.getElementById('subjectCurrent');
+    const menu = document.getElementById('subjectMenu');
+    if (!cur || !menu) return;
+    cur.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const open = menu.classList.toggle('hidden');
+      cur.setAttribute('aria-expanded', open ? 'false' : 'true');
+    });
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#subjectDropdown')) closeSubjectDropdown();
+    });
+  }
+
+  function closeSubjectDropdown() {
+    const menu = document.getElementById('subjectMenu');
+    if (menu) menu.classList.add('hidden');
+    const cur = document.getElementById('subjectCurrent');
+    if (cur) cur.setAttribute('aria-expanded', 'false');
   }
 
   // ---------------- 启动 ----------------
   function initApp() {
     applyTheme();
+    setupSubjectDropdown();
     let saved = null;
     try { saved = localStorage.getItem(SUBJECT_KEY); } catch (e) {}
     setSubject(saved);
     migrateLegacy();
-    renderSubjectSelect();
     loadDBAsync().then(function () {
       if (!loadSession()) buildSession(0);
       currentView = 'learn';
@@ -4031,11 +4083,6 @@
       renderApp();
       setTimeout(maybeShowCountdownPopup, 350);
     });
-  }
-
-  const subjectSelect = document.getElementById('subjectSelect');
-  if (subjectSelect) {
-    subjectSelect.addEventListener('change', function () { switchSubject(subjectSelect.value); });
   }
 
   initApp();

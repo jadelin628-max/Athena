@@ -1,10 +1,10 @@
   function subjectList() { return window.SUBJECTS || {}; }
   // 学科图标（assets/subject_icon/，无对应图则回退 emoji）
   const SUBJECT_ICON_URLS = {
-    math3: 'assets/subject_icon/icon-math.png',
-    econ: 'assets/subject_icon/icon-economics.png',
-    stats: 'assets/subject_icon/icon-statistics.png',
-    politics: 'assets/subject_icon/icon-politics.png'
+    math3: 'assets/subject_icon/icon-math.svg',
+    econ: 'assets/subject_icon/icon-economics.svg',
+    stats: 'assets/subject_icon/icon-statistics.svg',
+    politics: 'assets/subject_icon/icon-politics.svg'
   };
   function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
   // 把学科图标（图片）填进元素，suffix 为追加文本
@@ -44,11 +44,10 @@
     document.title = subj.name;
     const b = document.getElementById('brandText');
     if (b) setBrand(b, subj, '');
-    const sel = document.getElementById('subjectSelect');
-    if (sel) sel.value = subj.id;
+    renderSubjectDropdown();
     document.body.setAttribute('data-subject', subj.id);
-    const hdr = document.querySelector('header');
-    if (hdr) hdr.setAttribute('data-subject-icon', subj.icon);
+    const url = subjectIconUrl(subj.id);
+    document.body.style.setProperty('--subject-watermark', url ? 'url("' + url + '")' : 'none');
     return true;
   }
   function dbKey() { return currentSubjectId + '_formula_srs_v1'; }

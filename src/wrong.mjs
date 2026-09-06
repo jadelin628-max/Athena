@@ -331,6 +331,7 @@
     if (!ids.length) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '📕 错题本'));
+      wrap.appendChild(illus('empty-wrong'));
       wrap.appendChild(el('p', 'muted', '还没有错题。可在「知识卡·浏览」页的真题处标记，或点上方「手动录入」。'));
       app.appendChild(wrap);
       return;

@@ -113,6 +113,7 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   border-bottom: 1px solid var(--border); background: var(--bg);
 }
 .sub-btn { padding: 7px 13px; font-size: 13.5px; }
+.dock { display: none; }
 .subject-select {
   border: 1px solid var(--border); background: var(--card); color: var(--text);
   padding: 7px 9px; border-radius: 10px; font-size: 14px; cursor: pointer;
@@ -210,7 +211,11 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .btn:disabled { cursor: default; opacity: .7; }
 
 /* 学习视图 */
-.learn-wrap { display: flex; flex-direction: column; }
+.learn-wrap { display: flex; flex-direction: column; animation: cardIn .26s ease; }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
 .learn-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .badge {
   background: var(--accent-weak); color: var(--accent);
@@ -522,8 +527,21 @@ body.immersive #immersiveExit { display: block; }
   header nav { flex-wrap: nowrap; overflow-x: auto; }
   #menuToggle { display: inline-flex; flex: none; }
   .module-tab { padding: 7px 11px; font-size: 13px; }
-  .subnav { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .sub-btn { flex: none; padding: 8px 11px; font-size: 13px; }
+  .subnav { display: none; }
+  header .module-tab { display: none; }
+  .dock {
+    display: flex; align-items: center; gap: 2px;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    background: var(--card); border-top: 1px solid var(--border);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .dock-btn {
+    flex: none; border: none; background: transparent; color: var(--muted);
+    padding: 9px 11px; border-radius: 10px; font-size: 13px; cursor: pointer; white-space: nowrap;
+  }
+  .dock-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; font-weight: 600; }
+  .dock-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; flex: none; }
   .subject-select { max-width: 86px; font-size: 13px; padding: 7px 7px; }
   .countdown-badge { font-size: 11px; padding: 4px 9px; }
   .brand { gap: 6px; }

@@ -14,6 +14,7 @@
       b.classList.toggle('active', b.getAttribute('data-arg') === currentModule);
     });
     renderSubnav();
+    renderDock();
     const vf = el('div', 'app-version');
     vf.textContent = 'Athena · 版本 v' + VERSION;
     app.appendChild(vf);

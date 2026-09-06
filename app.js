@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.13.5';
+  const VERSION = '1.14.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.14.0', date: '2026-09', items: ['移动端新增底部 Dock（模块 tab + 常用入口，大屏仍用顶栏）', '切卡/评分加入轻量滑入淡入动效'] },
     { v: '1.13.5', date: '2026-09', items: ['修复：学科下拉菜单被顶栏 overflow 裁剪、桌面端 ☰ 菜单入口被隐藏'] },
     { v: '1.13.4', date: '2026-09', items: ['修复学科图标渲染失败（SVG 内容误存为 .png → 改为 .svg）', '学科切换改为自定义图片下拉组件；顶栏背景水印改用学科图标', '沉浸模式收起二级菜单；桌面端显示 ☰ 菜单入口', '空状态与倒计时弹窗接入插画'] },
     { v: '1.13.3', date: '2026-09', items: ['学科图标改用 assets/subject_icon/ 下的自定义图片（品牌栏），并纳入离线缓存'] },
@@ -1392,6 +1393,29 @@
     });
   }
 
+  // 移动端底部 Dock：模块 tab + 当前模块子视图（大屏隐藏，走顶栏）
+  function renderDock() {
+    const dock = document.getElementById('dock');
+    if (!dock) return;
+    dock.innerHTML = '';
+    [['cards', '📚 知识卡'], ['wrong', '📕 错题本']].forEach(function (m) {
+      const b = el('button', 'dock-btn' + (currentModule === m[0] ? ' active' : ''), m[1]);
+      b.setAttribute('data-action', 'module');
+      b.setAttribute('data-arg', m[0]);
+      dock.appendChild(b);
+    });
+    dock.appendChild(el('span', 'dock-sep', ''));
+    const items = currentModule === 'wrong'
+      ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
+      : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计']];
+    items.forEach(function (it) {
+      const b = el('button', 'dock-btn' + (currentView === it[0] ? ' active' : ''), it[1]);
+      b.setAttribute('data-action', 'nav');
+      b.setAttribute('data-arg', it[0]);
+      dock.appendChild(b);
+    });
+  }
+
   function renderApp() {
 
     const app = document.getElementById('app');
@@ -1410,6 +1434,7 @@
       b.classList.toggle('active', b.getAttribute('data-arg') === currentModule);
     });
     renderSubnav();
+    renderDock();
     const vf = el('div', 'app-version');
     vf.textContent = 'Athena · 版本 v' + VERSION;
     app.appendChild(vf);

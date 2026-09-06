@@ -428,8 +428,17 @@
     if (!cur || !menu) return;
     cur.addEventListener('click', function (e) {
       e.stopPropagation();
-      const open = menu.classList.toggle('hidden');
-      cur.setAttribute('aria-expanded', open ? 'false' : 'true');
+      const willShow = menu.classList.contains('hidden');
+      if (willShow) {
+        // 用 fixed 定位到按钮下方，避免被 header/nav 的 overflow 裁剪（移动端）
+        const r = cur.getBoundingClientRect();
+        menu.style.position = 'fixed';
+        menu.style.top = (r.bottom + 4) + 'px';
+        menu.style.left = r.left + 'px';
+        menu.style.minWidth = Math.max(r.width, 150) + 'px';
+      }
+      menu.classList.toggle('hidden');
+      cur.setAttribute('aria-expanded', willShow ? 'true' : 'false');
     });
     document.addEventListener('click', function (e) {
       if (!e.target.closest('#subjectDropdown')) closeSubjectDropdown();

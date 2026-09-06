@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Athena",
-  "version": "1.13.1",
+  "version": "1.13.2",
   "identifier": "com.athena.memory",
   "build": {
     "frontendDist": "../dist"
@@ -14,7 +14,8 @@
         "height": 820,
         "minWidth": 380,
         "minHeight": 560,
-        "resizable": true
+        "resizable": true,
+        "center": true
       }
     ],
     "security": {
@@ -24,6 +25,8 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "category": "Education",
+    "shortDescription": "考研知识点记忆（主动回忆 + 间隔重复）",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

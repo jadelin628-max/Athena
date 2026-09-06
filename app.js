@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.8.1';
+  const VERSION = '1.8.2';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.8.2', date: '2026-09', items: ['交错练习改为「分块交错」：同一章节的卡成组（每块 3 张）出现、章节之间轮流，让同类辨别卡真正在一起', '修复：学习中的卡被推回队尾造成「同卡两份」，学完新卡后 pos 跳回、只剩「回到当前卡片」——改为不再推回队尾，到期卡由 surfaceDue 按需重现'] },
     { v: '1.8.1', date: '2026-09', items: ['修复：新学卡交错失效——「同类」标签实为同一章节的变体，聚类后反而变成「分块」；现仅「对比/类比」参与辨析聚类，新学卡恢复按章节交错（相关跨章卡仍较近出现）'] },
     { v: '1.8.0', date: '2026-09', items: ['交错练习升级：新增「辨析聚类」算法——REL 中「对比/类比/同类」的相关卡片会较近出现，复习卡、续学卡、新学卡均生效', '新增「裸回忆」常驻设置：开启后学习时先隐藏分类徽标，逼你先判断类别再回忆，点开答案后才显示'] },
     { v: '1.7.0', date: '2026-09', items: ['新增「全部科目互通」：一键导出/导入四个学科的学习进度与统计（打包为单个 JSON），便于多平台 / 多设备迁移', '修复：PC 端四个评分挡位改为竖向全宽排布'] },
@@ -191,40 +192,13 @@
   function fsrsHalflife(S) { return Math.max(FSRS_S_MIN, S) * FSRS_HALFLIFE_K; }
 
 
-  // ---------------- 交错练习 · 辨析聚类 ----------------
-  // 原理：交错练习的收益在「辨别」——让「会搞混」的卡片（REL 中 tag=对比/类比/同类）
-  //       在队列里较近出现；同时按分类轮转，避免同一章节的卡连续扎堆。
-  // 纯函数（依赖注入 rel / catOf），便于 tools 对拍测试，不碰任何运行时全局。
+  // ---------------- 交错练习 · 分块交错 ----------------
+  // 原理：交错练习要「同类辨别卡在一起 + 章节之间交错」——
+  //   把同一章节的卡分成小块（chunk），各章节按小块轮流出现：
+  //   既让同类卡成组（便于辨别），又不整章阻塞（保持交错）。
+  // 纯函数（依赖注入 catOf），便于 tools 对拍测试，不碰任何运行时全局。
 
-  // 「辨析相关」标签：只有「对比 / 类比」算「跨章节、易搞混、需辨别」，聚类后相邻出现。
-  // 「同类」是同一章节的变体（如多个重要极限），聚在一起反而变成「分块」，不参与聚类——交给分类轮转去交错。
-  const DISCRIM_TAGS = { '对比': 1, '类比': 1 };
-
-  // 并查集：把「辨析相关」的卡片聚成同一簇；簇内保持输入顺序
-  function buildClusters(ids, rel) {
-    const idSet = {};
-    ids.forEach(function (id) { idSet[id] = 1; });
-    const parent = {};
-    const find = function (x) { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
-    ids.forEach(function (id) { parent[id] = id; });
-    ids.forEach(function (id) {
-      const edges = (rel && rel[id]) || [];
-      for (let i = 0; i < edges.length; i++) {
-        const e = edges[i];
-        const to = e && e.to;
-        if (to && idSet[to] && DISCRIM_TAGS[e.tag]) {
-          const ra = find(id), rb = find(to);
-          if (ra !== rb) parent[ra] = rb;
-        }
-      }
-    });
-    const groups = {};
-    ids.forEach(function (id) {
-      const r = find(id);
-      (groups[r] = groups[r] || []).push(id);
-    });
-    return Object.keys(groups).map(function (k) { return groups[k]; });
-  }
+  const CHUNK_SIZE = 3; // 每章节每轮吐出的卡数（同类成组的大小）
 
   function shuffleArr(arr) {
     const a = arr.slice();
@@ -235,13 +209,13 @@
     return a;
   }
 
-  // 辨析交错：相关卡聚成簇、簇内相邻出现（较近），簇之间按分类轮转（同章不连续）
-  function interleaveRelated(ids, rel, catOf) {
-    const clusters = buildClusters(ids, rel);
+  // 分块交错：按章节分组、组内乱序，每轮从每个章节吐出最多 chunkSize 张卡
+  function interleaveChunked(ids, catOf, chunkSize) {
+    const size = (typeof chunkSize === 'number' && chunkSize >= 1) ? chunkSize : 1;
     const byCat = {};
-    clusters.forEach(function (cluster) {
-      const c = catOf(cluster[0]) || '?';
-      (byCat[c] = byCat[c] || []).push(cluster);
+    ids.forEach(function (id) {
+      const c = catOf(id) || '?';
+      (byCat[c] = byCat[c] || []).push(id);
     });
     const groups = Object.keys(byCat).map(function (k) { return shuffleArr(byCat[k]); });
     const out = [];
@@ -250,8 +224,8 @@
       added = false;
       for (let i = 0; i < groups.length; i++) {
         if (groups[i].length) {
-          const cluster = groups[i].shift();
-          for (let j = 0; j < cluster.length; j++) out.push(cluster[j]);
+          const n = Math.min(size, groups[i].length);
+          for (let j = 0; j < n; j++) out.push(groups[i].shift());
           added = true;
         }
       }
@@ -1196,14 +1170,14 @@
   }
 
   // ---------------- 学习视图 · 交错练习 ----------------
-  // 辨析交错：把「会搞混」的卡（REL 中 tag=对比/类比/同类）聚成簇、簇内相邻出现，
-  // 簇之间再按分类轮转，避免同一章节连续扎堆。纯函数在 src/interleave.mjs，这里只做运行时装配。
+  // 分块交错：把同一章节的卡分成小块（chunk），各章节按小块轮流出现——
+  // 同类卡成组（便于辨别）、章节之间交错（不整章阻塞）。纯函数在 src/interleave.mjs。
   function catOfId(id) {
     const f = DATA.find(function (x) { return x.id === id; });
     return f ? f.cat : '?';
   }
-  function interleaveByIds(ids) { return interleaveRelated(ids, REL, catOfId); }
-  // 到期复习：先按重要度(星)分层，层内再做辨析交错，兼顾「重要优先」与「相关卡较近」
+  function interleaveByIds(ids) { return interleaveChunked(ids, catOfId, CHUNK_SIZE); }
+  // 到期复习：先按重要度(星)分层，层内再做分块交错，兼顾「重要优先」与「同类成组」
   function interleaveByImportance(ids) {
     const tiers = {};
     ids.forEach(function (id) {
@@ -1548,7 +1522,6 @@
       id: id,
       card: JSON.parse(JSON.stringify(card(id))),
       costBefore: todayCostSec(),
-      pushed: false,
       dailyBefore: (DB.log && DB.log.daily && DB.log.daily[todayStr()]) || 0,
       detailBefore: (DB.log && DB.log.detail && DB.log.detail[todayStr()] && DB.log.detail[todayStr()][id]) || 0
     };
@@ -1565,11 +1538,6 @@
       if (c.hist.length > 60) c.hist = c.hist.slice(-60);
       c.lastR = Date.now();
       c.ivlR = c.ivl || 0;
-    }
-    // 时间步进：学习中的卡按计时器到点重现（推回队尾，由 surfaceDue 在其 due 到达时提前）
-    if (card(id).state === 'learning' || card(id).state === 'relearning') {
-      deck.push(id);
-      lastRatingUndo.pushed = true;
     }
     frontier++;
     pendingAdvance = true;
@@ -1593,9 +1561,6 @@
     }
     if (!DB.log.cost) DB.log.cost = {};
     DB.log.cost[t] = Math.max(0, u.costBefore);
-    if (u.pushed) {
-      for (let i = deck.length - 1; i >= 0; i--) { if (deck[i] === id) { deck.splice(i, 1); break; } }
-    }
     if (frontier > 0) frontier--;
     pendingAdvance = false;
     saveDB();

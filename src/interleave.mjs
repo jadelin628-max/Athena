@@ -1,37 +1,10 @@
-  // ---------------- 交错练习 · 辨析聚类 ----------------
-  // 原理：交错练习的收益在「辨别」——让「会搞混」的卡片（REL 中 tag=对比/类比/同类）
-  //       在队列里较近出现；同时按分类轮转，避免同一章节的卡连续扎堆。
-  // 纯函数（依赖注入 rel / catOf），便于 tools 对拍测试，不碰任何运行时全局。
+  // ---------------- 交错练习 · 分块交错 ----------------
+  // 原理：交错练习要「同类辨别卡在一起 + 章节之间交错」——
+  //   把同一章节的卡分成小块（chunk），各章节按小块轮流出现：
+  //   既让同类卡成组（便于辨别），又不整章阻塞（保持交错）。
+  // 纯函数（依赖注入 catOf），便于 tools 对拍测试，不碰任何运行时全局。
 
-  // 「辨析相关」标签：只有「对比 / 类比」算「跨章节、易搞混、需辨别」，聚类后相邻出现。
-  // 「同类」是同一章节的变体（如多个重要极限），聚在一起反而变成「分块」，不参与聚类——交给分类轮转去交错。
-  const DISCRIM_TAGS = { '对比': 1, '类比': 1 };
-
-  // 并查集：把「辨析相关」的卡片聚成同一簇；簇内保持输入顺序
-  function buildClusters(ids, rel) {
-    const idSet = {};
-    ids.forEach(function (id) { idSet[id] = 1; });
-    const parent = {};
-    const find = function (x) { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
-    ids.forEach(function (id) { parent[id] = id; });
-    ids.forEach(function (id) {
-      const edges = (rel && rel[id]) || [];
-      for (let i = 0; i < edges.length; i++) {
-        const e = edges[i];
-        const to = e && e.to;
-        if (to && idSet[to] && DISCRIM_TAGS[e.tag]) {
-          const ra = find(id), rb = find(to);
-          if (ra !== rb) parent[ra] = rb;
-        }
-      }
-    });
-    const groups = {};
-    ids.forEach(function (id) {
-      const r = find(id);
-      (groups[r] = groups[r] || []).push(id);
-    });
-    return Object.keys(groups).map(function (k) { return groups[k]; });
-  }
+  const CHUNK_SIZE = 3; // 每章节每轮吐出的卡数（同类成组的大小）
 
   function shuffleArr(arr) {
     const a = arr.slice();
@@ -42,13 +15,13 @@
     return a;
   }
 
-  // 辨析交错：相关卡聚成簇、簇内相邻出现（较近），簇之间按分类轮转（同章不连续）
-  function interleaveRelated(ids, rel, catOf) {
-    const clusters = buildClusters(ids, rel);
+  // 分块交错：按章节分组、组内乱序，每轮从每个章节吐出最多 chunkSize 张卡
+  function interleaveChunked(ids, catOf, chunkSize) {
+    const size = (typeof chunkSize === 'number' && chunkSize >= 1) ? chunkSize : 1;
     const byCat = {};
-    clusters.forEach(function (cluster) {
-      const c = catOf(cluster[0]) || '?';
-      (byCat[c] = byCat[c] || []).push(cluster);
+    ids.forEach(function (id) {
+      const c = catOf(id) || '?';
+      (byCat[c] = byCat[c] || []).push(id);
     });
     const groups = Object.keys(byCat).map(function (k) { return shuffleArr(byCat[k]); });
     const out = [];
@@ -57,8 +30,8 @@
       added = false;
       for (let i = 0; i < groups.length; i++) {
         if (groups[i].length) {
-          const cluster = groups[i].shift();
-          for (let j = 0; j < cluster.length; j++) out.push(cluster[j]);
+          const n = Math.min(size, groups[i].length);
+          for (let j = 0; j < n; j++) out.push(groups[i].shift());
           added = true;
         }
       }
@@ -66,4 +39,4 @@
     return out;
   }
 
-  export { DISCRIM_TAGS, buildClusters, interleaveRelated };
+  export { CHUNK_SIZE, interleaveChunked };

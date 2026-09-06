@@ -35,14 +35,14 @@
   }
 
   // ---------------- 学习视图 · 交错练习 ----------------
-  // 辨析交错：把「会搞混」的卡（REL 中 tag=对比/类比/同类）聚成簇、簇内相邻出现，
-  // 簇之间再按分类轮转，避免同一章节连续扎堆。纯函数在 src/interleave.mjs，这里只做运行时装配。
+  // 分块交错：把同一章节的卡分成小块（chunk），各章节按小块轮流出现——
+  // 同类卡成组（便于辨别）、章节之间交错（不整章阻塞）。纯函数在 src/interleave.mjs。
   function catOfId(id) {
     const f = DATA.find(function (x) { return x.id === id; });
     return f ? f.cat : '?';
   }
-  function interleaveByIds(ids) { return interleaveRelated(ids, REL, catOfId); }
-  // 到期复习：先按重要度(星)分层，层内再做辨析交错，兼顾「重要优先」与「相关卡较近」
+  function interleaveByIds(ids) { return interleaveChunked(ids, catOfId, CHUNK_SIZE); }
+  // 到期复习：先按重要度(星)分层，层内再做分块交错，兼顾「重要优先」与「同类成组」
   function interleaveByImportance(ids) {
     const tiers = {};
     ids.forEach(function (id) {
@@ -387,7 +387,6 @@
       id: id,
       card: JSON.parse(JSON.stringify(card(id))),
       costBefore: todayCostSec(),
-      pushed: false,
       dailyBefore: (DB.log && DB.log.daily && DB.log.daily[todayStr()]) || 0,
       detailBefore: (DB.log && DB.log.detail && DB.log.detail[todayStr()] && DB.log.detail[todayStr()][id]) || 0
     };
@@ -404,11 +403,6 @@
       if (c.hist.length > 60) c.hist = c.hist.slice(-60);
       c.lastR = Date.now();
       c.ivlR = c.ivl || 0;
-    }
-    // 时间步进：学习中的卡按计时器到点重现（推回队尾，由 surfaceDue 在其 due 到达时提前）
-    if (card(id).state === 'learning' || card(id).state === 'relearning') {
-      deck.push(id);
-      lastRatingUndo.pushed = true;
     }
     frontier++;
     pendingAdvance = true;
@@ -432,9 +426,6 @@
     }
     if (!DB.log.cost) DB.log.cost = {};
     DB.log.cost[t] = Math.max(0, u.costBefore);
-    if (u.pushed) {
-      for (let i = deck.length - 1; i >= 0; i--) { if (deck[i] === id) { deck.splice(i, 1); break; } }
-    }
     if (frontier > 0) frontier--;
     pendingAdvance = false;
     saveDB();

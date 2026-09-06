@@ -35,14 +35,14 @@
   }
 
   // ---------------- 学习视图 · 交错练习 ----------------
-  // 分块交错：把同一章节的卡分成小块（chunk），各章节按小块轮流出现——
-  // 同类卡成组（便于辨别）、章节之间交错（不整章阻塞）。纯函数在 src/interleave.mjs。
+  // 辨析聚类：把「真有关系」的卡（REL 中 tag=同类/对比/类比）聚成簇、簇内相邻出现，
+  // 无关联的卡不硬凑、按章节轮转。纯函数在 src/interleave.mjs。
   function catOfId(id) {
     const f = DATA.find(function (x) { return x.id === id; });
     return f ? f.cat : '?';
   }
-  function interleaveByIds(ids) { return interleaveChunked(ids, catOfId, CHUNK_SIZE); }
-  // 到期复习：先按重要度(星)分层，层内再做分块交错，兼顾「重要优先」与「同类成组」
+  function interleaveByIds(ids) { return interleaveRelated(ids, REL, catOfId); }
+  // 到期复习：先按重要度(星)分层，层内再做辨析聚类，兼顾「重要优先」与「相关卡较近」
   function interleaveByImportance(ids) {
     const tiers = {};
     ids.forEach(function (id) {

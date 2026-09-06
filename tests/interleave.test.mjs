@@ -1,35 +1,47 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CHUNK_SIZE, interleaveChunked } from '../src/interleave.mjs';
+import { DISCRIM_TAGS, buildClusters, interleaveRelated } from '../src/interleave.mjs';
 
-test('CHUNK_SIZE 默认成组大小合理', () => {
-  assert.equal(CHUNK_SIZE, 3);
+test('辨析标签只包含 同类/对比/类比', () => {
+  assert.deepEqual(DISCRIM_TAGS, { '同类': 1, '对比': 1, '类比': 1 });
 });
 
-test('interleaveChunked 输出是输入的排列', () => {
-  const ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
-  const catOf = (id) => id[0];
-  const out = interleaveChunked(ids, catOf, 3);
+test('buildClusters 把辨析相关的卡聚成同簇，无关联的各自成簇', () => {
+  const ids = ['a', 'b', 'c', 'd', 'e', 'f'];
+  const rel = {
+    a: [{ to: 'b', tag: '同类' }],
+    b: [{ to: 'c', tag: '对比' }],   // a-b-c 连成一片
+    d: [{ to: 'e', tag: '相关' }],   // 「相关」不参与辨析聚类
+    e: [{ to: 'f', tag: '前置' }]    // 「前置」也不参与
+  };
+  const clusters = buildClusters(ids, rel);
+  const clusterOfA = clusters.find((cl) => cl.indexOf('a') !== -1);
+  assert.ok(clusterOfA, 'a 应在某个簇中');
+  assert.deepEqual(clusterOfA.slice().sort(), ['a', 'b', 'c']);
+  // d、e、f 都应各自成簇（相关/前置都不聚类）
+  const clusterOfD = clusters.find((cl) => cl.indexOf('d') !== -1);
+  const clusterOfE = clusters.find((cl) => cl.indexOf('e') !== -1);
+  const clusterOfF = clusters.find((cl) => cl.indexOf('f') !== -1);
+  assert.notEqual(clusterOfD, clusterOfE);
+  assert.notEqual(clusterOfE, clusterOfF);
+});
+
+test('interleaveRelated 输出是输入的排列，且同簇卡片相邻出现', () => {
+  const ids = ['a', 'b', 'c', 'd', 'e', 'f'];
+  const rel = {
+    a: [{ to: 'b', tag: '同类' }],
+    c: [{ to: 'f', tag: '对比' }]
+  };
+  const catOf = function (id) { return ({ a: 'X', b: 'X', c: 'Y', d: 'Y', e: 'Z', f: 'Y' })[id]; };
+  const out = interleaveRelated(ids, rel, catOf);
   assert.deepEqual(out.slice().sort(), ids.slice().sort());
+  assert.equal(Math.abs(out.indexOf('a') - out.indexOf('b')), 1);
+  assert.equal(Math.abs(out.indexOf('c') - out.indexOf('f')), 1);
 });
 
-test('interleaveChunked 同类成组：同章节连续段不超过 chunkSize', () => {
-  // 两个章节、各 5 张，chunk=2：每段同类最多 2 张，且章节交替
-  const ids = ['x1', 'x2', 'x3', 'x4', 'x5', 'y1', 'y2', 'y3', 'y4', 'y5'];
-  const catOf = (id) => id[0];
-  const out = interleaveChunked(ids, catOf, 2);
-  assert.deepEqual(out.slice().sort(), ids.slice().sort());
-  let maxRun = 1, run = 1;
-  for (let i = 1; i < out.length; i++) {
-    if (catOf(out[i]) === catOf(out[i - 1])) { run++; maxRun = Math.max(maxRun, run); }
-    else run = 1;
-  }
-  assert.ok(maxRun <= 2, `同类连续段应≤2，实际 ${maxRun}`);
-});
-
-test('interleaveChunked 空输入与无分类时安全', () => {
-  assert.deepEqual(interleaveChunked([], () => '?', 3), []);
+test('interleaveRelated 空输入与无辨析关系时安全', () => {
+  assert.deepEqual(interleaveRelated([], {}, () => '?'), []);
   const ids = ['a', 'b', 'c'];
-  const out = interleaveChunked(ids, () => '?', 3);
+  const out = interleaveRelated(ids, {}, () => '?');
   assert.deepEqual(out.slice().sort(), ids.slice().sort());
 });

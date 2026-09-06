@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.9.0';
+  const VERSION = '1.10.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.10.0', date: '2026-09', items: ['错题本新增「手动录入」：可粘贴题目 + 解析并搜索关联知识点', '新增「标记为难题」：难题间隔更疏（×1.4），与错题区分', '错题重做计入每日时间预算（每题约 4 分钟）'] },
     { v: '1.9.0', date: '2026-09', items: ['新增「错题本」模块：把做错的真题/例题标记进错题本，按记忆算法重现，需动手重做后按「不会/思路错/算错/会做对」评分', '错题评分四档与 FSRS 四档一一对应，学习步进改为按天；毕业=稳定度达目标（与知识卡一致，无退出，间隔随算法延长）', '错题失败（不会/思路错）会联动降级关联的知识点卡片，提前重现补漏'] },
     { v: '1.8.4', date: '2026-09', items: ['补全四个学科的「同类」标签（新增 458 条边）：同类辨别卡真正成组出现（数三 93% / 微观 73% / 统计 82% / 政治 93% 的卡进入同类型簇）', '大簇切成小段（每段 ≤6 张），避免同类卡整章连排成「分块」'] },
     { v: '1.8.3', date: '2026-09', items: ['交错簇改为「辨析聚类」：只把 REL 中「同类/对比/类比」的相关卡聚成簇，无关联的卡不再被硬凑进同一簇'] },
@@ -1390,8 +1391,11 @@
       }
       if (ex.src) eb.appendChild(el('div', 'example-src', '📚 来源：' + ex.src));
       const mark = el('button', 'btn small', '📕 标记为错题');
-      mark.addEventListener('click', function () { markAsWrong(ex, id); });
+      mark.addEventListener('click', function () { markAsWrong(ex, id, '错题'); });
       eb.appendChild(mark);
+      const markHard = el('button', 'btn small', '⭐ 标记为难题');
+      markHard.addEventListener('click', function () { markAsWrong(ex, id, '难题'); });
+      eb.appendChild(markHard);
       box.appendChild(eb);
     });
     if (rels.length) {
@@ -1650,6 +1654,12 @@
 
   const WRONG_STEP_MS = [DAY];      // 错题学习步：1 天（问题不适合分钟内重现）
   const WRONG_RELEARN_MS = [DAY];   // 错题重学步：1 天
+  const WRONG_COST_S = 240;         // 错题单题约 4 分钟（计入每日时间预算）
+  // 难题更疏：间隔乘 1.4，减少高频重现
+  function wrongInterval(c) {
+    const ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+    return (c.kind === '难题') ? Math.max(1, Math.round(ivl * 1.4)) : ivl;
+  }
 
   function wrongCard(wid) { return (DB && DB.wrongs && DB.wrongs[wid]) || null; }
 
@@ -1702,14 +1712,14 @@
     if (rating === 1) { // 思路错：Hard
       c.diff = fsrsDifficulty(c.diff, 2);
       c.stab = fsrsSuccessStability(c.diff, c.stab, R, 2);
-      c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+      c.ivl = wrongInterval(c);
       c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
       return;
     }
     if (rating === 2) { // 算错：Good
       c.diff = fsrsDifficulty(c.diff, 3);
       c.stab = fsrsSuccessStability(c.diff, c.stab, R, 3);
-      c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+      c.ivl = wrongInterval(c);
       c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
       return;
     }
@@ -1723,7 +1733,7 @@
   function wrongGraduate(c) {
     c.grad = 1; c.reps = 1; c.state = 'review';
     c.stab = Math.max(FSRS_S_MIN, c.stab);
-    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+    c.ivl = wrongInterval(c);
     c.due = dayStart(Date.now()) + c.ivl * DAY;
   }
 
@@ -1788,6 +1798,12 @@
   function renderWrongLearn() {
     const app = document.getElementById('app');
     const total = Object.keys(DB.wrongs || {}).length;
+    const tb = el('div', 'learn-top');
+    tb.appendChild(el('span', 'muted', '共 ' + total + ' 道'));
+    const add = el('button', 'btn small primary', '➕ 手动录入');
+    add.addEventListener('click', openWrongInput);
+    tb.appendChild(add);
+    app.appendChild(tb);
     if (total === 0) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '📕 错题本'));
@@ -1906,22 +1922,127 @@
     if (w.hist.length > 60) w.hist = w.hist.slice(-60);
     w.lastR = Date.now();
     w.ivlR = w.ivl || 0;
+    const t = todayStr();
+    if (!DB.log.cost) DB.log.cost = {};
+    DB.log.cost[t] = (DB.log.cost[t] || 0) + WRONG_COST_S;
     wrongFrontier++;
     saveDB();
     renderApp();
   }
 
   // 把一道真题/例题标记为错题（linked 为关联知识点 id）
-  function markAsWrong(ex, linkedId) {
+  function markAsWrong(ex, linkedId, kind) {
     if (!ex || !ex.q) return;
     const id = 'wp_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
     const w = defaultWrongCard();
-    w.kind = '错题';
+    w.kind = (kind === '难题') ? '难题' : '错题';
     w.q = ex.q; w.a = ex.a; w.a2 = ex.a2 || ''; w.src = ex.src || '';
     if (linkedId) w.linked = [linkedId];
     DB.wrongs[id] = w;
     saveDB();
     toast('已加入错题本');
+  }
+
+  // —— 手动录入错题 ——
+  let wrongInput = null; // { q, a, a2, src, linked: [] }
+
+  function wrongField(label, input) {
+    const box = el('div', 'wrong-field');
+    box.appendChild(el('span', 'mini-label', label));
+    box.appendChild(input);
+    return box;
+  }
+
+  function openWrongInput() {
+    wrongInput = { linked: [] };
+    const modal = el('div', 'map-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', closeWrongInput);
+    modal.appendChild(backdrop);
+
+    const cardBox = el('div', 'map-modal-card wrong-input-card');
+    cardBox.appendChild(el('h3', null, '➕ 手动录入错题'));
+
+    const q = el('textarea', 'wrong-input');
+    q.placeholder = '题目（必填）…';
+    cardBox.appendChild(wrongField('题目', q));
+
+    const a = el('textarea', 'wrong-input');
+    a.placeholder = '解析（必填）…';
+    cardBox.appendChild(wrongField('解析', a));
+
+    const a2 = el('textarea', 'wrong-input');
+    a2.placeholder = '💡 巧解（可选）…';
+    cardBox.appendChild(wrongField('巧解', a2));
+
+    const src = el('input', 'wrong-input');
+    src.type = 'text';
+    src.placeholder = '来源（可选，如：2023 数三真题）…';
+    cardBox.appendChild(wrongField('来源', src));
+
+    const linkedBox = el('div', 'wrong-field');
+    linkedBox.appendChild(el('span', 'mini-label', '关联知识点（可选）'));
+    const search = el('input', 'search');
+    search.type = 'search';
+    search.placeholder = '搜索知识点名称…';
+    const results = el('div', 'wrong-results');
+    search.addEventListener('input', function () { renderWrongLinkedResults(search.value, results); });
+    linkedBox.appendChild(search);
+    linkedBox.appendChild(results);
+    cardBox.appendChild(linkedBox);
+
+    const btns = el('div', 'wrong-input-btns');
+    const save = el('button', 'btn primary', '保存到错题本');
+    save.addEventListener('click', function () { saveWrongInput(q.value, a.value, a2.value, src.value); });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', closeWrongInput);
+    btns.appendChild(save);
+    btns.appendChild(cancel);
+    cardBox.appendChild(btns);
+
+    wrongInput.q = q; wrongInput.a = a; wrongInput.a2 = a2; wrongInput.src = src; wrongInput.search = search;
+
+    modal.appendChild(cardBox);
+    document.body.appendChild(modal);
+  }
+
+  function renderWrongLinkedResults(query, container) {
+    container.innerHTML = '';
+    const q = query.trim().toLowerCase();
+    if (!q) return;
+    DATA.filter(function (f) {
+      return (f.title + ' ' + f.front).toLowerCase().indexOf(q) !== -1;
+    }).slice(0, 12).forEach(function (f) {
+      const on = wrongInput.linked.indexOf(f.id) !== -1;
+      const chip = el('button', 'chip' + (on ? ' active' : ''), f.title);
+      chip.addEventListener('click', function () {
+        const idx = wrongInput.linked.indexOf(f.id);
+        if (idx >= 0) wrongInput.linked.splice(idx, 1); else wrongInput.linked.push(f.id);
+        chip.classList.toggle('active');
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  function saveWrongInput(q, a, a2, src) {
+    if (!q.trim() || !a.trim()) { toast('题目与解析不能为空'); return; }
+    const id = 'wp_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    const w = defaultWrongCard();
+    w.kind = '错题';
+    w.q = q.trim(); w.a = a.trim(); w.a2 = a2.trim(); w.src = src.trim();
+    w.linked = wrongInput.linked.slice();
+    DB.wrongs[id] = w;
+    saveDB();
+    closeWrongInput();
+    wrongDeck = [];
+    renderApp();
+    toast('已保存到错题本');
+  }
+
+  function closeWrongInput() {
+    const m = document.querySelector('.map-modal');
+    if (m) m.remove();
+    wrongInput = null;
   }
 
   function renderBrowse() {

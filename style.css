@@ -503,3 +503,10 @@ body.immersive #immersiveExit { display: block; }
   .chip { min-height: 36px; padding: 7px 12px; }
   .icon-btn { min-height: 40px; min-width: 40px; }
 }
+
+/* 错题录入 */
+.wrong-input-card { max-width: 640px; }
+.wrong-field { margin-bottom: 8px; }
+.wrong-input { width: 100%; box-sizing: border-box; min-height: 64px; margin-top: 4px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-size: 14px; resize: vertical; }
+.wrong-input-btns { display: flex; gap: 8px; margin-top: 10px; }
+.wrong-results { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }

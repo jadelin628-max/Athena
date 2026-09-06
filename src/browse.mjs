@@ -191,8 +191,11 @@
       }
       if (ex.src) eb.appendChild(el('div', 'example-src', '📚 来源：' + ex.src));
       const mark = el('button', 'btn small', '📕 标记为错题');
-      mark.addEventListener('click', function () { markAsWrong(ex, id); });
+      mark.addEventListener('click', function () { markAsWrong(ex, id, '错题'); });
       eb.appendChild(mark);
+      const markHard = el('button', 'btn small', '⭐ 标记为难题');
+      markHard.addEventListener('click', function () { markAsWrong(ex, id, '难题'); });
+      eb.appendChild(markHard);
       box.appendChild(eb);
     });
     if (rels.length) {

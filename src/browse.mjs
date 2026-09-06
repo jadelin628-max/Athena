@@ -4,6 +4,7 @@
     if (currentView === 'learn') renderLearn();
     else if (currentView === 'browse') renderBrowse();
     else if (currentView === 'quiz') renderQuiz();
+    else if (currentView === 'wrong') renderWrongLearn();
     else if (currentView === 'settings') renderSettings();
     else if (currentView === 'principle') renderPrinciples();
     else if (currentView === 'statistics') renderStatistics();
@@ -189,6 +190,9 @@
         eb.appendChild(a2);
       }
       if (ex.src) eb.appendChild(el('div', 'example-src', '📚 来源：' + ex.src));
+      const mark = el('button', 'btn small', '📕 标记为错题');
+      mark.addEventListener('click', function () { markAsWrong(ex, id); });
+      eb.appendChild(mark);
       box.appendChild(eb);
     });
     if (rels.length) {

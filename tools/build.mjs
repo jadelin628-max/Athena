@@ -18,6 +18,7 @@ const ORDER = [
   'render.mjs',
   'learn.mjs',
   'browse.mjs',
+  'wrong.mjs',
   'quiz.mjs',
   'settings.mjs',
   'stats.mjs',

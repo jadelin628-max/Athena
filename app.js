@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.8.4';
+  const VERSION = '1.9.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.9.0', date: '2026-09', items: ['新增「错题本」模块：把做错的真题/例题标记进错题本，按记忆算法重现，需动手重做后按「不会/思路错/算错/会做对」评分', '错题评分四档与 FSRS 四档一一对应，学习步进改为按天；毕业=稳定度达目标（与知识卡一致，无退出，间隔随算法延长）', '错题失败（不会/思路错）会联动降级关联的知识点卡片，提前重现补漏'] },
     { v: '1.8.4', date: '2026-09', items: ['补全四个学科的「同类」标签（新增 458 条边）：同类辨别卡真正成组出现（数三 93% / 微观 73% / 统计 82% / 政治 93% 的卡进入同类型簇）', '大簇切成小段（每段 ≤6 张），避免同类卡整章连排成「分块」'] },
     { v: '1.8.3', date: '2026-09', items: ['交错簇改为「辨析聚类」：只把 REL 中「同类/对比/类比」的相关卡聚成簇，无关联的卡不再被硬凑进同一簇'] },
     { v: '1.8.2', date: '2026-09', items: ['交错练习改为「分块交错」：同一章节的卡成组（每块 3 张）出现、章节之间轮流，让同类辨别卡真正在一起', '修复：学习中的卡被推回队尾造成「同卡两份」，学完新卡后 pos 跳回、只剩「回到当前卡片」——改为不再推回队尾，到期卡由 surfaceDue 按需重现'] },
@@ -327,6 +328,26 @@
 
   function defaultCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, notes: '', hist: [], lastR: 0, ivlR: 0 }; }
 
+  // 错题卡（独立于知识卡，复用 FSRS 调度状态 + 题目字段）
+  function defaultWrongCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, kind: '错题', q: '', a: '', a2: '', src: '', linked: [], errType: '', lastSolveMs: 0, hist: [], lastR: 0, ivlR: 0 }; }
+  function sanitizeWrongCard(w) {
+    const out = defaultWrongCard();
+    if (w && typeof w === 'object') {
+      ['reps', 'ivl', 'due', 'lapses', 'grad', 'step', 'diff', 'stab', 'lastSolveMs', 'lastR', 'ivlR'].forEach(function (k) { if (typeof w[k] === 'number') out[k] = w[k]; });
+      if (w.fsrsInit) out.fsrsInit = 1;
+      if (typeof w.kind === 'string') out.kind = (w.kind === '难题') ? '难题' : '错题';
+      if (typeof w.q === 'string') out.q = w.q;
+      if (typeof w.a === 'string') out.a = w.a;
+      if (typeof w.a2 === 'string') out.a2 = w.a2;
+      if (typeof w.src === 'string') out.src = w.src;
+      if (Array.isArray(w.linked)) out.linked = w.linked.filter(function (x) { return typeof x === 'string'; });
+      if (typeof w.errType === 'string') out.errType = w.errType;
+      if (Array.isArray(w.hist)) out.hist = w.hist.map(function (h) { return { t: h.t, m: h.m }; });
+      if (w.state === 'new' || w.state === 'learning' || w.state === 'relearning' || w.state === 'review') out.state = w.state;
+    }
+    return out;
+  }
+
   // IndexedDB（作为更持久的数据备份；localStorage 仍为主存储）
   function idbOpen() {
     return new Promise(function (resolve, reject) {
@@ -372,6 +393,7 @@
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
+    if (!DB.wrongs) DB.wrongs = {};
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
@@ -457,7 +479,7 @@
       deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
       browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
     }
-    const fresh = { cards: {}, settings: {}, log: {} };
+    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
@@ -496,6 +518,13 @@
               fresh.log[k][dk] = v;
             }
           });
+        }
+      });
+    }
+    if (payload.wrongs && typeof payload.wrongs === 'object') {
+      Object.keys(payload.wrongs).forEach(function (wid) {
+        if (payload.wrongs[wid] && typeof payload.wrongs[wid] === 'object') {
+          fresh.wrongs[wid] = sanitizeWrongCard(payload.wrongs[wid]);
         }
       });
     }
@@ -1174,6 +1203,7 @@
     if (currentView === 'learn') renderLearn();
     else if (currentView === 'browse') renderBrowse();
     else if (currentView === 'quiz') renderQuiz();
+    else if (currentView === 'wrong') renderWrongLearn();
     else if (currentView === 'settings') renderSettings();
     else if (currentView === 'principle') renderPrinciples();
     else if (currentView === 'statistics') renderStatistics();
@@ -1359,6 +1389,9 @@
         eb.appendChild(a2);
       }
       if (ex.src) eb.appendChild(el('div', 'example-src', '📚 来源：' + ex.src));
+      const mark = el('button', 'btn small', '📕 标记为错题');
+      mark.addEventListener('click', function () { markAsWrong(ex, id); });
+      eb.appendChild(mark);
       box.appendChild(eb);
     });
     if (rels.length) {
@@ -1610,6 +1643,286 @@
   let browseMastery = 'all';
   let browseStars = 'all';
 
+
+  // ---------------- 错题模块 ----------------
+  // 错题卡独立于知识卡：动手重做 → 看解析 → 按解题结果评分（不会/思路错/算错/会做对）。
+  // 调度复用 FSRS 内核，仅把学习步进改为「按天」；毕业 = 稳定度达目标（与知识卡一致，无「退出」）。
+
+  const WRONG_STEP_MS = [DAY];      // 错题学习步：1 天（问题不适合分钟内重现）
+  const WRONG_RELEARN_MS = [DAY];   // 错题重学步：1 天
+
+  function wrongCard(wid) { return (DB && DB.wrongs && DB.wrongs[wid]) || null; }
+
+  // 评分 → FSRS 档位（与知识卡四档一一对应）：0 不会=Again, 1 思路错=Hard, 2 算错=Good, 3 会做对=Easy
+  function applyRatingToWrongCard(c, rating) {
+    const now = Date.now();
+    const G = rating + 1;
+    if (typeof c.step !== 'number') c.step = 0;
+    if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning') {
+      const isRelearn = (c.state === 'relearning');
+      const steps = isRelearn ? WRONG_RELEARN_MS : WRONG_STEP_MS;
+      const lastStep = 0;
+      if (c.state === 'new' || !c.fsrsInit) {
+        c.diff = fsrsInitDifficulty(G);
+        c.stab = fsrsInitStability(G);
+        c.fsrsInit = 1;
+      } else {
+        c.stab = fsrsShortTermStability(c.stab, G);
+      }
+      if (rating <= 1) { // 不会 / 思路错：次日重现，不毕业
+        c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 0;
+        c.state = isRelearn ? 'relearning' : 'learning';
+        c.due = dayStart(now) + DAY;
+        return;
+      }
+      if (rating === 2) { // 算错：再学一步，次日重现后毕业
+        c.step = c.step + 1;
+        if (c.step > lastStep) {
+          wrongGraduate(c);
+        } else {
+          c.state = isRelearn ? 'relearning' : 'learning';
+          c.due = dayStart(now) + DAY;
+        }
+        return;
+      }
+      wrongGraduate(c); // 会做对：直接毕业
+      return;
+    }
+    // —— 复习阶段 ——
+    const daysSince = Math.max(0, (now - (c.lastR || c.due)) / DAY);
+    const R = fsrsRetention(daysSince, c.stab);
+    if (rating === 0) { // 不会：遗忘
+      c.step = 0; c.state = 'relearning'; c.grad = 0; c.reps = 0; c.ivl = 0;
+      c.lapses++;
+      c.diff = fsrsDifficulty(c.diff, 1);
+      c.stab = fsrsLapseStability(c.diff, c.stab, R);
+      c.due = dayStart(now) + DAY;
+      return;
+    }
+    if (rating === 1) { // 思路错：Hard
+      c.diff = fsrsDifficulty(c.diff, 2);
+      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 2);
+      c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
+      return;
+    }
+    if (rating === 2) { // 算错：Good
+      c.diff = fsrsDifficulty(c.diff, 3);
+      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 3);
+      c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
+      return;
+    }
+    // 会做对：Easy
+    c.diff = fsrsDifficulty(c.diff, 4);
+    c.stab = fsrsSuccessStability(c.diff, c.stab, R, 4);
+    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+    c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
+  }
+
+  function wrongGraduate(c) {
+    c.grad = 1; c.reps = 1; c.state = 'review';
+    c.stab = Math.max(FSRS_S_MIN, c.stab);
+    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+    c.due = dayStart(Date.now()) + c.ivl * DAY;
+  }
+
+  function isWrongGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
+
+  // 错题掌握度：稳定度到目标的比例（与知识卡一致，目标随选定日期变化）
+  function wrongMastery(wid) {
+    const c = wrongCard(wid);
+    let score = 0;
+    if (c && c.state !== 'new' && typeof c.stab === 'number' && c.stab > 0) {
+      const sN = targetS();
+      score = Math.round(100 * Math.max(0, Math.min(1, Math.log(1 + c.stab) / Math.log(1 + sN))));
+    }
+    let label = '未做';
+    if (score < 25) label = '薄弱';
+    else if (score < 65) label = '巩固中';
+    else if (score < 85) label = '较稳';
+    else label = '已稳固';
+    return { pct: score, label: label };
+  }
+
+  function wrongNextText(w) {
+    if (w.state === 'new') return '待做';
+    if (w.state === 'learning' || w.state === 'relearning') return '学习中 · 次日重现';
+    return '下次 ' + fmtDayMs(w.due) + '（间隔 ' + w.ivl + ' 天）' + (isWrongGraduated(w) ? ' · ✔已稳固' : '');
+  }
+
+  // 错题失败（不会/思路错）→ 关联知识卡降级，提前重现补漏
+  function demoteLinked(linkedIds) {
+    if (!linkedIds || !linkedIds.length) return;
+    const now = Date.now();
+    linkedIds.forEach(function (id) {
+      const c = card(id);
+      if (!c || c.state === 'new') return;
+      const R = fsrsRetention(Math.max(0, (now - (c.lastR || c.due)) / DAY), c.stab);
+      c.diff = fsrsDifficulty(c.diff, 1);
+      c.stab = fsrsLapseStability(c.diff, c.stab, R);
+      c.lapses = (c.lapses || 0) + 1;
+      c.step = 0;
+      if (c.state === 'review') { c.state = 'relearning'; c.grad = 0; c.reps = 0; c.ivl = 0; }
+      c.due = dayStart(now) + DAY;
+    });
+  }
+
+  // —— 错题视图状态 ——
+  let wrongDeck = [];
+  let wrongFrontier = 0;
+
+  function buildWrongSession() {
+    const now = Date.now();
+    const ids = Object.keys(DB.wrongs || {});
+    const due = ids.filter(function (wid) {
+      const c = DB.wrongs[wid];
+      return (c.state === 'review' || c.state === 'learning' || c.state === 'relearning') && c.due <= now;
+    });
+    due.sort(function (a, b) { return DB.wrongs[a].due - DB.wrongs[b].due; });
+    const fresh = shuffle(ids.filter(function (wid) { return DB.wrongs[wid].state === 'new'; }));
+    wrongDeck = due.concat(fresh);
+    wrongFrontier = 0;
+  }
+
+  function renderWrongLearn() {
+    const app = document.getElementById('app');
+    const total = Object.keys(DB.wrongs || {}).length;
+    if (total === 0) {
+      const wrap = el('div', 'center-card');
+      wrap.appendChild(el('h2', null, '📕 错题本'));
+      wrap.appendChild(el('p', 'muted', '还没有错题。在「浏览」页的真题处点「标记为错题」，即可把做错的题收进来，按记忆算法重现、重做、补漏。'));
+      app.appendChild(wrap);
+      return;
+    }
+    if (!wrongDeck.length) buildWrongSession();
+    if (wrongFrontier >= wrongDeck.length) {
+      const wrap = el('div', 'center-card');
+      wrap.appendChild(el('h2', null, '🎉 错题本轮完成'));
+      wrap.appendChild(el('p', 'muted', '本轮错题已做完——按排期到期的错题会自动重现。'));
+      app.appendChild(wrap);
+      return;
+    }
+    renderWrongCard(wrongDeck[wrongFrontier]);
+  }
+
+  function renderWrongCard(wid) {
+    const app = document.getElementById('app');
+    const w = DB.wrongs[wid];
+    const wrap = el('div', 'learn-wrap');
+
+    const top = el('div', 'learn-top');
+    top.appendChild(el('span', 'badge', w.kind === '难题' ? '⭐ 难题' : '📕 错题'));
+    wrap.appendChild(top);
+
+    const m = wrongMastery(wid);
+    const meta = el('div', 'learn-meta');
+    meta.appendChild(el('span', 'mastery-badge', m.label + ' ' + m.pct + '%'));
+    const bar = el('div', 'mastery-bar');
+    const fill = el('div', 'mastery-fill');
+    fill.style.width = m.pct + '%';
+    bar.appendChild(fill);
+    meta.appendChild(bar);
+    meta.appendChild(el('span', 'muted', wrongNextText(w)));
+    wrap.appendChild(meta);
+
+    const cardEl = el('div', 'card');
+    const qBox = el('div', 'front');
+    renderTex(qBox, w.q);
+    cardEl.appendChild(qBox);
+
+    const aBox = el('div', 'back hidden');
+    renderTex(aBox, w.a);
+    cardEl.appendChild(aBox);
+
+    if (w.a2) {
+      const a2b = el('div', 'wrong-a2 hidden');
+      a2b.appendChild(el('div', 'mini-label', '💡 巧解'));
+      const a2c = el('div', 'example-a');
+      renderTex(a2c, w.a2);
+      a2b.appendChild(a2c);
+      cardEl.appendChild(a2b);
+    }
+    if (w.src) {
+      cardEl.appendChild(el('div', 'wrong-src hidden', '📚 来源：' + w.src));
+    }
+    if (w.linked && w.linked.length) {
+      const rb = el('div', 'rel-box');
+      rb.appendChild(el('div', 'mini-label', '关联知识点'));
+      w.linked.forEach(function (id) {
+        const f = DATA.find(function (x) { return x.id === id; });
+        if (!f) return;
+        const chip = texEl('button', 'chip rel-chip', f.title);
+        chip.setAttribute('data-action', 'jump');
+        chip.setAttribute('data-arg', id);
+        rb.appendChild(chip);
+      });
+      cardEl.appendChild(rb);
+    }
+    wrap.appendChild(cardEl);
+
+    const controls = el('div', 'controls');
+    const reveal = el('button', 'btn primary', '显示解析');
+    reveal.setAttribute('data-action', 'wreveal');
+    controls.appendChild(reveal);
+    wrap.appendChild(controls);
+
+    const rating = el('div', 'rating hidden');
+    const mk = function (label, r) {
+      const b = el('button', 'btn rate r' + r, label);
+      b.setAttribute('data-action', 'wrate');
+      b.setAttribute('data-arg', String(r));
+      rating.appendChild(b);
+    };
+    mk('不会', 0);
+    mk('思路错', 1);
+    mk('算错', 2);
+    mk('会做对', 3);
+    wrap.appendChild(rating);
+
+    app.appendChild(wrap);
+  }
+
+  function revealWrong() {
+    const app = document.getElementById('app');
+    app.querySelector('.back').classList.remove('hidden');
+    const a2 = app.querySelector('.wrong-a2');
+    if (a2) a2.classList.remove('hidden');
+    const src = app.querySelector('.wrong-src');
+    if (src) src.classList.remove('hidden');
+    app.querySelector('.controls').classList.add('hidden');
+    app.querySelector('.rating').classList.remove('hidden');
+  }
+
+  function doWrongRate(r) {
+    if (!wrongDeck.length || wrongFrontier >= wrongDeck.length) return;
+    const wid = wrongDeck[wrongFrontier];
+    const w = DB.wrongs[wid];
+    applyRatingToWrongCard(w, r);
+    if (r <= 1) demoteLinked(w.linked); // 不会/思路错 → 关联知识卡降级
+    w.lastSolveMs = Date.now();
+    if (!Array.isArray(w.hist)) w.hist = [];
+    w.hist.push({ t: Date.now(), m: wrongMastery(wid).pct });
+    if (w.hist.length > 60) w.hist = w.hist.slice(-60);
+    w.lastR = Date.now();
+    w.ivlR = w.ivl || 0;
+    wrongFrontier++;
+    saveDB();
+    renderApp();
+  }
+
+  // 把一道真题/例题标记为错题（linked 为关联知识点 id）
+  function markAsWrong(ex, linkedId) {
+    if (!ex || !ex.q) return;
+    const id = 'wp_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    const w = defaultWrongCard();
+    w.kind = '错题';
+    w.q = ex.q; w.a = ex.a; w.a2 = ex.a2 || ''; w.src = ex.src || '';
+    if (linkedId) w.linked = [linkedId];
+    DB.wrongs[id] = w;
+    saveDB();
+    toast('已加入错题本');
+  }
 
   function renderBrowse() {
     const app = document.getElementById('app');
@@ -2611,6 +2924,12 @@
         break;
       case 'rate':
         doRate(parseInt(arg, 10));
+        break;
+      case 'wreveal':
+        revealWrong();
+        break;
+      case 'wrate':
+        doWrongRate(parseInt(arg, 10));
         break;
       case 'undo':
         undoLastRating();

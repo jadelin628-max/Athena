@@ -56,6 +56,26 @@
 
   function defaultCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, notes: '', hist: [], lastR: 0, ivlR: 0 }; }
 
+  // 错题卡（独立于知识卡，复用 FSRS 调度状态 + 题目字段）
+  function defaultWrongCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, kind: '错题', q: '', a: '', a2: '', src: '', linked: [], errType: '', lastSolveMs: 0, hist: [], lastR: 0, ivlR: 0 }; }
+  function sanitizeWrongCard(w) {
+    const out = defaultWrongCard();
+    if (w && typeof w === 'object') {
+      ['reps', 'ivl', 'due', 'lapses', 'grad', 'step', 'diff', 'stab', 'lastSolveMs', 'lastR', 'ivlR'].forEach(function (k) { if (typeof w[k] === 'number') out[k] = w[k]; });
+      if (w.fsrsInit) out.fsrsInit = 1;
+      if (typeof w.kind === 'string') out.kind = (w.kind === '难题') ? '难题' : '错题';
+      if (typeof w.q === 'string') out.q = w.q;
+      if (typeof w.a === 'string') out.a = w.a;
+      if (typeof w.a2 === 'string') out.a2 = w.a2;
+      if (typeof w.src === 'string') out.src = w.src;
+      if (Array.isArray(w.linked)) out.linked = w.linked.filter(function (x) { return typeof x === 'string'; });
+      if (typeof w.errType === 'string') out.errType = w.errType;
+      if (Array.isArray(w.hist)) out.hist = w.hist.map(function (h) { return { t: h.t, m: h.m }; });
+      if (w.state === 'new' || w.state === 'learning' || w.state === 'relearning' || w.state === 'review') out.state = w.state;
+    }
+    return out;
+  }
+
   // IndexedDB（作为更持久的数据备份；localStorage 仍为主存储）
   function idbOpen() {
     return new Promise(function (resolve, reject) {
@@ -101,6 +121,7 @@
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
+    if (!DB.wrongs) DB.wrongs = {};
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
@@ -186,7 +207,7 @@
       deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
       browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
     }
-    const fresh = { cards: {}, settings: {}, log: {} };
+    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
@@ -225,6 +246,13 @@
               fresh.log[k][dk] = v;
             }
           });
+        }
+      });
+    }
+    if (payload.wrongs && typeof payload.wrongs === 'object') {
+      Object.keys(payload.wrongs).forEach(function (wid) {
+        if (payload.wrongs[wid] && typeof payload.wrongs[wid] === 'object') {
+          fresh.wrongs[wid] = sanitizeWrongCard(payload.wrongs[wid]);
         }
       });
     }

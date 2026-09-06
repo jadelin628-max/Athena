@@ -53,6 +53,12 @@
       case 'rate':
         doRate(parseInt(arg, 10));
         break;
+      case 'wreveal':
+        revealWrong();
+        break;
+      case 'wrate':
+        doWrongRate(parseInt(arg, 10));
+        break;
       case 'undo':
         undoLastRating();
         break;

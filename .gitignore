@@ -20,6 +20,8 @@ backup/
 # Tauri 桌面版：前端拷贝与 Rust 构建产物
 dist/
 src-tauri/target/
+src-tauri/gen/
+src-tauri/icons/
 
 # 开发标准（AI 助手续接文档，本地私有）
 开发标准.md

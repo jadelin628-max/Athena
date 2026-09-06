@@ -9,7 +9,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
 
 const FILES = ['index.html', 'app.js', 'style.css', 'sw.js', 'manifest.webmanifest'];
-const DIRS = ['data', 'katex', 'icons'];
+const DIRS = ['data', 'katex', 'icons', 'assets'];
 
 function copyDir(src, dst) {
   fs.mkdirSync(dst, { recursive: true });
@@ -24,4 +24,4 @@ fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(DIST, { recursive: true });
 for (const f of FILES) fs.copyFileSync(path.join(ROOT, f), path.join(DIST, f));
 for (const d of DIRS) copyDir(path.join(ROOT, d), path.join(DIST, d));
-console.log('已复制运行时文件到 dist/（index.html + app.js + data/ + katex/ + icons/）');
+console.log('已复制运行时文件到 dist/（index.html + app.js + data/ + katex/ + icons/ + assets/）');

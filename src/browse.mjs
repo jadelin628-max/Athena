@@ -223,6 +223,145 @@
     if (m) m.remove();
   }
 
+  // —— 编辑卡片（覆盖层：题目/答案/标签/例题/隐藏）——
+  function renderExampleEditor(e) {
+    const eb = el('div', 'example-editor');
+    const q = el('textarea', 'wrong-input');
+    q.placeholder = '题目';
+    q.value = e.q || '';
+    const a = el('textarea', 'wrong-input');
+    a.placeholder = '解析';
+    a.value = e.a || '';
+    const a2 = el('textarea', 'wrong-input');
+    a2.placeholder = '💡 巧解（可选）';
+    a2.value = e.a2 || '';
+    const src = el('input', 'wrong-input');
+    src.type = 'text';
+    src.placeholder = '来源（可选）';
+    src.value = e.src || '';
+    const del = el('button', 'btn small danger', '删除此例题');
+    del.addEventListener('click', function () { eb.remove(); });
+    eb.appendChild(el('div', 'mini-label', '题目')); eb.appendChild(q);
+    eb.appendChild(el('div', 'mini-label', '解析')); eb.appendChild(a);
+    eb.appendChild(el('div', 'mini-label', '巧解')); eb.appendChild(a2);
+    eb.appendChild(el('div', 'mini-label', '来源')); eb.appendChild(src);
+    eb.appendChild(del);
+    return eb;
+  }
+
+  function collectExamples(exWrap) {
+    const out = [];
+    exWrap.querySelectorAll('.example-editor').forEach(function (eb) {
+      const fields = eb.querySelectorAll('.wrong-input');
+      const q = fields[0].value.trim(), a = fields[1].value.trim(), a2 = fields[2].value.trim(), src = fields[3].value.trim();
+      if (q) out.push({ q: q, a: a, a2: a2, src: src });
+    });
+    return out;
+  }
+
+  function openCardEdit(id) {
+    const f = DATA.find(function (x) { return x.id === id; });
+    if (!f) return;
+    const ov = (DB.cardOverrides && DB.cardOverrides[id]) || {};
+    const meta = metaOf(id);
+    const exs = examplesOf(id).map(function (e) { return { q: e.q || '', a: e.a || '', a2: e.a2 || '', src: e.src || '' }; });
+
+    const modal = el('div', 'map-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', closeEditModal);
+    modal.appendChild(backdrop);
+
+    const box = el('div', 'map-modal-card wrong-input-card edit-card');
+    box.appendChild(el('h3', null, '✏️ 编辑知识点'));
+
+    const title = el('textarea', 'wrong-input');
+    title.value = f.title;
+    box.appendChild(wrongField('标题', title));
+
+    const front = el('textarea', 'wrong-input');
+    front.value = f.front;
+    box.appendChild(wrongField('提示（正面）', front));
+
+    const back = el('textarea', 'wrong-input');
+    back.value = f.back;
+    box.appendChild(wrongField('答案', back));
+
+    const catSel = el('select', 'wrong-input');
+    Object.keys(CATS).forEach(function (k) {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = CATS[k];
+      if (k === f.cat) opt.selected = true;
+      catSel.appendChild(opt);
+    });
+    box.appendChild(wrongField('分类', catSel));
+
+    const starSel = el('select', 'wrong-input');
+    [1, 2, 3, 4, 5].forEach(function (n) {
+      const opt = document.createElement('option');
+      opt.value = String(n);
+      opt.textContent = '★'.repeat(n);
+      if (n === (meta[0] || 3)) opt.selected = true;
+      starSel.appendChild(opt);
+    });
+    box.appendChild(wrongField('重要度', starSel));
+
+    const examType = el('input', 'wrong-input');
+    examType.type = 'text';
+    examType.value = meta[1] || '';
+    box.appendChild(wrongField('常考题型', examType));
+
+    const exWrap = el('div', 'wrong-field');
+    exWrap.appendChild(el('span', 'mini-label', '例题（可增删改，题目留空则不保存该例题）'));
+    exs.forEach(function (e) { exWrap.appendChild(renderExampleEditor(e)); });
+    const addEx = el('button', 'btn small', '➕ 添加例题');
+    addEx.addEventListener('click', function () { exWrap.insertBefore(renderExampleEditor({ q: '', a: '', a2: '', src: '' }), addEx); });
+    exWrap.appendChild(addEx);
+    box.appendChild(exWrap);
+
+    const hiddenCb = el('input', 'chk');
+    hiddenCb.type = 'checkbox';
+    hiddenCb.checked = !!ov.hidden;
+    const hiddenLabel = el('label', 'setting-check', '');
+    hiddenLabel.appendChild(hiddenCb);
+    hiddenLabel.appendChild(el('span', null, '隐藏此卡片（软删除，可恢复）'));
+    box.appendChild(hiddenLabel);
+
+    const btns = el('div', 'wrong-input-btns');
+    const save = el('button', 'btn primary', '保存');
+    save.addEventListener('click', function () {
+      saveCardOverride(id, {
+        title: title.value, front: front.value, back: back.value,
+        cat: catSel.value, star: Number(starSel.value), examType: examType.value,
+        examples: collectExamples(exWrap), hidden: hiddenCb.checked
+      });
+      closeEditModal();
+    });
+    const restore = el('button', 'btn', '恢复原卡');
+    restore.addEventListener('click', function () {
+      delete DB.cardOverrides[id];
+      saveDB();
+      refreshData();
+      closeEditModal();
+      renderApp();
+      toast('已恢复原卡');
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', closeEditModal);
+    btns.appendChild(save);
+    btns.appendChild(restore);
+    btns.appendChild(cancel);
+    box.appendChild(btns);
+
+    modal.appendChild(box);
+    document.body.appendChild(modal);
+  }
+
+  function closeEditModal() {
+    const m = document.querySelector('.map-modal');
+    if (m) m.remove();
+  }
+
   // 例题 + 相关知识点（答案区附加内容，hiddenClass 为空字符串时可见）
   function buildExtras(id, hiddenClass) {
     const exs = examplesOf(id);

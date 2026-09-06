@@ -11,7 +11,7 @@
     currentSubjectId = subj.id;
     CATS = subj.CATS;
     DATA = subj.DATA;
-    BASE_DATA = subj.DATA;
+    BASE_SUBJ = subj;
     META = subj.META;
     EXAMPLES = subj.EXAMPLE || {};
     REL = subj.REL || {};
@@ -124,6 +124,7 @@
     if (!DB.log) DB.log = {};
     if (!DB.wrongs) DB.wrongs = {};
     if (!DB.custom) DB.custom = {};
+    if (!DB.cardOverrides) DB.cardOverrides = {};
     refreshData();
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
@@ -143,9 +144,25 @@
       }).catch(function () { normalizeDB(null); resolve(); });
     });
   }
-  // 把静态卡片 + 用户自建卡片合成当前 DATA（学习/浏览/导图/统计/自测共用）
+  // 把静态卡片 + 用户覆盖 + 用户自建卡片合成当前 DATA / META / EXAMPLE
   function refreshData() {
-    DATA = (BASE_DATA || []).slice();
+    const subj = BASE_SUBJ;
+    if (!subj) return;
+    const ov = (DB && DB.cardOverrides) || {};
+
+    // DATA：静态卡应用覆盖（含隐藏）→ 追加自建卡
+    DATA = subj.DATA
+      .filter(function (f) { return !(ov[f.id] && ov[f.id].hidden); })
+      .map(function (f) {
+        const o = ov[f.id] || {};
+        return {
+          id: f.id,
+          cat: (o.cat != null) ? o.cat : f.cat,
+          title: (o.title != null) ? o.title : f.title,
+          front: (o.front != null) ? o.front : f.front,
+          back: (o.back != null) ? o.back : f.back
+        };
+      });
     if (DB && DB.custom) {
       Object.keys(DB.custom).forEach(function (id) {
         const c = DB.custom[id];
@@ -154,6 +171,23 @@
         }
       });
     }
+
+    // META：star / examType 覆盖
+    META = {};
+    Object.keys(subj.META || {}).forEach(function (id) {
+      const base = subj.META[id] || [3, '综合计算与应用'];
+      const o = ov[id] || {};
+      META[id] = [
+        (o.star != null) ? o.star : base[0],
+        (o.examType != null) ? o.examType : base[1]
+      ];
+    });
+
+    // EXAMPLE：例题整段覆盖
+    EXAMPLES = {};
+    Object.keys(subj.EXAMPLE || {}).forEach(function (id) {
+      EXAMPLES[id] = (ov[id] && Array.isArray(ov[id].examples)) ? ov[id].examples : subj.EXAMPLE[id];
+    });
   }
 
   function sanitizeCustomCard(c) {
@@ -179,6 +213,39 @@
     renderApp();
     toast('已录入知识点');
     return true;
+  }
+
+  function sanitizeCardOverride(o) {
+    if (!o || typeof o !== 'object') return null;
+    const out = {};
+    if (typeof o.title === 'string') out.title = o.title;
+    if (typeof o.front === 'string') out.front = o.front;
+    if (typeof o.back === 'string') out.back = o.back;
+    if (typeof o.cat === 'string') out.cat = o.cat;
+    if (typeof o.star === 'number') out.star = o.star;
+    if (typeof o.examType === 'string') out.examType = o.examType;
+    if (Array.isArray(o.examples)) out.examples = o.examples.filter(function (e) { return e && typeof e.q === 'string'; });
+    if (o.hidden === true) out.hidden = true;
+    return (Object.keys(out).length ? out : null);
+  }
+
+  // 保存对某张内置卡的覆盖（编辑题目/答案/标签/例题/隐藏）
+  function saveCardOverride(id, o) {
+    const ov = {};
+    if (o.title != null) ov.title = String(o.title).trim();
+    if (o.front != null) ov.front = String(o.front).trim();
+    if (o.back != null) ov.back = String(o.back).trim();
+    if (o.cat != null) ov.cat = o.cat;
+    if (o.star != null) ov.star = o.star;
+    if (o.examType != null) ov.examType = String(o.examType).trim();
+    if (Array.isArray(o.examples) && o.examples.length) ov.examples = o.examples;
+    if (o.hidden) ov.hidden = true;
+    if (Object.keys(ov).length === 0) delete DB.cardOverrides[id];
+    else DB.cardOverrides[id] = ov;
+    refreshData();
+    saveDB();
+    renderApp();
+    toast('已保存修改');
   }
 
   // 合并写：同一轮事件里的多次 saveDB 只落一次盘（iOS 稳定性优先）。
@@ -248,7 +315,7 @@
       deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
       browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
     }
-    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {} };
+    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {}, cardOverrides: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
@@ -301,6 +368,12 @@
       Object.keys(payload.custom).forEach(function (id) {
         const c = sanitizeCustomCard(payload.custom[id]);
         if (c) fresh.custom[id] = c;
+      });
+    }
+    if (payload.cardOverrides && typeof payload.cardOverrides === 'object') {
+      Object.keys(payload.cardOverrides).forEach(function (id) {
+        const o = sanitizeCardOverride(payload.cardOverrides[id]);
+        if (o) fresh.cardOverrides[id] = o;
       });
     }
     DB = fresh;

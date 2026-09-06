@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.11.0';
+  const VERSION = '1.12.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.12.0', date: '2026-09', items: ['内置卡片可编辑：题目/提示/答案/分类/重要度/常考题型可覆盖编辑，例题可增删改，支持软删除（隐藏）与一键恢复原卡'] },
     { v: '1.11.0', date: '2026-09', items: ['学习界面新增「手动录入知识点」：可自建卡片（标题/分类/提示/答案），自建卡与内置卡一起参与学习、交错与统计'] },
     { v: '1.10.0', date: '2026-09', items: ['错题本新增「手动录入」：可粘贴题目 + 解析并搜索关联知识点', '新增「标记为难题」：难题间隔更疏（×1.4），与错题区分', '错题重做计入每日时间预算（每题约 4 分钟）'] },
     { v: '1.9.0', date: '2026-09', items: ['新增「错题本」模块：把做错的真题/例题标记进错题本，按记忆算法重现，需动手重做后按「不会/思路错/算错/会做对」评分', '错题评分四档与 FSRS 四档一一对应，学习步进改为按天；毕业=稳定度达目标（与知识卡一致，无退出，间隔随算法延长）', '错题失败（不会/思路错）会联动降级关联的知识点卡片，提前重现补漏'] },
@@ -80,7 +81,7 @@
   let currentSubjectId = null;
   let CATS = null, DATA = null, META = null;
   let EXAMPLES = {}, REL = {}, PITFALL = {}, MNEM = {};
-  let BASE_DATA = []; // 静态卡片基准（用户自建卡在其上追加）
+  let BASE_SUBJ = null; // 当前学科静态数据基准（DATA/META/EXAMPLE 在其上应用用户覆盖）
 
   const KATEX_SOURCES = [
     { js: 'katex/katex.min.js', css: 'katex/katex.min.css' },
@@ -286,7 +287,7 @@
     currentSubjectId = subj.id;
     CATS = subj.CATS;
     DATA = subj.DATA;
-    BASE_DATA = subj.DATA;
+    BASE_SUBJ = subj;
     META = subj.META;
     EXAMPLES = subj.EXAMPLE || {};
     REL = subj.REL || {};
@@ -399,6 +400,7 @@
     if (!DB.log) DB.log = {};
     if (!DB.wrongs) DB.wrongs = {};
     if (!DB.custom) DB.custom = {};
+    if (!DB.cardOverrides) DB.cardOverrides = {};
     refreshData();
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
@@ -418,9 +420,25 @@
       }).catch(function () { normalizeDB(null); resolve(); });
     });
   }
-  // 把静态卡片 + 用户自建卡片合成当前 DATA（学习/浏览/导图/统计/自测共用）
+  // 把静态卡片 + 用户覆盖 + 用户自建卡片合成当前 DATA / META / EXAMPLE
   function refreshData() {
-    DATA = (BASE_DATA || []).slice();
+    const subj = BASE_SUBJ;
+    if (!subj) return;
+    const ov = (DB && DB.cardOverrides) || {};
+
+    // DATA：静态卡应用覆盖（含隐藏）→ 追加自建卡
+    DATA = subj.DATA
+      .filter(function (f) { return !(ov[f.id] && ov[f.id].hidden); })
+      .map(function (f) {
+        const o = ov[f.id] || {};
+        return {
+          id: f.id,
+          cat: (o.cat != null) ? o.cat : f.cat,
+          title: (o.title != null) ? o.title : f.title,
+          front: (o.front != null) ? o.front : f.front,
+          back: (o.back != null) ? o.back : f.back
+        };
+      });
     if (DB && DB.custom) {
       Object.keys(DB.custom).forEach(function (id) {
         const c = DB.custom[id];
@@ -429,6 +447,23 @@
         }
       });
     }
+
+    // META：star / examType 覆盖
+    META = {};
+    Object.keys(subj.META || {}).forEach(function (id) {
+      const base = subj.META[id] || [3, '综合计算与应用'];
+      const o = ov[id] || {};
+      META[id] = [
+        (o.star != null) ? o.star : base[0],
+        (o.examType != null) ? o.examType : base[1]
+      ];
+    });
+
+    // EXAMPLE：例题整段覆盖
+    EXAMPLES = {};
+    Object.keys(subj.EXAMPLE || {}).forEach(function (id) {
+      EXAMPLES[id] = (ov[id] && Array.isArray(ov[id].examples)) ? ov[id].examples : subj.EXAMPLE[id];
+    });
   }
 
   function sanitizeCustomCard(c) {
@@ -454,6 +489,39 @@
     renderApp();
     toast('已录入知识点');
     return true;
+  }
+
+  function sanitizeCardOverride(o) {
+    if (!o || typeof o !== 'object') return null;
+    const out = {};
+    if (typeof o.title === 'string') out.title = o.title;
+    if (typeof o.front === 'string') out.front = o.front;
+    if (typeof o.back === 'string') out.back = o.back;
+    if (typeof o.cat === 'string') out.cat = o.cat;
+    if (typeof o.star === 'number') out.star = o.star;
+    if (typeof o.examType === 'string') out.examType = o.examType;
+    if (Array.isArray(o.examples)) out.examples = o.examples.filter(function (e) { return e && typeof e.q === 'string'; });
+    if (o.hidden === true) out.hidden = true;
+    return (Object.keys(out).length ? out : null);
+  }
+
+  // 保存对某张内置卡的覆盖（编辑题目/答案/标签/例题/隐藏）
+  function saveCardOverride(id, o) {
+    const ov = {};
+    if (o.title != null) ov.title = String(o.title).trim();
+    if (o.front != null) ov.front = String(o.front).trim();
+    if (o.back != null) ov.back = String(o.back).trim();
+    if (o.cat != null) ov.cat = o.cat;
+    if (o.star != null) ov.star = o.star;
+    if (o.examType != null) ov.examType = String(o.examType).trim();
+    if (Array.isArray(o.examples) && o.examples.length) ov.examples = o.examples;
+    if (o.hidden) ov.hidden = true;
+    if (Object.keys(ov).length === 0) delete DB.cardOverrides[id];
+    else DB.cardOverrides[id] = ov;
+    refreshData();
+    saveDB();
+    renderApp();
+    toast('已保存修改');
   }
 
   // 合并写：同一轮事件里的多次 saveDB 只落一次盘（iOS 稳定性优先）。
@@ -523,7 +591,7 @@
       deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
       browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
     }
-    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {} };
+    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {}, cardOverrides: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
@@ -576,6 +644,12 @@
       Object.keys(payload.custom).forEach(function (id) {
         const c = sanitizeCustomCard(payload.custom[id]);
         if (c) fresh.custom[id] = c;
+      });
+    }
+    if (payload.cardOverrides && typeof payload.cardOverrides === 'object') {
+      Object.keys(payload.cardOverrides).forEach(function (id) {
+        const o = sanitizeCardOverride(payload.cardOverrides[id]);
+        if (o) fresh.cardOverrides[id] = o;
       });
     }
     DB = fresh;
@@ -1473,6 +1547,145 @@
     if (m) m.remove();
   }
 
+  // —— 编辑卡片（覆盖层：题目/答案/标签/例题/隐藏）——
+  function renderExampleEditor(e) {
+    const eb = el('div', 'example-editor');
+    const q = el('textarea', 'wrong-input');
+    q.placeholder = '题目';
+    q.value = e.q || '';
+    const a = el('textarea', 'wrong-input');
+    a.placeholder = '解析';
+    a.value = e.a || '';
+    const a2 = el('textarea', 'wrong-input');
+    a2.placeholder = '💡 巧解（可选）';
+    a2.value = e.a2 || '';
+    const src = el('input', 'wrong-input');
+    src.type = 'text';
+    src.placeholder = '来源（可选）';
+    src.value = e.src || '';
+    const del = el('button', 'btn small danger', '删除此例题');
+    del.addEventListener('click', function () { eb.remove(); });
+    eb.appendChild(el('div', 'mini-label', '题目')); eb.appendChild(q);
+    eb.appendChild(el('div', 'mini-label', '解析')); eb.appendChild(a);
+    eb.appendChild(el('div', 'mini-label', '巧解')); eb.appendChild(a2);
+    eb.appendChild(el('div', 'mini-label', '来源')); eb.appendChild(src);
+    eb.appendChild(del);
+    return eb;
+  }
+
+  function collectExamples(exWrap) {
+    const out = [];
+    exWrap.querySelectorAll('.example-editor').forEach(function (eb) {
+      const fields = eb.querySelectorAll('.wrong-input');
+      const q = fields[0].value.trim(), a = fields[1].value.trim(), a2 = fields[2].value.trim(), src = fields[3].value.trim();
+      if (q) out.push({ q: q, a: a, a2: a2, src: src });
+    });
+    return out;
+  }
+
+  function openCardEdit(id) {
+    const f = DATA.find(function (x) { return x.id === id; });
+    if (!f) return;
+    const ov = (DB.cardOverrides && DB.cardOverrides[id]) || {};
+    const meta = metaOf(id);
+    const exs = examplesOf(id).map(function (e) { return { q: e.q || '', a: e.a || '', a2: e.a2 || '', src: e.src || '' }; });
+
+    const modal = el('div', 'map-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', closeEditModal);
+    modal.appendChild(backdrop);
+
+    const box = el('div', 'map-modal-card wrong-input-card edit-card');
+    box.appendChild(el('h3', null, '✏️ 编辑知识点'));
+
+    const title = el('textarea', 'wrong-input');
+    title.value = f.title;
+    box.appendChild(wrongField('标题', title));
+
+    const front = el('textarea', 'wrong-input');
+    front.value = f.front;
+    box.appendChild(wrongField('提示（正面）', front));
+
+    const back = el('textarea', 'wrong-input');
+    back.value = f.back;
+    box.appendChild(wrongField('答案', back));
+
+    const catSel = el('select', 'wrong-input');
+    Object.keys(CATS).forEach(function (k) {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = CATS[k];
+      if (k === f.cat) opt.selected = true;
+      catSel.appendChild(opt);
+    });
+    box.appendChild(wrongField('分类', catSel));
+
+    const starSel = el('select', 'wrong-input');
+    [1, 2, 3, 4, 5].forEach(function (n) {
+      const opt = document.createElement('option');
+      opt.value = String(n);
+      opt.textContent = '★'.repeat(n);
+      if (n === (meta[0] || 3)) opt.selected = true;
+      starSel.appendChild(opt);
+    });
+    box.appendChild(wrongField('重要度', starSel));
+
+    const examType = el('input', 'wrong-input');
+    examType.type = 'text';
+    examType.value = meta[1] || '';
+    box.appendChild(wrongField('常考题型', examType));
+
+    const exWrap = el('div', 'wrong-field');
+    exWrap.appendChild(el('span', 'mini-label', '例题（可增删改，题目留空则不保存该例题）'));
+    exs.forEach(function (e) { exWrap.appendChild(renderExampleEditor(e)); });
+    const addEx = el('button', 'btn small', '➕ 添加例题');
+    addEx.addEventListener('click', function () { exWrap.insertBefore(renderExampleEditor({ q: '', a: '', a2: '', src: '' }), addEx); });
+    exWrap.appendChild(addEx);
+    box.appendChild(exWrap);
+
+    const hiddenCb = el('input', 'chk');
+    hiddenCb.type = 'checkbox';
+    hiddenCb.checked = !!ov.hidden;
+    const hiddenLabel = el('label', 'setting-check', '');
+    hiddenLabel.appendChild(hiddenCb);
+    hiddenLabel.appendChild(el('span', null, '隐藏此卡片（软删除，可恢复）'));
+    box.appendChild(hiddenLabel);
+
+    const btns = el('div', 'wrong-input-btns');
+    const save = el('button', 'btn primary', '保存');
+    save.addEventListener('click', function () {
+      saveCardOverride(id, {
+        title: title.value, front: front.value, back: back.value,
+        cat: catSel.value, star: Number(starSel.value), examType: examType.value,
+        examples: collectExamples(exWrap), hidden: hiddenCb.checked
+      });
+      closeEditModal();
+    });
+    const restore = el('button', 'btn', '恢复原卡');
+    restore.addEventListener('click', function () {
+      delete DB.cardOverrides[id];
+      saveDB();
+      refreshData();
+      closeEditModal();
+      renderApp();
+      toast('已恢复原卡');
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', closeEditModal);
+    btns.appendChild(save);
+    btns.appendChild(restore);
+    btns.appendChild(cancel);
+    box.appendChild(btns);
+
+    modal.appendChild(box);
+    document.body.appendChild(modal);
+  }
+
+  function closeEditModal() {
+    const m = document.querySelector('.map-modal');
+    if (m) m.remove();
+  }
+
   // 例题 + 相关知识点（答案区附加内容，hiddenClass 为空字符串时可见）
   function buildExtras(id, hiddenClass) {
     const exs = examplesOf(id);
@@ -2296,6 +2509,9 @@
       const extras = buildExtras(f.id, '');
       if (extras) body.appendChild(extras);
       body.appendChild(memoryBox(f.id));
+      const edit = el('button', 'btn small', '✏️ 编辑');
+      edit.addEventListener('click', function () { openCardEdit(f.id); });
+      body.appendChild(edit);
       const reset = el('button', 'btn small danger', '重置此卡片进度');
       reset.setAttribute('data-action', 'resetcard');
       reset.setAttribute('data-arg', f.id);

@@ -510,3 +510,5 @@ body.immersive #immersiveExit { display: block; }
 .wrong-input { width: 100%; box-sizing: border-box; min-height: 64px; margin-top: 4px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-size: 14px; resize: vertical; }
 .wrong-input-btns { display: flex; gap: 8px; margin-top: 10px; }
 .wrong-results { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.edit-card { max-width: 720px; max-height: 82vh; overflow-y: auto; }
+.example-editor { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }

@@ -142,6 +142,9 @@
       const extras = buildExtras(f.id, '');
       if (extras) body.appendChild(extras);
       body.appendChild(memoryBox(f.id));
+      const edit = el('button', 'btn small', '✏️ 编辑');
+      edit.addEventListener('click', function () { openCardEdit(f.id); });
+      body.appendChild(edit);
       const reset = el('button', 'btn small danger', '重置此卡片进度');
       reset.setAttribute('data-action', 'resetcard');
       reset.setAttribute('data-arg', f.id);

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" shape-rendering="geometricPrecision">
+  <!-- Athena 正式 Logo：深色圆角底 + 粉色卡片从右侧滑入、仅露出左缘一小条（"即将滑入"的中间态） -->
+  <rect x="0" y="0" width="200" height="200" rx="44" fill="#151A24"/>
+  <rect x="173" y="38" width="66" height="124" rx="13" fill="#D4537E"/>
+</svg>

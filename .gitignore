@@ -17,6 +17,10 @@ backup/
 # 参考文件（真题提取文本，体量大且非运行所需）
 真题/
 
+# Tauri 桌面版：前端拷贝与 Rust 构建产物
+dist/
+src-tauri/target/
+
 # 开发标准（AI 助手续接文档，本地私有）
 开发标准.md
 PROGRESS.md

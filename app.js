@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.7.0';
+  const VERSION = '1.8.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.8.0', date: '2026-09', items: ['交错练习升级：新增「辨析聚类」算法——REL 中「对比/类比/同类」的相关卡片会较近出现，复习卡、续学卡、新学卡均生效', '新增「裸回忆」常驻设置：开启后学习时先隐藏分类徽标，逼你先判断类别再回忆，点开答案后才显示'] },
     { v: '1.7.0', date: '2026-09', items: ['新增「全部科目互通」：一键导出/导入四个学科的学习进度与统计（打包为单个 JSON），便于多平台 / 多设备迁移', '修复：PC 端四个评分挡位改为竖向全宽排布'] },
     { v: '1.6.1', date: '2026-09', items: ['移除早已弃用的「知识深度 DEPTH」残留（4 个学科数据块 + src 载入 + 校验脚本）', '工程清理：删除遗留死代码（EF_MIN、卡片 ef 字段、旧 SM-2 掌握分 s 与 initialStrength），并化简两处重复的 relearning 状态判断'] },
     { v: '1.6.0', date: '2026-09', items: ['倒计时完全用户化：删除默认 12 月 20 日兜底，未设目标日期时徽标隐藏、每日弹窗关闭、毕业目标回退固定稳定度', '学习页新增评分撤销（单步）、桌面端键盘提示、评分按钮 aria-label 与 focus-visible/reduced-motion 无障碍'] },
@@ -189,6 +190,74 @@
   function fsrsHalflife(S) { return Math.max(FSRS_S_MIN, S) * FSRS_HALFLIFE_K; }
 
 
+  // ---------------- 交错练习 · 辨析聚类 ----------------
+  // 原理：交错练习的收益在「辨别」——让「会搞混」的卡片（REL 中 tag=对比/类比/同类）
+  //       在队列里较近出现；同时按分类轮转，避免同一章节的卡连续扎堆。
+  // 纯函数（依赖注入 rel / catOf），便于 tools 对拍测试，不碰任何运行时全局。
+
+  // 「辨析相关」标签：只有这三类算「容易搞混、需辨别」，其余（前置/相关/方法/应用）不参与聚类
+  const DISCRIM_TAGS = { '对比': 1, '类比': 1, '同类': 1 };
+
+  // 并查集：把「辨析相关」的卡片聚成同一簇；簇内保持输入顺序
+  function buildClusters(ids, rel) {
+    const idSet = {};
+    ids.forEach(function (id) { idSet[id] = 1; });
+    const parent = {};
+    const find = function (x) { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+    ids.forEach(function (id) { parent[id] = id; });
+    ids.forEach(function (id) {
+      const edges = (rel && rel[id]) || [];
+      for (let i = 0; i < edges.length; i++) {
+        const e = edges[i];
+        const to = e && e.to;
+        if (to && idSet[to] && DISCRIM_TAGS[e.tag]) {
+          const ra = find(id), rb = find(to);
+          if (ra !== rb) parent[ra] = rb;
+        }
+      }
+    });
+    const groups = {};
+    ids.forEach(function (id) {
+      const r = find(id);
+      (groups[r] = groups[r] || []).push(id);
+    });
+    return Object.keys(groups).map(function (k) { return groups[k]; });
+  }
+
+  function shuffleArr(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  // 辨析交错：相关卡聚成簇、簇内相邻出现（较近），簇之间按分类轮转（同章不连续）
+  function interleaveRelated(ids, rel, catOf) {
+    const clusters = buildClusters(ids, rel);
+    const byCat = {};
+    clusters.forEach(function (cluster) {
+      const c = catOf(cluster[0]) || '?';
+      (byCat[c] = byCat[c] || []).push(cluster);
+    });
+    const groups = Object.keys(byCat).map(function (k) { return shuffleArr(byCat[k]); });
+    const out = [];
+    let added = true;
+    while (added) {
+      added = false;
+      for (let i = 0; i < groups.length; i++) {
+        if (groups[i].length) {
+          const cluster = groups[i].shift();
+          for (let j = 0; j < cluster.length; j++) out.push(cluster[j]);
+          added = true;
+        }
+      }
+    }
+    return out;
+  }
+
+
   function subjectList() { return window.SUBJECTS || {}; }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配
   function subjKind() {
@@ -290,6 +359,7 @@
     if (DB.settings.targetH != null) delete DB.settings.targetH;
     if (DB.settings.targetLinkExam == null) DB.settings.targetLinkExam = true;
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
+    if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
@@ -395,6 +465,9 @@
     }
     if (payload.settings && typeof payload.settings.examDate === 'string') {
       fresh.settings.examDate = payload.settings.examDate;
+    }
+    if (payload.settings && typeof payload.settings.bareRecall === 'boolean') {
+      fresh.settings.bareRecall = payload.settings.bareRecall;
     }
     if (payload.log && payload.log.checkins && typeof payload.log.checkins === 'object') {
       fresh.log.checkins = {};
@@ -913,6 +986,7 @@
   }
   // 是否与目标倒计时挂钩（用于记忆框/设置页文案）
   function targetLinked() { return !(DB && DB.settings && DB.settings.targetLinkExam === false) && countdownDays() != null; }
+  function bareRecallOn() { return !!(DB && DB.settings && DB.settings.bareRecall); }
   function isGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
 
   // 每日时间预算（秒）：按时间而非卡片数安排学习
@@ -1119,24 +1193,24 @@
     return bar;
   }
 
-  // ---------------- 学习视图 ----------------
-  function interleave(ids) {
-    const byCat = {};
+  // ---------------- 学习视图 · 交错练习 ----------------
+  // 辨析交错：把「会搞混」的卡（REL 中 tag=对比/类比/同类）聚成簇、簇内相邻出现，
+  // 簇之间再按分类轮转，避免同一章节连续扎堆。纯函数在 src/interleave.mjs，这里只做运行时装配。
+  function catOfId(id) {
+    const f = DATA.find(function (x) { return x.id === id; });
+    return f ? f.cat : '?';
+  }
+  function interleaveByIds(ids) { return interleaveRelated(ids, REL, catOfId); }
+  // 到期复习：先按重要度(星)分层，层内再做辨析交错，兼顾「重要优先」与「相关卡较近」
+  function interleaveByImportance(ids) {
+    const tiers = {};
     ids.forEach(function (id) {
-      const f = DATA.find(function (x) { return x.id === id; });
-      const c = f ? f.cat : '?';
-      (byCat[c] = byCat[c] || []).push(id);
+      const star = (metaOf(id) && metaOf(id)[0]) || 0;
+      (tiers[star] = tiers[star] || []).push(id);
     });
-    const groups = Object.keys(byCat).map(function (k) { return shuffle(byCat[k]); });
-    const out = [];
-    let added = true;
-    while (added) {
-      added = false;
-      for (let i = 0; i < groups.length; i++) {
-        if (groups[i].length) { out.push(groups[i].shift()); added = true; }
-      }
-    }
-    return out;
+    return Object.keys(tiers)
+      .sort(function (a, b) { return Number(b) - Number(a); })
+      .reduce(function (acc, k) { return acc.concat(interleaveByIds(tiers[k])); }, []);
   }
 
   // 新卡摄入：一次性引入全部未学新卡（时间预算为软上限，超出仅提示、不封顶引入）
@@ -1167,12 +1241,14 @@
       if (sb !== sa) return sb - sa;
       return card(a).due - card(b).due;
     });
-    // 学习阶段（时间步进到点）的卡：新卡被遗忘 / 复习卡被遗忘，都在等计时器，到点才回来
-    const resumeLearning = interleave(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
-    // 已引入但仍未学的新卡（完全随机序）
-    const newToStudy = shuffle(st.ids.filter(function (id) { return card(id).state === 'new'; }));
+    // 到期复习：先按重要度/到期排序，再按重要度分层做辨析交错（相关卡较近、同章不连续）
+    const dueOrdered = interleaveByImportance(due);
+    // 学习阶段（时间步进到点）的卡：辨析交错（相关卡较近）
+    const resumeLearning = interleaveByIds(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
+    // 已引入但仍未学的新卡：先乱序，再辨析交错（相关新卡较近出现）
+    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { return card(id).state === 'new'; })));
     // 队列 = 到期复习 + 续学 + 已引入新卡
-    deck = due.concat(resumeLearning, newToStudy);
+    deck = dueOrdered.concat(resumeLearning, newToStudy);
     pos = 0;
     frontier = 0;
     pendingAdvance = false;
@@ -1311,7 +1387,9 @@
     const wrap = el('div', 'learn-wrap');
 
     const top = el('div', 'learn-top');
-    top.appendChild(el('span', 'badge', CATS[f.cat]));
+    const catBadge = el('span', 'badge cat-badge', CATS[f.cat]);
+    if (bareRecallOn() && !reviewed) catBadge.classList.add('hidden');
+    top.appendChild(catBadge);
     wrap.appendChild(top);
 
     const m = mastery(id);
@@ -1440,6 +1518,10 @@
     const app = document.getElementById('app');
     app.querySelector('.back').classList.remove('hidden');
     app.querySelector('.use-box').classList.remove('hidden');
+    if (bareRecallOn()) {
+      const cb = app.querySelector('.cat-badge');
+      if (cb) cb.classList.remove('hidden');
+    }
     const ex = app.querySelector('.extras');
     if (ex) ex.classList.remove('hidden');
     app.querySelector('.hint').classList.remove('hidden');
@@ -1819,6 +1901,25 @@
     s4b.appendChild(examInput);
     wrap.appendChild(s4b);
     wrap.appendChild(el('p', 'muted', '设置目标日期后，顶部才会显示倒计时，并在每天首次打开时弹出提醒。留空则关闭倒计时与每日弹窗；毕业目标自动回退到固定稳定度。'));
+
+    const sBare = el('div', 'setting-row');
+    sBare.appendChild(el('span', null, '裸回忆'));
+    const bareCb = el('input', 'chk');
+    bareCb.type = 'checkbox';
+    bareCb.checked = bareRecallOn();
+    bareCb.title = '开启后，学习时先隐藏分类徽标，逼你先判断「这是哪一类」再回忆，更贴合交错练习的辨别';
+    bareCb.addEventListener('change', function () {
+      DB.settings.bareRecall = bareCb.checked;
+      saveDB();
+      toast(bareCb.checked ? '裸回忆已开启（学习时隐藏分类提示）' : '裸回忆已关闭');
+      renderApp();
+    });
+    const bareLabel = el('label', 'setting-check', '');
+    bareLabel.appendChild(bareCb);
+    bareLabel.appendChild(el('span', null, '学习时隐藏分类提示（先判断类别再回忆）'));
+    sBare.appendChild(bareLabel);
+    wrap.appendChild(sBare);
+    wrap.appendChild(el('p', 'muted', '交错练习的关键是「辨别」：先判断这道题属于哪一章、该用哪个方法，再回忆内容。开启后，卡片正面不再显示分类徽标，点开答案后才出现。'));
 
     const s6 = el('div', 'setting-row');
     s6.appendChild(el('span', null, '每日复习时间预算'));

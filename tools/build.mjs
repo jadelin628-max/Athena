@@ -13,6 +13,7 @@ const ORDER = [
   'config.mjs',
   'app.mjs',
   'fsrs-core.mjs',
+  'interleave.mjs',
   'store.mjs',
   'render.mjs',
   'learn.mjs',
@@ -39,7 +40,7 @@ function stripExports(text) {
 const banner = '/* 本文件由 tools/build.mjs 自动生成，请勿手改；修改 src/ 后运行 node tools/build.mjs 重新生成。 */\n';
 
 const body = ORDER
-  .map((rel) => (rel === 'fsrs-core.mjs' ? stripExports(read(rel)) : read(rel)))
+  .map((rel) => ((rel === 'fsrs-core.mjs' || rel === 'interleave.mjs') ? stripExports(read(rel)) : read(rel)))
   .join('\n');
 
 fs.writeFileSync(OUT, banner + body + '\n', 'utf8');

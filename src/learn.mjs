@@ -337,6 +337,7 @@
   }
   // 是否与目标倒计时挂钩（用于记忆框/设置页文案）
   function targetLinked() { return !(DB && DB.settings && DB.settings.targetLinkExam === false) && countdownDays() != null; }
+  function bareRecallOn() { return !!(DB && DB.settings && DB.settings.bareRecall); }
   function isGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
 
   // 每日时间预算（秒）：按时间而非卡片数安排学习

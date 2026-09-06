@@ -34,24 +34,24 @@
     return bar;
   }
 
-  // ---------------- 学习视图 ----------------
-  function interleave(ids) {
-    const byCat = {};
+  // ---------------- 学习视图 · 交错练习 ----------------
+  // 辨析交错：把「会搞混」的卡（REL 中 tag=对比/类比/同类）聚成簇、簇内相邻出现，
+  // 簇之间再按分类轮转，避免同一章节连续扎堆。纯函数在 src/interleave.mjs，这里只做运行时装配。
+  function catOfId(id) {
+    const f = DATA.find(function (x) { return x.id === id; });
+    return f ? f.cat : '?';
+  }
+  function interleaveByIds(ids) { return interleaveRelated(ids, REL, catOfId); }
+  // 到期复习：先按重要度(星)分层，层内再做辨析交错，兼顾「重要优先」与「相关卡较近」
+  function interleaveByImportance(ids) {
+    const tiers = {};
     ids.forEach(function (id) {
-      const f = DATA.find(function (x) { return x.id === id; });
-      const c = f ? f.cat : '?';
-      (byCat[c] = byCat[c] || []).push(id);
+      const star = (metaOf(id) && metaOf(id)[0]) || 0;
+      (tiers[star] = tiers[star] || []).push(id);
     });
-    const groups = Object.keys(byCat).map(function (k) { return shuffle(byCat[k]); });
-    const out = [];
-    let added = true;
-    while (added) {
-      added = false;
-      for (let i = 0; i < groups.length; i++) {
-        if (groups[i].length) { out.push(groups[i].shift()); added = true; }
-      }
-    }
-    return out;
+    return Object.keys(tiers)
+      .sort(function (a, b) { return Number(b) - Number(a); })
+      .reduce(function (acc, k) { return acc.concat(interleaveByIds(tiers[k])); }, []);
   }
 
   // 新卡摄入：一次性引入全部未学新卡（时间预算为软上限，超出仅提示、不封顶引入）
@@ -82,12 +82,14 @@
       if (sb !== sa) return sb - sa;
       return card(a).due - card(b).due;
     });
-    // 学习阶段（时间步进到点）的卡：新卡被遗忘 / 复习卡被遗忘，都在等计时器，到点才回来
-    const resumeLearning = interleave(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
-    // 已引入但仍未学的新卡（完全随机序）
-    const newToStudy = shuffle(st.ids.filter(function (id) { return card(id).state === 'new'; }));
+    // 到期复习：先按重要度/到期排序，再按重要度分层做辨析交错（相关卡较近、同章不连续）
+    const dueOrdered = interleaveByImportance(due);
+    // 学习阶段（时间步进到点）的卡：辨析交错（相关卡较近）
+    const resumeLearning = interleaveByIds(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
+    // 已引入但仍未学的新卡：先乱序，再辨析交错（相关新卡较近出现）
+    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { return card(id).state === 'new'; })));
     // 队列 = 到期复习 + 续学 + 已引入新卡
-    deck = due.concat(resumeLearning, newToStudy);
+    deck = dueOrdered.concat(resumeLearning, newToStudy);
     pos = 0;
     frontier = 0;
     pendingAdvance = false;
@@ -226,7 +228,9 @@
     const wrap = el('div', 'learn-wrap');
 
     const top = el('div', 'learn-top');
-    top.appendChild(el('span', 'badge', CATS[f.cat]));
+    const catBadge = el('span', 'badge cat-badge', CATS[f.cat]);
+    if (bareRecallOn() && !reviewed) catBadge.classList.add('hidden');
+    top.appendChild(catBadge);
     wrap.appendChild(top);
 
     const m = mastery(id);
@@ -355,6 +359,10 @@
     const app = document.getElementById('app');
     app.querySelector('.back').classList.remove('hidden');
     app.querySelector('.use-box').classList.remove('hidden');
+    if (bareRecallOn()) {
+      const cb = app.querySelector('.cat-badge');
+      if (cb) cb.classList.remove('hidden');
+    }
     const ex = app.querySelector('.extras');
     if (ex) ex.classList.remove('hidden');
     app.querySelector('.hint').classList.remove('hidden');

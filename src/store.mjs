@@ -99,6 +99,7 @@
     if (DB.settings.targetH != null) delete DB.settings.targetH;
     if (DB.settings.targetLinkExam == null) DB.settings.targetLinkExam = true;
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
+    if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
@@ -204,6 +205,9 @@
     }
     if (payload.settings && typeof payload.settings.examDate === 'string') {
       fresh.settings.examDate = payload.settings.examDate;
+    }
+    if (payload.settings && typeof payload.settings.bareRecall === 'boolean') {
+      fresh.settings.bareRecall = payload.settings.bareRecall;
     }
     if (payload.log && payload.log.checkins && typeof payload.log.checkins === 'object') {
       fresh.log.checkins = {};

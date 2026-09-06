@@ -39,6 +39,25 @@
     wrap.appendChild(s4b);
     wrap.appendChild(el('p', 'muted', '设置目标日期后，顶部才会显示倒计时，并在每天首次打开时弹出提醒。留空则关闭倒计时与每日弹窗；毕业目标自动回退到固定稳定度。'));
 
+    const sBare = el('div', 'setting-row');
+    sBare.appendChild(el('span', null, '裸回忆'));
+    const bareCb = el('input', 'chk');
+    bareCb.type = 'checkbox';
+    bareCb.checked = bareRecallOn();
+    bareCb.title = '开启后，学习时先隐藏分类徽标，逼你先判断「这是哪一类」再回忆，更贴合交错练习的辨别';
+    bareCb.addEventListener('change', function () {
+      DB.settings.bareRecall = bareCb.checked;
+      saveDB();
+      toast(bareCb.checked ? '裸回忆已开启（学习时隐藏分类提示）' : '裸回忆已关闭');
+      renderApp();
+    });
+    const bareLabel = el('label', 'setting-check', '');
+    bareLabel.appendChild(bareCb);
+    bareLabel.appendChild(el('span', null, '学习时隐藏分类提示（先判断类别再回忆）'));
+    sBare.appendChild(bareLabel);
+    wrap.appendChild(sBare);
+    wrap.appendChild(el('p', 'muted', '交错练习的关键是「辨别」：先判断这道题属于哪一章、该用哪个方法，再回忆内容。开启后，卡片正面不再显示分类徽标，点开答案后才出现。'));
+
     const s6 = el('div', 'setting-row');
     s6.appendChild(el('span', null, '每日复习时间预算'));
     const minInput = el('input', 'num');

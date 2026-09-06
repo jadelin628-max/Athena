@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.12.0';
+  const VERSION = '1.13.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.13.0', date: '2026-09', items: ['UI 重置：知识卡与错题本改为两个一级界面（各含二级导航），移动端适配', '删除导图视图', '错题新增「浏览」与「统计」视图，支持手动删除、标记查重跳转', '「清空学习进度」同步重置错题记忆状态；标记例题只保留一个按钮', '自建卡支持添加关联知识点（REL，带标签）'] },
     { v: '1.12.0', date: '2026-09', items: ['内置卡片可编辑：题目/提示/答案/分类/重要度/常考题型可覆盖编辑，例题可增删改，支持软删除（隐藏）与一键恢复原卡'] },
     { v: '1.11.0', date: '2026-09', items: ['学习界面新增「手动录入知识点」：可自建卡片（标题/分类/提示/答案），自建卡与内置卡一起参与学习、交错与统计'] },
     { v: '1.10.0', date: '2026-09', items: ['错题本新增「手动录入」：可粘贴题目 + 解析并搜索关联知识点', '新增「标记为难题」：难题间隔更疏（×1.4），与错题区分', '错题重做计入每日时间预算（每题约 4 分钟）'] },
@@ -401,6 +402,7 @@
     if (!DB.wrongs) DB.wrongs = {};
     if (!DB.custom) DB.custom = {};
     if (!DB.cardOverrides) DB.cardOverrides = {};
+    if (!DB.customRel) DB.customRel = {};
     refreshData();
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
@@ -464,6 +466,14 @@
     Object.keys(subj.EXAMPLE || {}).forEach(function (id) {
       EXAMPLES[id] = (ov[id] && Array.isArray(ov[id].examples)) ? ov[id].examples : subj.EXAMPLE[id];
     });
+
+    // REL：静态 REL + 自建卡 REL
+    REL = Object.assign({}, subj.REL || {});
+    if (DB && DB.customRel) {
+      Object.keys(DB.customRel).forEach(function (id) {
+        if (DB.customRel[id] && DB.customRel[id].length) REL[id] = DB.customRel[id];
+      });
+    }
   }
 
   function sanitizeCustomCard(c) {
@@ -478,12 +488,13 @@
   }
 
   // 手动录入知识点（自建卡）：写入 DB.custom + DB.cards，立即合成进 DATA
-  function saveCustomCard(title, front, back, cat) {
+  function saveCustomCard(title, front, back, cat, relList) {
     const t = (title || '').trim(), f = (front || '').trim(), b = (back || '').trim();
     if (!t || !f || !b) { toast('标题、提示、答案不能为空'); return false; }
     const id = 'cu_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
     DB.custom[id] = { id: id, cat: cat || Object.keys(CATS)[0], title: t, front: f, back: b };
     DB.cards[id] = defaultCard();
+    if (relList && relList.length) DB.customRel[id] = relList;
     refreshData();
     saveDB();
     renderApp();
@@ -591,7 +602,7 @@
       deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
       browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
     }
-    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {}, cardOverrides: {} };
+    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {}, cardOverrides: {}, customRel: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
@@ -650,6 +661,14 @@
       Object.keys(payload.cardOverrides).forEach(function (id) {
         const o = sanitizeCardOverride(payload.cardOverrides[id]);
         if (o) fresh.cardOverrides[id] = o;
+      });
+    }
+    if (payload.customRel && typeof payload.customRel === 'object') {
+      Object.keys(payload.customRel).forEach(function (id) {
+        const arr = payload.customRel[id];
+        if (Array.isArray(arr)) {
+          fresh.customRel[id] = arr.filter(function (e) { return e && typeof e.to === 'string' && typeof e.tag === 'string'; });
+        }
       });
     }
     DB = fresh;
@@ -1282,6 +1301,7 @@
 
   // ---------------- 视图状态 ----------------
   let currentView = 'learn';
+  let currentModule = 'cards'; // 一级界面：cards(知识卡) | wrong(错题本)
   let deck = [];
   let pos = 0;
   let frontier = 0;
@@ -1320,23 +1340,40 @@
     t._timer = setTimeout(function () { t.classList.remove('show'); }, 1800);
   }
 
+  // 渲染二级导航（随一级界面切换）
+  function renderSubnav() {
+    const sub = document.getElementById('subnav');
+    if (!sub) return;
+    sub.innerHTML = '';
+    const items = currentModule === 'wrong'
+      ? [['wrong', '📕 重做'], ['wrongBrowse', '📋 浏览'], ['wrongStats', '📊 统计']]
+      : [['learn', '📚 学习'], ['browse', '🔍 浏览'], ['quiz', '✏️ 自测'], ['statistics', '📈 统计']];
+    items.forEach(function (it) {
+      const b = el('button', 'nav-btn sub-btn' + (currentView === it[0] ? ' active' : ''), it[1]);
+      b.setAttribute('data-action', 'nav');
+      b.setAttribute('data-arg', it[0]);
+      sub.appendChild(b);
+    });
+  }
+
   function renderApp() {
 
     const app = document.getElementById('app');
     app.innerHTML = '';
-    document.body.classList.toggle('view-map', currentView === 'map');
     if (currentView === 'learn') renderLearn();
     else if (currentView === 'browse') renderBrowse();
     else if (currentView === 'quiz') renderQuiz();
-    else if (currentView === 'wrong') renderWrongLearn();
-    else if (currentView === 'settings') renderSettings();
-    else if (currentView === 'principle') renderPrinciples();
     else if (currentView === 'statistics') renderStatistics();
-    else if (currentView === 'map') renderMap();
-    // 高亮导航
-    document.querySelectorAll('nav .nav-btn').forEach(function (b) {
-      b.classList.toggle('active', b.getAttribute('data-arg') === currentView);
+    else if (currentView === 'wrong') renderWrongLearn();
+    else if (currentView === 'wrongBrowse') renderWrongBrowse();
+    else if (currentView === 'wrongStats') renderWrongStats();
+    else if (currentView === 'principle') renderPrinciples();
+    else if (currentView === 'settings') renderSettings();
+    // 高亮一级 tab + 渲染二级导航
+    document.querySelectorAll('.module-tab').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-arg') === currentModule);
     });
+    renderSubnav();
     const vf = el('div', 'app-version');
     vf.textContent = 'Athena · 版本 v' + VERSION;
     app.appendChild(vf);
@@ -1527,10 +1564,49 @@
     back.placeholder = '答案（必填，可含公式 $..$）…';
     cardBox.appendChild(wrongField('答案', back));
 
+    // 关联知识点（自建卡 REL，带标签，用于交错聚类）
+    const relList = [];
+    const relBox = el('div', 'wrong-field');
+    relBox.appendChild(el('span', 'mini-label', '关联知识点（可选，用于交错聚类）'));
+    const relTag = el('select', 'wrong-input');
+    ['同类', '对比', '类比', '相关', '前置', '方法', '应用'].forEach(function (t) {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      relTag.appendChild(opt);
+    });
+    const relSearch = el('input', 'search');
+    relSearch.type = 'search';
+    relSearch.placeholder = '搜索要关联的卡片…';
+    const relResults = el('div', 'wrong-results');
+    const relListBox = el('div', 'wrong-results');
+    relSearch.addEventListener('input', function () {
+      relResults.innerHTML = '';
+      const q = relSearch.value.trim().toLowerCase();
+      if (!q) return;
+      DATA.filter(function (f) {
+        return (f.title + ' ' + f.front).toLowerCase().indexOf(q) !== -1;
+      }).slice(0, 10).forEach(function (f) {
+        const chip = el('button', 'chip', f.title);
+        chip.addEventListener('click', function () {
+          if (!relList.some(function (r) { return r.to === f.id; })) {
+            relList.push({ to: f.id, tag: relTag.value });
+            relListBox.appendChild(renderRelChip(f.id, relTag.value, relList));
+          }
+        });
+        relResults.appendChild(chip);
+      });
+    });
+    relBox.appendChild(relTag);
+    relBox.appendChild(relSearch);
+    relBox.appendChild(relResults);
+    relBox.appendChild(relListBox);
+    cardBox.appendChild(relBox);
+
     const btns = el('div', 'wrong-input-btns');
     const save = el('button', 'btn primary', '保存');
     save.addEventListener('click', function () {
-      if (saveCustomCard(title.value, front.value, back.value, catSel.value)) closeCardInput();
+      if (saveCustomCard(title.value, front.value, back.value, catSel.value, relList)) closeCardInput();
     });
     const cancel = el('button', 'btn', '取消');
     cancel.addEventListener('click', closeCardInput);
@@ -1545,6 +1621,17 @@
   function closeCardInput() {
     const m = document.querySelector('.map-modal');
     if (m) m.remove();
+  }
+
+  function renderRelChip(id, tag, relList) {
+    const f = DATA.find(function (x) { return x.id === id; });
+    const chip = el('button', 'chip', '[' + tag + '] ' + (f ? f.title : id));
+    chip.addEventListener('click', function () {
+      const idx = relList.findIndex(function (r) { return r.to === id; });
+      if (idx >= 0) relList.splice(idx, 1);
+      chip.remove();
+    });
+    return chip;
   }
 
   // —— 编辑卡片（覆盖层：题目/答案/标签/例题/隐藏）——
@@ -1711,11 +1798,8 @@
       }
       if (ex.src) eb.appendChild(el('div', 'example-src', '📚 来源：' + ex.src));
       const mark = el('button', 'btn small', '📕 标记为错题');
-      mark.addEventListener('click', function () { markAsWrong(ex, id, '错题'); });
+      mark.addEventListener('click', function () { markAsWrong(ex, id); });
       eb.appendChild(mark);
-      const markHard = el('button', 'btn small', '⭐ 标记为难题');
-      markHard.addEventListener('click', function () { markAsWrong(ex, id, '难题'); });
-      eb.appendChild(markHard);
       box.appendChild(eb);
     });
     if (rels.length) {
@@ -2067,8 +2151,9 @@
       const sN = targetS();
       score = Math.round(100 * Math.max(0, Math.min(1, Math.log(1 + c.stab) / Math.log(1 + sN))));
     }
-    let label = '未做';
-    if (score < 25) label = '薄弱';
+    let label;
+    if (!c || c.state === 'new') label = '未做';
+    else if (score < 25) label = '薄弱';
     else if (score < 65) label = '巩固中';
     else if (score < 85) label = '较稳';
     else label = '已稳固';
@@ -2101,6 +2186,8 @@
   // —— 错题视图状态 ——
   let wrongDeck = [];
   let wrongFrontier = 0;
+  let wrongExpanded = {};
+  let wrongJumpId = null;
 
   function buildWrongSession() {
     const now = Date.now();
@@ -2251,16 +2338,199 @@
   }
 
   // 把一道真题/例题标记为错题（linked 为关联知识点 id）
-  function markAsWrong(ex, linkedId, kind) {
+  function markAsWrong(ex, linkedId) {
     if (!ex || !ex.q) return;
+    // 查重：已有相同题目的错题则跳转，不重复添加
+    const existing = Object.keys(DB.wrongs || {}).find(function (wid) {
+      return (DB.wrongs[wid].q || '').trim() === (ex.q || '').trim();
+    });
+    if (existing) {
+      currentModule = 'wrong';
+      currentView = 'wrongBrowse';
+      wrongJumpId = existing;
+      renderApp();
+      toast('已在错题本中，已为你定位');
+      return;
+    }
     const id = 'wp_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
     const w = defaultWrongCard();
-    w.kind = (kind === '难题') ? '难题' : '错题';
+    w.kind = '错题';
     w.q = ex.q; w.a = ex.a; w.a2 = ex.a2 || ''; w.src = ex.src || '';
     if (linkedId) w.linked = [linkedId];
     DB.wrongs[id] = w;
     saveDB();
     toast('已加入错题本');
+  }
+
+  function deleteWrongCard(wid) {
+    if (!confirm('确定删除这道错题吗？（不可恢复）')) return;
+    delete DB.wrongs[wid];
+    saveDB();
+    wrongDeck = [];
+    renderApp();
+    toast('已删除错题');
+  }
+
+  function renderWrongBrowse() {
+    const app = document.getElementById('app');
+    const ids = Object.keys(DB.wrongs || {});
+    const tb = el('div', 'learn-top');
+    tb.appendChild(el('span', 'muted', '共 ' + ids.length + ' 道'));
+    const add = el('button', 'btn small primary', '➕ 手动录入');
+    add.addEventListener('click', openWrongInput);
+    tb.appendChild(add);
+    app.appendChild(tb);
+
+    if (!ids.length) {
+      const wrap = el('div', 'center-card');
+      wrap.appendChild(el('h2', null, '📕 错题本'));
+      wrap.appendChild(el('p', 'muted', '还没有错题。可在「知识卡·浏览」页的真题处标记，或点上方「手动录入」。'));
+      app.appendChild(wrap);
+      return;
+    }
+
+    const list = el('div', 'browse-list');
+    ids.forEach(function (wid) {
+      const w = DB.wrongs[wid];
+      const m = wrongMastery(wid);
+      const item = el('div', 'browse-item');
+      item.setAttribute('data-wrong', wid);
+      const head = el('button', 'browse-item-head');
+      head.setAttribute('data-action', 'wtoggle');
+      head.setAttribute('data-arg', wid);
+      const left = el('div', 'browse-title');
+      left.appendChild(el('span', 'badge', '📕 错题'));
+      left.appendChild(texEl('span', 'browse-name', w.q));
+      const mark = el('span', 'browse-state');
+      mark.textContent = m.label + ' ' + m.pct + '%';
+      left.appendChild(mark);
+      head.appendChild(left);
+      item.appendChild(head);
+      const bar = el('div', 'mastery-bar');
+      const fill = el('div', 'mastery-fill');
+      fill.style.width = m.pct + '%';
+      bar.appendChild(fill);
+      item.appendChild(bar);
+      if (wrongExpanded[wid]) {
+        const body = el('div', 'browse-body');
+        const a = el('div', 'browse-a');
+        a.appendChild(el('div', 'mini-label', '解析'));
+        const ab = el('div');
+        renderTex(ab, w.a);
+        a.appendChild(ab);
+        body.appendChild(a);
+        if (w.a2) {
+          const a2b = el('div', 'browse-a');
+          a2b.appendChild(el('div', 'mini-label', '💡 巧解'));
+          renderTex(a2b, w.a2);
+          body.appendChild(a2b);
+        }
+        if (w.src) body.appendChild(el('p', 'muted', '📚 来源：' + w.src));
+        if (w.linked && w.linked.length) {
+          const rb = el('div', 'rel-box');
+          rb.appendChild(el('div', 'mini-label', '关联知识点'));
+          w.linked.forEach(function (id) {
+            const f = DATA.find(function (x) { return x.id === id; });
+            if (!f) return;
+            const chip = texEl('button', 'chip rel-chip', f.title);
+            chip.setAttribute('data-action', 'jump');
+            chip.setAttribute('data-arg', id);
+            rb.appendChild(chip);
+          });
+          body.appendChild(rb);
+        }
+        const del = el('button', 'btn small danger', '删除此题');
+        del.addEventListener('click', function () { deleteWrongCard(wid); });
+        body.appendChild(del);
+        item.appendChild(body);
+      }
+      list.appendChild(item);
+    });
+    app.appendChild(list);
+
+    if (wrongJumpId) {
+      const target = list.querySelector('[data-wrong="' + wrongJumpId + '"]');
+      if (target) {
+        wrongExpanded[wrongJumpId] = true;
+        const headBtn = target.querySelector('.browse-item-head');
+        if (headBtn) {
+          headBtn.classList.add('flash');
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      wrongJumpId = null;
+    }
+  }
+
+  function renderWrongStats() {
+    const app = document.getElementById('app');
+    const wrap = el('div', 'principles-wrap');
+    wrap.appendChild(el('h2', null, '📊 错题统计'));
+
+    const ids = Object.keys(DB.wrongs || {});
+    if (!ids.length) {
+      wrap.appendChild(el('p', 'muted', '还没有错题。'));
+      app.appendChild(wrap);
+      return;
+    }
+
+    let due = 0, fresh = 0, learn = 0, review = 0, grad = 0, pctSum = 0, lapses = 0;
+    ids.forEach(function (wid) {
+      const w = DB.wrongs[wid];
+      pctSum += wrongMastery(wid).pct;
+      lapses += (w.lapses || 0);
+      if (w.state === 'new') fresh++;
+      else if (w.state === 'learning' || w.state === 'relearning') learn++;
+      else { review++; if (isWrongGraduated(w)) grad++; }
+      if ((w.state === 'review' || w.state === 'learning' || w.state === 'relearning') && w.due <= Date.now()) due++;
+    });
+    const avg = Math.round(pctSum / ids.length);
+
+    const ov = el('div', 'stat-overview');
+    const kpi = function (label, val) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label)); ov.appendChild(c); };
+    kpi('总错题', ids.length);
+    kpi('待重做', due);
+    kpi('已稳固', grad);
+    kpi('平均掌握', avg + '%');
+    kpi('累计遗忘', lapses);
+    wrap.appendChild(ov);
+
+    wrap.appendChild(el('h3', null, '📌 状态分布'));
+    const sd = el('div', 'stat-card');
+    [['未做', fresh], ['学习中', learn], ['复习中', review], ['已稳固', grad]].forEach(function (p) {
+      const row = el('div', 'cat-bar-row');
+      row.appendChild(el('span', 'cat-bar-name', p[0]));
+      const bar = el('div', 'cat-bar');
+      const fill = el('div', 'cat-bar-fill');
+      fill.style.width = Math.round(p[1] / ids.length * 100) + '%';
+      fill.style.background = p[0] === '已稳固' ? '#2A75C0' : '#B5D4F4';
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(el('span', 'cat-bar-val', p[1] + ' 道'));
+      sd.appendChild(row);
+    });
+    wrap.appendChild(sd);
+
+    wrap.appendChild(el('h3', null, '💪 掌握度分布'));
+    const dist = {};
+    ids.forEach(function (wid) { const l = wrongMastery(wid).label; dist[l] = (dist[l] || 0) + 1; });
+    const dd = el('div', 'stat-card');
+    ['未做', '薄弱', '巩固中', '较稳', '已稳固'].forEach(function (l) {
+      if (dist[l] == null) return;
+      const row = el('div', 'cat-bar-row');
+      row.appendChild(el('span', 'cat-bar-name', l));
+      const bar = el('div', 'cat-bar');
+      const fill = el('div', 'cat-bar-fill');
+      fill.style.width = Math.round(dist[l] / ids.length * 100) + '%';
+      fill.style.background = masteryColor(dist[l] ? 70 : 10);
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(el('span', 'cat-bar-val', dist[l] + ' 道'));
+      dd.appendChild(row);
+    });
+    wrap.appendChild(dd);
+
+    app.appendChild(wrap);
   }
 
   // —— 手动录入错题 ——
@@ -3319,6 +3589,14 @@
       case 'nav':
         closeDrawer();
         currentView = arg;
+        if (arg === 'wrong' || arg === 'wrongBrowse' || arg === 'wrongStats') currentModule = 'wrong';
+        else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics') currentModule = 'cards';
+        renderApp();
+        break;
+      case 'module':
+        closeDrawer();
+        currentModule = arg;
+        currentView = (arg === 'wrong') ? 'wrong' : 'learn';
         renderApp();
         break;
       case 'menuclose':
@@ -3395,6 +3673,10 @@
         break;
       case 'btoggle':
         browseExpanded[arg] = !browseExpanded[arg];
+        renderApp();
+        break;
+      case 'wtoggle':
+        wrongExpanded[arg] = !wrongExpanded[arg];
         renderApp();
         break;
       case 'resetcard':
@@ -3497,14 +3779,21 @@
         break;
       }
       case 'resetall':
-        if (confirm('确定要清空全部学习进度吗？（清空后学习统计与记忆安排一并归零，便于重新测试）')) {
+        if (confirm('确定要清空全部学习进度吗？（知识卡与错题的记忆安排、统计一并归零，便于重新测试）')) {
           DB.cards = {};
           DATA.forEach(function (f) { DB.cards[f.id] = defaultCard(); });
-          // 同时清空学习统计日志与每科新卡波次、会话，使统计条归零
+          // 错题：只清记忆进度，保留题目/解析/关联内容
+          Object.keys(DB.wrongs || {}).forEach(function (wid) {
+            const w = DB.wrongs[wid];
+            const keep = { kind: w.kind, q: w.q, a: w.a, a2: w.a2, src: w.src, linked: w.linked, errType: w.errType };
+            DB.wrongs[wid] = Object.assign(defaultWrongCard(), keep);
+          });
           DB.log = {};
+          wrongDeck = [];
           buildSession(0);
           localStorage.removeItem(sessionKey());
           currentView = 'learn';
+          currentModule = 'cards';
           renderApp();
           toast('已重置（统计已清空）');
         }
@@ -3677,6 +3966,8 @@
     deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
     mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; heatSel = null;
     browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
+    wrongDeck = [];
+    currentModule = 'cards';
     loadDBAsync().then(function () {
       if (!loadSession()) buildSession(0);
       currentView = 'learn';
@@ -3708,6 +3999,7 @@
     loadDBAsync().then(function () {
       if (!loadSession()) buildSession(0);
       currentView = 'learn';
+      currentModule = 'cards';
       renderApp();
       setTimeout(maybeShowCountdownPopup, 350);
     });

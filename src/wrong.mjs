@@ -97,8 +97,9 @@
       const sN = targetS();
       score = Math.round(100 * Math.max(0, Math.min(1, Math.log(1 + c.stab) / Math.log(1 + sN))));
     }
-    let label = '未做';
-    if (score < 25) label = '薄弱';
+    let label;
+    if (!c || c.state === 'new') label = '未做';
+    else if (score < 25) label = '薄弱';
     else if (score < 65) label = '巩固中';
     else if (score < 85) label = '较稳';
     else label = '已稳固';
@@ -131,6 +132,8 @@
   // —— 错题视图状态 ——
   let wrongDeck = [];
   let wrongFrontier = 0;
+  let wrongExpanded = {};
+  let wrongJumpId = null;
 
   function buildWrongSession() {
     const now = Date.now();
@@ -281,16 +284,199 @@
   }
 
   // 把一道真题/例题标记为错题（linked 为关联知识点 id）
-  function markAsWrong(ex, linkedId, kind) {
+  function markAsWrong(ex, linkedId) {
     if (!ex || !ex.q) return;
+    // 查重：已有相同题目的错题则跳转，不重复添加
+    const existing = Object.keys(DB.wrongs || {}).find(function (wid) {
+      return (DB.wrongs[wid].q || '').trim() === (ex.q || '').trim();
+    });
+    if (existing) {
+      currentModule = 'wrong';
+      currentView = 'wrongBrowse';
+      wrongJumpId = existing;
+      renderApp();
+      toast('已在错题本中，已为你定位');
+      return;
+    }
     const id = 'wp_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
     const w = defaultWrongCard();
-    w.kind = (kind === '难题') ? '难题' : '错题';
+    w.kind = '错题';
     w.q = ex.q; w.a = ex.a; w.a2 = ex.a2 || ''; w.src = ex.src || '';
     if (linkedId) w.linked = [linkedId];
     DB.wrongs[id] = w;
     saveDB();
     toast('已加入错题本');
+  }
+
+  function deleteWrongCard(wid) {
+    if (!confirm('确定删除这道错题吗？（不可恢复）')) return;
+    delete DB.wrongs[wid];
+    saveDB();
+    wrongDeck = [];
+    renderApp();
+    toast('已删除错题');
+  }
+
+  function renderWrongBrowse() {
+    const app = document.getElementById('app');
+    const ids = Object.keys(DB.wrongs || {});
+    const tb = el('div', 'learn-top');
+    tb.appendChild(el('span', 'muted', '共 ' + ids.length + ' 道'));
+    const add = el('button', 'btn small primary', '➕ 手动录入');
+    add.addEventListener('click', openWrongInput);
+    tb.appendChild(add);
+    app.appendChild(tb);
+
+    if (!ids.length) {
+      const wrap = el('div', 'center-card');
+      wrap.appendChild(el('h2', null, '📕 错题本'));
+      wrap.appendChild(el('p', 'muted', '还没有错题。可在「知识卡·浏览」页的真题处标记，或点上方「手动录入」。'));
+      app.appendChild(wrap);
+      return;
+    }
+
+    const list = el('div', 'browse-list');
+    ids.forEach(function (wid) {
+      const w = DB.wrongs[wid];
+      const m = wrongMastery(wid);
+      const item = el('div', 'browse-item');
+      item.setAttribute('data-wrong', wid);
+      const head = el('button', 'browse-item-head');
+      head.setAttribute('data-action', 'wtoggle');
+      head.setAttribute('data-arg', wid);
+      const left = el('div', 'browse-title');
+      left.appendChild(el('span', 'badge', '📕 错题'));
+      left.appendChild(texEl('span', 'browse-name', w.q));
+      const mark = el('span', 'browse-state');
+      mark.textContent = m.label + ' ' + m.pct + '%';
+      left.appendChild(mark);
+      head.appendChild(left);
+      item.appendChild(head);
+      const bar = el('div', 'mastery-bar');
+      const fill = el('div', 'mastery-fill');
+      fill.style.width = m.pct + '%';
+      bar.appendChild(fill);
+      item.appendChild(bar);
+      if (wrongExpanded[wid]) {
+        const body = el('div', 'browse-body');
+        const a = el('div', 'browse-a');
+        a.appendChild(el('div', 'mini-label', '解析'));
+        const ab = el('div');
+        renderTex(ab, w.a);
+        a.appendChild(ab);
+        body.appendChild(a);
+        if (w.a2) {
+          const a2b = el('div', 'browse-a');
+          a2b.appendChild(el('div', 'mini-label', '💡 巧解'));
+          renderTex(a2b, w.a2);
+          body.appendChild(a2b);
+        }
+        if (w.src) body.appendChild(el('p', 'muted', '📚 来源：' + w.src));
+        if (w.linked && w.linked.length) {
+          const rb = el('div', 'rel-box');
+          rb.appendChild(el('div', 'mini-label', '关联知识点'));
+          w.linked.forEach(function (id) {
+            const f = DATA.find(function (x) { return x.id === id; });
+            if (!f) return;
+            const chip = texEl('button', 'chip rel-chip', f.title);
+            chip.setAttribute('data-action', 'jump');
+            chip.setAttribute('data-arg', id);
+            rb.appendChild(chip);
+          });
+          body.appendChild(rb);
+        }
+        const del = el('button', 'btn small danger', '删除此题');
+        del.addEventListener('click', function () { deleteWrongCard(wid); });
+        body.appendChild(del);
+        item.appendChild(body);
+      }
+      list.appendChild(item);
+    });
+    app.appendChild(list);
+
+    if (wrongJumpId) {
+      const target = list.querySelector('[data-wrong="' + wrongJumpId + '"]');
+      if (target) {
+        wrongExpanded[wrongJumpId] = true;
+        const headBtn = target.querySelector('.browse-item-head');
+        if (headBtn) {
+          headBtn.classList.add('flash');
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      wrongJumpId = null;
+    }
+  }
+
+  function renderWrongStats() {
+    const app = document.getElementById('app');
+    const wrap = el('div', 'principles-wrap');
+    wrap.appendChild(el('h2', null, '📊 错题统计'));
+
+    const ids = Object.keys(DB.wrongs || {});
+    if (!ids.length) {
+      wrap.appendChild(el('p', 'muted', '还没有错题。'));
+      app.appendChild(wrap);
+      return;
+    }
+
+    let due = 0, fresh = 0, learn = 0, review = 0, grad = 0, pctSum = 0, lapses = 0;
+    ids.forEach(function (wid) {
+      const w = DB.wrongs[wid];
+      pctSum += wrongMastery(wid).pct;
+      lapses += (w.lapses || 0);
+      if (w.state === 'new') fresh++;
+      else if (w.state === 'learning' || w.state === 'relearning') learn++;
+      else { review++; if (isWrongGraduated(w)) grad++; }
+      if ((w.state === 'review' || w.state === 'learning' || w.state === 'relearning') && w.due <= Date.now()) due++;
+    });
+    const avg = Math.round(pctSum / ids.length);
+
+    const ov = el('div', 'stat-overview');
+    const kpi = function (label, val) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label)); ov.appendChild(c); };
+    kpi('总错题', ids.length);
+    kpi('待重做', due);
+    kpi('已稳固', grad);
+    kpi('平均掌握', avg + '%');
+    kpi('累计遗忘', lapses);
+    wrap.appendChild(ov);
+
+    wrap.appendChild(el('h3', null, '📌 状态分布'));
+    const sd = el('div', 'stat-card');
+    [['未做', fresh], ['学习中', learn], ['复习中', review], ['已稳固', grad]].forEach(function (p) {
+      const row = el('div', 'cat-bar-row');
+      row.appendChild(el('span', 'cat-bar-name', p[0]));
+      const bar = el('div', 'cat-bar');
+      const fill = el('div', 'cat-bar-fill');
+      fill.style.width = Math.round(p[1] / ids.length * 100) + '%';
+      fill.style.background = p[0] === '已稳固' ? '#2A75C0' : '#B5D4F4';
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(el('span', 'cat-bar-val', p[1] + ' 道'));
+      sd.appendChild(row);
+    });
+    wrap.appendChild(sd);
+
+    wrap.appendChild(el('h3', null, '💪 掌握度分布'));
+    const dist = {};
+    ids.forEach(function (wid) { const l = wrongMastery(wid).label; dist[l] = (dist[l] || 0) + 1; });
+    const dd = el('div', 'stat-card');
+    ['未做', '薄弱', '巩固中', '较稳', '已稳固'].forEach(function (l) {
+      if (dist[l] == null) return;
+      const row = el('div', 'cat-bar-row');
+      row.appendChild(el('span', 'cat-bar-name', l));
+      const bar = el('div', 'cat-bar');
+      const fill = el('div', 'cat-bar-fill');
+      fill.style.width = Math.round(dist[l] / ids.length * 100) + '%';
+      fill.style.background = masteryColor(dist[l] ? 70 : 10);
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(el('span', 'cat-bar-val', dist[l] + ' 道'));
+      dd.appendChild(row);
+    });
+    wrap.appendChild(dd);
+
+    app.appendChild(wrap);
   }
 
   // —— 手动录入错题 ——

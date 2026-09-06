@@ -468,6 +468,7 @@
 
   // ---------------- 视图状态 ----------------
   let currentView = 'learn';
+  let currentModule = 'cards'; // 一级界面：cards(知识卡) | wrong(错题本)
   let deck = [];
   let pos = 0;
   let frontier = 0;
@@ -504,6 +505,22 @@
     t.classList.add('show');
     clearTimeout(t._timer);
     t._timer = setTimeout(function () { t.classList.remove('show'); }, 1800);
+  }
+
+  // 渲染二级导航（随一级界面切换）
+  function renderSubnav() {
+    const sub = document.getElementById('subnav');
+    if (!sub) return;
+    sub.innerHTML = '';
+    const items = currentModule === 'wrong'
+      ? [['wrong', '📕 重做'], ['wrongBrowse', '📋 浏览'], ['wrongStats', '📊 统计']]
+      : [['learn', '📚 学习'], ['browse', '🔍 浏览'], ['quiz', '✏️ 自测'], ['statistics', '📈 统计']];
+    items.forEach(function (it) {
+      const b = el('button', 'nav-btn sub-btn' + (currentView === it[0] ? ' active' : ''), it[1]);
+      b.setAttribute('data-action', 'nav');
+      b.setAttribute('data-arg', it[0]);
+      sub.appendChild(b);
+    });
   }
 
   function renderApp() {

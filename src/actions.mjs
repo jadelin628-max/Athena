@@ -3,6 +3,14 @@
       case 'nav':
         closeDrawer();
         currentView = arg;
+        if (arg === 'wrong' || arg === 'wrongBrowse' || arg === 'wrongStats') currentModule = 'wrong';
+        else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics') currentModule = 'cards';
+        renderApp();
+        break;
+      case 'module':
+        closeDrawer();
+        currentModule = arg;
+        currentView = (arg === 'wrong') ? 'wrong' : 'learn';
         renderApp();
         break;
       case 'menuclose':
@@ -79,6 +87,10 @@
         break;
       case 'btoggle':
         browseExpanded[arg] = !browseExpanded[arg];
+        renderApp();
+        break;
+      case 'wtoggle':
+        wrongExpanded[arg] = !wrongExpanded[arg];
         renderApp();
         break;
       case 'resetcard':
@@ -181,14 +193,21 @@
         break;
       }
       case 'resetall':
-        if (confirm('确定要清空全部学习进度吗？（清空后学习统计与记忆安排一并归零，便于重新测试）')) {
+        if (confirm('确定要清空全部学习进度吗？（知识卡与错题的记忆安排、统计一并归零，便于重新测试）')) {
           DB.cards = {};
           DATA.forEach(function (f) { DB.cards[f.id] = defaultCard(); });
-          // 同时清空学习统计日志与每科新卡波次、会话，使统计条归零
+          // 错题：只清记忆进度，保留题目/解析/关联内容
+          Object.keys(DB.wrongs || {}).forEach(function (wid) {
+            const w = DB.wrongs[wid];
+            const keep = { kind: w.kind, q: w.q, a: w.a, a2: w.a2, src: w.src, linked: w.linked, errType: w.errType };
+            DB.wrongs[wid] = Object.assign(defaultWrongCard(), keep);
+          });
           DB.log = {};
+          wrongDeck = [];
           buildSession(0);
           localStorage.removeItem(sessionKey());
           currentView = 'learn';
+          currentModule = 'cards';
           renderApp();
           toast('已重置（统计已清空）');
         }
@@ -361,6 +380,8 @@
     deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
     mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; heatSel = null;
     browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
+    wrongDeck = [];
+    currentModule = 'cards';
     loadDBAsync().then(function () {
       if (!loadSession()) buildSession(0);
       currentView = 'learn';
@@ -392,6 +413,7 @@
     loadDBAsync().then(function () {
       if (!loadSession()) buildSession(0);
       currentView = 'learn';
+      currentModule = 'cards';
       renderApp();
       setTimeout(maybeShowCountdownPopup, 350);
     });

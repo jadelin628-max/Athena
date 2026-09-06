@@ -125,6 +125,7 @@
     if (!DB.wrongs) DB.wrongs = {};
     if (!DB.custom) DB.custom = {};
     if (!DB.cardOverrides) DB.cardOverrides = {};
+    if (!DB.customRel) DB.customRel = {};
     refreshData();
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
@@ -188,6 +189,14 @@
     Object.keys(subj.EXAMPLE || {}).forEach(function (id) {
       EXAMPLES[id] = (ov[id] && Array.isArray(ov[id].examples)) ? ov[id].examples : subj.EXAMPLE[id];
     });
+
+    // REL：静态 REL + 自建卡 REL
+    REL = Object.assign({}, subj.REL || {});
+    if (DB && DB.customRel) {
+      Object.keys(DB.customRel).forEach(function (id) {
+        if (DB.customRel[id] && DB.customRel[id].length) REL[id] = DB.customRel[id];
+      });
+    }
   }
 
   function sanitizeCustomCard(c) {
@@ -202,12 +211,13 @@
   }
 
   // 手动录入知识点（自建卡）：写入 DB.custom + DB.cards，立即合成进 DATA
-  function saveCustomCard(title, front, back, cat) {
+  function saveCustomCard(title, front, back, cat, relList) {
     const t = (title || '').trim(), f = (front || '').trim(), b = (back || '').trim();
     if (!t || !f || !b) { toast('标题、提示、答案不能为空'); return false; }
     const id = 'cu_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
     DB.custom[id] = { id: id, cat: cat || Object.keys(CATS)[0], title: t, front: f, back: b };
     DB.cards[id] = defaultCard();
+    if (relList && relList.length) DB.customRel[id] = relList;
     refreshData();
     saveDB();
     renderApp();
@@ -315,7 +325,7 @@
       deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
       browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
     }
-    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {}, cardOverrides: {} };
+    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {}, cardOverrides: {}, customRel: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
@@ -374,6 +384,14 @@
       Object.keys(payload.cardOverrides).forEach(function (id) {
         const o = sanitizeCardOverride(payload.cardOverrides[id]);
         if (o) fresh.cardOverrides[id] = o;
+      });
+    }
+    if (payload.customRel && typeof payload.customRel === 'object') {
+      Object.keys(payload.customRel).forEach(function (id) {
+        const arr = payload.customRel[id];
+        if (Array.isArray(arr)) {
+          fresh.customRel[id] = arr.filter(function (e) { return e && typeof e.to === 'string' && typeof e.tag === 'string'; });
+        }
       });
     }
     DB = fresh;

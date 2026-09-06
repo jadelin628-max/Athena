@@ -1,18 +1,19 @@
     const app = document.getElementById('app');
     app.innerHTML = '';
-    document.body.classList.toggle('view-map', currentView === 'map');
     if (currentView === 'learn') renderLearn();
     else if (currentView === 'browse') renderBrowse();
     else if (currentView === 'quiz') renderQuiz();
-    else if (currentView === 'wrong') renderWrongLearn();
-    else if (currentView === 'settings') renderSettings();
-    else if (currentView === 'principle') renderPrinciples();
     else if (currentView === 'statistics') renderStatistics();
-    else if (currentView === 'map') renderMap();
-    // 高亮导航
-    document.querySelectorAll('nav .nav-btn').forEach(function (b) {
-      b.classList.toggle('active', b.getAttribute('data-arg') === currentView);
+    else if (currentView === 'wrong') renderWrongLearn();
+    else if (currentView === 'wrongBrowse') renderWrongBrowse();
+    else if (currentView === 'wrongStats') renderWrongStats();
+    else if (currentView === 'principle') renderPrinciples();
+    else if (currentView === 'settings') renderSettings();
+    // 高亮一级 tab + 渲染二级导航
+    document.querySelectorAll('.module-tab').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-arg') === currentModule);
     });
+    renderSubnav();
     const vf = el('div', 'app-version');
     vf.textContent = 'Athena · 版本 v' + VERSION;
     app.appendChild(vf);
@@ -203,10 +204,49 @@
     back.placeholder = '答案（必填，可含公式 $..$）…';
     cardBox.appendChild(wrongField('答案', back));
 
+    // 关联知识点（自建卡 REL，带标签，用于交错聚类）
+    const relList = [];
+    const relBox = el('div', 'wrong-field');
+    relBox.appendChild(el('span', 'mini-label', '关联知识点（可选，用于交错聚类）'));
+    const relTag = el('select', 'wrong-input');
+    ['同类', '对比', '类比', '相关', '前置', '方法', '应用'].forEach(function (t) {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      relTag.appendChild(opt);
+    });
+    const relSearch = el('input', 'search');
+    relSearch.type = 'search';
+    relSearch.placeholder = '搜索要关联的卡片…';
+    const relResults = el('div', 'wrong-results');
+    const relListBox = el('div', 'wrong-results');
+    relSearch.addEventListener('input', function () {
+      relResults.innerHTML = '';
+      const q = relSearch.value.trim().toLowerCase();
+      if (!q) return;
+      DATA.filter(function (f) {
+        return (f.title + ' ' + f.front).toLowerCase().indexOf(q) !== -1;
+      }).slice(0, 10).forEach(function (f) {
+        const chip = el('button', 'chip', f.title);
+        chip.addEventListener('click', function () {
+          if (!relList.some(function (r) { return r.to === f.id; })) {
+            relList.push({ to: f.id, tag: relTag.value });
+            relListBox.appendChild(renderRelChip(f.id, relTag.value, relList));
+          }
+        });
+        relResults.appendChild(chip);
+      });
+    });
+    relBox.appendChild(relTag);
+    relBox.appendChild(relSearch);
+    relBox.appendChild(relResults);
+    relBox.appendChild(relListBox);
+    cardBox.appendChild(relBox);
+
     const btns = el('div', 'wrong-input-btns');
     const save = el('button', 'btn primary', '保存');
     save.addEventListener('click', function () {
-      if (saveCustomCard(title.value, front.value, back.value, catSel.value)) closeCardInput();
+      if (saveCustomCard(title.value, front.value, back.value, catSel.value, relList)) closeCardInput();
     });
     const cancel = el('button', 'btn', '取消');
     cancel.addEventListener('click', closeCardInput);
@@ -221,6 +261,17 @@
   function closeCardInput() {
     const m = document.querySelector('.map-modal');
     if (m) m.remove();
+  }
+
+  function renderRelChip(id, tag, relList) {
+    const f = DATA.find(function (x) { return x.id === id; });
+    const chip = el('button', 'chip', '[' + tag + '] ' + (f ? f.title : id));
+    chip.addEventListener('click', function () {
+      const idx = relList.findIndex(function (r) { return r.to === id; });
+      if (idx >= 0) relList.splice(idx, 1);
+      chip.remove();
+    });
+    return chip;
   }
 
   // —— 编辑卡片（覆盖层：题目/答案/标签/例题/隐藏）——
@@ -387,11 +438,8 @@
       }
       if (ex.src) eb.appendChild(el('div', 'example-src', '📚 来源：' + ex.src));
       const mark = el('button', 'btn small', '📕 标记为错题');
-      mark.addEventListener('click', function () { markAsWrong(ex, id, '错题'); });
+      mark.addEventListener('click', function () { markAsWrong(ex, id); });
       eb.appendChild(mark);
-      const markHard = el('button', 'btn small', '⭐ 标记为难题');
-      markHard.addEventListener('click', function () { markAsWrong(ex, id, '难题'); });
-      eb.appendChild(markHard);
       box.appendChild(eb);
     });
     if (rels.length) {

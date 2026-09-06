@@ -303,6 +303,7 @@
     w.kind = '错题';
     w.q = ex.q; w.a = ex.a; w.a2 = ex.a2 || ''; w.src = ex.src || '';
     if (linkedId) w.linked = [linkedId];
+    applyRatingToWrongCard(w, 0); // 视为已做过一次（失败），初始化难度/稳定性，次日重现
     DB.wrongs[id] = w;
     saveDB();
     toast('已加入错题本');
@@ -567,6 +568,7 @@
     w.kind = '错题';
     w.q = q.trim(); w.a = a.trim(); w.a2 = a2.trim(); w.src = src.trim();
     w.linked = wrongInput.linked.slice();
+    applyRatingToWrongCard(w, 0); // 视为已做过一次（失败），次日重现
     DB.wrongs[id] = w;
     saveDB();
     closeWrongInput();

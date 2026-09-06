@@ -25,10 +25,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.13.0';
+  const VERSION = '1.13.1';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.13.1', date: '2026-09', items: ['修复：新添加的错题默认为「已做过一次」——初始即进入学习态、次日重现，并初始化 FSRS 难度/稳定性（等价首次「不会」评分）'] },
     { v: '1.13.0', date: '2026-09', items: ['UI 重置：知识卡与错题本改为两个一级界面（各含二级导航），移动端适配', '删除导图视图', '错题新增「浏览」与「统计」视图，支持手动删除、标记查重跳转', '「清空学习进度」同步重置错题记忆状态；标记例题只保留一个按钮', '自建卡支持添加关联知识点（REL，带标签）'] },
     { v: '1.12.0', date: '2026-09', items: ['内置卡片可编辑：题目/提示/答案/分类/重要度/常考题型可覆盖编辑，例题可增删改，支持软删除（隐藏）与一键恢复原卡'] },
     { v: '1.11.0', date: '2026-09', items: ['学习界面新增「手动录入知识点」：可自建卡片（标题/分类/提示/答案），自建卡与内置卡一起参与学习、交错与统计'] },
@@ -2357,6 +2358,7 @@
     w.kind = '错题';
     w.q = ex.q; w.a = ex.a; w.a2 = ex.a2 || ''; w.src = ex.src || '';
     if (linkedId) w.linked = [linkedId];
+    applyRatingToWrongCard(w, 0); // 视为已做过一次（失败），初始化难度/稳定性，次日重现
     DB.wrongs[id] = w;
     saveDB();
     toast('已加入错题本');
@@ -2621,6 +2623,7 @@
     w.kind = '错题';
     w.q = q.trim(); w.a = a.trim(); w.a2 = a2.trim(); w.src = src.trim();
     w.linked = wrongInput.linked.slice();
+    applyRatingToWrongCard(w, 0); // 视为已做过一次（失败），次日重现
     DB.wrongs[id] = w;
     saveDB();
     closeWrongInput();

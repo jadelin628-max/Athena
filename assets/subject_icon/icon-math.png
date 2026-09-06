@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Mathematics : integral sign ascending into a rising arrow -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 76 128 C 76 166 128 166 128 128 C 128 110 122 98 114 86 C 106 74 114 58 132 48" stroke="#D4537E"/>
+    <path d="M 134 47 L 156 36" stroke="#378ADD"/>
+    <path d="M 139 35 L 156 36 L 147 50" stroke="#378ADD"/>
+  </g>
+</svg>

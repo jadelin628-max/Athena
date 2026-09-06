@@ -1,4 +1,27 @@
   function subjectList() { return window.SUBJECTS || {}; }
+  // 学科图标（assets/subject_icon/，无对应图则回退 emoji）
+  const SUBJECT_ICON_URLS = {
+    math3: 'assets/subject_icon/icon-math.png',
+    econ: 'assets/subject_icon/icon-economics.png',
+    stats: 'assets/subject_icon/icon-statistics.png',
+    politics: 'assets/subject_icon/icon-politics.png'
+  };
+  function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
+  // 把学科图标（图片）填进元素，suffix 为追加文本
+  function setBrand(el, subj, suffix) {
+    el.innerHTML = '';
+    const url = subjectIconUrl(subj.id);
+    if (url) {
+      const img = document.createElement('img');
+      img.src = url;
+      img.className = 'subject-icon';
+      img.alt = '';
+      el.appendChild(img);
+    } else {
+      el.textContent = subj.icon || '';
+    }
+    if (suffix) el.appendChild(document.createTextNode(suffix));
+  }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配
   function subjKind() {
     const s = subjectList()[currentSubjectId];
@@ -20,7 +43,7 @@
     try { localStorage.setItem(SUBJECT_KEY, subj.id); } catch (e) {}
     document.title = subj.name;
     const b = document.getElementById('brandText');
-    if (b) b.textContent = subj.icon;
+    if (b) setBrand(b, subj, '');
     const sel = document.getElementById('subjectSelect');
     if (sel) sel.value = subj.id;
     document.body.setAttribute('data-subject', subj.id);
@@ -36,7 +59,7 @@
     if (!b || !currentSubjectId || !DB || !DATA) return;
     const subj = subjectList()[currentSubjectId];
     const s = stats();
-    b.textContent = (subj ? subj.icon : '') + ' ' + s.avg + '%';
+    setBrand(b, subj, ' ' + s.avg + '%');
   }
 
   function updateNavBadge() {

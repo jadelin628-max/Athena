@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Politics : classical temple facade, side view -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 120 48 L 182 90 L 58 90 Z" stroke="#D4537E"/>
+    <path d="M 66 112 H 174" stroke="#378ADD"/>
+    <path d="M 76 134 V 162 M 105 134 V 162 M 134 134 V 162 M 163 134 V 162" stroke="#378ADD"/>
+    <path d="M 54 186 H 186" stroke="#378ADD"/>
+  </g>
+</svg>

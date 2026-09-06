@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Statistics : bell curve overlapped by three bars -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 46 172 C 80 170 86 74 120 74 C 154 74 160 170 194 172" stroke="#D4537E"/>
+    <rect x="72"  y="128" width="24" height="50"  rx="10" fill="#378ADD" stroke="none"/>
+    <rect x="104" y="92"  width="24" height="86"  rx="10" fill="#378ADD" stroke="none"/>
+    <rect x="136" y="56"  width="24" height="122" rx="10" fill="#378ADD" stroke="none"/>
+  </g>
+</svg>

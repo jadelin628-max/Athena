@@ -104,6 +104,7 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 }
 .icon-btn { padding: 8px 10px; }
 .module-tab { font-weight: 600; padding: 8px 15px; }
+.subject-icon { height: 20px; width: 20px; object-fit: contain; vertical-align: -4px; }
 .subnav {
   display: flex; gap: 4px; align-items: center;
   padding: 6px max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left));

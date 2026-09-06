@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Microeconomics : supply & demand curves, equilibrium dot -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 64 170 C 98 164 140 92 174 86" stroke="#378ADD"/>
+    <path d="M 160 81 L 174 86 L 162 95" stroke="#378ADD"/>
+    <path d="M 64 86 C 98 92 140 164 174 170" stroke="#D4537E"/>
+    <path d="M 162 161 L 174 170 L 160 175" stroke="#D4537E"/>
+    <circle cx="119" cy="128" r="13" fill="#FFF8F5" stroke="none"/>
+    <circle cx="119" cy="128" r="6.5" fill="#D4537E" stroke="none"/>
+  </g>
+</svg>

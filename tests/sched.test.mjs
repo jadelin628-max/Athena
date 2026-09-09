@@ -106,7 +106,8 @@ test('复习卡 Again：进入重学、lapses+1、10 分钟后重现', () => {
   assert.ok(Math.abs(c.due - Date.now() - 10 * MIN) < 50);
   assert.equal(c.diff, fsrsDifficulty(5, 1));
   const R = fsrsRetention(Math.max(0, (Date.now() - (Date.now() - DAY)) / DAY), 30);
-  assert.equal(c.stab, fsrsLapseStability(c.diff, 30, R));
+  // 容差比较：代码内部与断言各自采样 Date.now()，毫秒跳变会让浮点差在最后几位
+  assert.ok(Math.abs(c.stab - fsrsLapseStability(c.diff, 30, R)) <= 1e-9 * Math.max(1, c.stab), '遗忘后稳定度');
 });
 
 test('复习卡 Hard/Good/Easy：保持 review，间隔按稳定度，到期按自然日对齐', () => {
@@ -116,7 +117,9 @@ test('复习卡 Hard/Good/Easy：保持 review，间隔按稳定度，到期按�
     assert.equal(c.state, 'review');
     assert.equal(c.reps, 4);
     assert.equal(c.ivl, Math.max(1, Math.round(fsrsInterval(c.stab))));
-    assert.equal(c.due, dayStart(Date.now()) + c.ivl * DAY);
+    // 容忍测试执行恰好跨过午夜零点（due 会多一天）
+    const a = dayStart(Date.now()) + c.ivl * DAY;
+    assert.ok(c.due === a || c.due === a + DAY, 'due 未按自然日对齐');
   }
 });
 

@@ -199,48 +199,86 @@
     } catch (e) { warnStorageFailure(); return false; }
   }
   function syncArchivePath(sid) {
-    return SYNC_DIR + '/archive/' + sid + '/' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+    // 随机后缀防撞名：两台设备同毫秒归档时，PUT 无 sha 的同名新文件会失败
+    return SYNC_DIR + '/archive/' + sid + '/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json';
   }
 
-  // 对单个学科执行一次合并式同步。返回 { action: push / pull / merge / skip }
+  // sha 冲突（HTTP 409 / 422）：PUT 与服务器当前版本不一致——另一台设备刚写过
+  function isShaConflict(err) {
+    return err && /409|does not match|wasn't supplied/i.test(String(err.message || err));
+  }
+
+  // 对单个学科执行一次合并式同步（内置 409 重试：两台设备同时写入时，后到的 PUT 会被
+  // GitHub 以 sha 不匹配拒绝——重新拉取云端、重新合并后再写，最多 3 次）。
+  // 返回 { action: push / pull / merge / skip }
   // push = 云端被本地更新；pull = 本地被云端更新；merge = 两端都更新为合并结果。
   async function syncSubject(sid) {
     const local = syncLocalDb(sid);
     const localUp = (local && typeof local.updatedAt === 'number') ? local.updatedAt : 0;
-    const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
-    const remoteUp = (remote && remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0;
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
+        const remoteUp = (remote && remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0;
 
-    if (local && !remote) { // 首推
-      await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local);
-      return { action: 'push' };
-    }
-    if (!local && remote) { // 本地没有（新设备）：拉取
-      if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
-      return { action: 'pull' };
-    }
-    if (!local && !remote) return { action: 'skip' };
+        if (local && !remote) { // 首推（若另一设备恰好先推了 → 409 重试，走合并分支）
+          try {
+            await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local);
+            return { action: 'push' };
+          } catch (err) {
+            if (isShaConflict(err)) { lastErr = err; continue; }
+            throw err;
+          }
+        }
+        if (!local && remote) { // 本地没有（新设备）：拉取（不写云端，无冲突可能）
+          if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
+          return { action: 'pull' };
+        }
+        if (!local && !remote) return { action: 'skip' };
 
-    // 两侧都有：合并（多端同时打开的安全基石），再按合并结果决定哪边需要更新
-    const merged = mergeDb(local, remote.data);
-    const mergedUp = (typeof merged.updatedAt === 'number') ? merged.updatedAt : 0;
-    let action = 'skip';
-    if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 合并结果比云端新 → 更新云端（先归档云端旧版）
-      if (remote) await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
-      await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', merged, remote ? remote.sha : null);
-      action = 'push';
+        // 两侧都有：合并（多端同时打开的安全基石），再按结果决定哪边需要更新
+        const merged = mergeDb(local, remote.data);
+        const mergedUp = (typeof merged.updatedAt === 'number') ? merged.updatedAt : 0;
+        let action = 'skip';
+        if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 合并结果比云端新 → 更新云端（先归档云端旧版）
+          await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
+          try {
+            await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', merged, remote.sha);
+          } catch (err) {
+            if (isShaConflict(err)) { lastErr = err; continue; } // 云端刚被别的设备更新：重拉重合
+            throw err;
+          }
+          action = 'push';
+        }
+        if (mergedUp > localUp + SYNC_TOLERANCE_MS) { // 合并结果比本地新 → 更新本地（先归档本地旧版）
+          await ghPutJson(syncArchivePath(sid), local);
+          if (!syncWriteLocalDb(sid, merged)) throw new Error('本地写入失败（存储空间不足？）');
+          action = (action === 'push') ? 'merge' : 'pull';
+        }
+        return { action: action };
+      } catch (err) {
+        if (isShaConflict(err)) { lastErr = err; continue; }
+        throw err;
+      }
     }
-    if (mergedUp > localUp + SYNC_TOLERANCE_MS) { // 合并结果比本地新 → 更新本地（先归档本地旧版）
-      if (local) await ghPutJson(syncArchivePath(sid), local);
-      if (!syncWriteLocalDb(sid, merged)) throw new Error('本地写入失败（存储空间不足？）');
-      action = (action === 'push') ? 'merge' : 'pull';
-    }
-    return { action: action };
+    throw new Error('云端正在被其他设备更新，重试 3 次未成功——稍后再同步即可（' + (lastErr && lastErr.message ? lastErr.message : '') + '）');
   }
 
   // 同步全部学科（合并式）。summary：cloud=云端被更新，local=本地被更新，both=双向合并。
-  async function runSync() {
-    if (typeof fetch === 'undefined') throw new Error('当前环境不支持网络请求');
-    if (!syncConfigured()) throw new Error('云同步未配置完整：请先在设置中填写 Token 与仓库名');
+  // 串行排队：启动同步/防抖推送/前台回归/手动按钮可能重叠，同一设备同一时刻只跑一轮，
+  // 否则两轮并发对同一文件 GET 相同 sha 后先后 PUT，后到的一方必收 409。
+  let syncChain = Promise.resolve();
+  function runSync() {
+    if (typeof fetch === 'undefined') return Promise.reject(new Error('当前环境不支持网络请求'));
+    const p = syncChain.then(function () {
+      if (!syncConfigured()) throw new Error('云同步未配置完整：请先在设置中填写 Token 与仓库名');
+      return doRunSync();
+    });
+    syncChain = p.catch(function () {});
+    return p;
+  }
+
+  async function doRunSync() {
     const summary = { cloud: [], local: [], both: [], skipped: [], failed: [] };
     const sids = Object.keys(subjectList());
     for (const sid of sids) {

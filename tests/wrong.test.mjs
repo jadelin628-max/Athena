@@ -17,6 +17,15 @@ const { initWrongAsLapsed, applyRatingToWrongCard } = await import('../src/wrong
 
 const DAY = 86400000;
 function newWrong(extra) { return Object.assign({ state: 'new', step: 0, reps: 0, ivl: 0, lapses: 0, grad: 0, diff: 5, stab: 0, fsrsInit: 0, due: 0, lastR: 0 }, extra || {}); }
+// 浮点容差断言：期望值与实际值用不同时刻的 Date.now() 采样，毫秒跳变会让浮点差在最后几位
+function approx(actual, expected, msg) {
+  assert.ok(Math.abs(actual - expected) <= 1e-9 * Math.max(1, Math.abs(expected)), (msg || '浮点不一致') + ': ' + actual + ' vs ' + expected);
+}
+// 自然日对齐断言：容忍测试执行恰好跨过午夜零点（due 会多一天）
+function assertTomorrow(actual) {
+  const a = dayStart(Date.now()) + DAY;
+  assert.ok(actual === a || actual === a + DAY, 'due 未对齐明日自然日: ' + actual);
+}
 
 test('添加即视为当天已忘记：直接进入复习队列，次日重现，lapses=1', () => {
   const c = newWrong();
@@ -41,9 +50,9 @@ test('评「不会」：遗忘更新后仍为复习态，次日重现', () => {
   assert.equal(c.state, 'review');
   assert.equal(c.lapses, lapsesBefore + 1);
   assert.equal(c.diff, fsrsDifficulty(fsrsInitDifficulty(1), 1));
-  assert.equal(c.stab, fsrsLapseStability(c.diff, fsrsInitStability(1), R));
+  approx(c.stab, fsrsLapseStability(c.diff, fsrsInitStability(1), R), '遗忘后稳定度');
   assert.equal(c.ivl, 1);
-  assert.equal(c.due, dayStart(Date.now()) + DAY); // 次日重现
+  assertTomorrow(c.due);
 });
 
 test('评「思路错/算错/会做对」：标准 FSRS 成功更新，间隔按稳定度计算并自然延长', () => {
@@ -59,8 +68,8 @@ test('评「思路错/算错/会做对」：标准 FSRS 成功更新，间隔按
     assert.equal(c.reps, 1);
     assert.equal(c.diff, newD);
     assert.equal(c.ivl, Math.max(1, Math.round(fsrsInterval(c.stab))));
-    assert.equal(c.stab, fsrsSuccessStability(newD, fsrsInitStability(1), R, rating + 1));
-    assert.equal(c.due, dayStart(Date.now()) + c.ivl * DAY);
+    approx(c.stab, fsrsSuccessStability(newD, fsrsInitStability(1), R, rating + 1), '成功稳定度');
+    assert.ok(c.due === dayStart(Date.now()) + c.ivl * DAY || c.due === dayStart(Date.now()) + (c.ivl + 1) * DAY, 'due 未按自然日对齐');
   }
 });
 

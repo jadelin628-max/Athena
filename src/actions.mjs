@@ -436,19 +436,33 @@
       e.stopPropagation();
       const willShow = menu.classList.contains('hidden');
       if (willShow) {
-        // 用 fixed 定位到按钮下方，避免被 header/nav 的 overflow 裁剪（移动端）
+        // 菜单挂在 body 根节点：fixed 定位到按钮下方（视口坐标），
+        // 不受 sticky/backdrop-filter 祖先的包含块与命中测试影响（移动端 WebKit 曾因此无法选中其他学科）
         const r = cur.getBoundingClientRect();
-        menu.style.position = 'fixed';
         menu.style.top = (r.bottom + 4) + 'px';
         menu.style.left = r.left + 'px';
         menu.style.minWidth = Math.max(r.width, 150) + 'px';
       }
       menu.classList.toggle('hidden');
+      if (!menu.classList.contains('hidden')) {
+        // 屏幕右缘溢出兜底：窄屏上按钮靠右时把菜单收回屏内
+        const mr = menu.getBoundingClientRect();
+        if (mr.right > window.innerWidth - 8) {
+          menu.style.left = Math.max(8, window.innerWidth - mr.width - 8) + 'px';
+        }
+      }
       cur.setAttribute('aria-expanded', willShow ? 'true' : 'false');
     });
+    function isOutside(e) {
+      return !e.target.closest('#subjectDropdown') && !e.target.closest('#subjectMenu');
+    }
     document.addEventListener('click', function (e) {
-      if (!e.target.closest('#subjectDropdown')) closeSubjectDropdown();
+      if (isOutside(e)) closeSubjectDropdown();
     });
+    // 触屏兜底：个别移动浏览器点外部时只派发 touchstart 不派发 click，同样收起
+    document.addEventListener('touchstart', function (e) {
+      if (isOutside(e)) closeSubjectDropdown();
+    }, { passive: true });
   }
 
   function closeSubjectDropdown() {

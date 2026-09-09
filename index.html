@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Athena">
-  <link rel="manifest" href="manifest.webmanifest?v=39">
-  <link rel="icon" type="image/png" href="icons/favicon.png?v=39">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=39">
+  <link rel="manifest" href="manifest.webmanifest?v=40">
+  <link rel="icon" type="image/png" href="icons/favicon.png?v=40">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=40">
   <title>Athena · 考研知识点记忆</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -19,7 +19,6 @@
     <div class="brand">
       <div class="subject-dd" id="subjectDropdown">
         <button class="subject-dd-current" id="subjectCurrent" type="button" aria-haspopup="listbox" aria-expanded="false" title="切换学科 · 徽标为总体掌握度"></button>
-        <div class="subject-dd-menu hidden" id="subjectMenu" role="listbox"></div>
       </div>
     </div>
     <nav>
@@ -43,6 +42,10 @@
     <button class="nav-btn drawer-item" data-action="nav" data-arg="settings">⚙️ 设置</button>
     <div class="drawer-foot">Athena · 考研知识点记忆</div>
   </nav>
+
+  <!-- 学科下拉菜单：挂在 body 根节点（fixed 定位由 JS 计算），避免 sticky/backdrop-filter 祖先
+       影响定位与命中测试（移动端 WebKit 上曾导致无法选中其他学科） -->
+  <div class="subject-dd-menu hidden" id="subjectMenu" role="listbox"></div>
 
   <main id="app"></main>
 

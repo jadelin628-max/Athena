@@ -118,8 +118,10 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   flex: none; font-size: 12px; font-weight: 700; color: var(--accent);
   background: var(--accent-weak); padding: 1px 8px; border-radius: 999px;
 }
+/* 学科下拉菜单：#subjectMenu 挂在 body 根节点（见 index.html），fixed + 高 z-index，
+   坐标由 JS 依触发按钮计算；默认放在视口外，.hidden 控制显隐 */
 .subject-dd-menu {
-  position: absolute; top: calc(100% + 4px); left: 0; z-index: 60;
+  position: fixed; top: -200px; left: -200px; z-index: 400;
   min-width: 160px; background: var(--card); border: 1px solid var(--border);
   border-radius: 12px; box-shadow: var(--shadow); padding: 4px;
 }

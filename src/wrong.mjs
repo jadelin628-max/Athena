@@ -1,90 +1,46 @@
   // ---------------- 错题模块 ----------------
   // 错题卡独立于知识卡：动手重做 → 看解析 → 按解题结果评分（不会/思路错/算错/会做对）。
-  // 调度复用 FSRS 内核，仅把学习步进改为「按天」；毕业 = 稳定度达目标（与知识卡一致，无「退出」）。
-
-  const WRONG_STEP_MS = [DAY];      // 错题学习步：1 天（问题不适合分钟内重现）
-  const WRONG_RELEARN_MS = [DAY];   // 错题重学步：1 天
-  const WRONG_COST_S = 240;         // 错题单题约 4 分钟（计入每日时间预算）
-  // 难题更疏：间隔乘 1.4，减少高频重现
-  function wrongInterval(c) {
-    const ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-    return (c.kind === '难题') ? Math.max(1, Math.round(ivl * 1.4)) : ivl;
-  }
+  // 调度原则（用户确认 2026-09-09）：以 FSRS-6 为基础做探索性调整，与知识卡共享同一内核——
+  //   ① 添加错题即视为「当天已遗忘」：按 FSRS 首评「忘记」初始化（D0(1)/S0(1)，lapses=1），
+  //      直接进入复习队列、次日重现；无学习/重学步进、无毕业事件、无难题分类（旧设计残留已删）。
+  //   ② 重做评分全部走标准 FSRS：「不会」=遗忘（次日重现）；「思路错/算错/会做对」=Hard/Good/Easy，
+  //      间隔由稳定度计算——一直做对间隔大幅延长，卡片永不消失。
+  //   ③「已稳固」仅是掌握度标识（稳定度 ≥ 目标 S，与知识卡「毕业」同义），无退出机制。
 
   function wrongCard(wid) { return (DB && DB.wrongs && DB.wrongs[wid]) || null; }
 
+  // 添加错题：视为「当天已忘记」，按 FSRS 首评 Again 初始化，直接进入复习队列（次日重现）
+  function initWrongAsLapsed(c) {
+    c.state = 'review';
+    c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 1; // 下次复习即明天（间隔 1 天）
+    c.diff = fsrsInitDifficulty(1);
+    c.stab = fsrsInitStability(1);
+    c.fsrsInit = 1;
+    c.lapses = 1;
+    c.due = dayStart(Date.now()) + DAY;
+  }
+
   // 评分 → FSRS 档位（与知识卡四档一一对应）：0 不会=Again, 1 思路错=Hard, 2 算错=Good, 3 会做对=Easy
+  // 错题卡永远处于复习态：「不会」走遗忘曲线更新后次日重现（不做同日重学步进），其余档走标准成功更新
   function applyRatingToWrongCard(c, rating) {
+    if (c.state === 'new') { initWrongAsLapsed(c); return; } // 兜底：未初始化的卡视为刚添加
     const now = Date.now();
     const G = rating + 1;
-    if (typeof c.step !== 'number') c.step = 0;
-    if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning') {
-      const isRelearn = (c.state === 'relearning');
-      const steps = isRelearn ? WRONG_RELEARN_MS : WRONG_STEP_MS;
-      const lastStep = 0;
-      if (c.state === 'new' || !c.fsrsInit) {
-        c.diff = fsrsInitDifficulty(G);
-        c.stab = fsrsInitStability(G);
-        c.fsrsInit = 1;
-      } else {
-        c.stab = fsrsShortTermStability(c.stab, G);
-      }
-      if (rating <= 1) { // 不会 / 思路错：次日重现，不毕业
-        c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 0;
-        c.state = isRelearn ? 'relearning' : 'learning';
-        c.due = dayStart(now) + DAY;
-        return;
-      }
-      if (rating === 2) { // 算错：再学一步，次日重现后毕业
-        c.step = c.step + 1;
-        if (c.step > lastStep) {
-          wrongGraduate(c);
-        } else {
-          c.state = isRelearn ? 'relearning' : 'learning';
-          c.due = dayStart(now) + DAY;
-        }
-        return;
-      }
-      wrongGraduate(c); // 会做对：直接毕业
-      return;
-    }
-    // —— 复习阶段 ——
     const daysSince = Math.max(0, (now - (c.lastR || c.due)) / DAY);
     const R = fsrsRetention(daysSince, c.stab);
-    if (rating === 0) { // 不会：遗忘
-      c.step = 0; c.state = 'relearning'; c.grad = 0; c.reps = 0; c.ivl = 0;
+    if (rating === 0) { // 不会：遗忘 → 稳定性下降、难度上升，次日重现
       c.lapses++;
       c.diff = fsrsDifficulty(c.diff, 1);
       c.stab = fsrsLapseStability(c.diff, c.stab, R);
+      c.ivl = 1;
+      c.state = 'review';
       c.due = dayStart(now) + DAY;
       return;
     }
-    if (rating === 1) { // 思路错：Hard
-      c.diff = fsrsDifficulty(c.diff, 2);
-      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 2);
-      c.ivl = wrongInterval(c);
-      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-      return;
-    }
-    if (rating === 2) { // 算错：Good
-      c.diff = fsrsDifficulty(c.diff, 3);
-      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 3);
-      c.ivl = wrongInterval(c);
-      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-      return;
-    }
-    // 会做对：Easy
-    c.diff = fsrsDifficulty(c.diff, 4);
-    c.stab = fsrsSuccessStability(c.diff, c.stab, R, 4);
+    c.diff = fsrsDifficulty(c.diff, G);
+    c.stab = fsrsSuccessStability(c.diff, c.stab, R, G);
     c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
     c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-  }
-
-  function wrongGraduate(c) {
-    c.grad = 1; c.reps = 1; c.state = 'review';
-    c.stab = Math.max(FSRS_S_MIN, c.stab);
-    c.ivl = wrongInterval(c);
-    c.due = dayStart(Date.now()) + c.ivl * DAY;
   }
 
   function isWrongGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
@@ -108,7 +64,6 @@
 
   function wrongNextText(w) {
     if (w.state === 'new') return '待做';
-    if (w.state === 'learning' || w.state === 'relearning') return '学习中 · 次日重现';
     return '下次 ' + fmtDayMs(w.due) + '（间隔 ' + w.ivl + ' 天）' + (isWrongGraduated(w) ? ' · ✔已稳固' : '');
   }
 
@@ -140,7 +95,7 @@
     const ids = Object.keys(DB.wrongs || {});
     const due = ids.filter(function (wid) {
       const c = DB.wrongs[wid];
-      return (c.state === 'review' || c.state === 'learning' || c.state === 'relearning') && c.due <= now;
+      return c.state === 'review' && c.due <= now;
     });
     due.sort(function (a, b) { return DB.wrongs[a].due - DB.wrongs[b].due; });
     const fresh = shuffle(ids.filter(function (wid) { return DB.wrongs[wid].state === 'new'; }));
@@ -181,7 +136,7 @@
     const wrap = el('div', 'learn-wrap');
 
     const top = el('div', 'learn-top');
-    top.appendChild(el('span', 'badge', w.kind === '难题' ? '⭐ 难题' : '📕 错题'));
+    top.appendChild(el('span', 'badge', '📕 错题'));
     wrap.appendChild(top);
 
     const m = wrongMastery(wid);
@@ -247,6 +202,8 @@
     mk('思路错', 1);
     mk('算错', 2);
     mk('会做对', 3);
+    const kbd = el('div', 'keyboard-hint muted', '1 不会 · 2 思路错 · 3 算错 · 4 会做对 · Space/Enter 显示解析');
+    rating.appendChild(kbd);
     wrap.appendChild(rating);
 
     app.appendChild(wrap);
@@ -275,9 +232,6 @@
     if (w.hist.length > 60) w.hist = w.hist.slice(-60);
     w.lastR = Date.now();
     w.ivlR = w.ivl || 0;
-    const t = todayStr();
-    if (!DB.log.cost) DB.log.cost = {};
-    DB.log.cost[t] = (DB.log.cost[t] || 0) + WRONG_COST_S;
     wrongFrontier++;
     saveDB();
     renderApp();
@@ -303,7 +257,7 @@
     w.kind = '错题';
     w.q = ex.q; w.a = ex.a; w.a2 = ex.a2 || ''; w.src = ex.src || '';
     if (linkedId) w.linked = [linkedId];
-    applyRatingToWrongCard(w, 0); // 视为已做过一次（失败），初始化难度/稳定性，次日重现
+    initWrongAsLapsed(w); // 视为当天已忘记，次日进入重做队列
     DB.wrongs[id] = w;
     saveDB();
     toast('已加入错题本');
@@ -422,15 +376,14 @@
       return;
     }
 
-    let due = 0, fresh = 0, learn = 0, review = 0, grad = 0, pctSum = 0, lapses = 0;
+    let due = 0, fresh = 0, review = 0, grad = 0, pctSum = 0, lapses = 0;
     ids.forEach(function (wid) {
       const w = DB.wrongs[wid];
       pctSum += wrongMastery(wid).pct;
       lapses += (w.lapses || 0);
       if (w.state === 'new') fresh++;
-      else if (w.state === 'learning' || w.state === 'relearning') learn++;
       else { review++; if (isWrongGraduated(w)) grad++; }
-      if ((w.state === 'review' || w.state === 'learning' || w.state === 'relearning') && w.due <= Date.now()) due++;
+      if (w.state === 'review' && w.due <= Date.now()) due++;
     });
     const avg = Math.round(pctSum / ids.length);
 
@@ -445,7 +398,7 @@
 
     wrap.appendChild(el('h3', null, '📌 状态分布'));
     const sd = el('div', 'stat-card');
-    [['未做', fresh], ['学习中', learn], ['复习中', review], ['已稳固', grad]].forEach(function (p) {
+    [['未做', fresh], ['复习中', review], ['已稳固', grad]].forEach(function (p) {
       const row = el('div', 'cat-bar-row');
       row.appendChild(el('span', 'cat-bar-name', p[0]));
       const bar = el('div', 'cat-bar');
@@ -569,7 +522,7 @@
     w.kind = '错题';
     w.q = q.trim(); w.a = a.trim(); w.a2 = a2.trim(); w.src = src.trim();
     w.linked = wrongInput.linked.slice();
-    applyRatingToWrongCard(w, 0); // 视为已做过一次（失败），次日重现
+    initWrongAsLapsed(w); // 视为当天已忘记，次日进入重做队列
     DB.wrongs[id] = w;
     saveDB();
     closeWrongInput();
@@ -583,3 +536,5 @@
     if (m) m.remove();
     wrongInput = null;
   }
+
+export { initWrongAsLapsed, applyRatingToWrongCard };

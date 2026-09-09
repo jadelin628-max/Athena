@@ -6,11 +6,16 @@
     search.type = 'search';
     search.placeholder = subjKind() === 'qa' ? '搜索知识点（名称 / 内容）…' : '搜索公式（名称 / 内容）…';
     search.value = browseQuery;
-    // 输入时只重绘列表，不重建整个视图（避免销毁搜索框导致输入/IME 被打断）
+    // 输入时只重绘列表，不重建整个视图（避免销毁搜索框导致输入/IME 被打断）；
+    // 150ms 防抖：停止输入后才做全量过滤 + 重建列表，逐键不再卡顿
+    let searchTimer = null;
     search.addEventListener('input', function () {
       browseQuery = search.value;
-      const old = app.querySelector('.browse-list');
-      if (old) old.replaceWith(buildBrowseList());
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        const old = app.querySelector('.browse-list');
+        if (old) old.replaceWith(buildBrowseList());
+      }, 150);
     });
     head.appendChild(search);
     app.appendChild(head);

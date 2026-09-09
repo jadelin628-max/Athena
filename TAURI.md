@@ -11,16 +11,13 @@
 ## 打包步骤
 
 ```bash
-# 1) 生成 app.js（改过 src/ 后）
-node tools/build.mjs
+# 1) 生成 app.js 并同步 dist/（npm run build 等价；改过 src/ 后任意构建都会自动同步桌面版）
+npm run build
 
-# 2) 复制运行时文件到 dist/
-node tools/build-tauri.mjs
-
-# 3) 生成桌面图标集（首次）：用一张 1024×1024 PNG 生成全套图标
+# 2) 生成桌面图标集（首次）：用一张 1024×1024 PNG 生成全套图标
 cargo tauri icon icons/icon-512.png
 
-# 4) 打包（产物在 src-tauri/target/release/bundle/）
+# 3) 打包（产物在 src-tauri/target/release/bundle/）
 cargo tauri build
 ```
 

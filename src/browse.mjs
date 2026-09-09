@@ -20,7 +20,6 @@
     app.appendChild(vf);
     updateNavBadge();
     updateBrand();
-    updateCountdown();
     snapshotMastery();
   }
 
@@ -29,10 +28,9 @@
     const incNew = incompleteNewCount();
     const bar = el('div', 'stats-bar');
     bar.appendChild(el('span', 'stat', '今天已学习 ' + todayReviewed() + ' 张'));
-    bar.appendChild(el('span', 'stat', '⏱ 今日 ' + todayCostMin() + ' / 预算 ' + budgetMin() + ' 分' + (todayCostSec() > budgetSec() ? '（已超出，可继续）' : '')));
+    bar.appendChild(el('span', 'stat', '⏱ 今日已学 ' + todayStudyMin() + ' 分钟'));
     bar.appendChild(el('span', 'stat', '待复习 ' + s.due + ' 张'));
     bar.appendChild(el('span', 'stat', '未学完新卡 ' + incNew + ' 张'));
-    bar.appendChild(el('span', 'stat', '平均掌握 ' + s.avg + '%'));
     bar.appendChild(el('span', 'stat', '总计 ' + s.total));
     return bar;
   }
@@ -166,8 +164,7 @@
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
       wrap.appendChild(illus('learn-done'));
-      const overBudget = todayCostSec() > budgetSec();
-      wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。' + (overBudget ? '（今日已超出时间预算 ' + (todayCostMin() - budgetMin()) + ' 分钟，仍可继续）' : '')));
+      wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
       app.appendChild(wrap);
       return;
     }
@@ -484,6 +481,10 @@
     const catBadge = el('span', 'badge cat-badge', CATS[f.cat]);
     if (bareRecallOn() && !reviewed) catBadge.classList.add('hidden');
     top.appendChild(catBadge);
+    // 直接编辑当前卡（桌面/移动通用；沉浸模式下随 learn-top 一并隐藏）
+    const editBtn = el('button', 'btn small learn-edit', '✏️ 编辑');
+    editBtn.addEventListener('click', function () { openCardEdit(id); });
+    top.appendChild(editBtn);
     wrap.appendChild(top);
 
     const m = mastery(id);
@@ -639,7 +640,6 @@
     lastRatingUndo = {
       id: id,
       card: JSON.parse(JSON.stringify(card(id))),
-      costBefore: todayCostSec(),
       dailyBefore: (DB.log && DB.log.daily && DB.log.daily[todayStr()]) || 0,
       detailBefore: (DB.log && DB.log.detail && DB.log.detail[todayStr()] && DB.log.detail[todayStr()][id]) || 0
     };
@@ -647,7 +647,6 @@
     const afterM = mastery(id).pct;
     lastMasteryDelta = afterM - beforeM;
     markReviewed(id);
-    addCost(r);
     // 记录掌握度历史快照（每次评分后的掌握度，供「掌握度趋势图」）
     {
       const c = card(id);
@@ -677,8 +676,6 @@
     if (DB.log && DB.log.detail && DB.log.detail[t] && typeof DB.log.detail[t][id] === 'number') {
       DB.log.detail[t][id] = Math.max(0, DB.log.detail[t][id] - 1);
     }
-    if (!DB.log.cost) DB.log.cost = {};
-    DB.log.cost[t] = Math.max(0, u.costBefore);
     if (frontier > 0) frontier--;
     pendingAdvance = false;
     saveDB();

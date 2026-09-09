@@ -10,7 +10,7 @@
 
   // ---------------- 会话持久化（跨模块/刷新保持学习卡片） ----------------
   function saveSession() {
-    try { localStorage.setItem(sessionKey(), JSON.stringify({ deck: deck, pos: pos, frontier: frontier, pendingAdvance: pendingAdvance, seenAgain: seenAgain })); } catch (e) {}
+    try { localStorage.setItem(sessionKey(), JSON.stringify({ deck: deck, pos: pos, frontier: frontier, pendingAdvance: pendingAdvance, seenAgain: seenAgain })); } catch (e) { warnStorageFailure(); }
   }
   function loadSession() {
     try {
@@ -106,25 +106,9 @@
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     return Math.max(0, Math.round((exam - today) / 86400000));
   }
-  function updateCountdown() {
-    const badge = document.getElementById('countdownBadge');
-    if (!badge || !DB) return;
-    const d = countdownDays();
-    if (d == null) { badge.classList.add('hidden'); return; }
-    badge.classList.remove('hidden');
-    const g = goalTitle();
-    badge.textContent = d === 0 ? '🎯 今天是' + g : '📅 距' + g + ' ' + d + ' 天';
-    badge.title = '目标日期：' + fmtDate(examDateObj()) + '（可在设置中修改）';
-    badge.classList.toggle('urgent', d > 0 && d <= 30);
-  }
-  const COUNTDOWN_SEEN_KEY = 'athena_countdown_seen';
+  // 倒计时弹窗：每次打开应用都弹（仅在设置了目标日期时）
   function maybeShowCountdownPopup() {
-    if (countdownDays() == null) return;
-    try {
-      if (localStorage.getItem(COUNTDOWN_SEEN_KEY) === todayStr()) return;
-      localStorage.setItem(COUNTDOWN_SEEN_KEY, todayStr());
-    } catch (e) {}
-    showCountdownPopup();
+    if (countdownDays() != null) showCountdownPopup();
   }
   function showCountdownPopup() {
     const d = countdownDays();
@@ -340,16 +324,22 @@
   function bareRecallOn() { return !!(DB && DB.settings && DB.settings.bareRecall); }
   function isGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
 
-  // 每日时间预算（秒）：按时间而非卡片数安排学习
-  function budgetSec() { return Math.max(5, (DB && DB.settings && typeof DB.settings.minutesPerDay === 'number') ? DB.settings.minutesPerDay : MIN_PER_DAY_DEFAULT) * 60; }
-  function budgetMin() { return Math.round(budgetSec() / 60); }
-  function todayCostSec() { const t = todayStr(); return (DB && DB.log && DB.log.cost && DB.log.cost[t]) || 0; }
-  function todayCostMin() { return Math.round(todayCostSec() / 60); }
-  // 记录本次评分的复习成本（以评分档映射时间），计入今日预算
-  function addCost(r) {
-    const t = todayStr();
-    if (!DB.log.cost) DB.log.cost = {};
-    DB.log.cost[t] = (DB.log.cost[t] || 0) + (RATING_COST_S[r] || 3);
+  // 学习计时：应用前台可见期间按天累计时长（DB.log.studyTime['yyyy-mm-dd'] = 毫秒）。
+  // 结算点：每 15 秒 tick + 切后台/关页（actions.mjs 在 flush 落盘前先结算，顺序不可换）。
+  function todayStudySec() { const t = todayStr(); return (DB && DB.log && DB.log.studyTime && DB.log.studyTime[t]) || 0; }
+  function todayStudyMin() { return Math.round(todayStudySec() / 60000); }
+  let studyTickLast = Date.now();
+  function settleStudyTime() {
+    const now = Date.now();
+    if (DB && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      const delta = now - studyTickLast;
+      if (delta >= 5000) { // 不足 5 秒不记账；休眠/挂起后不巨量补记（单次上限 60 秒）
+        if (!DB.log.studyTime) DB.log.studyTime = {};
+        const t = todayStr();
+        DB.log.studyTime[t] = (DB.log.studyTime[t] || 0) + Math.min(delta, 60000);
+      }
+    }
+    studyTickLast = now;
   }
 
   // 卡面「存储强度」文本：以稳定度 S（天）为准（毕业/掌握度均按 S 判），半衰期 h 仅作「遗忘到 50% 耗时」参考展示
@@ -373,79 +363,19 @@
   const RELEARN_MS = [10 * 60 * 1000];    // FSRS-6 relearning_steps = ['10m']
   const RELEARN_LAST_STEP = 0;            // relearning：仅 1 步（索引 0）
   // 四档评分：0 = 忘记(Again)；1 = 困难(Hard)；2 = 良好(Good)；3 = 简单(Easy)
-  function applyRatingToCard(c, rating) {
-    const now = Date.now();
-    const G = rating + 1; // 0=Again→1, 1=Hard→2, 2=Good→3, 3=Easy→4
-    if (typeof c.step !== 'number') c.step = 0;
-    // —— 学习 / 重学阶段（FSRS-6：Learning=[1m,10m]，Relearning=[10m]；短时记忆稳定度）——
-    if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning') {
-      const isRelearn = (c.state === 'relearning');
-      const steps = isRelearn ? RELEARN_MS : STEP_MS;
-      const lastStep = isRelearn ? RELEARN_LAST_STEP : LAST_STEP;
-      // 新卡首次评分建立初始 D/S；其后同日学习/重学步进用短时记忆稳定度更新（Again 降低、Good/Easy 不降）
-      if (c.state === 'new' || !(c.fsrsInit)) {
-        c.diff = fsrsInitDifficulty(G);
-        c.stab = fsrsInitStability(G);
-        c.fsrsInit = 1;
-      } else {
-        c.stab = fsrsShortTermStability(c.stab, G);
-      }
-      if (rating === 0) { // Again：回第 0 步
-        c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 0;
-        c.state = isRelearn ? 'relearning' : 'learning';
-        c.due = now + steps[0];
-        return;
-      }
-      if (rating === 1) { // Hard：前进一步（不毕业）
-        c.step = Math.min(c.step + 1, lastStep);
-        c.state = isRelearn ? 'relearning' : 'learning';
-        c.due = now + steps[c.step];
-        return;
-      }
-      if (rating === 2) { // Good：前进一步，超过最后一步 → 毕业
-        c.step = c.step + 1;
-        if (c.step > lastStep) {
-          graduateReview(c, c.stab);
-        } else {
-          c.state = isRelearn ? 'relearning' : 'learning';
-          c.due = now + steps[c.step];
-        }
-        return;
-      }
-      graduateReview(c, c.stab); // Easy：直接毕业
-      return;
-    }
-    // —— 复习阶段（FSRS-6：R(t,S) 遗忘曲线 + 难度/稳定性更新 + 期望保留率）——
-    const daysSince = Math.max(0, (now - (c.lastR || c.due)) / DAY);
-    const R = fsrsRetention(daysSince, c.stab);
-    if (rating === 0) { // Again：遗忘 → 稳定性下降、难度上升，进入 Relearning 重学（10 分钟一步）
-      c.step = 0; c.state = 'relearning'; c.grad = 0; c.reps = 0; c.ivl = 0;
-      c.lapses++;
-      c.diff = fsrsDifficulty(c.diff, 1);
-      c.stab = fsrsLapseStability(c.diff, c.stab, R);
-      c.due = now + RELEARN_MS[0];
-      return;
-    }
-    if (rating === 1) { // Hard
-      c.diff = fsrsDifficulty(c.diff, 2);
-      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 2);
-      c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-      return;
-    }
-    if (rating === 2) { // Good
-      c.diff = fsrsDifficulty(c.diff, 3);
-      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 3);
-      c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-      return;
-    }
-    // Easy
-    c.diff = fsrsDifficulty(c.diff, 4);
-    c.stab = fsrsSuccessStability(c.diff, c.stab, R, 4);
-    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-    c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-  }
+  // 调度状态机在 src/sched.mjs（与错题卡共用），这里只注入知识卡差异：
+  // 学习步 1 分钟 → 10 分钟，重学 10 分钟一步；Again 回第 0 步，Hard 前进不毕业，Good 越过最后一步毕业。
+  const LEARN_SCHED = {
+    stepsLearn: STEP_MS,
+    stepsRelearn: RELEARN_MS,
+    lastLearnStep: LAST_STEP,
+    lastRelearnStep: RELEARN_LAST_STEP,
+    learningDue: function (now, steps, step) { return now + steps[step]; },
+    relearnDue: function (now) { return now + RELEARN_MS[0]; },
+    graduate: graduateReview,
+    reviewIvl: function (c) { return Math.max(1, Math.round(fsrsInterval(c.stab))); }
+  };
+  function applyRatingToCard(c, rating) { applySchedRating(c, rating, LEARN_SCHED); }
 
   function applyRating(id, rating) { applyRatingToCard(card(id), rating); }
 
@@ -483,6 +413,17 @@
   let mapTx = 0, mapTy = 0;
   let mapDragMoved = false;
 
+  // 会话级状态一键重置（切换学科 / 导入数据时调用）。
+  // ⚠️ 新增会话级可变量时必须在这里同步补上——此前 switchSubject 与 importDB 各自维护
+  // 手工清单且互有遗漏（导入换科后错题队列/导图状态残留），统一到这里避免再漏。
+  function resetSessionState() {
+    deck = []; pos = 0; frontier = 0; pendingAdvance = false;
+    lastMasteryDelta = null; lastRatingUndo = null; seenAgain = {}; quiz = null;
+    mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; mapDragMoved = false; heatSel = null;
+    browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
+    wrongDeck = []; wrongFrontier = 0; wrongExpanded = {}; wrongJumpId = null;
+  }
+
   // ---------------- 通用 DOM ----------------
   function el(tag, cls, text) {
     const e = document.createElement(tag);
@@ -498,10 +439,10 @@
     return e;
   }
 
-  // 插画（assets/ 下的空状态/弹窗配图）
+  // 插画（assets/ 下的空状态/弹窗配图，WebP 格式——PNG 原稿已删除）
   function illus(name) {
     const img = document.createElement('img');
-    img.src = 'assets/' + name + '.png';
+    img.src = 'assets/' + name + '.webp';
     img.className = 'illus';
     img.alt = '';
     return img;
@@ -532,7 +473,7 @@
     });
   }
 
-  // 移动端底部 Dock：模块 tab + 当前模块子视图（大屏隐藏，走顶栏）
+  // 移动端底部 Dock：仅两个一级模块；二级导航（学习/浏览等）在顶栏下方 subnav 横滑条
   function renderDock() {
     const dock = document.getElementById('dock');
     if (!dock) return;
@@ -541,16 +482,6 @@
       const b = el('button', 'dock-btn' + (currentModule === m[0] ? ' active' : ''), m[1]);
       b.setAttribute('data-action', 'module');
       b.setAttribute('data-arg', m[0]);
-      dock.appendChild(b);
-    });
-    dock.appendChild(el('span', 'dock-sep', ''));
-    const items = currentModule === 'wrong'
-      ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
-      : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计']];
-    items.forEach(function (it) {
-      const b = el('button', 'dock-btn' + (currentView === it[0] ? ' active' : ''), it[1]);
-      b.setAttribute('data-action', 'nav');
-      b.setAttribute('data-arg', it[0]);
       dock.appendChild(b);
     });
   }

@@ -1,0 +1,16 @@
+{
+  "name": "athena",
+  "version": "1.16.0",
+  "private": true,
+  "description": "Athena —— 考研知识点记忆应用（FSRS-6，纯静态 PWA + Tauri 桌面版，零 npm 依赖）",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs && node tools/build-tauri.mjs",
+    "build:check": "node tools/build.mjs --check",
+    "build:tauri": "node tools/build.mjs && node tools/build-tauri.mjs",
+    "test": "node --test tests/fsrs.test.mjs tests/interleave.test.mjs tests/sched.test.mjs tests/wrong.test.mjs",
+    "check": "node tools/check_data.mjs && node tools/check_version.mjs && node tools/changelog.mjs --check && node tools/build.mjs --check",
+    "check:render": "node tools/check_render.mjs",
+    "changelog": "node tools/changelog.mjs"
+  }
+}

@@ -15,7 +15,6 @@
       DB.settings.goalTitle = v;
       saveDB();
       goalInput.value = v;
-      updateCountdown();
       toast('目标名称已设为「' + v + '」');
       renderApp();
     });
@@ -32,12 +31,11 @@
     examInput.addEventListener('change', function () {
       DB.settings.examDate = examInput.value || '';
       saveDB();
-      updateCountdown();
       toast(examInput.value ? '目标日期已设为 ' + examInput.value : '已清除目标日期（倒计时关闭）');
     });
     s4b.appendChild(examInput);
     wrap.appendChild(s4b);
-    wrap.appendChild(el('p', 'muted', '设置目标日期后，顶部才会显示倒计时，并在每天首次打开时弹出提醒。留空则关闭倒计时与每日弹窗；毕业目标自动回退到固定稳定度。'));
+    wrap.appendChild(el('p', 'muted', '设置目标日期后，每次打开应用会弹出倒计时提醒；毕业目标可自动随倒计时变化。留空则全部关闭。'));
 
     const sBare = el('div', 'setting-row');
     sBare.appendChild(el('span', null, '裸回忆'));
@@ -57,28 +55,6 @@
     sBare.appendChild(bareLabel);
     wrap.appendChild(sBare);
     wrap.appendChild(el('p', 'muted', '交错练习的关键是「辨别」：先判断这道题属于哪一章、该用哪个方法，再回忆内容。开启后，卡片正面不再显示分类徽标，点开答案后才出现。'));
-
-    const s6 = el('div', 'setting-row');
-    s6.appendChild(el('span', null, '每日复习时间预算'));
-    const minInput = el('input', 'num');
-    minInput.type = 'number';
-    minInput.min = '5'; minInput.max = '120'; minInput.step = '1';
-    minInput.style.width = '96px';
-    minInput.value = (DB.settings && typeof DB.settings.minutesPerDay === 'number') ? DB.settings.minutesPerDay : MIN_PER_DAY_DEFAULT;
-    minInput.title = '每日最多投入的复习时间（分钟）';
-    minInput.addEventListener('change', function () {
-      let v = parseInt(minInput.value, 10);
-      if (isNaN(v)) v = MIN_PER_DAY_DEFAULT;
-      v = Math.max(5, Math.min(120, v));
-      DB.settings.minutesPerDay = v;
-      saveDB();
-      minInput.value = v;
-      toast('每日复习时间预算 ' + v + ' 分钟');
-      renderApp();
-    });
-    s6.appendChild(minInput);
-    wrap.appendChild(s6);
-    wrap.appendChild(el('p', 'muted', '按「时间」而非「卡片数」安排学习：到期复习优先，复习实际用时计入预算，剩余时间用来引入新卡——最小化记忆成本（SSP-MMC 成本约束）。'));
 
     const s7 = el('div', 'setting-row');
     s7.appendChild(el('span', null, '毕业目标稳定度'));

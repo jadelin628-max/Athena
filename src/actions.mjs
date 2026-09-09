@@ -1,3 +1,31 @@
+  // ---------------- 导入 / 导出共用 ----------------
+  // 把对象序列化为 JSON 并触发浏览器下载
+  function downloadJson(payload, filename) {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  // 弹出文件选择框读取 JSON 文本（单科导入与全科目导入共用）
+  function pickJsonFile(onLoaded) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+    input.onchange = function () {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function () { onLoaded(String(reader.result)); };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
   function handleAction(action, arg) {
     switch (action) {
       case 'nav':
@@ -110,86 +138,51 @@
         renderApp();
         break;
       case 'export': {
-        const payload = { format: 'formula-memory', version: 2, subject: currentSubjectId, db: DB };
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
         const subj = subjectList()[currentSubjectId];
-        a.download = (subj ? subj.short : '公式') + (subjKind() === 'qa' ? '知识点记忆-备份.json' : '公式记忆-备份.json');
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadJson(
+          { format: 'formula-memory', version: 2, subject: currentSubjectId, db: DB },
+          (subj ? subj.short : '公式') + (subjKind() === 'qa' ? '知识点记忆-备份.json' : '公式记忆-备份.json')
+        );
         toast('已导出');
         break;
       }
       case 'importjson': {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'application/json,.json';
-        input.onchange = function () {
-          const file = input.files && input.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = function () {
-            try {
-              importDB(String(reader.result));
-              buildSession(0);
-              currentView = 'learn';
-              renderApp();
-              toast('导入成功');
-            } catch (err) {
-              toast(err.message || '导入失败');
-            }
-          };
-          reader.readAsText(file);
-        };
-        input.click();
+        pickJsonFile(function (text) {
+          try {
+            importDB(text);
+            buildSession(0);
+            currentView = 'learn';
+            renderApp();
+            toast('导入成功');
+          } catch (err) {
+            toast(err.message || '导入失败');
+          }
+        });
         break;
       }
       case 'exportall': {
         if (typeof flushSave === 'function') flushSave();
-        const payload = { format: 'athena-all-backup', version: 1, subjects: exportAllSubjects() };
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'Athena-全部科目备份.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadJson({ format: 'athena-all-backup', version: 1, subjects: exportAllSubjects() }, 'Athena-全部科目备份.json');
         toast('已导出全部科目');
         break;
       }
       case 'importall': {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'application/json,.json';
-        input.onchange = function () {
-          const file = input.files && input.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = function () {
-            try {
-              let data;
-              try { data = JSON.parse(String(reader.result)); } catch (e) { throw new Error('不是有效的 JSON 文件'); }
-              const n = importAllSubjects(data);
-              if (n === 0) throw new Error('文件中没有可导入的科目');
-              loadDBAsync().then(function () {
-                buildSession(0);
-                currentView = 'learn';
-                renderApp();
-                toast('已导入全部科目（' + n + ' 个）');
-              });
-            } catch (err) {
-              toast(err.message || '导入失败');
-            }
-          };
-          reader.readAsText(file);
-        };
-        input.click();
+        pickJsonFile(function (text) {
+          try {
+            let data;
+            try { data = JSON.parse(text); } catch (e) { throw new Error('不是有效的 JSON 文件'); }
+            const n = importAllSubjects(data);
+            if (n === 0) throw new Error('文件中没有可导入的科目');
+            loadDBAsync().then(function () {
+              buildSession(0);
+              currentView = 'learn';
+              renderApp();
+              toast('已导入全部科目（' + n + ' 个）');
+            });
+          } catch (err) {
+            toast(err.message || '导入失败');
+          }
+        });
         break;
       }
       case 'resetall':
@@ -203,7 +196,7 @@
             DB.wrongs[wid] = Object.assign(defaultWrongCard(), keep);
           });
           DB.log = {};
-          wrongDeck = [];
+          resetSessionState();
           buildSession(0);
           localStorage.removeItem(sessionKey());
           currentView = 'learn';
@@ -253,19 +246,23 @@
   });
 
   document.addEventListener('keydown', function (e) {
-    if (currentView !== 'learn') return;
+    // 键盘刷卡：知识卡学习页与错题重做页共用（Space/Enter 显示答案，1-4 评分）
+    if (currentView !== 'learn' && currentView !== 'wrong') return;
+    const isLearn = currentView === 'learn';
     if (e.key === ' ' || e.key === 'Enter') {
       const reveal = document.querySelector('.controls');
       if (reveal && !reveal.classList.contains('hidden')) {
         e.preventDefault();
-        revealCurrent();
+        if (isLearn) revealCurrent(); else revealWrong();
         return;
       }
     }
     const rating = document.querySelector('.rating');
     if (rating && !rating.classList.contains('hidden')) {
       const map = { '1': 0, '2': 1, '3': 2, '4': 3 };
-      if (map[e.key] != null) doRate(map[e.key]);
+      if (map[e.key] != null) {
+        if (isLearn) doRate(map[e.key]); else doWrongRate(map[e.key]);
+      }
     }
   });
 
@@ -310,9 +307,14 @@
     else if (dx > 0 && pos > 0) handleAction('goback');
   }, { passive: true });
 
-  // iOS/移动端稳定性：切后台或关页前强制落盘，避免合并写尚未 flush 就丢进度
+  // iOS/移动端稳定性：切后台或关页前先结算学习计时、再强制落盘，避免合并写尚未 flush 就丢进度
+  // （两个监听按注册顺序执行：先 settleStudyTime 记账，后 flushSave 写盘，顺序不可换）
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') settleStudyTime(); });
+  window.addEventListener('pagehide', settleStudyTime);
   window.addEventListener('pagehide', function () { if (typeof flushSave === 'function') flushSave(); });
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden' && typeof flushSave === 'function') flushSave(); });
+  // 前台期间每 15 秒结算一次学习时长（内存记账，随各次 saveDB / 切后台落盘）
+  setInterval(settleStudyTime, 15000);
 
   // ---------------- 主题 ----------------
   function applyTheme() {
@@ -377,12 +379,12 @@
   // ---------------- 学科切换与选择器 ----------------
   function switchSubject(id) {
     if (id === currentSubjectId || !setSubject(id)) return;
-    deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
-    mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; heatSel = null;
-    browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
-    wrongDeck = [];
+    const target = id;
+    resetSessionState(); // 统一会话重置（deck/浏览过滤/导图/错题队列一次清干净）
     currentModule = 'cards';
     loadDBAsync().then(function () {
+      // 竞态防护：等待期间用户又切到了别的学科时，放弃这次过期的加载结果
+      if (currentSubjectId !== target) return;
       if (!loadSession()) buildSession(0);
       currentView = 'learn';
       renderApp();
@@ -419,6 +421,10 @@
       cimg.alt = '';
       cur.appendChild(cimg);
       cur.appendChild(document.createTextNode(cs.short));
+      // 总体掌握度徽标（数值由 renderApp → updateBrand 刷新）
+      const pct = el('span', 'subject-pct', '');
+      pct.id = 'subjectPct';
+      cur.appendChild(pct);
     }
   }
 

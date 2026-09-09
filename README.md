@@ -16,17 +16,16 @@
 
 ## 开发与校验
 
-`app.js` 由 `src/` 拼接生成；改完代码或数据后运行（需 Node ≥ 18，零 npm 依赖）：
+`app.js` 由 `src/` 拼接生成（需 Node ≥ 18，零 npm 依赖）。推荐用 npm 脚本（`package.json` 仅作任务入口，无需 `npm install`）：
 
 ```bash
-node tools/build.mjs                                        # 重新生成 app.js
-node --test tests/fsrs.test.mjs tests/interleave.test.mjs   # 纯函数对拍
-node tools/check_data.mjs                                   # 数据完整性
-node tools/check_render.mjs                                 # 渲染不变量（需 Chrome/Edge）
-node tools/check_version.mjs                                # 版本一致性
+npm run build         # 重新生成 app.js 并同步桌面版 dist/（等价 node tools/build.mjs + build-tauri）
+npm test              # 单元测试（FSRS 对拍 / 交错 / 调度状态机 / 错题调度）
+npm run check         # 数据完整性 + 版本一致性（含 tauri/dist）+ CHANGELOG/app.js 同步校验
+npm run check:render  # 渲染不变量（需 Chrome/Edge）
 ```
 
-详见 `tools/README.md`。
+等价的底层命令与工具说明见 `tools/README.md`。推送/PR 时 GitHub Actions 会自动跑构建同步校验、测试与各道闸门（`.github/workflows/ci.yml`）。
 
 ## 许可证
 

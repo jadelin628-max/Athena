@@ -1,10 +1,6 @@
   // ---------------- 全局配置常量（各模块共享，须最先拼接） ----------------
   // 目标倒计时
   const GOAL_DEFAULT = '考研';
-  // 每日复习时间预算（分钟）
-  const MIN_PER_DAY_DEFAULT = 20;
-  // 各评分档单次复习成本（秒）
-  const RATING_COST_S = [9, 6, 3, 1];
   // 毕业目标稳定度与目标日可提取性
   const TARGET_S_DEFAULT = 90;
   const TARGET_CONFIDENCE = 0.9;

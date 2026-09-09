@@ -82,17 +82,10 @@ body[data-subject="politics"] header {
   font-weight: 800; font-size: 18px; letter-spacing: .2px;
   display: flex; align-items: center; gap: 8px; white-space: nowrap;
 }
-.countdown-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: linear-gradient(135deg, #F4C0D1, #F0AEC4); color: #72243E;
-  font-size: 12.5px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
-  white-space: nowrap; box-shadow: 0 2px 8px rgba(212, 83, 126, .18);
-  flex: none; cursor: pointer; transition: transform .12s, box-shadow .12s;
+.brand {
+  font-weight: 800; font-size: 18px; letter-spacing: .2px;
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
 }
-.countdown-badge:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212, 83, 126, .3); }
-.countdown-badge:active { transform: translateY(0); }
-.countdown-badge.urgent { background: linear-gradient(135deg, #D4537E, #C24A71); color: #fff; }
-.brand small { color: var(--muted); font-weight: 600; font-size: 13px; }
 nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .nav-btn, .icon-btn {
   border: none; background: transparent; color: var(--muted);
@@ -114,18 +107,16 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 }
 .sub-btn { padding: 7px 13px; font-size: 13.5px; }
 .dock { display: none; }
-.subject-select {
-  border: 1px solid var(--border); background: var(--card); color: var(--text);
-  padding: 7px 9px; border-radius: 10px; font-size: 14px; cursor: pointer;
-  max-width: 118px; transition: border-color .15s;
-}
-.subject-select:focus { outline: none; border-color: var(--accent); }
 .subject-dd { position: relative; }
 .subject-dd-current {
   display: flex; align-items: center; gap: 6px;
   border: 1px solid var(--border); background: var(--card); color: var(--text);
-  padding: 7px 10px; border-radius: 10px; font-size: 14px; cursor: pointer;
-  max-width: 160px; white-space: nowrap; overflow: hidden;
+  padding: 6px 10px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer;
+  max-width: 220px; white-space: nowrap; overflow: hidden;
+}
+.subject-pct {
+  flex: none; font-size: 12px; font-weight: 700; color: var(--accent);
+  background: var(--accent-weak); padding: 1px 8px; border-radius: 999px;
 }
 .subject-dd-menu {
   position: absolute; top: calc(100% + 4px); left: 0; z-index: 60;
@@ -337,6 +328,7 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 
 /* 学习导航 */
 .learn-nav { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.learn-top .learn-edit { flex: none; }
 
 /* 掌握度 */
 .learn-meta { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; flex-wrap: wrap; }
@@ -346,7 +338,6 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 }
 .mastery-bar { flex: 1; min-width: 80px; height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; }
 .mastery-fill { height: 100%; background: linear-gradient(90deg, #B5D4F4, #378ADD); border-radius: 999px; transition: width .35s; }
-.browse-state { margin-left: auto; color: var(--accent); font-weight: 600; font-size: 13px; white-space: nowrap; }
 .browse-item .mastery-bar { margin: 0 16px 10px; height: 6px; flex: none; }
 
 /* 星级与题型 */
@@ -490,6 +481,7 @@ body.immersive header { display: none; }
 body.immersive .subnav { display: none; }
 body.immersive .dock { display: none; }
 body.immersive .stats-bar, body.immersive .app-version { display: none; }
+body.immersive .learn-top { display: none; } /* 沉浸模式隐藏录入/编辑等操作按钮 */
 body.immersive #immersiveExit { display: block; }
 
 /* 记忆原理 */
@@ -528,23 +520,20 @@ body.immersive #immersiveExit { display: block; }
   header nav { flex-wrap: nowrap; overflow-x: auto; }
   #menuToggle { display: inline-flex; flex: none; }
   .module-tab { padding: 7px 11px; font-size: 13px; }
-  .subnav { display: none; }
+  .subnav { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   header .module-tab { display: none; }
   .dock {
-    display: flex; align-items: center; gap: 2px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
     background: var(--card); border-top: 1px solid var(--border);
     padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
     overflow-x: auto; -webkit-overflow-scrolling: touch;
   }
   .dock-btn {
-    flex: none; border: none; background: transparent; color: var(--muted);
-    padding: 9px 11px; border-radius: 10px; font-size: 13px; cursor: pointer; white-space: nowrap;
+    flex: 1; max-width: 180px; border: none; background: transparent; color: var(--muted);
+    padding: 9px 11px; border-radius: 10px; font-size: 13.5px; cursor: pointer; white-space: nowrap;
   }
   .dock-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; font-weight: 600; }
-  .dock-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; flex: none; }
-  .subject-select { max-width: 86px; font-size: 13px; padding: 7px 7px; }
-  .countdown-badge { font-size: 11px; padding: 4px 9px; }
   .brand { gap: 6px; }
   #brandText { font-size: 13px; }
   .nav-btn { padding: 9px 10px; font-size: 13px; min-height: 40px; }

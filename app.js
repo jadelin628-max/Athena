@@ -2,10 +2,6 @@
   // ---------------- 全局配置常量（各模块共享，须最先拼接） ----------------
   // 目标倒计时
   const GOAL_DEFAULT = '考研';
-  // 每日复习时间预算（分钟）
-  const MIN_PER_DAY_DEFAULT = 20;
-  // 各评分档单次复习成本（秒）
-  const RATING_COST_S = [9, 6, 3, 1];
   // 毕业目标稳定度与目标日可提取性
   const TARGET_S_DEFAULT = 90;
   const TARGET_CONFIDENCE = 0.9;
@@ -25,10 +21,13 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.14.2';
+  const VERSION = '1.16.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.16.0', date: '2026-09', items: ['错题算法重置（以 FSRS 为基础的探索性调整）：添加错题即视为「当天已遗忘」并直接进入复习队列（次日重现）；重做评分全部走标准 FSRS——一直做对间隔大幅延长、卡片永不消失；移除学习/重学步进与「难题」分类（旧设计残留），「已稳固」仅为掌握度标识', 'UI 改版：总体掌握度并入左上角学科选择器；移除顶栏倒计时徽标，倒计时弹窗改为每次打开应用弹出；☰ 菜单仅保留原理与设置；移动端底栏仅保留知识卡/错题本两个模块键，二级导航恢复为顶栏下方横滑条；学习页卡片右上角新增「✏️ 编辑」；沉浸模式隐藏录入/编辑按钮；统计条移除与顶栏重复的「平均掌握」', '「每日时间预算」功能移除，新增学习计时器：自动累计应用前台使用时长（按天），统计条显示「⏱ 今日已学 X 分钟」', '工程：npm run build 现在自动同步 Tauri 桌面版 dist/，版本发布不再可能打包旧代码；CI 增加实际构建验证'] },
+    { v: '1.15.1', date: '2026-09', items: ['错题算法对齐设计（知识卡仍为标准 FSRS-6，不受影响）：评「算错」现为次日重现一步后再毕业（学习步进改两步，修复此前因配置提前毕业）；难题卡评「会做对」的复习间隔统一走 ×1.4 规则（此前仅困难/良好生效）', '体积：空状态/倒计时插画由 PNG 转 WebP（4.6MB → 240KB，缩小 95%），离线缓存与桌面安装包同步瘦身'] },
+    { v: '1.15.0', date: '2026-09', items: ['安全：学习进度写盘失败（存储空间满/隐私模式）不再静默——立即提示并引导导出备份；「导入全部科目」写失败的学科不再误报为导入成功', '性能：评分后落盘延迟 100ms 合并写入，把 JSON 序列化挪出评分点击的绘制路径；浏览页搜索输入 150ms 防抖', '错题重做页新增键盘快捷键（1-4 评分 / Space 显示解析）与快捷键提示行，与知识卡学习页一致', '重构：知识卡与错题卡的 FSRS 步进调度状态机合并为 src/sched.mjs 共享实现（调度行为不变，新增 12 个状态迁移测试）；切换学科/导入/清空进度的会话重置统一为 resetSessionState，修复导入换科后错题队列与导图状态残留；切学科异步加载增加竞态防护', '数据：学习数据库新增 schemaVersion 字段，为后续大版本数据迁移留钩子', '工程：新增 package.json 与 GitHub Actions CI（build 同步校验 + 测试 + 数据/版本闸门）；check_version 纳入 tauri.conf.json、dist/ 与 package.json 的版本校验（修复桌面版打包旧代码）；新增 CHANGELOG.md（由 tools/changelog.mjs 从应用内更新日志生成）；清理 style.css 死代码'] },
     { v: '1.14.2', date: '2026-09', items: ['评分档「忘记」改为「再来一次」，弱化犯错带来的挫败感'] },
     { v: '1.14.1', date: '2026-09', items: ['修复：移动端沉浸模式底部 Dock 未收起、学科选择器被顶栏 overflow 裁剪而无法使用'] },
     { v: '1.14.0', date: '2026-09', items: ['移动端新增底部 Dock（模块 tab + 常用入口，大屏仍用顶栏）', '切卡/评分加入轻量滑入淡入动效'] },
@@ -208,6 +207,76 @@
   function fsrsHalflife(S) { return Math.max(FSRS_S_MIN, S) * FSRS_HALFLIFE_K; }
 
 
+  // ---------------- FSRS 步进调度状态机（知识卡学习调度专用） ----------------
+  // 把「学习/重学时间步进 + 复习阶段 FSRS 更新」的状态迁移收敛到一处，
+  // 变体只通过 opts 注入差异（错题卡不走此机器：v1.16.0 起为纯复习态，见 wrong.mjs）：
+  //   stepsLearn / stepsRelearn : 学习 / 重学阶段的步长表（毫秒）
+  //   lastLearnStep / lastRelearnStep : 各阶段最后一步索引（Good 越过该步即毕业）
+  //   learningDue(now, steps, step) : 学习/重学阶段评分后的下次到期时刻
+  //   relearnDue(now) : 复习阶段评「忘记」进入重学后的下次到期时刻
+  //   graduate(c) : 毕业实现（按当前稳定度定间隔）
+  //   reviewIvl(c, G) : 复习阶段 Hard/Good/Easy 的间隔天数
+  // 四档评分：0 = 忘记(Again)；1 = 困难(Hard)；2 = 良好(Good)；3 = 简单(Easy)
+  function applySchedRating(c, rating, opts) {
+    const now = Date.now();
+    const G = rating + 1; // 0=Again→1, 1=Hard→2, 2=Good→3, 3=Easy→4
+    if (typeof c.step !== 'number') c.step = 0;
+    // —— 学习 / 重学阶段（FSRS-6：短时记忆稳定度，Again 可降、Good/Easy 不降）——
+    if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning') {
+      const isRelearn = (c.state === 'relearning');
+      const steps = isRelearn ? opts.stepsRelearn : opts.stepsLearn;
+      const lastStep = isRelearn ? opts.lastRelearnStep : opts.lastLearnStep;
+      // 新卡首次评分建立初始 D/S；其后同日学习/重学步进用短时记忆稳定度更新
+      if (c.state === 'new' || !(c.fsrsInit)) {
+        c.diff = fsrsInitDifficulty(G);
+        c.stab = fsrsInitStability(G);
+        c.fsrsInit = 1;
+      } else {
+        c.stab = fsrsShortTermStability(c.stab, G);
+      }
+      if (rating === 0) { // Again：回第 0 步
+        c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 0;
+        c.state = isRelearn ? 'relearning' : 'learning';
+        c.due = opts.learningDue(now, steps, 0);
+        return;
+      }
+      if (rating === 1) { // Hard：前进一步（不毕业）
+        c.step = Math.min(c.step + 1, lastStep);
+        c.state = isRelearn ? 'relearning' : 'learning';
+        c.due = opts.learningDue(now, steps, c.step);
+        return;
+      }
+      if (rating === 2) { // Good：前进一步，超过最后一步 → 毕业
+        c.step = c.step + 1;
+        if (c.step > lastStep) {
+          opts.graduate(c);
+        } else {
+          c.state = isRelearn ? 'relearning' : 'learning';
+          c.due = opts.learningDue(now, steps, c.step);
+        }
+        return;
+      }
+      opts.graduate(c); // Easy：直接毕业
+      return;
+    }
+    // —— 复习阶段（FSRS-6：R(t,S) 遗忘曲线 + 难度/稳定性更新 + 期望保留率）——
+    const daysSince = Math.max(0, (now - (c.lastR || c.due)) / DAY);
+    const R = fsrsRetention(daysSince, c.stab);
+    if (rating === 0) { // Again：遗忘 → 稳定性下降、难度上升，进入 Relearning 重学
+      c.step = 0; c.state = 'relearning'; c.grad = 0; c.reps = 0; c.ivl = 0;
+      c.lapses++;
+      c.diff = fsrsDifficulty(c.diff, 1);
+      c.stab = fsrsLapseStability(c.diff, c.stab, R);
+      c.due = opts.relearnDue(now);
+      return;
+    }
+    c.diff = fsrsDifficulty(c.diff, G);
+    c.stab = fsrsSuccessStability(c.diff, c.stab, R, G);
+    c.ivl = opts.reviewIvl(c, G);
+    c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
+  }
+
+
   // ---------------- 交错练习 · 辨析聚类 ----------------
   // 原理：把「相关需辨析」的卡（REL 中 tag=同类/对比/类比）聚成簇、簇内相邻出现，
   //       簇与无关联的单卡再按章节轮转——只让「真有关系」的卡在一起，无关联的卡不硬凑。
@@ -292,21 +361,6 @@
     politics: 'assets/subject_icon/icon-politics.svg'
   };
   function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
-  // 把学科图标（图片）填进元素，suffix 为追加文本
-  function setBrand(el, subj, suffix) {
-    el.innerHTML = '';
-    const url = subjectIconUrl(subj.id);
-    if (url) {
-      const img = document.createElement('img');
-      img.src = url;
-      img.className = 'subject-icon';
-      img.alt = '';
-      el.appendChild(img);
-    } else {
-      el.textContent = subj.icon || '';
-    }
-    if (suffix) el.appendChild(document.createTextNode(suffix));
-  }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配
   function subjKind() {
     const s = subjectList()[currentSubjectId];
@@ -325,10 +379,8 @@
     REL = subj.REL || {};
     PITFALL = subj.PITFALL || {};
     MNEM = subj.MNEM || {};
-    try { localStorage.setItem(SUBJECT_KEY, subj.id); } catch (e) {}
+    try { localStorage.setItem(SUBJECT_KEY, subj.id); } catch (e) { warnStorageFailure(); }
     document.title = subj.name;
-    const b = document.getElementById('brandText');
-    if (b) setBrand(b, subj, '');
     renderSubjectDropdown();
     document.body.setAttribute('data-subject', subj.id);
     const url = subjectIconUrl(subj.id);
@@ -338,12 +390,11 @@
   function dbKey() { return currentSubjectId + '_formula_srs_v1'; }
   function sessionKey() { return currentSubjectId + '_formula_session_v2'; }
 
+  // 把总体掌握度写进左上角学科选择器内的百分比徽标（每轮渲染随统计刷新）
   function updateBrand() {
-    const b = document.getElementById('brandText');
-    if (!b || !currentSubjectId || !DB || !DATA) return;
-    const subj = subjectList()[currentSubjectId];
-    const s = stats();
-    setBrand(b, subj, ' ' + s.avg + '%');
+    const pct = document.getElementById('subjectPct');
+    if (!pct || !currentSubjectId || !DB || !DATA) return;
+    pct.textContent = stats().avg + '%';
   }
 
   function updateNavBadge() {
@@ -371,7 +422,7 @@
     if (w && typeof w === 'object') {
       ['reps', 'ivl', 'due', 'lapses', 'grad', 'step', 'diff', 'stab', 'lastSolveMs', 'lastR', 'ivlR'].forEach(function (k) { if (typeof w[k] === 'number') out[k] = w[k]; });
       if (w.fsrsInit) out.fsrsInit = 1;
-      if (typeof w.kind === 'string') out.kind = (w.kind === '难题') ? '难题' : '错题';
+      out.kind = '错题'; // 难题分类已废除（v1.16.0），存量「难题」统一迁移
       if (typeof w.q === 'string') out.q = w.q;
       if (typeof w.a === 'string') out.a = w.a;
       if (typeof w.a2 === 'string') out.a2 = w.a2;
@@ -417,10 +468,11 @@
 
   function normalizeDB(raw) {
     DB = (raw && typeof raw === 'object') ? raw : { cards: {}, settings: {}, log: {} };
+    // 整体 schema 版本号：为将来大迁移留钩子（旧数据无此字段，一律补为当前版本 1）
+    if (DB.schemaVersion == null) DB.schemaVersion = 1;
     if (!DB.cards) DB.cards = {};
     if (!DB.settings) DB.settings = {};
     if (DB.settings.dailyNew == null) DB.settings.dailyNew = 10;
-    if (DB.settings.minutesPerDay == null) DB.settings.minutesPerDay = MIN_PER_DAY_DEFAULT;
     // 旧版本用 targetH（半衰期天）作为固定毕业目标；迁移到 targetS（稳定度天）。
     //   旧 90 天半衰期 ≈ 90/K ≈ 1 天稳定度，语义已变：直接采用新默认值（不再沿用旧数值，避免误把「半衰期天」当「稳定度天」）。
     if (DB.settings.targetS == null) DB.settings.targetS = TARGET_S_DEFAULT;
@@ -433,6 +485,13 @@
     if (!DB.custom) DB.custom = {};
     if (!DB.cardOverrides) DB.cardOverrides = {};
     if (!DB.customRel) DB.customRel = {};
+    // 错题卡调度迁移（v1.16.0 重置为纯复习态）：学习/重学态 → 复习态；难题分类废除
+    Object.keys(DB.wrongs).forEach(function (wid) {
+      const w = DB.wrongs[wid];
+      if (!w || typeof w !== 'object') return;
+      if (w.kind === '难题') w.kind = '错题';
+      if (w.state === 'learning' || w.state === 'relearning') w.state = 'review';
+    });
     refreshData();
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
@@ -565,7 +624,16 @@
     toast('已保存修改');
   }
 
-  // 合并写：同一轮事件里的多次 saveDB 只落一次盘（iOS 稳定性优先）。
+  // 存储写失败告警（每次会话只提示一次）：配额满/隐私模式下丢的是学习进度，绝不能静默
+  let storageWarned = false;
+  function warnStorageFailure() {
+    if (storageWarned) return;
+    storageWarned = true;
+    try { console.error('Athena: localStorage 写入失败（存储空间可能已满或处于隐私模式），学习进度无法保存！'); } catch (e) {}
+    try { toast('⚠️ 学习进度写入失败（存储空间可能已满）——请立即到「设置」导出备份，避免进度丢失！'); } catch (e) {}
+  }
+
+  // 合并写：短时间窗口内的多次 saveDB 只落一次盘，且把序列化挪出评分点击的绘制路径。
   let saveDirty = false;
   let saveFlushScheduled = false;
   let idbBackupTimer = null;
@@ -573,26 +641,27 @@
     if (!DB) return;
     saveDirty = false;
     saveFlushScheduled = false;
-    const json = JSON.stringify(DB);
-    try { localStorage.setItem(dbKey(), json); } catch (e) {}
-    // IndexedDB 作为低频备份：防抖 2s，避免每次评分都全量写 IDB
+    let json = null;
+    try { json = JSON.stringify(DB); } catch (e) { warnStorageFailure(); return; }
+    try {
+      localStorage.setItem(dbKey(), json);
+    } catch (e) {
+      warnStorageFailure();
+    }
+    // IndexedDB 作为低频备份：防抖 2s，避免每次评分都全量写 IDB（idbSet 内部已吞异常，备份尽力而为）
     if (idbBackupTimer) clearTimeout(idbBackupTimer);
     idbBackupTimer = setTimeout(function () {
       idbBackupTimer = null;
-      try { idbSet(dbKey(), DB); } catch (e) {}
+      idbSet(dbKey(), DB);
     }, 2000);
   }
   function saveDB() {
-    if (saveFlushScheduled) { saveDirty = true; return; }
     saveDirty = true;
+    if (saveFlushScheduled) return;
     saveFlushScheduled = true;
-    if (typeof queueMicrotask === 'function') {
-      queueMicrotask(function () { if (saveDirty) flushSave(); });
-    } else {
-      Promise.resolve().then(function () { if (saveDirty) flushSave(); });
-    }
-    // 兜底：即使微任务被推迟，也保证在下一轮 timer 里落盘
-    setTimeout(function () { if (saveDirty) flushSave(); }, 0);
+    // 延迟 100ms：让评分后的界面先绘制，再串行化落盘（大库时评分点击不再卡顿）；
+    // 同窗口内的多次 saveDB 合并为一次写。切后台/关页由 pagehide/visibilitychange 兜底 flush。
+    setTimeout(function () { if (saveDirty) flushSave(); }, 100);
   }
 
   function sanitizeCard(c) {
@@ -629,16 +698,12 @@
     }
     if (target !== currentSubjectId) {
       if (!setSubject(target)) throw new Error('备份中的学科不受支持');
-      deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
-      browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
+      resetSessionState(); // 统一会话重置（含错题队列/导图/浏览过滤，避免上一学科状态残留）
     }
-    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {}, cardOverrides: {}, customRel: {} };
+    const fresh = { schemaVersion: 1, cards: {}, settings: {}, log: {}, wrongs: {}, custom: {}, cardOverrides: {}, customRel: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
-    }
-    if (payload.settings && typeof payload.settings.minutesPerDay === 'number') {
-      fresh.settings.minutesPerDay = Math.max(5, Math.min(120, Math.round(payload.settings.minutesPerDay)));
     }
     if (payload.settings && typeof payload.settings.targetS === 'number') {
       fresh.settings.targetS = Math.max(7, Math.min(730, Math.round(payload.settings.targetS)));
@@ -717,21 +782,26 @@
     });
     return out;
   }
-  // 导入全部科目：把 { sid: db } 写入各科 localStorage + IndexedDB；返回成功写入的科目数
+  // 导入全部科目：把 { sid: db } 写入各科 localStorage + IndexedDB；返回成功写入的科目数。
+  // 写入失败的学科不计入成功数（调用方以此判断是否提示），并触发存储告警。
   function importAllSubjects(data) {
     const subs = data && data.subjects;
     if (!subs || typeof subs !== 'object') throw new Error('文件格式不正确（缺少 subjects 数据）');
     const list = subjectList();
     let count = 0;
+    let failed = false;
     Object.keys(subs).forEach(function (sid) {
       if (!list[sid]) return; // 跳过本应用不认识的学科
       const db = subs[sid];
       if (!db || typeof db !== 'object' || typeof db.cards !== 'object') return;
       const key = sid + '_formula_srs_v1';
-      try { localStorage.setItem(key, JSON.stringify(db)); } catch (e) {}
-      try { idbSet(key, db); } catch (e) {}
+      let ok = true;
+      try { localStorage.setItem(key, JSON.stringify(db)); } catch (e) { ok = false; }
+      if (!ok) { failed = true; return; }
+      idbSet(key, db);
       count++;
     });
+    if (failed) warnStorageFailure();
     return count;
   }
 
@@ -873,7 +943,7 @@
 
   // ---------------- 会话持久化（跨模块/刷新保持学习卡片） ----------------
   function saveSession() {
-    try { localStorage.setItem(sessionKey(), JSON.stringify({ deck: deck, pos: pos, frontier: frontier, pendingAdvance: pendingAdvance, seenAgain: seenAgain })); } catch (e) {}
+    try { localStorage.setItem(sessionKey(), JSON.stringify({ deck: deck, pos: pos, frontier: frontier, pendingAdvance: pendingAdvance, seenAgain: seenAgain })); } catch (e) { warnStorageFailure(); }
   }
   function loadSession() {
     try {
@@ -969,25 +1039,9 @@
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     return Math.max(0, Math.round((exam - today) / 86400000));
   }
-  function updateCountdown() {
-    const badge = document.getElementById('countdownBadge');
-    if (!badge || !DB) return;
-    const d = countdownDays();
-    if (d == null) { badge.classList.add('hidden'); return; }
-    badge.classList.remove('hidden');
-    const g = goalTitle();
-    badge.textContent = d === 0 ? '🎯 今天是' + g : '📅 距' + g + ' ' + d + ' 天';
-    badge.title = '目标日期：' + fmtDate(examDateObj()) + '（可在设置中修改）';
-    badge.classList.toggle('urgent', d > 0 && d <= 30);
-  }
-  const COUNTDOWN_SEEN_KEY = 'athena_countdown_seen';
+  // 倒计时弹窗：每次打开应用都弹（仅在设置了目标日期时）
   function maybeShowCountdownPopup() {
-    if (countdownDays() == null) return;
-    try {
-      if (localStorage.getItem(COUNTDOWN_SEEN_KEY) === todayStr()) return;
-      localStorage.setItem(COUNTDOWN_SEEN_KEY, todayStr());
-    } catch (e) {}
-    showCountdownPopup();
+    if (countdownDays() != null) showCountdownPopup();
   }
   function showCountdownPopup() {
     const d = countdownDays();
@@ -1203,16 +1257,22 @@
   function bareRecallOn() { return !!(DB && DB.settings && DB.settings.bareRecall); }
   function isGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
 
-  // 每日时间预算（秒）：按时间而非卡片数安排学习
-  function budgetSec() { return Math.max(5, (DB && DB.settings && typeof DB.settings.minutesPerDay === 'number') ? DB.settings.minutesPerDay : MIN_PER_DAY_DEFAULT) * 60; }
-  function budgetMin() { return Math.round(budgetSec() / 60); }
-  function todayCostSec() { const t = todayStr(); return (DB && DB.log && DB.log.cost && DB.log.cost[t]) || 0; }
-  function todayCostMin() { return Math.round(todayCostSec() / 60); }
-  // 记录本次评分的复习成本（以评分档映射时间），计入今日预算
-  function addCost(r) {
-    const t = todayStr();
-    if (!DB.log.cost) DB.log.cost = {};
-    DB.log.cost[t] = (DB.log.cost[t] || 0) + (RATING_COST_S[r] || 3);
+  // 学习计时：应用前台可见期间按天累计时长（DB.log.studyTime['yyyy-mm-dd'] = 毫秒）。
+  // 结算点：每 15 秒 tick + 切后台/关页（actions.mjs 在 flush 落盘前先结算，顺序不可换）。
+  function todayStudySec() { const t = todayStr(); return (DB && DB.log && DB.log.studyTime && DB.log.studyTime[t]) || 0; }
+  function todayStudyMin() { return Math.round(todayStudySec() / 60000); }
+  let studyTickLast = Date.now();
+  function settleStudyTime() {
+    const now = Date.now();
+    if (DB && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      const delta = now - studyTickLast;
+      if (delta >= 5000) { // 不足 5 秒不记账；休眠/挂起后不巨量补记（单次上限 60 秒）
+        if (!DB.log.studyTime) DB.log.studyTime = {};
+        const t = todayStr();
+        DB.log.studyTime[t] = (DB.log.studyTime[t] || 0) + Math.min(delta, 60000);
+      }
+    }
+    studyTickLast = now;
   }
 
   // 卡面「存储强度」文本：以稳定度 S（天）为准（毕业/掌握度均按 S 判），半衰期 h 仅作「遗忘到 50% 耗时」参考展示
@@ -1236,79 +1296,19 @@
   const RELEARN_MS = [10 * 60 * 1000];    // FSRS-6 relearning_steps = ['10m']
   const RELEARN_LAST_STEP = 0;            // relearning：仅 1 步（索引 0）
   // 四档评分：0 = 忘记(Again)；1 = 困难(Hard)；2 = 良好(Good)；3 = 简单(Easy)
-  function applyRatingToCard(c, rating) {
-    const now = Date.now();
-    const G = rating + 1; // 0=Again→1, 1=Hard→2, 2=Good→3, 3=Easy→4
-    if (typeof c.step !== 'number') c.step = 0;
-    // —— 学习 / 重学阶段（FSRS-6：Learning=[1m,10m]，Relearning=[10m]；短时记忆稳定度）——
-    if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning') {
-      const isRelearn = (c.state === 'relearning');
-      const steps = isRelearn ? RELEARN_MS : STEP_MS;
-      const lastStep = isRelearn ? RELEARN_LAST_STEP : LAST_STEP;
-      // 新卡首次评分建立初始 D/S；其后同日学习/重学步进用短时记忆稳定度更新（Again 降低、Good/Easy 不降）
-      if (c.state === 'new' || !(c.fsrsInit)) {
-        c.diff = fsrsInitDifficulty(G);
-        c.stab = fsrsInitStability(G);
-        c.fsrsInit = 1;
-      } else {
-        c.stab = fsrsShortTermStability(c.stab, G);
-      }
-      if (rating === 0) { // Again：回第 0 步
-        c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 0;
-        c.state = isRelearn ? 'relearning' : 'learning';
-        c.due = now + steps[0];
-        return;
-      }
-      if (rating === 1) { // Hard：前进一步（不毕业）
-        c.step = Math.min(c.step + 1, lastStep);
-        c.state = isRelearn ? 'relearning' : 'learning';
-        c.due = now + steps[c.step];
-        return;
-      }
-      if (rating === 2) { // Good：前进一步，超过最后一步 → 毕业
-        c.step = c.step + 1;
-        if (c.step > lastStep) {
-          graduateReview(c, c.stab);
-        } else {
-          c.state = isRelearn ? 'relearning' : 'learning';
-          c.due = now + steps[c.step];
-        }
-        return;
-      }
-      graduateReview(c, c.stab); // Easy：直接毕业
-      return;
-    }
-    // —— 复习阶段（FSRS-6：R(t,S) 遗忘曲线 + 难度/稳定性更新 + 期望保留率）——
-    const daysSince = Math.max(0, (now - (c.lastR || c.due)) / DAY);
-    const R = fsrsRetention(daysSince, c.stab);
-    if (rating === 0) { // Again：遗忘 → 稳定性下降、难度上升，进入 Relearning 重学（10 分钟一步）
-      c.step = 0; c.state = 'relearning'; c.grad = 0; c.reps = 0; c.ivl = 0;
-      c.lapses++;
-      c.diff = fsrsDifficulty(c.diff, 1);
-      c.stab = fsrsLapseStability(c.diff, c.stab, R);
-      c.due = now + RELEARN_MS[0];
-      return;
-    }
-    if (rating === 1) { // Hard
-      c.diff = fsrsDifficulty(c.diff, 2);
-      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 2);
-      c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-      return;
-    }
-    if (rating === 2) { // Good
-      c.diff = fsrsDifficulty(c.diff, 3);
-      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 3);
-      c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-      return;
-    }
-    // Easy
-    c.diff = fsrsDifficulty(c.diff, 4);
-    c.stab = fsrsSuccessStability(c.diff, c.stab, R, 4);
-    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-    c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-  }
+  // 调度状态机在 src/sched.mjs（与错题卡共用），这里只注入知识卡差异：
+  // 学习步 1 分钟 → 10 分钟，重学 10 分钟一步；Again 回第 0 步，Hard 前进不毕业，Good 越过最后一步毕业。
+  const LEARN_SCHED = {
+    stepsLearn: STEP_MS,
+    stepsRelearn: RELEARN_MS,
+    lastLearnStep: LAST_STEP,
+    lastRelearnStep: RELEARN_LAST_STEP,
+    learningDue: function (now, steps, step) { return now + steps[step]; },
+    relearnDue: function (now) { return now + RELEARN_MS[0]; },
+    graduate: graduateReview,
+    reviewIvl: function (c) { return Math.max(1, Math.round(fsrsInterval(c.stab))); }
+  };
+  function applyRatingToCard(c, rating) { applySchedRating(c, rating, LEARN_SCHED); }
 
   function applyRating(id, rating) { applyRatingToCard(card(id), rating); }
 
@@ -1346,6 +1346,17 @@
   let mapTx = 0, mapTy = 0;
   let mapDragMoved = false;
 
+  // 会话级状态一键重置（切换学科 / 导入数据时调用）。
+  // ⚠️ 新增会话级可变量时必须在这里同步补上——此前 switchSubject 与 importDB 各自维护
+  // 手工清单且互有遗漏（导入换科后错题队列/导图状态残留），统一到这里避免再漏。
+  function resetSessionState() {
+    deck = []; pos = 0; frontier = 0; pendingAdvance = false;
+    lastMasteryDelta = null; lastRatingUndo = null; seenAgain = {}; quiz = null;
+    mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; mapDragMoved = false; heatSel = null;
+    browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
+    wrongDeck = []; wrongFrontier = 0; wrongExpanded = {}; wrongJumpId = null;
+  }
+
   // ---------------- 通用 DOM ----------------
   function el(tag, cls, text) {
     const e = document.createElement(tag);
@@ -1361,10 +1372,10 @@
     return e;
   }
 
-  // 插画（assets/ 下的空状态/弹窗配图）
+  // 插画（assets/ 下的空状态/弹窗配图，WebP 格式——PNG 原稿已删除）
   function illus(name) {
     const img = document.createElement('img');
-    img.src = 'assets/' + name + '.png';
+    img.src = 'assets/' + name + '.webp';
     img.className = 'illus';
     img.alt = '';
     return img;
@@ -1395,7 +1406,7 @@
     });
   }
 
-  // 移动端底部 Dock：模块 tab + 当前模块子视图（大屏隐藏，走顶栏）
+  // 移动端底部 Dock：仅两个一级模块；二级导航（学习/浏览等）在顶栏下方 subnav 横滑条
   function renderDock() {
     const dock = document.getElementById('dock');
     if (!dock) return;
@@ -1404,16 +1415,6 @@
       const b = el('button', 'dock-btn' + (currentModule === m[0] ? ' active' : ''), m[1]);
       b.setAttribute('data-action', 'module');
       b.setAttribute('data-arg', m[0]);
-      dock.appendChild(b);
-    });
-    dock.appendChild(el('span', 'dock-sep', ''));
-    const items = currentModule === 'wrong'
-      ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
-      : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计']];
-    items.forEach(function (it) {
-      const b = el('button', 'dock-btn' + (currentView === it[0] ? ' active' : ''), it[1]);
-      b.setAttribute('data-action', 'nav');
-      b.setAttribute('data-arg', it[0]);
       dock.appendChild(b);
     });
   }
@@ -1442,7 +1443,6 @@
     app.appendChild(vf);
     updateNavBadge();
     updateBrand();
-    updateCountdown();
     snapshotMastery();
   }
 
@@ -1451,10 +1451,9 @@
     const incNew = incompleteNewCount();
     const bar = el('div', 'stats-bar');
     bar.appendChild(el('span', 'stat', '今天已学习 ' + todayReviewed() + ' 张'));
-    bar.appendChild(el('span', 'stat', '⏱ 今日 ' + todayCostMin() + ' / 预算 ' + budgetMin() + ' 分' + (todayCostSec() > budgetSec() ? '（已超出，可继续）' : '')));
+    bar.appendChild(el('span', 'stat', '⏱ 今日已学 ' + todayStudyMin() + ' 分钟'));
     bar.appendChild(el('span', 'stat', '待复习 ' + s.due + ' 张'));
     bar.appendChild(el('span', 'stat', '未学完新卡 ' + incNew + ' 张'));
-    bar.appendChild(el('span', 'stat', '平均掌握 ' + s.avg + '%'));
     bar.appendChild(el('span', 'stat', '总计 ' + s.total));
     return bar;
   }
@@ -1588,8 +1587,7 @@
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
       wrap.appendChild(illus('learn-done'));
-      const overBudget = todayCostSec() > budgetSec();
-      wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。' + (overBudget ? '（今日已超出时间预算 ' + (todayCostMin() - budgetMin()) + ' 分钟，仍可继续）' : '')));
+      wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
       app.appendChild(wrap);
       return;
     }
@@ -1906,6 +1904,10 @@
     const catBadge = el('span', 'badge cat-badge', CATS[f.cat]);
     if (bareRecallOn() && !reviewed) catBadge.classList.add('hidden');
     top.appendChild(catBadge);
+    // 直接编辑当前卡（桌面/移动通用；沉浸模式下随 learn-top 一并隐藏）
+    const editBtn = el('button', 'btn small learn-edit', '✏️ 编辑');
+    editBtn.addEventListener('click', function () { openCardEdit(id); });
+    top.appendChild(editBtn);
     wrap.appendChild(top);
 
     const m = mastery(id);
@@ -2061,7 +2063,6 @@
     lastRatingUndo = {
       id: id,
       card: JSON.parse(JSON.stringify(card(id))),
-      costBefore: todayCostSec(),
       dailyBefore: (DB.log && DB.log.daily && DB.log.daily[todayStr()]) || 0,
       detailBefore: (DB.log && DB.log.detail && DB.log.detail[todayStr()] && DB.log.detail[todayStr()][id]) || 0
     };
@@ -2069,7 +2070,6 @@
     const afterM = mastery(id).pct;
     lastMasteryDelta = afterM - beforeM;
     markReviewed(id);
-    addCost(r);
     // 记录掌握度历史快照（每次评分后的掌握度，供「掌握度趋势图」）
     {
       const c = card(id);
@@ -2099,8 +2099,6 @@
     if (DB.log && DB.log.detail && DB.log.detail[t] && typeof DB.log.detail[t][id] === 'number') {
       DB.log.detail[t][id] = Math.max(0, DB.log.detail[t][id] - 1);
     }
-    if (!DB.log.cost) DB.log.cost = {};
-    DB.log.cost[t] = Math.max(0, u.costBefore);
     if (frontier > 0) frontier--;
     pendingAdvance = false;
     saveDB();
@@ -2118,91 +2116,47 @@
 
   // ---------------- 错题模块 ----------------
   // 错题卡独立于知识卡：动手重做 → 看解析 → 按解题结果评分（不会/思路错/算错/会做对）。
-  // 调度复用 FSRS 内核，仅把学习步进改为「按天」；毕业 = 稳定度达目标（与知识卡一致，无「退出」）。
-
-  const WRONG_STEP_MS = [DAY];      // 错题学习步：1 天（问题不适合分钟内重现）
-  const WRONG_RELEARN_MS = [DAY];   // 错题重学步：1 天
-  const WRONG_COST_S = 240;         // 错题单题约 4 分钟（计入每日时间预算）
-  // 难题更疏：间隔乘 1.4，减少高频重现
-  function wrongInterval(c) {
-    const ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
-    return (c.kind === '难题') ? Math.max(1, Math.round(ivl * 1.4)) : ivl;
-  }
+  // 调度原则（用户确认 2026-09-09）：以 FSRS-6 为基础做探索性调整，与知识卡共享同一内核——
+  //   ① 添加错题即视为「当天已遗忘」：按 FSRS 首评「忘记」初始化（D0(1)/S0(1)，lapses=1），
+  //      直接进入复习队列、次日重现；无学习/重学步进、无毕业事件、无难题分类（旧设计残留已删）。
+  //   ② 重做评分全部走标准 FSRS：「不会」=遗忘（次日重现）；「思路错/算错/会做对」=Hard/Good/Easy，
+  //      间隔由稳定度计算——一直做对间隔大幅延长，卡片永不消失。
+  //   ③「已稳固」仅是掌握度标识（稳定度 ≥ 目标 S，与知识卡「毕业」同义），无退出机制。
 
   function wrongCard(wid) { return (DB && DB.wrongs && DB.wrongs[wid]) || null; }
 
+  // 添加错题：视为「当天已忘记」，按 FSRS 首评 Again 初始化，直接进入复习队列（次日重现）
+  function initWrongAsLapsed(c) {
+    c.state = 'review';
+    c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 1; // 下次复习即明天（间隔 1 天）
+    c.diff = fsrsInitDifficulty(1);
+    c.stab = fsrsInitStability(1);
+    c.fsrsInit = 1;
+    c.lapses = 1;
+    c.due = dayStart(Date.now()) + DAY;
+  }
+
   // 评分 → FSRS 档位（与知识卡四档一一对应）：0 不会=Again, 1 思路错=Hard, 2 算错=Good, 3 会做对=Easy
+  // 错题卡永远处于复习态：「不会」走遗忘曲线更新后次日重现（不做同日重学步进），其余档走标准成功更新
   function applyRatingToWrongCard(c, rating) {
+    if (c.state === 'new') { initWrongAsLapsed(c); return; } // 兜底：未初始化的卡视为刚添加
     const now = Date.now();
     const G = rating + 1;
-    if (typeof c.step !== 'number') c.step = 0;
-    if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning') {
-      const isRelearn = (c.state === 'relearning');
-      const steps = isRelearn ? WRONG_RELEARN_MS : WRONG_STEP_MS;
-      const lastStep = 0;
-      if (c.state === 'new' || !c.fsrsInit) {
-        c.diff = fsrsInitDifficulty(G);
-        c.stab = fsrsInitStability(G);
-        c.fsrsInit = 1;
-      } else {
-        c.stab = fsrsShortTermStability(c.stab, G);
-      }
-      if (rating <= 1) { // 不会 / 思路错：次日重现，不毕业
-        c.step = 0; c.grad = 0; c.reps = 0; c.ivl = 0;
-        c.state = isRelearn ? 'relearning' : 'learning';
-        c.due = dayStart(now) + DAY;
-        return;
-      }
-      if (rating === 2) { // 算错：再学一步，次日重现后毕业
-        c.step = c.step + 1;
-        if (c.step > lastStep) {
-          wrongGraduate(c);
-        } else {
-          c.state = isRelearn ? 'relearning' : 'learning';
-          c.due = dayStart(now) + DAY;
-        }
-        return;
-      }
-      wrongGraduate(c); // 会做对：直接毕业
-      return;
-    }
-    // —— 复习阶段 ——
     const daysSince = Math.max(0, (now - (c.lastR || c.due)) / DAY);
     const R = fsrsRetention(daysSince, c.stab);
-    if (rating === 0) { // 不会：遗忘
-      c.step = 0; c.state = 'relearning'; c.grad = 0; c.reps = 0; c.ivl = 0;
+    if (rating === 0) { // 不会：遗忘 → 稳定性下降、难度上升，次日重现
       c.lapses++;
       c.diff = fsrsDifficulty(c.diff, 1);
       c.stab = fsrsLapseStability(c.diff, c.stab, R);
+      c.ivl = 1;
+      c.state = 'review';
       c.due = dayStart(now) + DAY;
       return;
     }
-    if (rating === 1) { // 思路错：Hard
-      c.diff = fsrsDifficulty(c.diff, 2);
-      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 2);
-      c.ivl = wrongInterval(c);
-      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-      return;
-    }
-    if (rating === 2) { // 算错：Good
-      c.diff = fsrsDifficulty(c.diff, 3);
-      c.stab = fsrsSuccessStability(c.diff, c.stab, R, 3);
-      c.ivl = wrongInterval(c);
-      c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-      return;
-    }
-    // 会做对：Easy
-    c.diff = fsrsDifficulty(c.diff, 4);
-    c.stab = fsrsSuccessStability(c.diff, c.stab, R, 4);
+    c.diff = fsrsDifficulty(c.diff, G);
+    c.stab = fsrsSuccessStability(c.diff, c.stab, R, G);
     c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
     c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
-  }
-
-  function wrongGraduate(c) {
-    c.grad = 1; c.reps = 1; c.state = 'review';
-    c.stab = Math.max(FSRS_S_MIN, c.stab);
-    c.ivl = wrongInterval(c);
-    c.due = dayStart(Date.now()) + c.ivl * DAY;
   }
 
   function isWrongGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
@@ -2226,7 +2180,6 @@
 
   function wrongNextText(w) {
     if (w.state === 'new') return '待做';
-    if (w.state === 'learning' || w.state === 'relearning') return '学习中 · 次日重现';
     return '下次 ' + fmtDayMs(w.due) + '（间隔 ' + w.ivl + ' 天）' + (isWrongGraduated(w) ? ' · ✔已稳固' : '');
   }
 
@@ -2258,7 +2211,7 @@
     const ids = Object.keys(DB.wrongs || {});
     const due = ids.filter(function (wid) {
       const c = DB.wrongs[wid];
-      return (c.state === 'review' || c.state === 'learning' || c.state === 'relearning') && c.due <= now;
+      return c.state === 'review' && c.due <= now;
     });
     due.sort(function (a, b) { return DB.wrongs[a].due - DB.wrongs[b].due; });
     const fresh = shuffle(ids.filter(function (wid) { return DB.wrongs[wid].state === 'new'; }));
@@ -2299,7 +2252,7 @@
     const wrap = el('div', 'learn-wrap');
 
     const top = el('div', 'learn-top');
-    top.appendChild(el('span', 'badge', w.kind === '难题' ? '⭐ 难题' : '📕 错题'));
+    top.appendChild(el('span', 'badge', '📕 错题'));
     wrap.appendChild(top);
 
     const m = wrongMastery(wid);
@@ -2365,6 +2318,8 @@
     mk('思路错', 1);
     mk('算错', 2);
     mk('会做对', 3);
+    const kbd = el('div', 'keyboard-hint muted', '1 不会 · 2 思路错 · 3 算错 · 4 会做对 · Space/Enter 显示解析');
+    rating.appendChild(kbd);
     wrap.appendChild(rating);
 
     app.appendChild(wrap);
@@ -2393,9 +2348,6 @@
     if (w.hist.length > 60) w.hist = w.hist.slice(-60);
     w.lastR = Date.now();
     w.ivlR = w.ivl || 0;
-    const t = todayStr();
-    if (!DB.log.cost) DB.log.cost = {};
-    DB.log.cost[t] = (DB.log.cost[t] || 0) + WRONG_COST_S;
     wrongFrontier++;
     saveDB();
     renderApp();
@@ -2421,7 +2373,7 @@
     w.kind = '错题';
     w.q = ex.q; w.a = ex.a; w.a2 = ex.a2 || ''; w.src = ex.src || '';
     if (linkedId) w.linked = [linkedId];
-    applyRatingToWrongCard(w, 0); // 视为已做过一次（失败），初始化难度/稳定性，次日重现
+    initWrongAsLapsed(w); // 视为当天已忘记，次日进入重做队列
     DB.wrongs[id] = w;
     saveDB();
     toast('已加入错题本');
@@ -2540,15 +2492,14 @@
       return;
     }
 
-    let due = 0, fresh = 0, learn = 0, review = 0, grad = 0, pctSum = 0, lapses = 0;
+    let due = 0, fresh = 0, review = 0, grad = 0, pctSum = 0, lapses = 0;
     ids.forEach(function (wid) {
       const w = DB.wrongs[wid];
       pctSum += wrongMastery(wid).pct;
       lapses += (w.lapses || 0);
       if (w.state === 'new') fresh++;
-      else if (w.state === 'learning' || w.state === 'relearning') learn++;
       else { review++; if (isWrongGraduated(w)) grad++; }
-      if ((w.state === 'review' || w.state === 'learning' || w.state === 'relearning') && w.due <= Date.now()) due++;
+      if (w.state === 'review' && w.due <= Date.now()) due++;
     });
     const avg = Math.round(pctSum / ids.length);
 
@@ -2563,7 +2514,7 @@
 
     wrap.appendChild(el('h3', null, '📌 状态分布'));
     const sd = el('div', 'stat-card');
-    [['未做', fresh], ['学习中', learn], ['复习中', review], ['已稳固', grad]].forEach(function (p) {
+    [['未做', fresh], ['复习中', review], ['已稳固', grad]].forEach(function (p) {
       const row = el('div', 'cat-bar-row');
       row.appendChild(el('span', 'cat-bar-name', p[0]));
       const bar = el('div', 'cat-bar');
@@ -2687,7 +2638,7 @@
     w.kind = '错题';
     w.q = q.trim(); w.a = a.trim(); w.a2 = a2.trim(); w.src = src.trim();
     w.linked = wrongInput.linked.slice();
-    applyRatingToWrongCard(w, 0); // 视为已做过一次（失败），次日重现
+    initWrongAsLapsed(w); // 视为当天已忘记，次日进入重做队列
     DB.wrongs[id] = w;
     saveDB();
     closeWrongInput();
@@ -2702,6 +2653,7 @@
     wrongInput = null;
   }
 
+
   function renderBrowse() {
     const app = document.getElementById('app');
 
@@ -2710,11 +2662,16 @@
     search.type = 'search';
     search.placeholder = subjKind() === 'qa' ? '搜索知识点（名称 / 内容）…' : '搜索公式（名称 / 内容）…';
     search.value = browseQuery;
-    // 输入时只重绘列表，不重建整个视图（避免销毁搜索框导致输入/IME 被打断）
+    // 输入时只重绘列表，不重建整个视图（避免销毁搜索框导致输入/IME 被打断）；
+    // 150ms 防抖：停止输入后才做全量过滤 + 重建列表，逐键不再卡顿
+    let searchTimer = null;
     search.addEventListener('input', function () {
       browseQuery = search.value;
-      const old = app.querySelector('.browse-list');
-      if (old) old.replaceWith(buildBrowseList());
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        const old = app.querySelector('.browse-list');
+        if (old) old.replaceWith(buildBrowseList());
+      }, 150);
     });
     head.appendChild(search);
     app.appendChild(head);
@@ -2974,7 +2931,6 @@
       DB.settings.goalTitle = v;
       saveDB();
       goalInput.value = v;
-      updateCountdown();
       toast('目标名称已设为「' + v + '」');
       renderApp();
     });
@@ -2991,12 +2947,11 @@
     examInput.addEventListener('change', function () {
       DB.settings.examDate = examInput.value || '';
       saveDB();
-      updateCountdown();
       toast(examInput.value ? '目标日期已设为 ' + examInput.value : '已清除目标日期（倒计时关闭）');
     });
     s4b.appendChild(examInput);
     wrap.appendChild(s4b);
-    wrap.appendChild(el('p', 'muted', '设置目标日期后，顶部才会显示倒计时，并在每天首次打开时弹出提醒。留空则关闭倒计时与每日弹窗；毕业目标自动回退到固定稳定度。'));
+    wrap.appendChild(el('p', 'muted', '设置目标日期后，每次打开应用会弹出倒计时提醒；毕业目标可自动随倒计时变化。留空则全部关闭。'));
 
     const sBare = el('div', 'setting-row');
     sBare.appendChild(el('span', null, '裸回忆'));
@@ -3016,28 +2971,6 @@
     sBare.appendChild(bareLabel);
     wrap.appendChild(sBare);
     wrap.appendChild(el('p', 'muted', '交错练习的关键是「辨别」：先判断这道题属于哪一章、该用哪个方法，再回忆内容。开启后，卡片正面不再显示分类徽标，点开答案后才出现。'));
-
-    const s6 = el('div', 'setting-row');
-    s6.appendChild(el('span', null, '每日复习时间预算'));
-    const minInput = el('input', 'num');
-    minInput.type = 'number';
-    minInput.min = '5'; minInput.max = '120'; minInput.step = '1';
-    minInput.style.width = '96px';
-    minInput.value = (DB.settings && typeof DB.settings.minutesPerDay === 'number') ? DB.settings.minutesPerDay : MIN_PER_DAY_DEFAULT;
-    minInput.title = '每日最多投入的复习时间（分钟）';
-    minInput.addEventListener('change', function () {
-      let v = parseInt(minInput.value, 10);
-      if (isNaN(v)) v = MIN_PER_DAY_DEFAULT;
-      v = Math.max(5, Math.min(120, v));
-      DB.settings.minutesPerDay = v;
-      saveDB();
-      minInput.value = v;
-      toast('每日复习时间预算 ' + v + ' 分钟');
-      renderApp();
-    });
-    s6.appendChild(minInput);
-    wrap.appendChild(s6);
-    wrap.appendChild(el('p', 'muted', '按「时间」而非「卡片数」安排学习：到期复习优先，复习实际用时计入预算，剩余时间用来引入新卡——最小化记忆成本（SSP-MMC 成本约束）。'));
 
     const s7 = el('div', 'setting-row');
     s7.appendChild(el('span', null, '毕业目标稳定度'));
@@ -3651,6 +3584,34 @@
 
   // ---------------- 动作分发 ----------------
 
+  // ---------------- 导入 / 导出共用 ----------------
+  // 把对象序列化为 JSON 并触发浏览器下载
+  function downloadJson(payload, filename) {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  // 弹出文件选择框读取 JSON 文本（单科导入与全科目导入共用）
+  function pickJsonFile(onLoaded) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+    input.onchange = function () {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function () { onLoaded(String(reader.result)); };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
   function handleAction(action, arg) {
     switch (action) {
       case 'nav':
@@ -3763,86 +3724,51 @@
         renderApp();
         break;
       case 'export': {
-        const payload = { format: 'formula-memory', version: 2, subject: currentSubjectId, db: DB };
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
         const subj = subjectList()[currentSubjectId];
-        a.download = (subj ? subj.short : '公式') + (subjKind() === 'qa' ? '知识点记忆-备份.json' : '公式记忆-备份.json');
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadJson(
+          { format: 'formula-memory', version: 2, subject: currentSubjectId, db: DB },
+          (subj ? subj.short : '公式') + (subjKind() === 'qa' ? '知识点记忆-备份.json' : '公式记忆-备份.json')
+        );
         toast('已导出');
         break;
       }
       case 'importjson': {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'application/json,.json';
-        input.onchange = function () {
-          const file = input.files && input.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = function () {
-            try {
-              importDB(String(reader.result));
-              buildSession(0);
-              currentView = 'learn';
-              renderApp();
-              toast('导入成功');
-            } catch (err) {
-              toast(err.message || '导入失败');
-            }
-          };
-          reader.readAsText(file);
-        };
-        input.click();
+        pickJsonFile(function (text) {
+          try {
+            importDB(text);
+            buildSession(0);
+            currentView = 'learn';
+            renderApp();
+            toast('导入成功');
+          } catch (err) {
+            toast(err.message || '导入失败');
+          }
+        });
         break;
       }
       case 'exportall': {
         if (typeof flushSave === 'function') flushSave();
-        const payload = { format: 'athena-all-backup', version: 1, subjects: exportAllSubjects() };
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'Athena-全部科目备份.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadJson({ format: 'athena-all-backup', version: 1, subjects: exportAllSubjects() }, 'Athena-全部科目备份.json');
         toast('已导出全部科目');
         break;
       }
       case 'importall': {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'application/json,.json';
-        input.onchange = function () {
-          const file = input.files && input.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = function () {
-            try {
-              let data;
-              try { data = JSON.parse(String(reader.result)); } catch (e) { throw new Error('不是有效的 JSON 文件'); }
-              const n = importAllSubjects(data);
-              if (n === 0) throw new Error('文件中没有可导入的科目');
-              loadDBAsync().then(function () {
-                buildSession(0);
-                currentView = 'learn';
-                renderApp();
-                toast('已导入全部科目（' + n + ' 个）');
-              });
-            } catch (err) {
-              toast(err.message || '导入失败');
-            }
-          };
-          reader.readAsText(file);
-        };
-        input.click();
+        pickJsonFile(function (text) {
+          try {
+            let data;
+            try { data = JSON.parse(text); } catch (e) { throw new Error('不是有效的 JSON 文件'); }
+            const n = importAllSubjects(data);
+            if (n === 0) throw new Error('文件中没有可导入的科目');
+            loadDBAsync().then(function () {
+              buildSession(0);
+              currentView = 'learn';
+              renderApp();
+              toast('已导入全部科目（' + n + ' 个）');
+            });
+          } catch (err) {
+            toast(err.message || '导入失败');
+          }
+        });
         break;
       }
       case 'resetall':
@@ -3856,7 +3782,7 @@
             DB.wrongs[wid] = Object.assign(defaultWrongCard(), keep);
           });
           DB.log = {};
-          wrongDeck = [];
+          resetSessionState();
           buildSession(0);
           localStorage.removeItem(sessionKey());
           currentView = 'learn';
@@ -3906,19 +3832,23 @@
   });
 
   document.addEventListener('keydown', function (e) {
-    if (currentView !== 'learn') return;
+    // 键盘刷卡：知识卡学习页与错题重做页共用（Space/Enter 显示答案，1-4 评分）
+    if (currentView !== 'learn' && currentView !== 'wrong') return;
+    const isLearn = currentView === 'learn';
     if (e.key === ' ' || e.key === 'Enter') {
       const reveal = document.querySelector('.controls');
       if (reveal && !reveal.classList.contains('hidden')) {
         e.preventDefault();
-        revealCurrent();
+        if (isLearn) revealCurrent(); else revealWrong();
         return;
       }
     }
     const rating = document.querySelector('.rating');
     if (rating && !rating.classList.contains('hidden')) {
       const map = { '1': 0, '2': 1, '3': 2, '4': 3 };
-      if (map[e.key] != null) doRate(map[e.key]);
+      if (map[e.key] != null) {
+        if (isLearn) doRate(map[e.key]); else doWrongRate(map[e.key]);
+      }
     }
   });
 
@@ -3963,9 +3893,14 @@
     else if (dx > 0 && pos > 0) handleAction('goback');
   }, { passive: true });
 
-  // iOS/移动端稳定性：切后台或关页前强制落盘，避免合并写尚未 flush 就丢进度
+  // iOS/移动端稳定性：切后台或关页前先结算学习计时、再强制落盘，避免合并写尚未 flush 就丢进度
+  // （两个监听按注册顺序执行：先 settleStudyTime 记账，后 flushSave 写盘，顺序不可换）
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') settleStudyTime(); });
+  window.addEventListener('pagehide', settleStudyTime);
   window.addEventListener('pagehide', function () { if (typeof flushSave === 'function') flushSave(); });
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden' && typeof flushSave === 'function') flushSave(); });
+  // 前台期间每 15 秒结算一次学习时长（内存记账，随各次 saveDB / 切后台落盘）
+  setInterval(settleStudyTime, 15000);
 
   // ---------------- 主题 ----------------
   function applyTheme() {
@@ -4030,12 +3965,12 @@
   // ---------------- 学科切换与选择器 ----------------
   function switchSubject(id) {
     if (id === currentSubjectId || !setSubject(id)) return;
-    deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
-    mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; heatSel = null;
-    browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
-    wrongDeck = [];
+    const target = id;
+    resetSessionState(); // 统一会话重置（deck/浏览过滤/导图/错题队列一次清干净）
     currentModule = 'cards';
     loadDBAsync().then(function () {
+      // 竞态防护：等待期间用户又切到了别的学科时，放弃这次过期的加载结果
+      if (currentSubjectId !== target) return;
       if (!loadSession()) buildSession(0);
       currentView = 'learn';
       renderApp();
@@ -4072,6 +4007,10 @@
       cimg.alt = '';
       cur.appendChild(cimg);
       cur.appendChild(document.createTextNode(cs.short));
+      // 总体掌握度徽标（数值由 renderApp → updateBrand 刷新）
+      const pct = el('span', 'subject-pct', '');
+      pct.id = 'subjectPct';
+      cur.appendChild(pct);
     }
   }
 

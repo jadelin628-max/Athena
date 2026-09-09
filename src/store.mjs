@@ -7,21 +7,6 @@
     politics: 'assets/subject_icon/icon-politics.svg'
   };
   function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
-  // 把学科图标（图片）填进元素，suffix 为追加文本
-  function setBrand(el, subj, suffix) {
-    el.innerHTML = '';
-    const url = subjectIconUrl(subj.id);
-    if (url) {
-      const img = document.createElement('img');
-      img.src = url;
-      img.className = 'subject-icon';
-      img.alt = '';
-      el.appendChild(img);
-    } else {
-      el.textContent = subj.icon || '';
-    }
-    if (suffix) el.appendChild(document.createTextNode(suffix));
-  }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配
   function subjKind() {
     const s = subjectList()[currentSubjectId];
@@ -40,10 +25,8 @@
     REL = subj.REL || {};
     PITFALL = subj.PITFALL || {};
     MNEM = subj.MNEM || {};
-    try { localStorage.setItem(SUBJECT_KEY, subj.id); } catch (e) {}
+    try { localStorage.setItem(SUBJECT_KEY, subj.id); } catch (e) { warnStorageFailure(); }
     document.title = subj.name;
-    const b = document.getElementById('brandText');
-    if (b) setBrand(b, subj, '');
     renderSubjectDropdown();
     document.body.setAttribute('data-subject', subj.id);
     const url = subjectIconUrl(subj.id);
@@ -53,12 +36,11 @@
   function dbKey() { return currentSubjectId + '_formula_srs_v1'; }
   function sessionKey() { return currentSubjectId + '_formula_session_v2'; }
 
+  // 把总体掌握度写进左上角学科选择器内的百分比徽标（每轮渲染随统计刷新）
   function updateBrand() {
-    const b = document.getElementById('brandText');
-    if (!b || !currentSubjectId || !DB || !DATA) return;
-    const subj = subjectList()[currentSubjectId];
-    const s = stats();
-    setBrand(b, subj, ' ' + s.avg + '%');
+    const pct = document.getElementById('subjectPct');
+    if (!pct || !currentSubjectId || !DB || !DATA) return;
+    pct.textContent = stats().avg + '%';
   }
 
   function updateNavBadge() {
@@ -86,7 +68,7 @@
     if (w && typeof w === 'object') {
       ['reps', 'ivl', 'due', 'lapses', 'grad', 'step', 'diff', 'stab', 'lastSolveMs', 'lastR', 'ivlR'].forEach(function (k) { if (typeof w[k] === 'number') out[k] = w[k]; });
       if (w.fsrsInit) out.fsrsInit = 1;
-      if (typeof w.kind === 'string') out.kind = (w.kind === '难题') ? '难题' : '错题';
+      out.kind = '错题'; // 难题分类已废除（v1.16.0），存量「难题」统一迁移
       if (typeof w.q === 'string') out.q = w.q;
       if (typeof w.a === 'string') out.a = w.a;
       if (typeof w.a2 === 'string') out.a2 = w.a2;
@@ -132,10 +114,11 @@
 
   function normalizeDB(raw) {
     DB = (raw && typeof raw === 'object') ? raw : { cards: {}, settings: {}, log: {} };
+    // 整体 schema 版本号：为将来大迁移留钩子（旧数据无此字段，一律补为当前版本 1）
+    if (DB.schemaVersion == null) DB.schemaVersion = 1;
     if (!DB.cards) DB.cards = {};
     if (!DB.settings) DB.settings = {};
     if (DB.settings.dailyNew == null) DB.settings.dailyNew = 10;
-    if (DB.settings.minutesPerDay == null) DB.settings.minutesPerDay = MIN_PER_DAY_DEFAULT;
     // 旧版本用 targetH（半衰期天）作为固定毕业目标；迁移到 targetS（稳定度天）。
     //   旧 90 天半衰期 ≈ 90/K ≈ 1 天稳定度，语义已变：直接采用新默认值（不再沿用旧数值，避免误把「半衰期天」当「稳定度天」）。
     if (DB.settings.targetS == null) DB.settings.targetS = TARGET_S_DEFAULT;
@@ -148,6 +131,13 @@
     if (!DB.custom) DB.custom = {};
     if (!DB.cardOverrides) DB.cardOverrides = {};
     if (!DB.customRel) DB.customRel = {};
+    // 错题卡调度迁移（v1.16.0 重置为纯复习态）：学习/重学态 → 复习态；难题分类废除
+    Object.keys(DB.wrongs).forEach(function (wid) {
+      const w = DB.wrongs[wid];
+      if (!w || typeof w !== 'object') return;
+      if (w.kind === '难题') w.kind = '错题';
+      if (w.state === 'learning' || w.state === 'relearning') w.state = 'review';
+    });
     refreshData();
     DATA.forEach(function (f) {
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
@@ -280,7 +270,16 @@
     toast('已保存修改');
   }
 
-  // 合并写：同一轮事件里的多次 saveDB 只落一次盘（iOS 稳定性优先）。
+  // 存储写失败告警（每次会话只提示一次）：配额满/隐私模式下丢的是学习进度，绝不能静默
+  let storageWarned = false;
+  function warnStorageFailure() {
+    if (storageWarned) return;
+    storageWarned = true;
+    try { console.error('Athena: localStorage 写入失败（存储空间可能已满或处于隐私模式），学习进度无法保存！'); } catch (e) {}
+    try { toast('⚠️ 学习进度写入失败（存储空间可能已满）——请立即到「设置」导出备份，避免进度丢失！'); } catch (e) {}
+  }
+
+  // 合并写：短时间窗口内的多次 saveDB 只落一次盘，且把序列化挪出评分点击的绘制路径。
   let saveDirty = false;
   let saveFlushScheduled = false;
   let idbBackupTimer = null;
@@ -288,26 +287,27 @@
     if (!DB) return;
     saveDirty = false;
     saveFlushScheduled = false;
-    const json = JSON.stringify(DB);
-    try { localStorage.setItem(dbKey(), json); } catch (e) {}
-    // IndexedDB 作为低频备份：防抖 2s，避免每次评分都全量写 IDB
+    let json = null;
+    try { json = JSON.stringify(DB); } catch (e) { warnStorageFailure(); return; }
+    try {
+      localStorage.setItem(dbKey(), json);
+    } catch (e) {
+      warnStorageFailure();
+    }
+    // IndexedDB 作为低频备份：防抖 2s，避免每次评分都全量写 IDB（idbSet 内部已吞异常，备份尽力而为）
     if (idbBackupTimer) clearTimeout(idbBackupTimer);
     idbBackupTimer = setTimeout(function () {
       idbBackupTimer = null;
-      try { idbSet(dbKey(), DB); } catch (e) {}
+      idbSet(dbKey(), DB);
     }, 2000);
   }
   function saveDB() {
-    if (saveFlushScheduled) { saveDirty = true; return; }
     saveDirty = true;
+    if (saveFlushScheduled) return;
     saveFlushScheduled = true;
-    if (typeof queueMicrotask === 'function') {
-      queueMicrotask(function () { if (saveDirty) flushSave(); });
-    } else {
-      Promise.resolve().then(function () { if (saveDirty) flushSave(); });
-    }
-    // 兜底：即使微任务被推迟，也保证在下一轮 timer 里落盘
-    setTimeout(function () { if (saveDirty) flushSave(); }, 0);
+    // 延迟 100ms：让评分后的界面先绘制，再串行化落盘（大库时评分点击不再卡顿）；
+    // 同窗口内的多次 saveDB 合并为一次写。切后台/关页由 pagehide/visibilitychange 兜底 flush。
+    setTimeout(function () { if (saveDirty) flushSave(); }, 100);
   }
 
   function sanitizeCard(c) {
@@ -344,16 +344,12 @@
     }
     if (target !== currentSubjectId) {
       if (!setSubject(target)) throw new Error('备份中的学科不受支持');
-      deck = []; pos = 0; frontier = 0; pendingAdvance = false; lastMasteryDelta = null; seenAgain = {}; quiz = null;
-      browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all'; heatSel = null;
+      resetSessionState(); // 统一会话重置（含错题队列/导图/浏览过滤，避免上一学科状态残留）
     }
-    const fresh = { cards: {}, settings: {}, log: {}, wrongs: {}, custom: {}, cardOverrides: {}, customRel: {} };
+    const fresh = { schemaVersion: 1, cards: {}, settings: {}, log: {}, wrongs: {}, custom: {}, cardOverrides: {}, customRel: {} };
     DATA.forEach(function (f) { fresh.cards[f.id] = sanitizeCard(payload.cards[f.id]); });
     if (payload.settings && typeof payload.settings.dailyNew === 'number') {
       fresh.settings.dailyNew = Math.max(1, Math.min(99, Math.round(payload.settings.dailyNew)));
-    }
-    if (payload.settings && typeof payload.settings.minutesPerDay === 'number') {
-      fresh.settings.minutesPerDay = Math.max(5, Math.min(120, Math.round(payload.settings.minutesPerDay)));
     }
     if (payload.settings && typeof payload.settings.targetS === 'number') {
       fresh.settings.targetS = Math.max(7, Math.min(730, Math.round(payload.settings.targetS)));
@@ -432,20 +428,25 @@
     });
     return out;
   }
-  // 导入全部科目：把 { sid: db } 写入各科 localStorage + IndexedDB；返回成功写入的科目数
+  // 导入全部科目：把 { sid: db } 写入各科 localStorage + IndexedDB；返回成功写入的科目数。
+  // 写入失败的学科不计入成功数（调用方以此判断是否提示），并触发存储告警。
   function importAllSubjects(data) {
     const subs = data && data.subjects;
     if (!subs || typeof subs !== 'object') throw new Error('文件格式不正确（缺少 subjects 数据）');
     const list = subjectList();
     let count = 0;
+    let failed = false;
     Object.keys(subs).forEach(function (sid) {
       if (!list[sid]) return; // 跳过本应用不认识的学科
       const db = subs[sid];
       if (!db || typeof db !== 'object' || typeof db.cards !== 'object') return;
       const key = sid + '_formula_srs_v1';
-      try { localStorage.setItem(key, JSON.stringify(db)); } catch (e) {}
-      try { idbSet(key, db); } catch (e) {}
+      let ok = true;
+      try { localStorage.setItem(key, JSON.stringify(db)); } catch (e) { ok = false; }
+      if (!ok) { failed = true; return; }
+      idbSet(key, db);
       count++;
     });
+    if (failed) warnStorageFailure();
     return count;
   }

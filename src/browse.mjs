@@ -547,6 +547,7 @@
     let notesTimer;
     notes.addEventListener('input', function () {
       st.notes = notes.value;
+      st.noteUpd = Date.now(); // 笔记独立时间戳（云同步合并时与复习记录互不挤掉）
       clearTimeout(notesTimer);
       notesTimer = setTimeout(saveDB, 400);
     });

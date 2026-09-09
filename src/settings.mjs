@@ -1,9 +1,24 @@
   function renderSettings() {
     const app = document.getElementById('app');
     const wrap = el('div', 'settings-wrap');
+    wrap.appendChild(el('h2', null, '⚙️ 设置'));
 
-    const s4 = el('div', 'setting-row');
-    s4.appendChild(el('span', null, '目标名称'));
+    // 分栏（会话内切换）：学习偏好 / 数据与同步 / 关于
+    let settingsTab = renderSettings._tab || 'study';
+    const tabs = el('div', 'chips');
+    [['study', '🎛 学习偏好'], ['data', '💾 数据与同步'], ['about', 'ℹ️ 关于']].forEach(function (t) {
+      const b = el('button', 'chip' + (settingsTab === t[0] ? ' active' : ''), t[1]);
+      b.addEventListener('click', function () { renderSettings._tab = t[0]; renderApp(); });
+      tabs.appendChild(b);
+    });
+    wrap.appendChild(tabs);
+
+    const row = function (label) { const r = el('div', 'setting-row'); r.appendChild(el('span', null, label)); return r; };
+    const note = function (text) { wrap.appendChild(el('p', 'muted', text)); };
+
+    if (settingsTab === 'study') {
+
+    const s4 = row('目标名称');
     const goalInput = el('input', 'num');
     goalInput.type = 'text';
     goalInput.maxLength = 10;
@@ -96,6 +111,10 @@
       ? '毕业目标自动随目标倒计时变化：要求「' + goalTitle() + '日仍能 ≥90% 记得」（等价稳定度 S ≥ 剩余天数）。距' + goalTitle() + ' ' + countdownDays() + ' 天 → 目标 S_N ≈ ' + Math.round(targetS()) + ' 天。'
       : '稳定度 S 达到该值即「毕业/稳固」——表示「停止复习后仍能 ≥90% 记得」的天数（固定值 ' + Math.round(targetS()) + ' 天）。勾选上方的「与目标倒计时挂钩」可改为随倒计时动态变化。'));
 
+    }
+
+    if (settingsTab === 'data') {
+
     const s2 = el('div', 'setting-row');
     s2.appendChild(el('span', null, '备份 / 迁移进度'));
     const exp = el('button', 'btn', '导出 JSON');
@@ -169,32 +188,31 @@
     wrap.appendChild(sSyncCfg);
 
     const sSyncBtns = el('div', 'setting-row');
-    const mkSyncBtn = function (label, mode) {
-      const b = el('button', 'btn', label);
-      b.addEventListener('click', function () {
-        if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
-        b.disabled = true;
-        toast('同步中…');
-        runSync(mode).then(function (summary) {
-          let msg = '同步完成：上传 ' + summary.pushed.length + ' 科，下载 ' + summary.pulled.length + ' 科';
-          if (summary.failed.length) msg += '，失败：' + summary.failed[0];
-          toast(msg);
-          renderApp();
-        }).catch(function (err) {
-          toast('同步失败：' + (err.message || err));
-        }).finally(function () { b.disabled = false; });
-      });
-      return b;
-    };
-    sSyncBtns.appendChild(mkSyncBtn('立即同步', 'auto'));
-    sSyncBtns.appendChild(mkSyncBtn('强制上传本地', 'push'));
-    sSyncBtns.appendChild(mkSyncBtn('强制下载云端', 'pull'));
+    const syncBtn = el('button', 'btn primary', '立即同步');
+    syncBtn.addEventListener('click', function () {
+      if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
+      syncBtn.disabled = true;
+      toast('同步中…');
+      runSync().then(function (summary) {
+        let msg = '同步完成：云端更新 ' + summary.cloud.length + ' 科，本地更新 ' + summary.local.length + ' 科，双向合并 ' + summary.both.length + ' 科';
+        if (summary.failed.length) msg += '，失败：' + summary.failed[0];
+        toast(msg);
+        renderApp();
+      }).catch(function (err) {
+        toast('同步失败：' + (err.message || err));
+      }).finally(function () { syncBtn.disabled = false; });
+    });
+    sSyncBtns.appendChild(syncBtn);
     wrap.appendChild(sSyncBtns);
     const last = scfg.lastSyncAt
-      ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + '（上传 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.pushed : 0) + ' / 下载 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.pulled : 0) + ' 科）' + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
+      ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + '（云端更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.cloud : 0) + ' / 本地更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.local : 0) + ' / 双向合并 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.both : 0) + ' 科）' + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
       : '尚未同步过。';
-    wrap.appendChild(el('p', 'muted', last));
-    wrap.appendChild(el('p', 'muted', '准备步骤：① 在 GitHub 新建一个【私有】仓库；② 创建 Fine-grained Token，仅勾选该仓库、权限 Contents: Read and write；③ 填入上方并「保存并验证」。同步把四科整库快照存入仓库 athena-sync/ 目录，时间戳新者胜，任何覆盖前自动归档被覆盖版本到 archive/（等价版本历史）。数据为明文 JSON，请确保仓库为私有。'));
+    note(last);
+    note('准备步骤：① 在 GitHub 新建一个【私有】仓库；② 创建 Fine-grained Token，仅勾选该仓库、权限 Contents: Read and write；③ 填入上方并「保存并验证」。同步把四科整库快照存入仓库 athena-sync/ 目录；合并式同步按卡片逐张取较新记录，多端同时打开不会互相覆盖，任何合并前两侧都会自动归档到 archive/。数据为明文 JSON，请确保仓库为私有。');
+
+    }
+
+    if (settingsTab === 'about') {
 
     const s8 = el('div', 'setting-row');
     s8.appendChild(el('span', null, '更新与缓存'));
@@ -233,6 +251,8 @@
       cl.appendChild(row);
     });
     wrap.appendChild(cl);
+
+    }
 
     app.appendChild(wrap);
   }

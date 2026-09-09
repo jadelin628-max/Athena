@@ -483,7 +483,8 @@
     t._timer = setTimeout(function () { t.classList.remove('show'); }, 1800);
   }
 
-  // 渲染二级导航（随一级界面切换）
+  // 渲染二级导航（随一级界面切换）；吸顶定位紧贴 sticky header 下方，
+  // 并把「header+subnav」总高写入 CSS 变量 --chrome-h（原理页目录等使用）
   function renderSubnav() {
     const sub = document.getElementById('subnav');
     if (!sub) return;
@@ -497,6 +498,10 @@
       b.setAttribute('data-arg', it[0]);
       sub.appendChild(b);
     });
+    const header = document.querySelector('header');
+    const headerH = header ? header.offsetHeight : 0;
+    sub.style.top = headerH + 'px';
+    document.documentElement.style.setProperty('--chrome-h', (headerH + sub.offsetHeight) + 'px');
   }
 
   // 移动端底部 Dock：仅两个一级模块；二级导航（学习/浏览等）在顶栏下方 subnav 横滑条

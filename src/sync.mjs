@@ -31,13 +31,103 @@
     return new TextDecoder().decode(bytes);
   }
 
-  // —— LWW 决策（纯函数，供单测）——
-  function decideSyncAction(localUp, remoteUp) {
-    if (remoteUp && !localUp) return 'pull';      // 本地缺时间戳（旧数据）：拉取，但拉取前会归档本地，无损
-    if (!remoteUp && localUp) return 'push';      // 云端还没有：首推
-    if (remoteUp > localUp + SYNC_TOLERANCE_MS) return 'pull';
-    if (localUp > remoteUp + SYNC_TOLERANCE_MS) return 'push';
-    return 'skip';
+  // —— LWW 决策已被 mergeDb 合并取代：覆盖改为逐卡归并，多端同时打开安全 ——
+
+  // 卡片合并：调度状态整组取 lastR 较新一方（一次评分产生的一致整体）；
+  // 笔记独立取 noteUpd 较新一方（withNotes=true，复习与笔记互不挤掉）。
+  // 注意：胜者可能是本地内存对象，notes 改写即本地收敛到合并态。
+  function mergeCard(a, b, withNotes) {
+    const winner = (((b.lastR || 0) > (a.lastR || 0)) ? b : a);
+    if (withNotes) {
+      const an = a.noteUpd || 0, bn = b.noteUpd || 0;
+      if (an !== bn) winner.notes = (an > bn ? (a.notes || '') : (b.notes || ''));
+      if (an || bn) winner.noteUpd = Math.max(an, bn);
+    }
+    return winner;
+  }
+
+  // —— 合并两侧 DB（纯函数，供单测）——
+  // 卡片/错题：并集，同卡按上述规则选边；仅一侧存在的卡整卡采用。
+  // 日志：daily/studyTime/counts/detail 逐日（逐字段）取大——同时段两端学习时计数取 max 而非相加，
+  //       只影响统计展示精度，不影响任何学习数据；checkins 取「或」；mastery/metrics 取当日专注较长一侧。
+  // 自定义内容（custom/cardOverrides/customRel）：并集，冲突本地优先（低频，archive 兜底）。
+  // 设置：本地优先（正在使用的设备）。updatedAt/schemaVersion 取大。
+  function mergeDb(local, remote) {
+    const out = {};
+    Object.keys(local).forEach(function (k) { out[k] = local[k]; });
+    out.updatedAt = Math.max(local.updatedAt || 0, remote.updatedAt || 0);
+    out.schemaVersion = Math.max(local.schemaVersion || 0, remote.schemaVersion || 0);
+
+    ['cards', 'wrongs'].forEach(function (key) {
+      const a = local[key] || {}, b = remote[key] || {};
+      const merged = {};
+      Object.keys(a).forEach(function (id) { merged[id] = a[id]; });
+      Object.keys(b).forEach(function (id) {
+        merged[id] = merged[id] ? mergeCard(merged[id], b[id], key === 'cards') : b[id];
+      });
+      out[key] = merged;
+    });
+
+    ['custom', 'cardOverrides', 'customRel'].forEach(function (key) {
+      out[key] = Object.assign({}, remote[key] || {}, local[key] || {});
+    });
+
+    const lg = Object.assign({}, local.log || {});
+    const rlog = remote.log || {};
+    ['daily', 'studyTime'].forEach(function (k) {
+      const a = (local.log && local.log[k]) || {}, b = (rlog && rlog[k]) || {};
+      const m = Object.assign({}, b);
+      Object.keys(a).forEach(function (d) { m[d] = Math.max(a[d] || 0, b[d] || 0); });
+      lg[k] = m;
+    });
+    (function () { // counts：每日 {n,r,w} 逐字段取大
+      const a = (local.log && local.log.counts) || {}, b = (rlog && rlog.counts) || {};
+      const m = Object.assign({}, b);
+      Object.keys(a).forEach(function (d) {
+        m[d] = {
+          n: Math.max((a[d] && a[d].n) || 0, (b[d] && b[d].n) || 0),
+          r: Math.max((a[d] && a[d].r) || 0, (b[d] && b[d].r) || 0),
+          w: Math.max((a[d] && a[d].w) || 0, (b[d] && b[d].w) || 0)
+        };
+      });
+      lg.counts = m;
+    })();
+    (function () { // detail：逐日逐卡取大
+      const a = (local.log && local.log.detail) || {}, b = (rlog && rlog.detail) || {};
+      const m = Object.assign({}, b);
+      Object.keys(a).forEach(function (d) {
+        const day = Object.assign({}, b[d] || {});
+        Object.keys(a[d]).forEach(function (id) { day[id] = Math.max(a[d][id] || 0, (b[d] && b[d][id]) || 0); });
+        m[d] = day;
+      });
+      lg.detail = m;
+    })();
+    (function () { // checkins：取或
+      const a = (local.log && local.log.checkins) || {}, b = (rlog && rlog.checkins) || {};
+      const m = Object.assign({}, b);
+      Object.keys(a).forEach(function (d) { if (a[d]) m[d] = true; });
+      lg.checkins = m;
+    })();
+    (function () { // mastery/metrics：取当日专注较长一侧的快照
+      const st = lg.studyTime || {};
+      ['mastery', 'metrics'].forEach(function (k) {
+        const a = (local.log && local.log[k]) || {}, b = (rlog && rlog[k]) || {};
+        const m = Object.assign({}, b);
+        Object.keys(a).forEach(function (d) {
+          const aSt = (local.log && local.log.studyTime && local.log.studyTime[d]) || 0;
+          const bSt = (rlog && rlog.studyTime && rlog.studyTime[d]) || 0;
+          m[d] = (aSt >= bSt) ? a[d] : b[d];
+        });
+        lg[k] = m;
+      });
+    })();
+    (function () { // newIntro：已引入新卡并集（本地在前）
+      const ai = (local.log && local.log.newIntro && local.log.newIntro.ids) || [];
+      const bi = (rlog && rlog.newIntro && rlog.newIntro.ids) || [];
+      lg.newIntro = { ids: ai.concat(bi.filter(function (id) { return ai.indexOf(id) === -1; })) };
+    })();
+    out.log = lg;
+    return out;
   }
 
   // 已配置完整（Token + 仓库格式正确）：手动同步按钮的门槛（不要求打开自动同步开关）
@@ -112,59 +202,53 @@
     return SYNC_DIR + '/archive/' + sid + '/' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
   }
 
-  // 对单个学科执行一次 LWW 决策。返回 { action: push / pull / skip }
+  // 对单个学科执行一次合并式同步。返回 { action: push / pull / merge / skip }
+  // push = 云端被本地更新；pull = 本地被云端更新；merge = 两端都更新为合并结果。
   async function syncSubject(sid) {
     const local = syncLocalDb(sid);
     const localUp = (local && typeof local.updatedAt === 'number') ? local.updatedAt : 0;
     const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
     const remoteUp = (remote && remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0;
-    const action = decideSyncAction(localUp, remoteUp);
 
-    if (action === 'pull' && remote) {
-      if (local) await ghPutJson(syncArchivePath(sid), local); // 覆盖本地前先归档本地版本
+    if (local && !remote) { // 首推
+      await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local);
+      return { action: 'push' };
+    }
+    if (!local && remote) { // 本地没有（新设备）：拉取
       if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
       return { action: 'pull' };
     }
-    if (action === 'push' && local) {
-      let remoteSha = null;
-      if (remote) { // 覆盖云端前先归档云端旧版本
-        await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
-        remoteSha = remote.sha;
-      }
-      await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local, remoteSha);
-      return { action: 'push' };
+    if (!local && !remote) return { action: 'skip' };
+
+    // 两侧都有：合并（多端同时打开的安全基石），再按合并结果决定哪边需要更新
+    const merged = mergeDb(local, remote.data);
+    const mergedUp = (typeof merged.updatedAt === 'number') ? merged.updatedAt : 0;
+    let action = 'skip';
+    if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 合并结果比云端新 → 更新云端（先归档云端旧版）
+      if (remote) await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
+      await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', merged, remote ? remote.sha : null);
+      action = 'push';
+    }
+    if (mergedUp > localUp + SYNC_TOLERANCE_MS) { // 合并结果比本地新 → 更新本地（先归档本地旧版）
+      if (local) await ghPutJson(syncArchivePath(sid), local);
+      if (!syncWriteLocalDb(sid, merged)) throw new Error('本地写入失败（存储空间不足？）');
+      action = (action === 'push') ? 'merge' : 'pull';
     }
     return { action: action };
   }
 
-  // 同步全部学科。mode：auto（各学科按 LWW）/ push（本地强制胜出）/ pull（云端强制胜出）
-  async function runSync(mode) {
+  // 同步全部学科（合并式）。summary：cloud=云端被更新，local=本地被更新，both=双向合并。
+  async function runSync() {
     if (typeof fetch === 'undefined') throw new Error('当前环境不支持网络请求');
     if (!syncConfigured()) throw new Error('云同步未配置完整：请先在设置中填写 Token 与仓库名');
-    const summary = { pushed: [], pulled: [], skipped: [], failed: [] };
+    const summary = { cloud: [], local: [], both: [], skipped: [], failed: [] };
     const sids = Object.keys(subjectList());
     for (const sid of sids) {
       try {
-        let res;
-        if (mode === 'push' || mode === 'pull') {
-          const local = syncLocalDb(sid);
-          const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
-          if (mode === 'push' && local) {
-            if (remote) await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
-            await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local, remote ? remote.sha : null);
-            res = { action: 'push' };
-          } else if (mode === 'pull' && remote) {
-            if (local) await ghPutJson(syncArchivePath(sid), local);
-            if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
-            res = { action: 'pull' };
-          } else {
-            res = { action: 'skip' };
-          }
-        } else {
-          res = await syncSubject(sid);
-        }
-        if (res.action === 'push') summary.pushed.push(sid);
-        else if (res.action === 'pull') summary.pulled.push(sid);
+        const res = await syncSubject(sid);
+        if (res.action === 'push') summary.cloud.push(sid);
+        else if (res.action === 'pull') summary.local.push(sid);
+        else if (res.action === 'merge') summary.both.push(sid);
         else summary.skipped.push(sid);
       } catch (err) {
         summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
@@ -172,13 +256,12 @@
     }
     const cfg = syncCfg();
     cfg.lastSyncAt = Date.now();
-    cfg.lastSyncMode = mode;
-    cfg.lastSyncSummary = { pushed: summary.pushed.length, pulled: summary.pulled.length, failed: summary.failed.length };
+    cfg.lastSyncSummary = { cloud: summary.cloud.length, local: summary.local.length, both: summary.both.length, failed: summary.failed.length };
     cfg.lastError = summary.failed.length ? summary.failed.join('；') : '';
     saveSyncCfg(cfg);
 
-    // 当前学科被云端覆盖时：重载数据并刷新界面
-    if (summary.pulled.indexOf(currentSubjectId) !== -1) {
+    // 当前学科被更新时：重载数据并刷新界面
+    if (summary.local.concat(summary.both).indexOf(currentSubjectId) !== -1) {
       await loadDBAsync();
       renderApp();
     }
@@ -193,18 +276,18 @@
     if (syncPushTimer) clearTimeout(syncPushTimer);
     syncPushTimer = setTimeout(function () {
       syncPushTimer = null;
-      runSync('auto').catch(function () {});
+      runSync().catch(function () {});
     }, 30000); // 防抖 30s：连续评分合并为一次上传
   }
   function autoSyncOnLaunch() {
     const cfg = syncCfg();
     if (!cfg.enabled || !syncConfigured()) return;
-    runSync('auto').then(function (summary) {
-      if (summary.pulled.indexOf(currentSubjectId) !== -1) {
-        buildSession(0); // 云端覆盖了当前学科：重建学习队列以纳入变化
+    runSync().then(function (summary) {
+      if (summary.local.concat(summary.both).indexOf(currentSubjectId) !== -1) {
+        buildSession(0); // 当前学科数据被更新：重建学习队列以纳入变化
         renderApp();
       }
     }).catch(function () {});
   }
 
-export { b64encodeUtf8, b64decodeUtf8, decideSyncAction, runSync, syncReady, syncConfigured, syncCfg, saveSyncCfg, syncValidate, autoSyncOnLaunch };
+export { b64encodeUtf8, b64decodeUtf8, mergeDb, runSync, syncReady, syncConfigured, syncCfg, saveSyncCfg, syncValidate, autoSyncOnLaunch };

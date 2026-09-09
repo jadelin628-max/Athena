@@ -139,6 +139,7 @@
       let notesTimer;
       notes.addEventListener('input', function () {
         card(f.id).notes = notes.value;
+        card(f.id).noteUpd = Date.now(); // 笔记独立时间戳（云同步合并用）
         clearTimeout(notesTimer);
         notesTimer = setTimeout(saveDB, 400);
       });

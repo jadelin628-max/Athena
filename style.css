@@ -104,6 +104,7 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   display: flex; gap: 4px; align-items: center;
   padding: 6px max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left));
   border-bottom: 1px solid var(--border); background: var(--bg);
+  position: sticky; z-index: 15; /* 吸顶：top 由 JS 按 header 高度设置（renderSubnav） */
 }
 .sub-btn { padding: 7px 13px; font-size: 13.5px; }
 .dock { display: none; }
@@ -489,10 +490,10 @@ body.immersive #immersiveExit { display: block; }
 /* 记忆原理 */
 .principles-wrap { display: flex; flex-direction: column; gap: 14px; }
 .principle-toc {
-  position: sticky; top: 96px; z-index: 6;
+  position: sticky; top: var(--chrome-h, 96px); z-index: 6;
   background: var(--bg); padding: 10px 0 6px; margin: -4px 0 2px;
 }
-.principle { scroll-margin-top: 150px; }
+.principle { scroll-margin-top: calc(var(--chrome-h, 96px) + 44px); }
 .pr-row-text { flex: 1; font-size: 13px; line-height: 1.6; }
 .principle .cat-bar-row { align-items: baseline; }
 .principle .mini-label { margin-top: 10px; }

@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.18.1';
+  const VERSION = '1.19.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.19.0', date: '2026-09', items: ['同步升级为「合并式」：多端同时打开不再互相覆盖——同步时按卡片逐张归并（调度状态取最近复习一方、笔记独立取最近编辑一方，复习与笔记互不挤掉），学习日志逐日取大，两端进度都保留；任何合并前两侧仍自动归档', '切回前台自动同步（距上次超过 5 分钟）：手机切回前台先吸收云端变化再学习', '设置页移除「强制上传/强制下载」——合并式同步下不再需要手动覆盖，恢复走仓库 archive/ 目录', '移动端二级导航（学习/浏览等）吸顶：滚动时始终可见', '设置页分栏：学习偏好 / 数据与同步 / 关于 三个栏目切换'] },
     { v: '1.18.1', date: '2026-09', items: ['修复：手动同步（立即同步/强制上传/强制下载）不再要求开启「自动同步」开关——此前未打开开关时按钮会误报「请先填写 Token 与仓库并验证」，把只用手动同步的用户挡在门外；配置完整（Token+仓库）即可手动同步，自动同步仍由开关独立控制'] },
     { v: '1.18.0', date: '2026-09', items: ['新增多端同步（GitHub 私仓）：设置页配置 Token 与仓库后，四科学习数据以整库快照存入你自己的仓库（athena-sync/ 目录），启动自动拉取、评分落盘约 30 秒后自动上传，手机 / 电脑保持一致', '同步策略：时间戳新者胜（2 秒容差），任何覆盖前自动把被覆盖版本归档到 archive/ 目录——等价版本历史、不丢数据；同步失败不影响本地使用；支持强制上传 / 强制下载', '数据以明文 JSON 存放（请确保仓库为私有）；自动同步开关可随时关闭'] },
     { v: '1.17.0', date: '2026-09', items: ['统计页新增「学习报告」：日报/周报/月报/年报聚合——专注时长、新学、复习、错题重做、学习天数、掌握度变化；新增每日完成量分类计数（学习时长自 v1.16.0、分类计数自本版起记录）', '原理页重构为「原理 · 学习科学」：吸顶目录跳转 + 关键词搜索 + 八个结构化章节（核心方法 / 交错与辨别 / FSRS 内核 / 掌握度与毕业 / 学习科学清单 / 身体与学习 / 动机与坚持 / 学不进去排查表），条目标注证据等级', '新增节律提示：连续学习约 50 分钟温和提醒起身休息；深夜（23 点后）打开应用提醒一次「睡眠是记忆巩固的一部分」——均为轻提示，不阻断学习'] },
@@ -1423,7 +1424,8 @@
     t._timer = setTimeout(function () { t.classList.remove('show'); }, 1800);
   }
 
-  // 渲染二级导航（随一级界面切换）
+  // 渲染二级导航（随一级界面切换）；吸顶定位紧贴 sticky header 下方，
+  // 并把「header+subnav」总高写入 CSS 变量 --chrome-h（原理页目录等使用）
   function renderSubnav() {
     const sub = document.getElementById('subnav');
     if (!sub) return;
@@ -1437,6 +1439,10 @@
       b.setAttribute('data-arg', it[0]);
       sub.appendChild(b);
     });
+    const header = document.querySelector('header');
+    const headerH = header ? header.offsetHeight : 0;
+    sub.style.top = headerH + 'px';
+    document.documentElement.style.setProperty('--chrome-h', (headerH + sub.offsetHeight) + 'px');
   }
 
   // 移动端底部 Dock：仅两个一级模块；二级导航（学习/浏览等）在顶栏下方 subnav 横滑条
@@ -2003,6 +2009,7 @@
     let notesTimer;
     notes.addEventListener('input', function () {
       st.notes = notes.value;
+      st.noteUpd = Date.now(); // 笔记独立时间戳（云同步合并时与复习记录互不挤掉）
       clearTimeout(notesTimer);
       notesTimer = setTimeout(saveDB, 400);
     });
@@ -2831,6 +2838,7 @@
       let notesTimer;
       notes.addEventListener('input', function () {
         card(f.id).notes = notes.value;
+        card(f.id).noteUpd = Date.now(); // 笔记独立时间戳（云同步合并用）
         clearTimeout(notesTimer);
         notesTimer = setTimeout(saveDB, 400);
       });
@@ -2953,9 +2961,24 @@
   function renderSettings() {
     const app = document.getElementById('app');
     const wrap = el('div', 'settings-wrap');
+    wrap.appendChild(el('h2', null, '⚙️ 设置'));
 
-    const s4 = el('div', 'setting-row');
-    s4.appendChild(el('span', null, '目标名称'));
+    // 分栏（会话内切换）：学习偏好 / 数据与同步 / 关于
+    let settingsTab = renderSettings._tab || 'study';
+    const tabs = el('div', 'chips');
+    [['study', '🎛 学习偏好'], ['data', '💾 数据与同步'], ['about', 'ℹ️ 关于']].forEach(function (t) {
+      const b = el('button', 'chip' + (settingsTab === t[0] ? ' active' : ''), t[1]);
+      b.addEventListener('click', function () { renderSettings._tab = t[0]; renderApp(); });
+      tabs.appendChild(b);
+    });
+    wrap.appendChild(tabs);
+
+    const row = function (label) { const r = el('div', 'setting-row'); r.appendChild(el('span', null, label)); return r; };
+    const note = function (text) { wrap.appendChild(el('p', 'muted', text)); };
+
+    if (settingsTab === 'study') {
+
+    const s4 = row('目标名称');
     const goalInput = el('input', 'num');
     goalInput.type = 'text';
     goalInput.maxLength = 10;
@@ -3048,6 +3071,10 @@
       ? '毕业目标自动随目标倒计时变化：要求「' + goalTitle() + '日仍能 ≥90% 记得」（等价稳定度 S ≥ 剩余天数）。距' + goalTitle() + ' ' + countdownDays() + ' 天 → 目标 S_N ≈ ' + Math.round(targetS()) + ' 天。'
       : '稳定度 S 达到该值即「毕业/稳固」——表示「停止复习后仍能 ≥90% 记得」的天数（固定值 ' + Math.round(targetS()) + ' 天）。勾选上方的「与目标倒计时挂钩」可改为随倒计时动态变化。'));
 
+    }
+
+    if (settingsTab === 'data') {
+
     const s2 = el('div', 'setting-row');
     s2.appendChild(el('span', null, '备份 / 迁移进度'));
     const exp = el('button', 'btn', '导出 JSON');
@@ -3121,32 +3148,31 @@
     wrap.appendChild(sSyncCfg);
 
     const sSyncBtns = el('div', 'setting-row');
-    const mkSyncBtn = function (label, mode) {
-      const b = el('button', 'btn', label);
-      b.addEventListener('click', function () {
-        if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
-        b.disabled = true;
-        toast('同步中…');
-        runSync(mode).then(function (summary) {
-          let msg = '同步完成：上传 ' + summary.pushed.length + ' 科，下载 ' + summary.pulled.length + ' 科';
-          if (summary.failed.length) msg += '，失败：' + summary.failed[0];
-          toast(msg);
-          renderApp();
-        }).catch(function (err) {
-          toast('同步失败：' + (err.message || err));
-        }).finally(function () { b.disabled = false; });
-      });
-      return b;
-    };
-    sSyncBtns.appendChild(mkSyncBtn('立即同步', 'auto'));
-    sSyncBtns.appendChild(mkSyncBtn('强制上传本地', 'push'));
-    sSyncBtns.appendChild(mkSyncBtn('强制下载云端', 'pull'));
+    const syncBtn = el('button', 'btn primary', '立即同步');
+    syncBtn.addEventListener('click', function () {
+      if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
+      syncBtn.disabled = true;
+      toast('同步中…');
+      runSync().then(function (summary) {
+        let msg = '同步完成：云端更新 ' + summary.cloud.length + ' 科，本地更新 ' + summary.local.length + ' 科，双向合并 ' + summary.both.length + ' 科';
+        if (summary.failed.length) msg += '，失败：' + summary.failed[0];
+        toast(msg);
+        renderApp();
+      }).catch(function (err) {
+        toast('同步失败：' + (err.message || err));
+      }).finally(function () { syncBtn.disabled = false; });
+    });
+    sSyncBtns.appendChild(syncBtn);
     wrap.appendChild(sSyncBtns);
     const last = scfg.lastSyncAt
-      ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + '（上传 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.pushed : 0) + ' / 下载 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.pulled : 0) + ' 科）' + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
+      ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + '（云端更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.cloud : 0) + ' / 本地更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.local : 0) + ' / 双向合并 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.both : 0) + ' 科）' + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
       : '尚未同步过。';
-    wrap.appendChild(el('p', 'muted', last));
-    wrap.appendChild(el('p', 'muted', '准备步骤：① 在 GitHub 新建一个【私有】仓库；② 创建 Fine-grained Token，仅勾选该仓库、权限 Contents: Read and write；③ 填入上方并「保存并验证」。同步把四科整库快照存入仓库 athena-sync/ 目录，时间戳新者胜，任何覆盖前自动归档被覆盖版本到 archive/（等价版本历史）。数据为明文 JSON，请确保仓库为私有。'));
+    note(last);
+    note('准备步骤：① 在 GitHub 新建一个【私有】仓库；② 创建 Fine-grained Token，仅勾选该仓库、权限 Contents: Read and write；③ 填入上方并「保存并验证」。同步把四科整库快照存入仓库 athena-sync/ 目录；合并式同步按卡片逐张取较新记录，多端同时打开不会互相覆盖，任何合并前两侧都会自动归档到 archive/。数据为明文 JSON，请确保仓库为私有。');
+
+    }
+
+    if (settingsTab === 'about') {
 
     const s8 = el('div', 'setting-row');
     s8.appendChild(el('span', null, '更新与缓存'));
@@ -3185,6 +3211,8 @@
       cl.appendChild(row);
     });
     wrap.appendChild(cl);
+
+    }
 
     app.appendChild(wrap);
   }
@@ -3896,13 +3924,103 @@
     return new TextDecoder().decode(bytes);
   }
 
-  // —— LWW 决策（纯函数，供单测）——
-  function decideSyncAction(localUp, remoteUp) {
-    if (remoteUp && !localUp) return 'pull';      // 本地缺时间戳（旧数据）：拉取，但拉取前会归档本地，无损
-    if (!remoteUp && localUp) return 'push';      // 云端还没有：首推
-    if (remoteUp > localUp + SYNC_TOLERANCE_MS) return 'pull';
-    if (localUp > remoteUp + SYNC_TOLERANCE_MS) return 'push';
-    return 'skip';
+  // —— LWW 决策已被 mergeDb 合并取代：覆盖改为逐卡归并，多端同时打开安全 ——
+
+  // 卡片合并：调度状态整组取 lastR 较新一方（一次评分产生的一致整体）；
+  // 笔记独立取 noteUpd 较新一方（withNotes=true，复习与笔记互不挤掉）。
+  // 注意：胜者可能是本地内存对象，notes 改写即本地收敛到合并态。
+  function mergeCard(a, b, withNotes) {
+    const winner = (((b.lastR || 0) > (a.lastR || 0)) ? b : a);
+    if (withNotes) {
+      const an = a.noteUpd || 0, bn = b.noteUpd || 0;
+      if (an !== bn) winner.notes = (an > bn ? (a.notes || '') : (b.notes || ''));
+      if (an || bn) winner.noteUpd = Math.max(an, bn);
+    }
+    return winner;
+  }
+
+  // —— 合并两侧 DB（纯函数，供单测）——
+  // 卡片/错题：并集，同卡按上述规则选边；仅一侧存在的卡整卡采用。
+  // 日志：daily/studyTime/counts/detail 逐日（逐字段）取大——同时段两端学习时计数取 max 而非相加，
+  //       只影响统计展示精度，不影响任何学习数据；checkins 取「或」；mastery/metrics 取当日专注较长一侧。
+  // 自定义内容（custom/cardOverrides/customRel）：并集，冲突本地优先（低频，archive 兜底）。
+  // 设置：本地优先（正在使用的设备）。updatedAt/schemaVersion 取大。
+  function mergeDb(local, remote) {
+    const out = {};
+    Object.keys(local).forEach(function (k) { out[k] = local[k]; });
+    out.updatedAt = Math.max(local.updatedAt || 0, remote.updatedAt || 0);
+    out.schemaVersion = Math.max(local.schemaVersion || 0, remote.schemaVersion || 0);
+
+    ['cards', 'wrongs'].forEach(function (key) {
+      const a = local[key] || {}, b = remote[key] || {};
+      const merged = {};
+      Object.keys(a).forEach(function (id) { merged[id] = a[id]; });
+      Object.keys(b).forEach(function (id) {
+        merged[id] = merged[id] ? mergeCard(merged[id], b[id], key === 'cards') : b[id];
+      });
+      out[key] = merged;
+    });
+
+    ['custom', 'cardOverrides', 'customRel'].forEach(function (key) {
+      out[key] = Object.assign({}, remote[key] || {}, local[key] || {});
+    });
+
+    const lg = Object.assign({}, local.log || {});
+    const rlog = remote.log || {};
+    ['daily', 'studyTime'].forEach(function (k) {
+      const a = (local.log && local.log[k]) || {}, b = (rlog && rlog[k]) || {};
+      const m = Object.assign({}, b);
+      Object.keys(a).forEach(function (d) { m[d] = Math.max(a[d] || 0, b[d] || 0); });
+      lg[k] = m;
+    });
+    (function () { // counts：每日 {n,r,w} 逐字段取大
+      const a = (local.log && local.log.counts) || {}, b = (rlog && rlog.counts) || {};
+      const m = Object.assign({}, b);
+      Object.keys(a).forEach(function (d) {
+        m[d] = {
+          n: Math.max((a[d] && a[d].n) || 0, (b[d] && b[d].n) || 0),
+          r: Math.max((a[d] && a[d].r) || 0, (b[d] && b[d].r) || 0),
+          w: Math.max((a[d] && a[d].w) || 0, (b[d] && b[d].w) || 0)
+        };
+      });
+      lg.counts = m;
+    })();
+    (function () { // detail：逐日逐卡取大
+      const a = (local.log && local.log.detail) || {}, b = (rlog && rlog.detail) || {};
+      const m = Object.assign({}, b);
+      Object.keys(a).forEach(function (d) {
+        const day = Object.assign({}, b[d] || {});
+        Object.keys(a[d]).forEach(function (id) { day[id] = Math.max(a[d][id] || 0, (b[d] && b[d][id]) || 0); });
+        m[d] = day;
+      });
+      lg.detail = m;
+    })();
+    (function () { // checkins：取或
+      const a = (local.log && local.log.checkins) || {}, b = (rlog && rlog.checkins) || {};
+      const m = Object.assign({}, b);
+      Object.keys(a).forEach(function (d) { if (a[d]) m[d] = true; });
+      lg.checkins = m;
+    })();
+    (function () { // mastery/metrics：取当日专注较长一侧的快照
+      const st = lg.studyTime || {};
+      ['mastery', 'metrics'].forEach(function (k) {
+        const a = (local.log && local.log[k]) || {}, b = (rlog && rlog[k]) || {};
+        const m = Object.assign({}, b);
+        Object.keys(a).forEach(function (d) {
+          const aSt = (local.log && local.log.studyTime && local.log.studyTime[d]) || 0;
+          const bSt = (rlog && rlog.studyTime && rlog.studyTime[d]) || 0;
+          m[d] = (aSt >= bSt) ? a[d] : b[d];
+        });
+        lg[k] = m;
+      });
+    })();
+    (function () { // newIntro：已引入新卡并集（本地在前）
+      const ai = (local.log && local.log.newIntro && local.log.newIntro.ids) || [];
+      const bi = (rlog && rlog.newIntro && rlog.newIntro.ids) || [];
+      lg.newIntro = { ids: ai.concat(bi.filter(function (id) { return ai.indexOf(id) === -1; })) };
+    })();
+    out.log = lg;
+    return out;
   }
 
   // 已配置完整（Token + 仓库格式正确）：手动同步按钮的门槛（不要求打开自动同步开关）
@@ -3977,59 +4095,53 @@
     return SYNC_DIR + '/archive/' + sid + '/' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
   }
 
-  // 对单个学科执行一次 LWW 决策。返回 { action: push / pull / skip }
+  // 对单个学科执行一次合并式同步。返回 { action: push / pull / merge / skip }
+  // push = 云端被本地更新；pull = 本地被云端更新；merge = 两端都更新为合并结果。
   async function syncSubject(sid) {
     const local = syncLocalDb(sid);
     const localUp = (local && typeof local.updatedAt === 'number') ? local.updatedAt : 0;
     const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
     const remoteUp = (remote && remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0;
-    const action = decideSyncAction(localUp, remoteUp);
 
-    if (action === 'pull' && remote) {
-      if (local) await ghPutJson(syncArchivePath(sid), local); // 覆盖本地前先归档本地版本
+    if (local && !remote) { // 首推
+      await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local);
+      return { action: 'push' };
+    }
+    if (!local && remote) { // 本地没有（新设备）：拉取
       if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
       return { action: 'pull' };
     }
-    if (action === 'push' && local) {
-      let remoteSha = null;
-      if (remote) { // 覆盖云端前先归档云端旧版本
-        await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
-        remoteSha = remote.sha;
-      }
-      await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local, remoteSha);
-      return { action: 'push' };
+    if (!local && !remote) return { action: 'skip' };
+
+    // 两侧都有：合并（多端同时打开的安全基石），再按合并结果决定哪边需要更新
+    const merged = mergeDb(local, remote.data);
+    const mergedUp = (typeof merged.updatedAt === 'number') ? merged.updatedAt : 0;
+    let action = 'skip';
+    if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 合并结果比云端新 → 更新云端（先归档云端旧版）
+      if (remote) await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
+      await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', merged, remote ? remote.sha : null);
+      action = 'push';
+    }
+    if (mergedUp > localUp + SYNC_TOLERANCE_MS) { // 合并结果比本地新 → 更新本地（先归档本地旧版）
+      if (local) await ghPutJson(syncArchivePath(sid), local);
+      if (!syncWriteLocalDb(sid, merged)) throw new Error('本地写入失败（存储空间不足？）');
+      action = (action === 'push') ? 'merge' : 'pull';
     }
     return { action: action };
   }
 
-  // 同步全部学科。mode：auto（各学科按 LWW）/ push（本地强制胜出）/ pull（云端强制胜出）
-  async function runSync(mode) {
+  // 同步全部学科（合并式）。summary：cloud=云端被更新，local=本地被更新，both=双向合并。
+  async function runSync() {
     if (typeof fetch === 'undefined') throw new Error('当前环境不支持网络请求');
     if (!syncConfigured()) throw new Error('云同步未配置完整：请先在设置中填写 Token 与仓库名');
-    const summary = { pushed: [], pulled: [], skipped: [], failed: [] };
+    const summary = { cloud: [], local: [], both: [], skipped: [], failed: [] };
     const sids = Object.keys(subjectList());
     for (const sid of sids) {
       try {
-        let res;
-        if (mode === 'push' || mode === 'pull') {
-          const local = syncLocalDb(sid);
-          const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
-          if (mode === 'push' && local) {
-            if (remote) await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
-            await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local, remote ? remote.sha : null);
-            res = { action: 'push' };
-          } else if (mode === 'pull' && remote) {
-            if (local) await ghPutJson(syncArchivePath(sid), local);
-            if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
-            res = { action: 'pull' };
-          } else {
-            res = { action: 'skip' };
-          }
-        } else {
-          res = await syncSubject(sid);
-        }
-        if (res.action === 'push') summary.pushed.push(sid);
-        else if (res.action === 'pull') summary.pulled.push(sid);
+        const res = await syncSubject(sid);
+        if (res.action === 'push') summary.cloud.push(sid);
+        else if (res.action === 'pull') summary.local.push(sid);
+        else if (res.action === 'merge') summary.both.push(sid);
         else summary.skipped.push(sid);
       } catch (err) {
         summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
@@ -4037,13 +4149,12 @@
     }
     const cfg = syncCfg();
     cfg.lastSyncAt = Date.now();
-    cfg.lastSyncMode = mode;
-    cfg.lastSyncSummary = { pushed: summary.pushed.length, pulled: summary.pulled.length, failed: summary.failed.length };
+    cfg.lastSyncSummary = { cloud: summary.cloud.length, local: summary.local.length, both: summary.both.length, failed: summary.failed.length };
     cfg.lastError = summary.failed.length ? summary.failed.join('；') : '';
     saveSyncCfg(cfg);
 
-    // 当前学科被云端覆盖时：重载数据并刷新界面
-    if (summary.pulled.indexOf(currentSubjectId) !== -1) {
+    // 当前学科被更新时：重载数据并刷新界面
+    if (summary.local.concat(summary.both).indexOf(currentSubjectId) !== -1) {
       await loadDBAsync();
       renderApp();
     }
@@ -4058,15 +4169,15 @@
     if (syncPushTimer) clearTimeout(syncPushTimer);
     syncPushTimer = setTimeout(function () {
       syncPushTimer = null;
-      runSync('auto').catch(function () {});
+      runSync().catch(function () {});
     }, 30000); // 防抖 30s：连续评分合并为一次上传
   }
   function autoSyncOnLaunch() {
     const cfg = syncCfg();
     if (!cfg.enabled || !syncConfigured()) return;
-    runSync('auto').then(function (summary) {
-      if (summary.pulled.indexOf(currentSubjectId) !== -1) {
-        buildSession(0); // 云端覆盖了当前学科：重建学习队列以纳入变化
+    runSync().then(function (summary) {
+      if (summary.local.concat(summary.both).indexOf(currentSubjectId) !== -1) {
+        buildSession(0); // 当前学科数据被更新：重建学习队列以纳入变化
         renderApp();
       }
     }).catch(function () {});
@@ -4390,6 +4501,15 @@
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden' && typeof flushSave === 'function') flushSave(); });
   // 前台期间每 15 秒结算一次学习时长（内存记账，随各次 saveDB / 切后台落盘）
   setInterval(settleStudyTime, 15000);
+  // 云同步：切回前台且距上次同步超过 5 分钟时立即同步——先吸收云端变化再学习，
+  // 配合合并式同步（sync.mjs mergeDb），多端同时打开不会互相覆盖
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible') return;
+    const c = syncCfg();
+    if (c.enabled && syncConfigured() && Date.now() - (c.lastSyncAt || 0) > 5 * 60000) {
+      runSync().catch(function () {});
+    }
+  });
 
   // ---------------- 主题 ----------------
   function applyTheme() {

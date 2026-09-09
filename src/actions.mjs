@@ -315,6 +315,15 @@
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden' && typeof flushSave === 'function') flushSave(); });
   // 前台期间每 15 秒结算一次学习时长（内存记账，随各次 saveDB / 切后台落盘）
   setInterval(settleStudyTime, 15000);
+  // 云同步：切回前台且距上次同步超过 5 分钟时立即同步——先吸收云端变化再学习，
+  // 配合合并式同步（sync.mjs mergeDb），多端同时打开不会互相覆盖
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible') return;
+    const c = syncCfg();
+    if (c.enabled && syncConfigured() && Date.now() - (c.lastSyncAt || 0) > 5 * 60000) {
+      runSync().catch(function () {});
+    }
+  });
 
   // ---------------- 主题 ----------------
   function applyTheme() {

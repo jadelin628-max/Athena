@@ -9,7 +9,7 @@ globalThis.localStorage = {
   setItem: (k, v) => { store[k] = String(v); },
   removeItem: (k) => { delete store[k]; }
 };
-const { b64encodeUtf8, b64decodeUtf8, decideSyncAction, syncConfigured, syncReady, saveSyncCfg } = await import('../src/sync.mjs');
+const { b64encodeUtf8, b64decodeUtf8, mergeDb, syncConfigured, syncReady, saveSyncCfg } = await import('../src/sync.mjs');
 
 test('b64 UTF-8 往返：中文 / LaTeX 公式 / emoji / 多行', () => {
   const cases = [
@@ -21,14 +21,76 @@ test('b64 UTF-8 往返：中文 / LaTeX 公式 / emoji / 多行', () => {
   for (const s of cases) assert.equal(b64decodeUtf8(b64encodeUtf8(s)), s);
 });
 
-test('LWW 决策：云无→推，本地缺→拉（归档保底），新者胜，容差内跳过', () => {
-  assert.equal(decideSyncAction(0, 5000), 'pull');    // 本地无时间戳（旧数据）
-  assert.equal(decideSyncAction(5000, 0), 'push');    // 云端还没有
-  assert.equal(decideSyncAction(1000, 5000), 'pull'); // 云端新 4s
-  assert.equal(decideSyncAction(5000, 1000), 'push'); // 本地新 4s
-  assert.equal(decideSyncAction(5000, 6000), 'skip'); // 差 1s（容差内）
-  assert.equal(decideSyncAction(5000, 5000), 'skip'); // 一致
-  assert.equal(decideSyncAction(0, 0), 'skip');       // 两边都没有
+test('mergeDb：卡片并集 + 调度整组按 lastR 选边 + 笔记独立按 noteUpd', () => {
+  const local = {
+    updatedAt: 1000, schemaVersion: 1, settings: { a: 1 }, log: {},
+    cards: {
+      x: { lastR: 100, stab: 5, notes: 'A笔记' },   // 本地笔记更新（noteUpd 更晚）
+      y: { lastR: 300, stab: 9, notes: 'Y' },       // 仅本地有
+      z: { lastR: 50, stab: 3, notes: 'Z' }
+    },
+    wrongs: {}
+  };
+  const remote = {
+    updatedAt: 2000, schemaVersion: 1, settings: { a: 2 }, log: {},
+    cards: {
+      x: { lastR: 200, stab: 8, notes: 'R笔记' },   // 云端复习更新（lastR 更晚）
+      w: { lastR: 400, stab: 2, notes: 'W' }        // 仅云端有
+    },
+    wrongs: {}
+  };
+  local.cards.x.noteUpd = 150;
+  remote.cards.x.noteUpd = 120;
+  const m = mergeDb(local, remote);
+  assert.equal(m.cards.x.lastR, 200);      // 调度整组取云端（复习较新）
+  assert.equal(m.cards.x.stab, 8);
+  assert.equal(m.cards.x.notes, 'A笔记');   // 笔记独立取本地（noteUpd 较晚）
+  assert.equal(m.cards.x.noteUpd, 150);
+  assert.equal(m.cards.y.stab, 9);         // 仅本地有 → 保留
+  assert.equal(m.cards.w.lastR, 400);      // 仅云端有 → 整卡采用
+  assert.equal(m.cards.z.lastR, 50);
+  assert.equal(m.updatedAt, 2000);         // 取大
+  assert.deepEqual(m.settings, { a: 1 });  // 设置本地优先
+});
+
+test('mergeDb：调度与笔记来自不同侧时互不挤掉', () => {
+  const local = { updatedAt: 1, cards: { x: { lastR: 500, stab: 9, notes: '旧笔记', noteUpd: 100 } }, wrongs: {}, log: {}, settings: {} };
+  const remote = { updatedAt: 2, cards: { x: { lastR: 100, stab: 1, notes: '新笔记', noteUpd: 900 } }, wrongs: {}, log: {}, settings: {} };
+  const m = mergeDb(local, remote);
+  assert.equal(m.cards.x.lastR, 500);      // 调度取本地（复习较新）
+  assert.equal(m.cards.x.stab, 9);
+  assert.equal(m.cards.x.notes, '新笔记');  // 笔记取云端（编辑较晚）
+  assert.equal(m.cards.x.noteUpd, 900);
+});
+
+test('mergeDb：日志逐日取大、counts 逐字段取大、checkins 取或、detail 逐卡取大、metrics 取当日专注较长一侧、newIntro 并集', () => {
+  const local = {
+    updatedAt: 1, cards: {}, wrongs: {}, settings: {},
+    log: {
+      daily: { d1: 5, d2: 2 }, studyTime: { d1: 60000, d2: 1000 },
+      counts: { d1: { n: 2, r: 3, w: 0 } }, checkins: { d1: true },
+      detail: { d1: { c1: 2 } }, mastery: { d1: 10 }, metrics: { d1: { avg: 10 } },
+      newIntro: { ids: ['a', 'b'] }
+    }
+  };
+  const remote = {
+    updatedAt: 2, cards: {}, wrongs: {}, settings: {},
+    log: {
+      daily: { d1: 3, d3: 7 }, studyTime: { d1: 30000, d3: 80000 },
+      counts: { d1: { n: 1, r: 5, w: 1 } }, checkins: { d3: true },
+      detail: { d1: { c2: 4 } }, mastery: { d1: 30 }, metrics: { d1: { avg: 30 } },
+      newIntro: { ids: ['b', 'c'] }
+    }
+  };
+  const m = mergeDb(local, remote);
+  assert.deepEqual(m.log.daily, { d1: 5, d2: 2, d3: 7 });
+  assert.deepEqual(m.log.studyTime, { d1: 60000, d2: 1000, d3: 80000 });
+  assert.deepEqual(m.log.counts.d1, { n: 2, r: 5, w: 1 });
+  assert.deepEqual(m.log.checkins, { d1: true, d3: true });
+  assert.deepEqual(m.log.detail.d1, { c1: 2, c2: 4 });
+  assert.equal(m.log.mastery.d1, 10);       // d1 本地专注更长 → 取本地快照
+  assert.equal(m.log.metrics.d1.avg, 10);
+  assert.deepEqual(m.log.newIntro.ids, ['a', 'b', 'c']);
 });
 
 test('手动同步门槛 = 已配置（Token+仓库）；自动同步门槛 = 已配置且开启开关', () => {

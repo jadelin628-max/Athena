@@ -40,9 +40,15 @@
     return 'skip';
   }
 
+  // 已配置完整（Token + 仓库格式正确）：手动同步按钮的门槛（不要求打开自动同步开关）
+  function syncConfigured() {
+    const cfg = syncCfg();
+    return !!(cfg.token && cfg.repo && /^[^/\s]+\/[^/\s]+$/.test(cfg.repo));
+  }
+  // 已配置且开启自动同步：启动拉取 / 防抖推送的门槛
   function syncReady() {
     const cfg = syncCfg();
-    return !!(cfg.enabled && cfg.token && cfg.repo && /^[^/\s]+\/[^/\s]+$/.test(cfg.repo));
+    return !!cfg.enabled && syncConfigured();
   }
 
   async function ghRequest(path, opts) {
@@ -134,7 +140,7 @@
   // 同步全部学科。mode：auto（各学科按 LWW）/ push（本地强制胜出）/ pull（云端强制胜出）
   async function runSync(mode) {
     if (typeof fetch === 'undefined') throw new Error('当前环境不支持网络请求');
-    if (!syncReady()) throw new Error('请先在设置中填写 Token 与仓库并开启自动同步');
+    if (!syncConfigured()) throw new Error('云同步未配置完整：请先在设置中填写 Token 与仓库名');
     const summary = { pushed: [], pulled: [], skipped: [], failed: [] };
     const sids = Object.keys(subjectList());
     for (const sid of sids) {
@@ -183,7 +189,7 @@
   let syncPushTimer = null;
   function scheduleSyncPush() {
     const cfg = syncCfg();
-    if (!cfg.enabled || !syncReady()) return;
+    if (!cfg.enabled || !syncConfigured()) return;
     if (syncPushTimer) clearTimeout(syncPushTimer);
     syncPushTimer = setTimeout(function () {
       syncPushTimer = null;
@@ -192,7 +198,7 @@
   }
   function autoSyncOnLaunch() {
     const cfg = syncCfg();
-    if (!cfg.enabled || !syncReady()) return;
+    if (!cfg.enabled || !syncConfigured()) return;
     runSync('auto').then(function (summary) {
       if (summary.pulled.indexOf(currentSubjectId) !== -1) {
         buildSession(0); // 云端覆盖了当前学科：重建学习队列以纳入变化
@@ -201,4 +207,4 @@
     }).catch(function () {});
   }
 
-export { b64encodeUtf8, b64decodeUtf8, decideSyncAction, runSync, syncReady, syncCfg, saveSyncCfg, syncValidate, autoSyncOnLaunch };
+export { b64encodeUtf8, b64decodeUtf8, decideSyncAction, runSync, syncReady, syncConfigured, syncCfg, saveSyncCfg, syncValidate, autoSyncOnLaunch };

@@ -172,7 +172,7 @@
     const mkSyncBtn = function (label, mode) {
       const b = el('button', 'btn', label);
       b.addEventListener('click', function () {
-        if (!syncReady()) { toast('请先填写 Token 与仓库并验证'); return; }
+        if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
         b.disabled = true;
         toast('同步中…');
         runSync(mode).then(function (summary) {

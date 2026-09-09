@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.19.1';
+  const VERSION = '1.20.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.20.0', date: '2026-09', items: ['统计页新增「未来负载预测」：未来 14 天到期量柱状图（知识卡+错题卡，考试日在窗口内时高亮 🎯）', '新增考试日预期：假设「每次到期都按良好复习」，模拟到考试日的 FSRS 稳定度增长，给出预计仍能 ≥90% 记得的卡片比例与平均可提取性——与目标倒计时毕业目标配套，用于规划学习节奏'] },
     { v: '1.19.1', date: '2026-09', items: ['修复：同步偶发「HTTP 409 does not match」——两台设备同时写入（或同一设备的启动同步/防抖推送/前台回归/手动按钮重叠执行）时，后到的 PUT 会因文件 sha 已变化被 GitHub 拒绝；现在同一设备的同步请求串行排队，PUT 遇 409 自动重新拉取云端、重新合并后再写（最多 3 次），多端同时同步平滑收敛'] },
     { v: '1.19.0', date: '2026-09', items: ['同步升级为「合并式」：多端同时打开不再互相覆盖——同步时按卡片逐张归并（调度状态取最近复习一方、笔记独立取最近编辑一方，复习与笔记互不挤掉），学习日志逐日取大，两端进度都保留；任何合并前两侧仍自动归档', '切回前台自动同步（距上次超过 5 分钟）：手机切回前台先吸收云端变化再学习', '设置页移除「强制上传/强制下载」——合并式同步下不再需要手动覆盖，恢复走仓库 archive/ 目录', '移动端二级导航（学习/浏览等）吸顶：滚动时始终可见', '设置页分栏：学习偏好 / 数据与同步 / 关于 三个栏目切换'] },
     { v: '1.18.1', date: '2026-09', items: ['修复：手动同步（立即同步/强制上传/强制下载）不再要求开启「自动同步」开关——此前未打开开关时按钮会误报「请先填写 Token 与仓库并验证」，把只用手动同步的用户挡在门外；配置完整（Token+仓库）即可手动同步，自动同步仍由开关独立控制'] },
@@ -3337,6 +3338,115 @@
     return box;
   }
 
+  // ---------------- 未来负载预测 ----------------
+  // 未来 days 天的到期量分桶（知识卡+错题卡；仅统计已进入复习排期的卡，
+  // 新卡与学习/重学中的卡由学习行为决定、无法预测，不计入）。逾期未复习的计入「今天」。
+  function dueForecast(days) {
+    const buckets = new Array(days).fill(0);
+    let beyond = 0;
+    const today = dayStart(Date.now());
+    const addCard = function (c) {
+      if (!c || c.state !== 'review' || !c.due) return;
+      let idx = Math.floor((dayStart(c.due) - today) / DAY);
+      if (idx < 0) idx = 0;
+      if (idx >= days) beyond++; else buckets[idx]++;
+    };
+    DATA.forEach(function (f) { addCard(card(f.id)); });
+    Object.keys(DB.wrongs || {}).forEach(function (wid) { addCard(DB.wrongs[wid]); });
+    return { buckets: buckets, beyond: beyond };
+  }
+
+  // 考试日预期：假设「每次到期都按良好复习」，模拟到考试日的 FSRS 稳定度增长，
+  // 返回考试日的可提取性 R（0-1）。这是规划参考（每次复习会真实进一步提升）。
+  function simulateExamRetention(c, examDays) {
+    const examTs = dayStart(Date.now()) + examDays * DAY;
+    let stab = c.stab, diff = c.diff, due = c.due, lastR = c.lastR || c.due;
+    let guard = 0;
+    while (due <= examTs && guard++ < 500) {
+      const R = fsrsRetention(Math.max(0, (due - lastR) / DAY), stab);
+      diff = fsrsDifficulty(diff, 3); // 良好
+      stab = fsrsSuccessStability(diff, stab, R, 3);
+      const ivl = Math.max(1, Math.round(fsrsInterval(stab)));
+      lastR = due;
+      due = dayStart(due) + ivl * DAY;
+    }
+    return fsrsRetention(Math.max(0, (examTs - lastR) / DAY), stab);
+  }
+
+  // 考试日展望：已排期卡片中，考试日预计仍能 ≥90% 记得的比例与平均可提取性
+  function examOutlook() {
+    const examDays = countdownDays();
+    if (examDays == null || examDays <= 0) return null;
+    let predictable = 0, ok = 0, rSum = 0;
+    const evaluate = function (c) {
+      if (!c || c.state !== 'review' || !(c.stab > 0)) return;
+      predictable++;
+      const R = simulateExamRetention(c, examDays);
+      if (R >= TARGET_CONFIDENCE) ok++;
+      rSum += R;
+    };
+    DATA.forEach(function (f) { evaluate(card(f.id)); });
+    Object.keys(DB.wrongs || {}).forEach(function (wid) { evaluate(DB.wrongs[wid]); });
+    if (!predictable) return null;
+    return { examDays: examDays, pct: Math.round(ok / predictable * 100), avg: Math.round(rSum / predictable * 100) };
+  }
+
+  function forecastChart(buckets, examIdx) {
+    const W = 680, H = 150, pad = 26, padTop = 20;
+    const max = Math.max.apply(null, buckets.concat([1]));
+    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%' });
+    const bw = (W - pad * 2) / buckets.length;
+    const base = H - pad;
+    buckets.forEach(function (cnt, i) {
+      const h = Math.round(cnt / max * (H - pad - padTop));
+      const x = pad + i * bw;
+      const rect = svgEl('rect', {
+        x: (x + bw * 0.12).toFixed(1), y: base - h,
+        width: (bw * 0.76).toFixed(1), height: Math.max(h, 1), rx: 3,
+        fill: i === examIdx ? '#D4537E' : (i === 0 ? '#76AFE8' : '#B5D4F4')
+      });
+      const d = new Date(); d.setDate(d.getDate() + i);
+      const t = svgEl('title', {});
+      t.textContent = (i === 0 ? '今天' : (d.getMonth() + 1) + '月' + d.getDate() + '日') + '：到期 ' + cnt + ' 张' + (i === examIdx ? '（考试日 🎯）' : '');
+      rect.appendChild(t);
+      svg.appendChild(rect);
+      if (cnt > 0) svg.appendChild(svgText('text', x + bw / 2, base - h - 5, String(cnt), { 'text-anchor': 'middle', 'font-weight': '600', fill: i === examIdx ? '#D4537E' : '#888780' }));
+      const label = i === 0 ? '今天' : (i === 1 ? '明天' : (d.getMonth() + 1) + '/' + d.getDate());
+      svg.appendChild(svgText('text', x + bw / 2, H - 8, label, { 'text-anchor': 'middle' }));
+    });
+    svg.appendChild(svgEl('line', { x1: pad, x2: W - pad, y1: base, y2: base, stroke: '#E7E4DD', 'stroke-width': '1' }));
+    return svg;
+  }
+
+  function renderForecastCard() {
+    const box = el('div', 'stat-card');
+    const days = 14;
+    const fc = dueForecast(days);
+    const outlook = examOutlook();
+    const examIdx = (outlook && outlook.examDays < days) ? outlook.examDays : -1;
+    box.appendChild(forecastChart(fc.buckets, examIdx));
+
+    const s = stats();
+    const fc30 = dueForecast(30);
+    let total30 = fc30.buckets.reduce(function (a, b) { return a + b; }, 0) + fc30.beyond;
+    const ov = el('div', 'stat-overview');
+    const kpi = function (label, val, unit) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label + (unit || ''))); ov.appendChild(c); };
+    kpi('未来 7 天', fc.buckets.slice(0, 7).reduce(function (a, b) { return a + b; }, 0), ' 张');
+    kpi('未来 30 天', total30, ' 张');
+    if (outlook) {
+      kpi(goalTitle() + '日预期', outlook.pct, '% ≥90%记得');
+      kpi('预期平均可提取', outlook.avg, '%');
+    } else {
+      kpi('已排期卡片', s.total - stateCounts().fresh, ' 张');
+      kpi('更远到期', fc.beyond, ' 张');
+    }
+    box.appendChild(ov);
+    box.appendChild(el('p', 'muted', outlook
+      ? '预测假设「每次到期都按良好复习」：在此前提下，' + goalTitle() + '日（' + outlook.examDays + ' 天后）预计 ' + outlook.pct + '% 的已排期卡片仍能 ≥90% 记得、平均可提取性 ' + outlook.avg + '%。未排期（新卡/学习中）卡片未计入——继续学习会改变预测。'
+      : '预测基于当前 FSRS 状态；新卡与学习中的卡片未计入。设置目标日期后，这里还会给出考试日「仍能 ≥90% 记得」的预期比例。'));
+    return box;
+  }
+
   function renderStatistics() {
     const app = document.getElementById('app');
     const wrap = el('div', 'principles-wrap');
@@ -3358,6 +3468,10 @@
     // —— 学习报告（日/周/月/年聚合）——
     wrap.appendChild(el('h3', null, '📋 学习报告'));
     wrap.appendChild(renderStudyReport());
+
+    // —— 未来负载预测 ——
+    wrap.appendChild(el('h3', null, '📅 未来负载预测（14 天）'));
+    wrap.appendChild(renderForecastCard());
 
     wrap.appendChild(el('h3', null, '🔥 学习日历（近 16 周）'));
     const daily = (DB.log && DB.log.daily) || {};
@@ -3484,6 +3598,7 @@
 
     app.appendChild(wrap);
   }
+
 
 
   // ---------------- 原理 · 学习科学（结构化文档：目录跳转 + 关键词搜索） ----------------

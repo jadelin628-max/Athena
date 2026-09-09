@@ -44,7 +44,7 @@ function stripExports(text) {
 const banner = '/* 本文件由 tools/build.mjs 自动生成，请勿手改；修改 src/ 后运行 node tools/build.mjs 重新生成。 */\n';
 
 const body = ORDER
-  .map((rel) => ((rel === 'fsrs-core.mjs' || rel === 'interleave.mjs' || rel === 'sched.mjs' || rel === 'wrong.mjs' || rel === 'sync.mjs') ? stripExports(read(rel)) : read(rel)))
+  .map((rel) => ((rel === 'fsrs-core.mjs' || rel === 'interleave.mjs' || rel === 'sched.mjs' || rel === 'wrong.mjs' || rel === 'sync.mjs' || rel === 'stats.mjs') ? stripExports(read(rel)) : read(rel)))
   .join('\n');
 
 const out = banner + body + '\n';

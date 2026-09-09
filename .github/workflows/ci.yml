@@ -16,8 +16,8 @@ jobs:
       # 零 npm 依赖：无需 install，直接跑构建同步校验 + 测试 + 三道闸
       - name: app.js 与 src/ 同步校验
         run: node tools/build.mjs --check
-      - name: 单元测试（FSRS 对拍 / 交错 / 调度状态机 / 错题调度）
-        run: node --test tests/fsrs.test.mjs tests/interleave.test.mjs tests/sched.test.mjs tests/wrong.test.mjs
+      - name: 单元测试（FSRS 对拍 / 交错 / 调度状态机 / 错题调度 / 云同步）
+        run: node --test tests/fsrs.test.mjs tests/interleave.test.mjs tests/sched.test.mjs tests/wrong.test.mjs tests/sync.test.mjs
       - name: 实际构建（含桌面版 dist/ 同步，验证 build 链路不坏）
         run: node tools/build.mjs && node tools/build-tauri.mjs
       - name: 数据完整性校验

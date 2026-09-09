@@ -488,6 +488,14 @@ body.immersive #immersiveExit { display: block; }
 
 /* 记忆原理 */
 .principles-wrap { display: flex; flex-direction: column; gap: 14px; }
+.principle-toc {
+  position: sticky; top: 96px; z-index: 6;
+  background: var(--bg); padding: 10px 0 6px; margin: -4px 0 2px;
+}
+.principle { scroll-margin-top: 150px; }
+.pr-row-text { flex: 1; font-size: 13px; line-height: 1.6; }
+.principle .cat-bar-row { align-items: baseline; }
+.principle .mini-label { margin-top: 10px; }
 .principle {
   background: var(--card); border: 1px solid var(--border);
   border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px;

@@ -232,6 +232,7 @@
     if (w.hist.length > 60) w.hist = w.hist.slice(-60);
     w.lastR = Date.now();
     w.ivlR = w.ivl || 0;
+    bumpCount('w');
     wrongFrontier++;
     saveDB();
     renderApp();

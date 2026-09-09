@@ -486,6 +486,7 @@
       currentModule = 'cards';
       renderApp();
       setTimeout(maybeShowCountdownPopup, 350);
+      setTimeout(autoSyncOnLaunch, 1200); // 启动自动同步（等首屏渲染完成后再联网比对）
     });
   }
 

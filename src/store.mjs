@@ -127,6 +127,7 @@
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
+    if (!DB.log.counts) DB.log.counts = {}; // 每日完成量分类计数（n 新学 / r 复习 / w 错题重做）
     if (!DB.wrongs) DB.wrongs = {};
     if (!DB.custom) DB.custom = {};
     if (!DB.cardOverrides) DB.cardOverrides = {};
@@ -287,10 +288,12 @@
     if (!DB) return;
     saveDirty = false;
     saveFlushScheduled = false;
+    DB.updatedAt = Date.now(); // 同步时间戳（云同步「新者胜」的依据）
     let json = null;
     try { json = JSON.stringify(DB); } catch (e) { warnStorageFailure(); return; }
     try {
       localStorage.setItem(dbKey(), json);
+      if (typeof scheduleSyncPush === 'function') scheduleSyncPush(); // 脏学科防抖推送（sync.mjs）
     } catch (e) {
       warnStorageFailure();
     }
@@ -371,12 +374,12 @@
       Object.keys(payload.log.checkins).forEach(function (k) { fresh.log.checkins[k] = true; });
     }
     if (payload.log && typeof payload.log === 'object') {
-      ['daily', 'mastery', 'detail'].forEach(function (k) {
+      ['daily', 'mastery', 'detail', 'counts'].forEach(function (k) {
         if (payload.log[k] && typeof payload.log[k] === 'object') {
           fresh.log[k] = {};
           Object.keys(payload.log[k]).forEach(function (dk) {
             const v = payload.log[k][dk];
-            if (k === 'detail') {
+            if (k === 'detail' || k === 'counts') {
               fresh.log[k][dk] = (v && typeof v === 'object') ? JSON.parse(JSON.stringify(v)) : {};
             } else if (typeof v === 'number') {
               fresh.log[k][dk] = v;

@@ -1,78 +1,176 @@
+  // ---------------- 原理 · 学习科学（结构化文档：目录跳转 + 关键词搜索） ----------------
+  const PRINCIPLE_SECTIONS = [
+    {
+      id: 'core', icon: '✍️', title: '核心方法：主动回忆 + 间隔重复',
+      blocks: [
+        { p: '学习科学里证据最强的两项技术（Dunlosky 2013 系统评估，证据等级 A）：检索练习——合上书主动回忆，远比反复阅读更牢固（Roediger & Karpicke 2006）；间隔重复——同样的总时长，分散到多天远优于考前突击（Cepeda 2006，254 项研究荟萃）。' },
+        { p: '本应用的学习闭环就是这两项的组合：卡片默认只显示提示 → 先自行回想（必要时写下来）→ 点「显示答案」核对 → 按真实回忆质量评分，FSRS-6 算法把下一次复习自动安排在遗忘临界点。' },
+        { muted: '重读、划线、抄写感觉「顺滑」，恰恰是低效的证据——这叫流畅性错觉。学得「难受」（合意困难）往往才是有效信号；反之，被动输入时大脑的三个可塑性信号（肾上腺素、乙酰胆碱、多巴胺）都不释放，等于白学。' }
+      ]
+    },
+    {
+      id: 'interleave', icon: '🔀', title: '交错与辨别',
+      blocks: [
+        { p: '交错练习（B 级）：把不同章节、不同题型混着练，远期成绩与迁移能力显著更好——练习时更「难受」，又是合意困难。集中刷同一类题的「顺滑感」是错觉。' },
+        { p: '本应用的实现：带「同类/对比/类比」关联的卡片聚成簇、相邻出现（辨析聚类）；「裸回忆」开关进一步隐藏分类徽标，逼你先判断「这是哪一类、该用哪个方法」再回忆。' },
+        { rows: [['自测', '随机抽卡「给内容选名称」，检验是否真正认得（生成效应：自己生成的答案记得更牢）。'], ['错题本', '真题做错后收进错题本，重做并评分，按 FSRS 排期重现；「不会/思路错」会把关联知识点一并降级、次日补漏。'], ['费曼技巧', '能用自己的话讲清楚才是真理解：合上卡片讲一遍，卡壳处即盲区（B 级）。'], ['自我解释', '每记一个公式追问：为什么成立？和什么已知有关？用在什么题型？（B 级）']] }
+      ]
+    },
+    {
+      id: 'fsrs', icon: '📐', title: '调度内核：FSRS-6',
+      blocks: [
+        { p: '每张卡由难度 D 与稳定度 S 建模；可提取性 R(t,S) = (1 + F·t/S)^decay 表示「此刻能想起的概率」。四档评分（再来一次/困难/良好/简单）对应 FSRS 官方四档，按官方 21 参数默认权重更新 D/S，并按期望保留率 90% 反推下次间隔。' },
+        { p: '知识卡：学习阶段按时间步进（1 分钟 → 10 分钟），Good 越过最后一步毕业进入长期复习，遗忘后进入 10 分钟重学。错题卡为纯复习态：添加即视为「当天已忘记」，次日重现，之后与知识卡走同一套 FSRS 复习逻辑。' },
+        { muted: '调度内核是纯函数（src/fsrs-core.mjs、sched.mjs），与官方权重做对拍测试；毕业目标可与考试倒计时挂钩（要求目标日仍能 ≥90% 记得）。' }
+      ]
+    },
+    {
+      id: 'mastery', icon: '📊', title: '掌握度与毕业目标',
+      blocks: [
+        { p: '掌握度 = 记忆「存储强度」到毕业目标的比例（⚠️自设计，依据论文「存储强度」概念 + 对数压缩）：达到毕业目标即 100%。分级：未学 → 初学 → 生疏 → 巩固中 → 已掌握 → 熟练 → 稳固 → 毕业。另单独显示「当前可提取性 R」表示此刻想起的概率。' },
+        { p: '毕业目标默认与目标倒计时挂钩：要求目标日仍能 ≥90% 记得（等价于稳定度 S ≥ 剩余天数），随倒计时自动收紧；可在设置中改为固定目标值。' },
+        { legend: true }
+      ]
+    },
+    {
+      id: 'science', icon: '📚', title: '学习科学清单：怎么学最有效',
+      blocks: [
+        { h: '高效（A 级，跨学科稳定）' },
+        { rows: [['检索练习', '合上书先回忆：做题、默写、闪卡、给假想学生讲——本应用的核心闭环。'], ['间隔重复', '同内容隔天/隔周回顾——FSRS 自动排期；间隔约为目标保留期的 10–20%。']] },
+        { h: '中效（B 级，用对场景有效）' },
+        { rows: [['交错练习', '不同题型混着练（已内置辨析聚类）。'], ['精细提问 / 自我解释', '对材料追问「为什么成立、和什么有关」。'], ['示例学习', '先照例题仿写，尽快脱离例题独立做。']] },
+        { h: '低效（D 级，大量时间换微量收益）' },
+        { rows: [['重读 / 划线 / 被动摘要', '感觉顺滑恰恰是流畅性错觉——把这部分时间换成检索练习。']] },
+        { p: '两个常见辟谣：「学习风格」（视觉型/听觉型）没有证据支持，请按材料本身的最佳表征学习（Pashler 2008，A 级负面证据）；「手写一定优于打字」证据混合，手写的真正价值在于强迫概括与加工。' }
+      ]
+    },
+    {
+      id: 'body', icon: '🌙', title: '身体是学习系统的一部分',
+      blocks: [
+        { rows: [['睡眠（A 级）', '「学之前睡好」（睡眠决定编码效率），「学之后睡够」（巩固发生在深睡与安静休息）。熬夜学习的净收益通常为负。'], ['安静休息（B 级）', '学完 10–20 分钟不看手机、闭眼或散步，给海马「重放」留时间。'], ['运动（A/B 级）', '规律运动改善情绪、动机与睡眠；中等强度运动后 1–2 小时是编码黄金窗——把最难的材料放在运动后学。'], ['专注（A 级常识）', '任务切换有真实成本；手机哪怕静音扣在桌上也会偷走工作记忆——学习时段物理隔离。'], ['咖啡因（A 级）', '提升警觉，但半衰期约 5 小时：睡前 8–10 小时停止摄入；每日总量 ≤400mg。']] },
+        { muted: '本节为一般健康信息，不构成医疗建议；个体差异请以自身实验与医生意见为准。' }
+      ]
+    },
+    {
+      id: 'motivation', icon: '🎯', title: '动机与坚持',
+      blocks: [
+        { p: '最强的日常动机来源是「可见的微小进步」（Progress Principle，对 1.2 万个工作日的研究）——统计页的学习报告与趋势图就是为此设计：把注意力放在过程反馈，而非遥远的终点。' },
+        { p: '对拖延：它本质是用短期情绪修复替代长期目标。对策有三——自我原谅比自责更能减少下一次拖延（B 级）；启动只承诺两分钟（启动后继续的概率远大于放弃）；把任务拆到「下一个具体物理动作」。' },
+        { p: '习惯自动化的中位数约 66 天（「21 天养成」是讹传）；把新行为写成「当 X 时我就做 Y」的执行意图，是动机科学里效应量最大的廉价工具。环境设计大于意志力。' },
+        { muted: '本应用刻意不做积分、抽卡、连击惩罚等设计：变率奖励是劫持动机的赌场工具，而有形奖励会侵蚀你本来就有的学习兴趣（过度合理化效应，A 级）。' }
+      ]
+    },
+    {
+      id: 'troubleshoot', icon: '🛠️', title: '学不进去排查表',
+      blocks: [
+        { rows: [['完全不想启动', '先查睡眠够不够、刺激密度是否过高（短视频依赖）。对策：补觉优先；两分钟启动法。'], ['三分钟热度', '查自主/胜任/关联缺了哪个。对策：把「要学」转成「我选择学」；看学习报告里的微进步；找个搭子。'], ['学完就忘', '是不是只重读不检索？间隔为零？对策：用自测与错题本；相信算法排期，到期就复习。'], ['越学越麻木', '是否形成刺激依赖（不听音乐学不了）？对策：给辅助刺激做减法与随机化；用真休息替代刷手机。'], ['burnout 前兆', '恢复是否长期不足？对策：减载 + 睡眠 + 每周一个无目标日；持续两周以上请就医。']] },
+        { muted: '持续两周以上的情绪低落、兴趣丧失、睡眠食欲明显改变——请直接寻求专业帮助，这不是「调优」能解决的问题。' }
+      ]
+    }
+  ];
+
+  let principleQuery = '';
+  function principleBlockText(sec) {
+    return sec.blocks.map(function (b) {
+      if (b.p) return b.p;
+      if (b.muted) return b.muted;
+      if (b.h) return b.h;
+      if (b.rows) return b.rows.map(function (r) { return r[0] + r[1]; }).join(' ');
+      return '';
+    }).join(' ');
+  }
+
   function renderPrinciples() {
     const app = document.getElementById('app');
     const wrap = el('div', 'principles-wrap');
 
-    wrap.appendChild(el('h2', null, '🧠 记忆原理'));
-    wrap.appendChild(el('p', 'muted', '本应用遵循认知科学中被反复验证的记忆与学习规律——每条都给出「是什么」与「怎么实践」。'));
+    wrap.appendChild(el('h2', null, '🧠 原理 · 学习科学'));
+    wrap.appendChild(el('p', 'muted', '本应用遵循认知科学中被反复验证的记忆与学习规律——目录跳转，或搜索关键词直达章节；条目后标注证据等级（A 强 / B 中 / C 弱）。'));
 
-    const cards = [
-      { icon: '✍️', name: '主动回忆 · Active Recall',
-        desc: '先回想、再核对，比反复阅读更能加固记忆。',
-        how: '卡片默认只显示提示，先自行回想，再点「显示答案」。' },
-      { icon: '⏱️', name: '间隔重复 · Spaced Repetition',
-        desc: '在即将遗忘时复习，用最少次数达成长期记忆。',
-        how: '内置 FSRS-6 算法：按「再来一次/困难/良好/简单」打分，自动把下次复习安排在遗忘临界点。' },
-      { icon: '📉', name: '遗忘曲线 · Forgetting Curve',
-        desc: '艾宾浩斯发现遗忘「先快后慢」，不复习会迅速丢失。',
-        how: '每天完成「待复习」卡片，在遗忘临界点及时巩固，而不是考前突击。' },
-      { icon: '🔀', name: '交错练习 · Interleaving',
-        desc: '混合不同章节，比集中刷一类更能提升辨析与迁移能力。',
-        how: '复习队列随机乱序，各章节公式混合出现。' },
-      { icon: '🧪', name: '测试效应 · Testing Effect',
-        desc: '「考自己」比「看自己」记得更牢。',
-        how: '用自测模式随机抽题，给出公式选名称，检验是否真正认得。' },
-      { icon: '🌱', name: '生成效应 · Generation Effect',
-        desc: '自己生成答案，比被动接收的记忆更深。',
-        how: '看到提示后先在脑中/纸上写出公式，再点「显示答案」核对。' },
-      { icon: '🔗', name: '精加工 · Elaboration',
-        desc: '把新知识与已知知识、应用场景建立联系，形成意义网络。',
-        how: '复习时追问：公式的条件是什么？和其他公式什么关系？用在什么题型？' },
-      { icon: '🖼️', name: '双重编码 · Dual Coding',
-        desc: '语言符号 + 图形图像双通道编码，记忆更牢。',
-        how: '给公式配上图形（积分面积、正态曲线、预算线等），文字与图形一起记。' },
-      { icon: '🗣️', name: '费曼技巧 · Feynman Technique',
-        desc: '能用自己的话讲清楚，才是真理解。',
-        how: '合上卡片，把公式与推导讲给自己或写下来；讲不通就回去再看。' },
-      { icon: '❓', name: '自我解释 · Self-explanation',
-        desc: '学习时向自己解释每一步「为什么」。',
-        how: '每记一个公式都问「为什么成立、为什么这样推导」，不只看结论。' },
-      { icon: '🎯', name: '元认知监控 · Metacognition',
-        desc: '准确判断自己「会不会」，避免熟练错觉。',
-        how: '用「再来一次/困难/良好/简单」如实自评，并用自测结果校准对自己掌握度的判断。' },
-      { icon: '🌙', name: '睡眠巩固 · Sleep & Consolidation',
-        desc: '睡眠期间大脑会巩固白天所学，是记忆的关键环节。',
-        how: '睡前做一组复习并保证充足睡眠，避免熬夜突击影响记忆固化。' },
-      { icon: '📅', name: '分散学习 · Distributed Practice',
-        desc: '每天少量多次，远优于考前一次性集中。',
-        how: '每天坚持打卡、完成当日队列（「坚持天数」会给你反馈），让复习形成习惯。' }
-    ];
-    cards.forEach(function (c) {
+    // 搜索（实时过滤章节）
+    const search = el('input', 'search');
+    search.type = 'search';
+    search.placeholder = '搜索关键词（如：睡眠 / 交错 / 遗忘曲线 / 拖延）…';
+    search.value = principleQuery;
+    wrap.appendChild(search);
+
+    // 目录（吸顶 chips，锚点跳转）
+    const toc = el('div', 'chips principle-toc');
+    const tocChips = {};
+    PRINCIPLE_SECTIONS.forEach(function (sec) {
+      const chip = el('button', 'chip', sec.icon + ' ' + sec.title);
+      chip.addEventListener('click', function () {
+        const node = document.getElementById('pr-' + sec.id);
+        if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      tocChips[sec.id] = chip;
+      toc.appendChild(chip);
+    });
+    wrap.appendChild(toc);
+
+    // 章节
+    const boxes = {};
+    PRINCIPLE_SECTIONS.forEach(function (sec) {
       const box = el('div', 'principle');
-      const h = el('div', 'principle-head');
-      h.appendChild(el('span', 'principle-icon', c.icon));
-      h.appendChild(el('strong', null, c.name));
-      box.appendChild(h);
-      box.appendChild(el('p', null, c.desc));
-      box.appendChild(el('p', 'muted how', '如何体现：' + c.how));
+      box.id = 'pr-' + sec.id;
+      const head = el('div', 'principle-head');
+      head.appendChild(el('span', 'principle-icon', sec.icon));
+      head.appendChild(el('strong', null, sec.title));
+      box.appendChild(head);
+      sec.blocks.forEach(function (b) {
+        if (b.h) {
+          box.appendChild(el('div', 'mini-label', b.h));
+        } else if (b.p) {
+          box.appendChild(el('p', null, b.p));
+        } else if (b.muted) {
+          box.appendChild(el('p', 'muted how', b.muted));
+        } else if (b.rows) {
+          b.rows.forEach(function (row) {
+            const r = el('div', 'cat-bar-row');
+            r.appendChild(el('span', 'cat-bar-name', row[0]));
+            r.appendChild(el('span', 'pr-row-text', row[1]));
+            box.appendChild(r);
+          });
+        } else if (b.legend) {
+          const s = stats();
+          const legend = el('div', 'legend');
+          const levels = ['未学', '初学', '生疏', '巩固中', '已掌握', '熟练', '稳固', '毕业'];
+          const counts = {};
+          DATA.forEach(function (f) { const l = mastery(f.id).label; counts[l] = (counts[l] || 0) + 1; });
+          levels.forEach(function (lv) {
+            const p = el('span', 'legend-item');
+            p.textContent = lv + ' ' + (counts[lv] || 0);
+            legend.appendChild(p);
+          });
+          box.appendChild(legend);
+          box.appendChild(el('p', 'muted', '当前整体平均掌握度 ' + s.avg + '%（分级实时统计如上）。'));
+        }
+      });
+      boxes[sec.id] = box;
       wrap.appendChild(box);
     });
 
-    const s = stats();
-    const dist = el('div', 'principle');
-    dist.appendChild(el('strong', null, '📊 掌握程度如何计算'));
-    dist.appendChild(el('p', 'muted',
-      '掌握度 = 记忆「存储强度」到毕业目标的比例（⚠️自设计，依据论文「存储强度」概念 + 对数压缩）：每张卡随复习稳固度提升，达到毕业目标即 100%。分级：未学 → 初学 → 生疏 → 巩固中 → 已掌握 → 熟练 → 稳固 → 毕业。另在卡片上单独显示「当前可提取性 R」表示此刻想起的概率。当前整体平均掌握度 ' + s.avg + '%。'));
-    const legend = el('div', 'legend');
-    const levels = ['未学', '初学', '生疏', '巩固中', '已掌握', '熟练', '稳固', '毕业'];
-    const counts = {};
-    DATA.forEach(function (f) { const l = mastery(f.id).label; counts[l] = (counts[l] || 0) + 1; });
-    levels.forEach(function (lv) {
-      const p = el('span', 'legend-item');
-      p.textContent = lv + ' ' + (counts[lv] || 0);
-      legend.appendChild(p);
+    const empty = el('p', 'muted', '没有匹配的章节——换个关键词试试。');
+    empty.classList.add('hidden');
+    wrap.appendChild(empty);
+
+    function applyFilter() {
+      const q = principleQuery.trim().toLowerCase();
+      let visible = 0;
+      PRINCIPLE_SECTIONS.forEach(function (sec) {
+        const text = (sec.title + ' ' + principleBlockText(sec)).toLowerCase();
+        const show = !q || text.indexOf(q) !== -1;
+        boxes[sec.id].style.display = show ? '' : 'none';
+        tocChips[sec.id].style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      empty.classList.toggle('hidden', visible > 0 || !q);
+    }
+    search.addEventListener('input', function () {
+      principleQuery = search.value;
+      applyFilter();
     });
-    dist.appendChild(legend);
-    wrap.appendChild(dist);
+    applyFilter();
 
     app.appendChild(wrap);
   }

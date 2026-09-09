@@ -118,6 +118,84 @@
     wrap.appendChild(s2b);
     wrap.appendChild(el('p', 'muted', '把四个学科的学习进度与统计打包成单个 JSON 文件，一键迁移到另一台设备或平台（手机 / 平板 / 电脑 / 网页版）。'));
 
+    // —— 云同步（GitHub 私仓）——
+    const scfg = syncCfg();
+    const sSync = el('div', 'setting-row');
+    sSync.appendChild(el('span', null, '云同步 (GitHub)'));
+    const autoCb = el('input', 'chk');
+    autoCb.type = 'checkbox';
+    autoCb.checked = !!scfg.enabled;
+    const autoLabel = el('label', 'setting-check', '');
+    autoLabel.appendChild(autoCb);
+    autoLabel.appendChild(el('span', null, '自动同步（启动拉取 + 评分后防抖上传）'));
+    autoLabel.title = '开启后：打开应用自动比对云端，评分落盘约 30 秒后自动上传有变化的学科';
+    autoCb.addEventListener('change', function () {
+      const c = syncCfg();
+      c.enabled = autoCb.checked;
+      saveSyncCfg(c);
+      toast(autoCb.checked ? '自动同步已开启' : '自动同步已关闭');
+    });
+    sSync.appendChild(autoLabel);
+    wrap.appendChild(sSync);
+
+    const sSyncCfg = el('div', 'setting-row');
+    const tokenInput = el('input', 'num');
+    tokenInput.type = 'password';
+    tokenInput.style.width = '240px';
+    tokenInput.placeholder = 'GitHub Token（仅保存在本设备）';
+    tokenInput.value = scfg.token || '';
+    sSyncCfg.appendChild(tokenInput);
+    const repoInput = el('input', 'num');
+    repoInput.type = 'text';
+    repoInput.style.width = '170px';
+    repoInput.placeholder = '用户名/仓库名';
+    repoInput.value = scfg.repo || '';
+    sSyncCfg.appendChild(repoInput);
+    const saveBtn = el('button', 'btn', '保存并验证');
+    saveBtn.addEventListener('click', function () {
+      const c = syncCfg();
+      c.token = tokenInput.value.trim();
+      c.repo = repoInput.value.trim();
+      saveSyncCfg(c);
+      saveBtn.disabled = true;
+      toast('正在验证…');
+      syncValidate().then(function (msg) {
+        toast(msg);
+      }).catch(function (err) {
+        toast('验证失败：' + (err.message || err));
+      }).finally(function () { saveBtn.disabled = false; });
+    });
+    sSyncCfg.appendChild(saveBtn);
+    wrap.appendChild(sSyncCfg);
+
+    const sSyncBtns = el('div', 'setting-row');
+    const mkSyncBtn = function (label, mode) {
+      const b = el('button', 'btn', label);
+      b.addEventListener('click', function () {
+        if (!syncReady()) { toast('请先填写 Token 与仓库并验证'); return; }
+        b.disabled = true;
+        toast('同步中…');
+        runSync(mode).then(function (summary) {
+          let msg = '同步完成：上传 ' + summary.pushed.length + ' 科，下载 ' + summary.pulled.length + ' 科';
+          if (summary.failed.length) msg += '，失败：' + summary.failed[0];
+          toast(msg);
+          renderApp();
+        }).catch(function (err) {
+          toast('同步失败：' + (err.message || err));
+        }).finally(function () { b.disabled = false; });
+      });
+      return b;
+    };
+    sSyncBtns.appendChild(mkSyncBtn('立即同步', 'auto'));
+    sSyncBtns.appendChild(mkSyncBtn('强制上传本地', 'push'));
+    sSyncBtns.appendChild(mkSyncBtn('强制下载云端', 'pull'));
+    wrap.appendChild(sSyncBtns);
+    const last = scfg.lastSyncAt
+      ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + '（上传 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.pushed : 0) + ' / 下载 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.pulled : 0) + ' 科）' + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
+      : '尚未同步过。';
+    wrap.appendChild(el('p', 'muted', last));
+    wrap.appendChild(el('p', 'muted', '准备步骤：① 在 GitHub 新建一个【私有】仓库；② 创建 Fine-grained Token，仅勾选该仓库、权限 Contents: Read and write；③ 填入上方并「保存并验证」。同步把四科整库快照存入仓库 athena-sync/ 目录，时间戳新者胜，任何覆盖前自动归档被覆盖版本到 archive/（等价版本历史）。数据为明文 JSON，请确保仓库为私有。'));
+
     const s8 = el('div', 'setting-row');
     s8.appendChild(el('span', null, '更新与缓存'));
     const cc = el('button', 'btn', '强制清除缓存并更新');

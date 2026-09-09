@@ -21,10 +21,12 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.16.1';
+  const VERSION = '1.18.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.18.0', date: '2026-09', items: ['新增多端同步（GitHub 私仓）：设置页配置 Token 与仓库后，四科学习数据以整库快照存入你自己的仓库（athena-sync/ 目录），启动自动拉取、评分落盘约 30 秒后自动上传，手机 / 电脑保持一致', '同步策略：时间戳新者胜（2 秒容差），任何覆盖前自动把被覆盖版本归档到 archive/ 目录——等价版本历史、不丢数据；同步失败不影响本地使用；支持强制上传 / 强制下载', '数据以明文 JSON 存放（请确保仓库为私有）；自动同步开关可随时关闭'] },
+    { v: '1.17.0', date: '2026-09', items: ['统计页新增「学习报告」：日报/周报/月报/年报聚合——专注时长、新学、复习、错题重做、学习天数、掌握度变化；新增每日完成量分类计数（学习时长自 v1.16.0、分类计数自本版起记录）', '原理页重构为「原理 · 学习科学」：吸顶目录跳转 + 关键词搜索 + 八个结构化章节（核心方法 / 交错与辨别 / FSRS 内核 / 掌握度与毕业 / 学习科学清单 / 身体与学习 / 动机与坚持 / 学不进去排查表），条目标注证据等级', '新增节律提示：连续学习约 50 分钟温和提醒起身休息；深夜（23 点后）打开应用提醒一次「睡眠是记忆巩固的一部分」——均为轻提示，不阻断学习'] },
     { v: '1.16.1', date: '2026-09', items: ['修复：移动端学科选择器无法切换学科——下拉菜单由顶栏内部改挂到页面根节点（fixed 定位 + JS 计算坐标），彻底摆脱 sticky/backdrop-filter 祖先对定位与命中测试的影响（该选择器的移动端问题第三次出现，此次根治）；点外部收起增加 touchstart 兜底，窄屏靠右时菜单自动收回屏内'] },
     { v: '1.16.0', date: '2026-09', items: ['错题算法重置（以 FSRS 为基础的探索性调整）：添加错题即视为「当天已遗忘」并直接进入复习队列（次日重现）；重做评分全部走标准 FSRS——一直做对间隔大幅延长、卡片永不消失；移除学习/重学步进与「难题」分类（旧设计残留），「已稳固」仅为掌握度标识', 'UI 改版：总体掌握度并入左上角学科选择器；移除顶栏倒计时徽标，倒计时弹窗改为每次打开应用弹出；☰ 菜单仅保留原理与设置；移动端底栏仅保留知识卡/错题本两个模块键，二级导航恢复为顶栏下方横滑条；学习页卡片右上角新增「✏️ 编辑」；沉浸模式隐藏录入/编辑按钮；统计条移除与顶栏重复的「平均掌握」', '「每日时间预算」功能移除，新增学习计时器：自动累计应用前台使用时长（按天），统计条显示「⏱ 今日已学 X 分钟」', '工程：npm run build 现在自动同步 Tauri 桌面版 dist/，版本发布不再可能打包旧代码；CI 增加实际构建验证'] },
     { v: '1.15.1', date: '2026-09', items: ['错题算法对齐设计（知识卡仍为标准 FSRS-6，不受影响）：评「算错」现为次日重现一步后再毕业（学习步进改两步，修复此前因配置提前毕业）；难题卡评「会做对」的复习间隔统一走 ×1.4 规则（此前仅困难/良好生效）', '体积：空状态/倒计时插画由 PNG 转 WebP（4.6MB → 240KB，缩小 95%），离线缓存与桌面安装包同步瘦身'] },
@@ -482,6 +484,7 @@
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
+    if (!DB.log.counts) DB.log.counts = {}; // 每日完成量分类计数（n 新学 / r 复习 / w 错题重做）
     if (!DB.wrongs) DB.wrongs = {};
     if (!DB.custom) DB.custom = {};
     if (!DB.cardOverrides) DB.cardOverrides = {};
@@ -642,10 +645,12 @@
     if (!DB) return;
     saveDirty = false;
     saveFlushScheduled = false;
+    DB.updatedAt = Date.now(); // 同步时间戳（云同步「新者胜」的依据）
     let json = null;
     try { json = JSON.stringify(DB); } catch (e) { warnStorageFailure(); return; }
     try {
       localStorage.setItem(dbKey(), json);
+      if (typeof scheduleSyncPush === 'function') scheduleSyncPush(); // 脏学科防抖推送（sync.mjs）
     } catch (e) {
       warnStorageFailure();
     }
@@ -726,12 +731,12 @@
       Object.keys(payload.log.checkins).forEach(function (k) { fresh.log.checkins[k] = true; });
     }
     if (payload.log && typeof payload.log === 'object') {
-      ['daily', 'mastery', 'detail'].forEach(function (k) {
+      ['daily', 'mastery', 'detail', 'counts'].forEach(function (k) {
         if (payload.log[k] && typeof payload.log[k] === 'object') {
           fresh.log[k] = {};
           Object.keys(payload.log[k]).forEach(function (dk) {
             const v = payload.log[k][dk];
-            if (k === 'detail') {
+            if (k === 'detail' || k === 'counts') {
               fresh.log[k][dk] = (v && typeof v === 'object') ? JSON.parse(JSON.stringify(v)) : {};
             } else if (typeof v === 'number') {
               fresh.log[k][dk] = v;
@@ -1262,16 +1267,42 @@
   // 结算点：每 15 秒 tick + 切后台/关页（actions.mjs 在 flush 落盘前先结算，顺序不可换）。
   function todayStudySec() { const t = todayStr(); return (DB && DB.log && DB.log.studyTime && DB.log.studyTime[t]) || 0; }
   function todayStudyMin() { return Math.round(todayStudySec() / 60000); }
+  // 每日完成量分类计数（新学 n / 复习 r / 错题重做 w），供统计页学习报告聚合
+  function bumpCount(kind) {
+    if (!DB || !DB.log) return;
+    if (!DB.log.counts) DB.log.counts = {};
+    const t = todayStr();
+    const c = (DB.log.counts[t] = DB.log.counts[t] || { n: 0, r: 0, w: 0 });
+    c[kind] = (c[kind] || 0) + 1;
+  }
   let studyTickLast = Date.now();
+  let continuousSince = Date.now();  // 连续前台起点（切后台即重置）
+  let lastBreakNudgeMs = 0;          // 上次「起身休息」提示时刻
+  let nightNudged = false;           // 本次会话是否已提示过深夜睡眠
   function settleStudyTime() {
     const now = Date.now();
-    if (DB && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+    const visible = (typeof document !== 'undefined' && document.visibilityState === 'visible');
+    if (DB && visible) {
       const delta = now - studyTickLast;
       if (delta >= 5000) { // 不足 5 秒不记账；休眠/挂起后不巨量补记（单次上限 60 秒）
         if (!DB.log.studyTime) DB.log.studyTime = {};
         const t = todayStr();
         DB.log.studyTime[t] = (DB.log.studyTime[t] || 0) + Math.min(delta, 60000);
       }
+      // 节律提示：连续学习约 50 分钟，温和提醒起身休息（脚手架，非强制）
+      if (now - continuousSince >= 50 * 60000 && now - lastBreakNudgeMs >= 50 * 60000) {
+        lastBreakNudgeMs = now;
+        try { toast('⏳ 已连续学习约 50 分钟——起身远眺 5 分钟再回来，专注与巩固都会更好。'); } catch (e) {}
+      }
+      // 深夜提示：23 点后每次会话提醒一次（「学前睡好编码、学后睡够巩固」，A 级证据）
+      const hour = new Date(now).getHours();
+      if (!nightNudged && (hour >= 23 || hour < 5)) {
+        nightNudged = true;
+        try { toast('🌙 睡眠是记忆巩固的最后一道工序——今晚早睡，比熬夜多刷十张卡更值。'); } catch (e) {}
+      }
+    } else {
+      continuousSince = now; // 切后台：连续计时清零
+      lastBreakNudgeMs = 0;
     }
     studyTickLast = now;
   }
@@ -2059,6 +2090,7 @@
   function doRate(r) {
     if (frontier >= deck.length) return;
     const id = deck[frontier];
+    const wasNew = card(id).state === 'new'; // 评分前状态：新卡首学 vs 复习
     const beforeM = mastery(id).pct; // 评分前掌握度（存储强度到目标比例）
     // 撤销快照：卡片状态 + 今日统计计数，供评分后单步回退
     lastRatingUndo = {
@@ -2071,6 +2103,7 @@
     const afterM = mastery(id).pct;
     lastMasteryDelta = afterM - beforeM;
     markReviewed(id);
+    bumpCount(wasNew ? 'n' : 'r');
     // 记录掌握度历史快照（每次评分后的掌握度，供「掌握度趋势图」）
     {
       const c = card(id);
@@ -2349,6 +2382,7 @@
     if (w.hist.length > 60) w.hist = w.hist.slice(-60);
     w.lastR = Date.now();
     w.ivlR = w.ivl || 0;
+    bumpCount('w');
     wrongFrontier++;
     saveDB();
     renderApp();
@@ -3035,6 +3069,84 @@
     wrap.appendChild(s2b);
     wrap.appendChild(el('p', 'muted', '把四个学科的学习进度与统计打包成单个 JSON 文件，一键迁移到另一台设备或平台（手机 / 平板 / 电脑 / 网页版）。'));
 
+    // —— 云同步（GitHub 私仓）——
+    const scfg = syncCfg();
+    const sSync = el('div', 'setting-row');
+    sSync.appendChild(el('span', null, '云同步 (GitHub)'));
+    const autoCb = el('input', 'chk');
+    autoCb.type = 'checkbox';
+    autoCb.checked = !!scfg.enabled;
+    const autoLabel = el('label', 'setting-check', '');
+    autoLabel.appendChild(autoCb);
+    autoLabel.appendChild(el('span', null, '自动同步（启动拉取 + 评分后防抖上传）'));
+    autoLabel.title = '开启后：打开应用自动比对云端，评分落盘约 30 秒后自动上传有变化的学科';
+    autoCb.addEventListener('change', function () {
+      const c = syncCfg();
+      c.enabled = autoCb.checked;
+      saveSyncCfg(c);
+      toast(autoCb.checked ? '自动同步已开启' : '自动同步已关闭');
+    });
+    sSync.appendChild(autoLabel);
+    wrap.appendChild(sSync);
+
+    const sSyncCfg = el('div', 'setting-row');
+    const tokenInput = el('input', 'num');
+    tokenInput.type = 'password';
+    tokenInput.style.width = '240px';
+    tokenInput.placeholder = 'GitHub Token（仅保存在本设备）';
+    tokenInput.value = scfg.token || '';
+    sSyncCfg.appendChild(tokenInput);
+    const repoInput = el('input', 'num');
+    repoInput.type = 'text';
+    repoInput.style.width = '170px';
+    repoInput.placeholder = '用户名/仓库名';
+    repoInput.value = scfg.repo || '';
+    sSyncCfg.appendChild(repoInput);
+    const saveBtn = el('button', 'btn', '保存并验证');
+    saveBtn.addEventListener('click', function () {
+      const c = syncCfg();
+      c.token = tokenInput.value.trim();
+      c.repo = repoInput.value.trim();
+      saveSyncCfg(c);
+      saveBtn.disabled = true;
+      toast('正在验证…');
+      syncValidate().then(function (msg) {
+        toast(msg);
+      }).catch(function (err) {
+        toast('验证失败：' + (err.message || err));
+      }).finally(function () { saveBtn.disabled = false; });
+    });
+    sSyncCfg.appendChild(saveBtn);
+    wrap.appendChild(sSyncCfg);
+
+    const sSyncBtns = el('div', 'setting-row');
+    const mkSyncBtn = function (label, mode) {
+      const b = el('button', 'btn', label);
+      b.addEventListener('click', function () {
+        if (!syncReady()) { toast('请先填写 Token 与仓库并验证'); return; }
+        b.disabled = true;
+        toast('同步中…');
+        runSync(mode).then(function (summary) {
+          let msg = '同步完成：上传 ' + summary.pushed.length + ' 科，下载 ' + summary.pulled.length + ' 科';
+          if (summary.failed.length) msg += '，失败：' + summary.failed[0];
+          toast(msg);
+          renderApp();
+        }).catch(function (err) {
+          toast('同步失败：' + (err.message || err));
+        }).finally(function () { b.disabled = false; });
+      });
+      return b;
+    };
+    sSyncBtns.appendChild(mkSyncBtn('立即同步', 'auto'));
+    sSyncBtns.appendChild(mkSyncBtn('强制上传本地', 'push'));
+    sSyncBtns.appendChild(mkSyncBtn('强制下载云端', 'pull'));
+    wrap.appendChild(sSyncBtns);
+    const last = scfg.lastSyncAt
+      ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + '（上传 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.pushed : 0) + ' / 下载 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.pulled : 0) + ' 科）' + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
+      : '尚未同步过。';
+    wrap.appendChild(el('p', 'muted', last));
+    wrap.appendChild(el('p', 'muted', '准备步骤：① 在 GitHub 新建一个【私有】仓库；② 创建 Fine-grained Token，仅勾选该仓库、权限 Contents: Read and write；③ 填入上方并「保存并验证」。同步把四科整库快照存入仓库 athena-sync/ 目录，时间戳新者胜，任何覆盖前自动归档被覆盖版本到 archive/（等价版本历史）。数据为明文 JSON，请确保仓库为私有。'));
+
     const s8 = el('div', 'setting-row');
     s8.appendChild(el('span', null, '更新与缓存'));
     const cc = el('button', 'btn', '强制清除缓存并更新');
@@ -3132,6 +3244,69 @@
     return box;
   }
 
+  // ---------------- 学习报告（日/周/月/年聚合） ----------------
+  let reportPeriod = 'day'; // 会话内状态，不持久化
+  const REPORT_PERIODS = [['day', '日报'], ['week', '周报'], ['month', '月报'], ['year', '年报']];
+  const REPORT_DAYS = { day: 1, week: 7, month: 30, year: 365 };
+
+  function fmtStudyMs(ms) {
+    const min = Math.round(ms / 60000);
+    if (min < 1) return '0 分钟';
+    if (min < 60) return min + ' 分钟';
+    return Math.floor(min / 60) + ' 小时 ' + (min % 60) + ' 分';
+  }
+
+  function renderStudyReport() {
+    const box = el('div', 'stat-card');
+    const chips = el('div', 'chips');
+    REPORT_PERIODS.forEach(function (p) {
+      const b = el('button', 'chip' + (reportPeriod === p[0] ? ' active' : ''), p[1]);
+      b.addEventListener('click', function () { reportPeriod = p[0]; renderApp(); });
+      chips.appendChild(b);
+    });
+    box.appendChild(chips);
+
+    const days = REPORT_DAYS[reportPeriod];
+    const counts = (DB.log && DB.log.counts) || {};
+    const study = (DB.log && DB.log.studyTime) || {};
+    const daily = (DB.log && DB.log.daily) || {};
+    const masteryLog = (DB.log && DB.log.mastery) || {};
+
+    let studyMs = 0, n = 0, r = 0, w = 0, activeDays = 0;
+    for (let i = 0; i < days; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = fmtDate(d);
+      const st = study[key] || 0;
+      const c = counts[key];
+      if (st > 0 || (daily[key] || 0) > 0 || c) activeDays++;
+      studyMs += st;
+      if (c) { n += (c.n || 0); r += (c.r || 0); w += (c.w || 0); }
+    }
+
+    // 掌握度变化：今日 vs 窗口起点前最近一次快照（日报即「vs 昨天」，最多回看 30 天）
+    const cur = (masteryLog[todayStr()] != null) ? masteryLog[todayStr()] : stats().avg;
+    let base = null;
+    const lookback = (reportPeriod === 'day') ? 1 : days - 1;
+    for (let i = lookback; i <= days + 30; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const k = fmtDate(d);
+      if (masteryLog[k] != null) { base = masteryLog[k]; break; }
+    }
+    const deltaTxt = (base == null) ? '—' : ((cur - base >= 0 ? '+' : '') + (cur - base) + '%');
+
+    const ov = el('div', 'stat-overview');
+    const kpi = function (label, val, unit) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label + (unit || ''))); ov.appendChild(c); };
+    kpi('专注时长', fmtStudyMs(studyMs), '');
+    kpi('新学', n, ' 张');
+    kpi('复习', r, ' 张');
+    kpi('错题重做', w, ' 道');
+    kpi('学习天数', activeDays + '/' + days, '');
+    kpi('掌握度变化', deltaTxt, '');
+    box.appendChild(ov);
+    box.appendChild(el('p', 'muted', '窗口：近 ' + days + ' 天。学习时长自 v1.16.0、新学/复习/错题分类计数自 v1.17.0 起记录，更早时段的聚合不完整。'));
+    return box;
+  }
+
   function renderStatistics() {
     const app = document.getElementById('app');
     const wrap = el('div', 'principles-wrap');
@@ -3149,6 +3324,10 @@
     kpi('平均可提取 R', avgCurrentR(), '%');
     kpi('累计遗忘', totalLapses(), '');
     wrap.appendChild(ov);
+
+    // —— 学习报告（日/周/月/年聚合）——
+    wrap.appendChild(el('h3', null, '📋 学习报告'));
+    wrap.appendChild(renderStudyReport());
 
     wrap.appendChild(el('h3', null, '🔥 学习日历（近 16 周）'));
     const daily = (DB.log && DB.log.daily) || {};
@@ -3277,81 +3456,179 @@
   }
 
 
+  // ---------------- 原理 · 学习科学（结构化文档：目录跳转 + 关键词搜索） ----------------
+  const PRINCIPLE_SECTIONS = [
+    {
+      id: 'core', icon: '✍️', title: '核心方法：主动回忆 + 间隔重复',
+      blocks: [
+        { p: '学习科学里证据最强的两项技术（Dunlosky 2013 系统评估，证据等级 A）：检索练习——合上书主动回忆，远比反复阅读更牢固（Roediger & Karpicke 2006）；间隔重复——同样的总时长，分散到多天远优于考前突击（Cepeda 2006，254 项研究荟萃）。' },
+        { p: '本应用的学习闭环就是这两项的组合：卡片默认只显示提示 → 先自行回想（必要时写下来）→ 点「显示答案」核对 → 按真实回忆质量评分，FSRS-6 算法把下一次复习自动安排在遗忘临界点。' },
+        { muted: '重读、划线、抄写感觉「顺滑」，恰恰是低效的证据——这叫流畅性错觉。学得「难受」（合意困难）往往才是有效信号；反之，被动输入时大脑的三个可塑性信号（肾上腺素、乙酰胆碱、多巴胺）都不释放，等于白学。' }
+      ]
+    },
+    {
+      id: 'interleave', icon: '🔀', title: '交错与辨别',
+      blocks: [
+        { p: '交错练习（B 级）：把不同章节、不同题型混着练，远期成绩与迁移能力显著更好——练习时更「难受」，又是合意困难。集中刷同一类题的「顺滑感」是错觉。' },
+        { p: '本应用的实现：带「同类/对比/类比」关联的卡片聚成簇、相邻出现（辨析聚类）；「裸回忆」开关进一步隐藏分类徽标，逼你先判断「这是哪一类、该用哪个方法」再回忆。' },
+        { rows: [['自测', '随机抽卡「给内容选名称」，检验是否真正认得（生成效应：自己生成的答案记得更牢）。'], ['错题本', '真题做错后收进错题本，重做并评分，按 FSRS 排期重现；「不会/思路错」会把关联知识点一并降级、次日补漏。'], ['费曼技巧', '能用自己的话讲清楚才是真理解：合上卡片讲一遍，卡壳处即盲区（B 级）。'], ['自我解释', '每记一个公式追问：为什么成立？和什么已知有关？用在什么题型？（B 级）']] }
+      ]
+    },
+    {
+      id: 'fsrs', icon: '📐', title: '调度内核：FSRS-6',
+      blocks: [
+        { p: '每张卡由难度 D 与稳定度 S 建模；可提取性 R(t,S) = (1 + F·t/S)^decay 表示「此刻能想起的概率」。四档评分（再来一次/困难/良好/简单）对应 FSRS 官方四档，按官方 21 参数默认权重更新 D/S，并按期望保留率 90% 反推下次间隔。' },
+        { p: '知识卡：学习阶段按时间步进（1 分钟 → 10 分钟），Good 越过最后一步毕业进入长期复习，遗忘后进入 10 分钟重学。错题卡为纯复习态：添加即视为「当天已忘记」，次日重现，之后与知识卡走同一套 FSRS 复习逻辑。' },
+        { muted: '调度内核是纯函数（src/fsrs-core.mjs、sched.mjs），与官方权重做对拍测试；毕业目标可与考试倒计时挂钩（要求目标日仍能 ≥90% 记得）。' }
+      ]
+    },
+    {
+      id: 'mastery', icon: '📊', title: '掌握度与毕业目标',
+      blocks: [
+        { p: '掌握度 = 记忆「存储强度」到毕业目标的比例（⚠️自设计，依据论文「存储强度」概念 + 对数压缩）：达到毕业目标即 100%。分级：未学 → 初学 → 生疏 → 巩固中 → 已掌握 → 熟练 → 稳固 → 毕业。另单独显示「当前可提取性 R」表示此刻想起的概率。' },
+        { p: '毕业目标默认与目标倒计时挂钩：要求目标日仍能 ≥90% 记得（等价于稳定度 S ≥ 剩余天数），随倒计时自动收紧；可在设置中改为固定目标值。' },
+        { legend: true }
+      ]
+    },
+    {
+      id: 'science', icon: '📚', title: '学习科学清单：怎么学最有效',
+      blocks: [
+        { h: '高效（A 级，跨学科稳定）' },
+        { rows: [['检索练习', '合上书先回忆：做题、默写、闪卡、给假想学生讲——本应用的核心闭环。'], ['间隔重复', '同内容隔天/隔周回顾——FSRS 自动排期；间隔约为目标保留期的 10–20%。']] },
+        { h: '中效（B 级，用对场景有效）' },
+        { rows: [['交错练习', '不同题型混着练（已内置辨析聚类）。'], ['精细提问 / 自我解释', '对材料追问「为什么成立、和什么有关」。'], ['示例学习', '先照例题仿写，尽快脱离例题独立做。']] },
+        { h: '低效（D 级，大量时间换微量收益）' },
+        { rows: [['重读 / 划线 / 被动摘要', '感觉顺滑恰恰是流畅性错觉——把这部分时间换成检索练习。']] },
+        { p: '两个常见辟谣：「学习风格」（视觉型/听觉型）没有证据支持，请按材料本身的最佳表征学习（Pashler 2008，A 级负面证据）；「手写一定优于打字」证据混合，手写的真正价值在于强迫概括与加工。' }
+      ]
+    },
+    {
+      id: 'body', icon: '🌙', title: '身体是学习系统的一部分',
+      blocks: [
+        { rows: [['睡眠（A 级）', '「学之前睡好」（睡眠决定编码效率），「学之后睡够」（巩固发生在深睡与安静休息）。熬夜学习的净收益通常为负。'], ['安静休息（B 级）', '学完 10–20 分钟不看手机、闭眼或散步，给海马「重放」留时间。'], ['运动（A/B 级）', '规律运动改善情绪、动机与睡眠；中等强度运动后 1–2 小时是编码黄金窗——把最难的材料放在运动后学。'], ['专注（A 级常识）', '任务切换有真实成本；手机哪怕静音扣在桌上也会偷走工作记忆——学习时段物理隔离。'], ['咖啡因（A 级）', '提升警觉，但半衰期约 5 小时：睡前 8–10 小时停止摄入；每日总量 ≤400mg。']] },
+        { muted: '本节为一般健康信息，不构成医疗建议；个体差异请以自身实验与医生意见为准。' }
+      ]
+    },
+    {
+      id: 'motivation', icon: '🎯', title: '动机与坚持',
+      blocks: [
+        { p: '最强的日常动机来源是「可见的微小进步」（Progress Principle，对 1.2 万个工作日的研究）——统计页的学习报告与趋势图就是为此设计：把注意力放在过程反馈，而非遥远的终点。' },
+        { p: '对拖延：它本质是用短期情绪修复替代长期目标。对策有三——自我原谅比自责更能减少下一次拖延（B 级）；启动只承诺两分钟（启动后继续的概率远大于放弃）；把任务拆到「下一个具体物理动作」。' },
+        { p: '习惯自动化的中位数约 66 天（「21 天养成」是讹传）；把新行为写成「当 X 时我就做 Y」的执行意图，是动机科学里效应量最大的廉价工具。环境设计大于意志力。' },
+        { muted: '本应用刻意不做积分、抽卡、连击惩罚等设计：变率奖励是劫持动机的赌场工具，而有形奖励会侵蚀你本来就有的学习兴趣（过度合理化效应，A 级）。' }
+      ]
+    },
+    {
+      id: 'troubleshoot', icon: '🛠️', title: '学不进去排查表',
+      blocks: [
+        { rows: [['完全不想启动', '先查睡眠够不够、刺激密度是否过高（短视频依赖）。对策：补觉优先；两分钟启动法。'], ['三分钟热度', '查自主/胜任/关联缺了哪个。对策：把「要学」转成「我选择学」；看学习报告里的微进步；找个搭子。'], ['学完就忘', '是不是只重读不检索？间隔为零？对策：用自测与错题本；相信算法排期，到期就复习。'], ['越学越麻木', '是否形成刺激依赖（不听音乐学不了）？对策：给辅助刺激做减法与随机化；用真休息替代刷手机。'], ['burnout 前兆', '恢复是否长期不足？对策：减载 + 睡眠 + 每周一个无目标日；持续两周以上请就医。']] },
+        { muted: '持续两周以上的情绪低落、兴趣丧失、睡眠食欲明显改变——请直接寻求专业帮助，这不是「调优」能解决的问题。' }
+      ]
+    }
+  ];
+
+  let principleQuery = '';
+  function principleBlockText(sec) {
+    return sec.blocks.map(function (b) {
+      if (b.p) return b.p;
+      if (b.muted) return b.muted;
+      if (b.h) return b.h;
+      if (b.rows) return b.rows.map(function (r) { return r[0] + r[1]; }).join(' ');
+      return '';
+    }).join(' ');
+  }
+
   function renderPrinciples() {
     const app = document.getElementById('app');
     const wrap = el('div', 'principles-wrap');
 
-    wrap.appendChild(el('h2', null, '🧠 记忆原理'));
-    wrap.appendChild(el('p', 'muted', '本应用遵循认知科学中被反复验证的记忆与学习规律——每条都给出「是什么」与「怎么实践」。'));
+    wrap.appendChild(el('h2', null, '🧠 原理 · 学习科学'));
+    wrap.appendChild(el('p', 'muted', '本应用遵循认知科学中被反复验证的记忆与学习规律——目录跳转，或搜索关键词直达章节；条目后标注证据等级（A 强 / B 中 / C 弱）。'));
 
-    const cards = [
-      { icon: '✍️', name: '主动回忆 · Active Recall',
-        desc: '先回想、再核对，比反复阅读更能加固记忆。',
-        how: '卡片默认只显示提示，先自行回想，再点「显示答案」。' },
-      { icon: '⏱️', name: '间隔重复 · Spaced Repetition',
-        desc: '在即将遗忘时复习，用最少次数达成长期记忆。',
-        how: '内置 FSRS-6 算法：按「再来一次/困难/良好/简单」打分，自动把下次复习安排在遗忘临界点。' },
-      { icon: '📉', name: '遗忘曲线 · Forgetting Curve',
-        desc: '艾宾浩斯发现遗忘「先快后慢」，不复习会迅速丢失。',
-        how: '每天完成「待复习」卡片，在遗忘临界点及时巩固，而不是考前突击。' },
-      { icon: '🔀', name: '交错练习 · Interleaving',
-        desc: '混合不同章节，比集中刷一类更能提升辨析与迁移能力。',
-        how: '复习队列随机乱序，各章节公式混合出现。' },
-      { icon: '🧪', name: '测试效应 · Testing Effect',
-        desc: '「考自己」比「看自己」记得更牢。',
-        how: '用自测模式随机抽题，给出公式选名称，检验是否真正认得。' },
-      { icon: '🌱', name: '生成效应 · Generation Effect',
-        desc: '自己生成答案，比被动接收的记忆更深。',
-        how: '看到提示后先在脑中/纸上写出公式，再点「显示答案」核对。' },
-      { icon: '🔗', name: '精加工 · Elaboration',
-        desc: '把新知识与已知知识、应用场景建立联系，形成意义网络。',
-        how: '复习时追问：公式的条件是什么？和其他公式什么关系？用在什么题型？' },
-      { icon: '🖼️', name: '双重编码 · Dual Coding',
-        desc: '语言符号 + 图形图像双通道编码，记忆更牢。',
-        how: '给公式配上图形（积分面积、正态曲线、预算线等），文字与图形一起记。' },
-      { icon: '🗣️', name: '费曼技巧 · Feynman Technique',
-        desc: '能用自己的话讲清楚，才是真理解。',
-        how: '合上卡片，把公式与推导讲给自己或写下来；讲不通就回去再看。' },
-      { icon: '❓', name: '自我解释 · Self-explanation',
-        desc: '学习时向自己解释每一步「为什么」。',
-        how: '每记一个公式都问「为什么成立、为什么这样推导」，不只看结论。' },
-      { icon: '🎯', name: '元认知监控 · Metacognition',
-        desc: '准确判断自己「会不会」，避免熟练错觉。',
-        how: '用「再来一次/困难/良好/简单」如实自评，并用自测结果校准对自己掌握度的判断。' },
-      { icon: '🌙', name: '睡眠巩固 · Sleep & Consolidation',
-        desc: '睡眠期间大脑会巩固白天所学，是记忆的关键环节。',
-        how: '睡前做一组复习并保证充足睡眠，避免熬夜突击影响记忆固化。' },
-      { icon: '📅', name: '分散学习 · Distributed Practice',
-        desc: '每天少量多次，远优于考前一次性集中。',
-        how: '每天坚持打卡、完成当日队列（「坚持天数」会给你反馈），让复习形成习惯。' }
-    ];
-    cards.forEach(function (c) {
+    // 搜索（实时过滤章节）
+    const search = el('input', 'search');
+    search.type = 'search';
+    search.placeholder = '搜索关键词（如：睡眠 / 交错 / 遗忘曲线 / 拖延）…';
+    search.value = principleQuery;
+    wrap.appendChild(search);
+
+    // 目录（吸顶 chips，锚点跳转）
+    const toc = el('div', 'chips principle-toc');
+    const tocChips = {};
+    PRINCIPLE_SECTIONS.forEach(function (sec) {
+      const chip = el('button', 'chip', sec.icon + ' ' + sec.title);
+      chip.addEventListener('click', function () {
+        const node = document.getElementById('pr-' + sec.id);
+        if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      tocChips[sec.id] = chip;
+      toc.appendChild(chip);
+    });
+    wrap.appendChild(toc);
+
+    // 章节
+    const boxes = {};
+    PRINCIPLE_SECTIONS.forEach(function (sec) {
       const box = el('div', 'principle');
-      const h = el('div', 'principle-head');
-      h.appendChild(el('span', 'principle-icon', c.icon));
-      h.appendChild(el('strong', null, c.name));
-      box.appendChild(h);
-      box.appendChild(el('p', null, c.desc));
-      box.appendChild(el('p', 'muted how', '如何体现：' + c.how));
+      box.id = 'pr-' + sec.id;
+      const head = el('div', 'principle-head');
+      head.appendChild(el('span', 'principle-icon', sec.icon));
+      head.appendChild(el('strong', null, sec.title));
+      box.appendChild(head);
+      sec.blocks.forEach(function (b) {
+        if (b.h) {
+          box.appendChild(el('div', 'mini-label', b.h));
+        } else if (b.p) {
+          box.appendChild(el('p', null, b.p));
+        } else if (b.muted) {
+          box.appendChild(el('p', 'muted how', b.muted));
+        } else if (b.rows) {
+          b.rows.forEach(function (row) {
+            const r = el('div', 'cat-bar-row');
+            r.appendChild(el('span', 'cat-bar-name', row[0]));
+            r.appendChild(el('span', 'pr-row-text', row[1]));
+            box.appendChild(r);
+          });
+        } else if (b.legend) {
+          const s = stats();
+          const legend = el('div', 'legend');
+          const levels = ['未学', '初学', '生疏', '巩固中', '已掌握', '熟练', '稳固', '毕业'];
+          const counts = {};
+          DATA.forEach(function (f) { const l = mastery(f.id).label; counts[l] = (counts[l] || 0) + 1; });
+          levels.forEach(function (lv) {
+            const p = el('span', 'legend-item');
+            p.textContent = lv + ' ' + (counts[lv] || 0);
+            legend.appendChild(p);
+          });
+          box.appendChild(legend);
+          box.appendChild(el('p', 'muted', '当前整体平均掌握度 ' + s.avg + '%（分级实时统计如上）。'));
+        }
+      });
+      boxes[sec.id] = box;
       wrap.appendChild(box);
     });
 
-    const s = stats();
-    const dist = el('div', 'principle');
-    dist.appendChild(el('strong', null, '📊 掌握程度如何计算'));
-    dist.appendChild(el('p', 'muted',
-      '掌握度 = 记忆「存储强度」到毕业目标的比例（⚠️自设计，依据论文「存储强度」概念 + 对数压缩）：每张卡随复习稳固度提升，达到毕业目标即 100%。分级：未学 → 初学 → 生疏 → 巩固中 → 已掌握 → 熟练 → 稳固 → 毕业。另在卡片上单独显示「当前可提取性 R」表示此刻想起的概率。当前整体平均掌握度 ' + s.avg + '%。'));
-    const legend = el('div', 'legend');
-    const levels = ['未学', '初学', '生疏', '巩固中', '已掌握', '熟练', '稳固', '毕业'];
-    const counts = {};
-    DATA.forEach(function (f) { const l = mastery(f.id).label; counts[l] = (counts[l] || 0) + 1; });
-    levels.forEach(function (lv) {
-      const p = el('span', 'legend-item');
-      p.textContent = lv + ' ' + (counts[lv] || 0);
-      legend.appendChild(p);
+    const empty = el('p', 'muted', '没有匹配的章节——换个关键词试试。');
+    empty.classList.add('hidden');
+    wrap.appendChild(empty);
+
+    function applyFilter() {
+      const q = principleQuery.trim().toLowerCase();
+      let visible = 0;
+      PRINCIPLE_SECTIONS.forEach(function (sec) {
+        const text = (sec.title + ' ' + principleBlockText(sec)).toLowerCase();
+        const show = !q || text.indexOf(q) !== -1;
+        boxes[sec.id].style.display = show ? '' : 'none';
+        tocChips[sec.id].style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      empty.classList.toggle('hidden', visible > 0 || !q);
+    }
+    search.addEventListener('input', function () {
+      principleQuery = search.value;
+      applyFilter();
     });
-    dist.appendChild(legend);
-    wrap.appendChild(dist);
+    applyFilter();
 
     app.appendChild(wrap);
   }
@@ -3584,6 +3861,210 @@
   }
 
   // ---------------- 动作分发 ----------------
+
+  // ---------------- 云同步（GitHub 私仓后端，本地优先、尽力而为） ----------------
+  // 数据布局（私有仓库内）：
+  //   athena-sync/data/{学科id}.json                 —— 该学科完整 DB（含 updatedAt 修改时间戳）
+  //   athena-sync/archive/{学科id}/{ISO时间}.json     —— 被覆盖版本的自动归档（任何覆盖前先归档，不丢数据）
+  // 同步策略：单用户、时间戳新者胜（LWW，2 秒容差）；任何覆盖前把被覆盖方归档到云端，等价于版本历史。
+  // 设置存 localStorage（athena_sync），不属于学习数据、不参与同步。
+  // 失败永不影响本地使用：token 失效/断网时静默跳过，状态记录在设置里。
+
+  const SYNC_CFG_KEY = 'athena_sync';
+  const SYNC_DIR = 'athena-sync';
+  const SYNC_TOLERANCE_MS = 2000; // 时间戳容差：2 秒内的两端写入视为一致
+
+  function syncCfg() {
+    try { return JSON.parse(localStorage.getItem(SYNC_CFG_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function saveSyncCfg(cfg) {
+    try { localStorage.setItem(SYNC_CFG_KEY, JSON.stringify(cfg)); } catch (e) {}
+  }
+
+  // —— Base64（UTF-8 安全，GitHub contents API 要求）——
+  function b64encodeUtf8(str) {
+    const bytes = new TextEncoder().encode(str);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function b64decodeUtf8(b64) {
+    const bin = atob(String(b64).replace(/\s/g, ''));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  // —— LWW 决策（纯函数，供单测）——
+  function decideSyncAction(localUp, remoteUp) {
+    if (remoteUp && !localUp) return 'pull';      // 本地缺时间戳（旧数据）：拉取，但拉取前会归档本地，无损
+    if (!remoteUp && localUp) return 'push';      // 云端还没有：首推
+    if (remoteUp > localUp + SYNC_TOLERANCE_MS) return 'pull';
+    if (localUp > remoteUp + SYNC_TOLERANCE_MS) return 'push';
+    return 'skip';
+  }
+
+  function syncReady() {
+    const cfg = syncCfg();
+    return !!(cfg.enabled && cfg.token && cfg.repo && /^[^/\s]+\/[^/\s]+$/.test(cfg.repo));
+  }
+
+  async function ghRequest(path, opts) {
+    const cfg = syncCfg();
+    const headers = { 'Accept': 'application/vnd.github+json' };
+    if (cfg.token) headers['Authorization'] = 'Bearer ' + cfg.token;
+    const init = { method: (opts && opts.method) || 'GET', headers: headers };
+    if (opts && opts.body) init.body = JSON.stringify(opts.body);
+    const resp = await fetch('https://api.github.com/repos/' + cfg.repo + '/contents/' + path, init);
+    if (resp.status === 404) return { notFound: true };
+    if (!resp.ok) {
+      let msg = 'HTTP ' + resp.status;
+      try { const j = await resp.json(); if (j && j.message) msg += '：' + j.message; } catch (e) {}
+      if (resp.status === 401) msg = 'Token 无效或过期（' + msg + '）';
+      if (resp.status === 403) msg = '无权限或触发限流（' + msg + '）';
+      throw new Error(msg);
+    }
+    return resp.json();
+  }
+
+  async function ghGetJson(path) {
+    const j = await ghRequest(path);
+    if (j.notFound) return null;
+    if (j.encoding !== 'base64' || typeof j.content !== 'string') throw new Error('文件内容编码异常：' + path);
+    return { sha: j.sha, data: JSON.parse(b64decodeUtf8(j.content)) };
+  }
+
+  async function ghPutJson(path, obj, sha) {
+    const body = { message: 'Athena 同步：' + path + '（' + new Date().toISOString() + '）', content: b64encodeUtf8(JSON.stringify(obj)) };
+    if (sha) body.sha = sha;
+    return ghRequest(path, { method: 'PUT', body: body });
+  }
+
+  // 验证仓库与 Token（设置页「保存并验证」）
+  async function syncValidate() {
+    const cfg = syncCfg();
+    if (!cfg.repo || !/^[^/\s]+\/[^/\s]+$/.test(cfg.repo)) throw new Error('仓库路径格式应为：用户名/仓库名');
+    const headers = { 'Accept': 'application/vnd.github+json' };
+    if (cfg.token) headers['Authorization'] = 'Bearer ' + cfg.token;
+    const resp = await fetch('https://api.github.com/repos/' + cfg.repo, { headers: headers });
+    if (resp.status === 404) throw new Error('仓库不存在，或 Token 无权访问（404）');
+    if (resp.status === 401) throw new Error('Token 无效或过期（401）');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const j = await resp.json();
+    return (j.private === true) ? '验证成功：私有仓库 ✓' : '验证成功，但这是公开仓库——学习数据对外可见，强烈建议改用私有仓库！';
+  }
+
+  // 本地某学科的 DB 对象：当前学科取内存 DB，其他学科读 localStorage 快照
+  function syncLocalDb(sid) {
+    if (sid === currentSubjectId && DB) return DB;
+    try { return JSON.parse(localStorage.getItem(sid + '_formula_srs_v1')); } catch (e) { return null; }
+  }
+  function syncWriteLocalDb(sid, db) {
+    try {
+      localStorage.setItem(sid + '_formula_srs_v1', JSON.stringify(db));
+      try { idbSet(sid + '_formula_srs_v1', db); } catch (e) {}
+      return true;
+    } catch (e) { warnStorageFailure(); return false; }
+  }
+  function syncArchivePath(sid) {
+    return SYNC_DIR + '/archive/' + sid + '/' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+  }
+
+  // 对单个学科执行一次 LWW 决策。返回 { action: push / pull / skip }
+  async function syncSubject(sid) {
+    const local = syncLocalDb(sid);
+    const localUp = (local && typeof local.updatedAt === 'number') ? local.updatedAt : 0;
+    const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
+    const remoteUp = (remote && remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0;
+    const action = decideSyncAction(localUp, remoteUp);
+
+    if (action === 'pull' && remote) {
+      if (local) await ghPutJson(syncArchivePath(sid), local); // 覆盖本地前先归档本地版本
+      if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
+      return { action: 'pull' };
+    }
+    if (action === 'push' && local) {
+      let remoteSha = null;
+      if (remote) { // 覆盖云端前先归档云端旧版本
+        await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
+        remoteSha = remote.sha;
+      }
+      await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local, remoteSha);
+      return { action: 'push' };
+    }
+    return { action: action };
+  }
+
+  // 同步全部学科。mode：auto（各学科按 LWW）/ push（本地强制胜出）/ pull（云端强制胜出）
+  async function runSync(mode) {
+    if (typeof fetch === 'undefined') throw new Error('当前环境不支持网络请求');
+    if (!syncReady()) throw new Error('请先在设置中填写 Token 与仓库并开启自动同步');
+    const summary = { pushed: [], pulled: [], skipped: [], failed: [] };
+    const sids = Object.keys(subjectList());
+    for (const sid of sids) {
+      try {
+        let res;
+        if (mode === 'push' || mode === 'pull') {
+          const local = syncLocalDb(sid);
+          const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
+          if (mode === 'push' && local) {
+            if (remote) await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
+            await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local, remote ? remote.sha : null);
+            res = { action: 'push' };
+          } else if (mode === 'pull' && remote) {
+            if (local) await ghPutJson(syncArchivePath(sid), local);
+            if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
+            res = { action: 'pull' };
+          } else {
+            res = { action: 'skip' };
+          }
+        } else {
+          res = await syncSubject(sid);
+        }
+        if (res.action === 'push') summary.pushed.push(sid);
+        else if (res.action === 'pull') summary.pulled.push(sid);
+        else summary.skipped.push(sid);
+      } catch (err) {
+        summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
+      }
+    }
+    const cfg = syncCfg();
+    cfg.lastSyncAt = Date.now();
+    cfg.lastSyncMode = mode;
+    cfg.lastSyncSummary = { pushed: summary.pushed.length, pulled: summary.pulled.length, failed: summary.failed.length };
+    cfg.lastError = summary.failed.length ? summary.failed.join('；') : '';
+    saveSyncCfg(cfg);
+
+    // 当前学科被云端覆盖时：重载数据并刷新界面
+    if (summary.pulled.indexOf(currentSubjectId) !== -1) {
+      await loadDBAsync();
+      renderApp();
+    }
+    return summary;
+  }
+
+  // —— 自动同步调度 ——
+  let syncPushTimer = null;
+  function scheduleSyncPush() {
+    const cfg = syncCfg();
+    if (!cfg.enabled || !syncReady()) return;
+    if (syncPushTimer) clearTimeout(syncPushTimer);
+    syncPushTimer = setTimeout(function () {
+      syncPushTimer = null;
+      runSync('auto').catch(function () {});
+    }, 30000); // 防抖 30s：连续评分合并为一次上传
+  }
+  function autoSyncOnLaunch() {
+    const cfg = syncCfg();
+    if (!cfg.enabled || !syncReady()) return;
+    runSync('auto').then(function (summary) {
+      if (summary.pulled.indexOf(currentSubjectId) !== -1) {
+        buildSession(0); // 云端覆盖了当前学科：重建学习队列以纳入变化
+        renderApp();
+      }
+    }).catch(function () {});
+  }
+
 
   // ---------------- 导入 / 导出共用 ----------------
   // 把对象序列化为 JSON 并触发浏览器下载
@@ -4073,6 +4554,7 @@
       currentModule = 'cards';
       renderApp();
       setTimeout(maybeShowCountdownPopup, 350);
+      setTimeout(autoSyncOnLaunch, 1200); // 启动自动同步（等首屏渲染完成后再联网比对）
     });
   }
 

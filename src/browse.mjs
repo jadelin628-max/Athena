@@ -635,6 +635,7 @@
   function doRate(r) {
     if (frontier >= deck.length) return;
     const id = deck[frontier];
+    const wasNew = card(id).state === 'new'; // 评分前状态：新卡首学 vs 复习
     const beforeM = mastery(id).pct; // 评分前掌握度（存储强度到目标比例）
     // 撤销快照：卡片状态 + 今日统计计数，供评分后单步回退
     lastRatingUndo = {
@@ -647,6 +648,7 @@
     const afterM = mastery(id).pct;
     lastMasteryDelta = afterM - beforeM;
     markReviewed(id);
+    bumpCount(wasNew ? 'n' : 'r');
     // 记录掌握度历史快照（每次评分后的掌握度，供「掌握度趋势图」）
     {
       const c = card(id);

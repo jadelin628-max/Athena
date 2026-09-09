@@ -328,16 +328,42 @@
   // 结算点：每 15 秒 tick + 切后台/关页（actions.mjs 在 flush 落盘前先结算，顺序不可换）。
   function todayStudySec() { const t = todayStr(); return (DB && DB.log && DB.log.studyTime && DB.log.studyTime[t]) || 0; }
   function todayStudyMin() { return Math.round(todayStudySec() / 60000); }
+  // 每日完成量分类计数（新学 n / 复习 r / 错题重做 w），供统计页学习报告聚合
+  function bumpCount(kind) {
+    if (!DB || !DB.log) return;
+    if (!DB.log.counts) DB.log.counts = {};
+    const t = todayStr();
+    const c = (DB.log.counts[t] = DB.log.counts[t] || { n: 0, r: 0, w: 0 });
+    c[kind] = (c[kind] || 0) + 1;
+  }
   let studyTickLast = Date.now();
+  let continuousSince = Date.now();  // 连续前台起点（切后台即重置）
+  let lastBreakNudgeMs = 0;          // 上次「起身休息」提示时刻
+  let nightNudged = false;           // 本次会话是否已提示过深夜睡眠
   function settleStudyTime() {
     const now = Date.now();
-    if (DB && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+    const visible = (typeof document !== 'undefined' && document.visibilityState === 'visible');
+    if (DB && visible) {
       const delta = now - studyTickLast;
       if (delta >= 5000) { // 不足 5 秒不记账；休眠/挂起后不巨量补记（单次上限 60 秒）
         if (!DB.log.studyTime) DB.log.studyTime = {};
         const t = todayStr();
         DB.log.studyTime[t] = (DB.log.studyTime[t] || 0) + Math.min(delta, 60000);
       }
+      // 节律提示：连续学习约 50 分钟，温和提醒起身休息（脚手架，非强制）
+      if (now - continuousSince >= 50 * 60000 && now - lastBreakNudgeMs >= 50 * 60000) {
+        lastBreakNudgeMs = now;
+        try { toast('⏳ 已连续学习约 50 分钟——起身远眺 5 分钟再回来，专注与巩固都会更好。'); } catch (e) {}
+      }
+      // 深夜提示：23 点后每次会话提醒一次（「学前睡好编码、学后睡够巩固」，A 级证据）
+      const hour = new Date(now).getHours();
+      if (!nightNudged && (hour >= 23 || hour < 5)) {
+        nightNudged = true;
+        try { toast('🌙 睡眠是记忆巩固的最后一道工序——今晚早睡，比熬夜多刷十张卡更值。'); } catch (e) {}
+      }
+    } else {
+      continuousSince = now; // 切后台：连续计时清零
+      lastBreakNudgeMs = 0;
     }
     studyTickLast = now;
   }

@@ -52,6 +52,69 @@
     return box;
   }
 
+  // ---------------- 学习报告（日/周/月/年聚合） ----------------
+  let reportPeriod = 'day'; // 会话内状态，不持久化
+  const REPORT_PERIODS = [['day', '日报'], ['week', '周报'], ['month', '月报'], ['year', '年报']];
+  const REPORT_DAYS = { day: 1, week: 7, month: 30, year: 365 };
+
+  function fmtStudyMs(ms) {
+    const min = Math.round(ms / 60000);
+    if (min < 1) return '0 分钟';
+    if (min < 60) return min + ' 分钟';
+    return Math.floor(min / 60) + ' 小时 ' + (min % 60) + ' 分';
+  }
+
+  function renderStudyReport() {
+    const box = el('div', 'stat-card');
+    const chips = el('div', 'chips');
+    REPORT_PERIODS.forEach(function (p) {
+      const b = el('button', 'chip' + (reportPeriod === p[0] ? ' active' : ''), p[1]);
+      b.addEventListener('click', function () { reportPeriod = p[0]; renderApp(); });
+      chips.appendChild(b);
+    });
+    box.appendChild(chips);
+
+    const days = REPORT_DAYS[reportPeriod];
+    const counts = (DB.log && DB.log.counts) || {};
+    const study = (DB.log && DB.log.studyTime) || {};
+    const daily = (DB.log && DB.log.daily) || {};
+    const masteryLog = (DB.log && DB.log.mastery) || {};
+
+    let studyMs = 0, n = 0, r = 0, w = 0, activeDays = 0;
+    for (let i = 0; i < days; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = fmtDate(d);
+      const st = study[key] || 0;
+      const c = counts[key];
+      if (st > 0 || (daily[key] || 0) > 0 || c) activeDays++;
+      studyMs += st;
+      if (c) { n += (c.n || 0); r += (c.r || 0); w += (c.w || 0); }
+    }
+
+    // 掌握度变化：今日 vs 窗口起点前最近一次快照（日报即「vs 昨天」，最多回看 30 天）
+    const cur = (masteryLog[todayStr()] != null) ? masteryLog[todayStr()] : stats().avg;
+    let base = null;
+    const lookback = (reportPeriod === 'day') ? 1 : days - 1;
+    for (let i = lookback; i <= days + 30; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const k = fmtDate(d);
+      if (masteryLog[k] != null) { base = masteryLog[k]; break; }
+    }
+    const deltaTxt = (base == null) ? '—' : ((cur - base >= 0 ? '+' : '') + (cur - base) + '%');
+
+    const ov = el('div', 'stat-overview');
+    const kpi = function (label, val, unit) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label + (unit || ''))); ov.appendChild(c); };
+    kpi('专注时长', fmtStudyMs(studyMs), '');
+    kpi('新学', n, ' 张');
+    kpi('复习', r, ' 张');
+    kpi('错题重做', w, ' 道');
+    kpi('学习天数', activeDays + '/' + days, '');
+    kpi('掌握度变化', deltaTxt, '');
+    box.appendChild(ov);
+    box.appendChild(el('p', 'muted', '窗口：近 ' + days + ' 天。学习时长自 v1.16.0、新学/复习/错题分类计数自 v1.17.0 起记录，更早时段的聚合不完整。'));
+    return box;
+  }
+
   function renderStatistics() {
     const app = document.getElementById('app');
     const wrap = el('div', 'principles-wrap');
@@ -69,6 +132,10 @@
     kpi('平均可提取 R', avgCurrentR(), '%');
     kpi('累计遗忘', totalLapses(), '');
     wrap.appendChild(ov);
+
+    // —— 学习报告（日/周/月/年聚合）——
+    wrap.appendChild(el('h3', null, '📋 学习报告'));
+    wrap.appendChild(renderStudyReport());
 
     wrap.appendChild(el('h3', null, '🔥 学习日历（近 16 周）'));
     const daily = (DB.log && DB.log.daily) || {};

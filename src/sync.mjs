@@ -220,12 +220,44 @@
     return err && /409|does not match|wasn't supplied/i.test(String(err.message || err));
   }
 
+  // 归档治理：仅「分歧冲突」时归档（云端版本比本机上次同步所见的更新，说明另一端有本机未见的变化，
+  // 此时的覆盖才真正丢弃信息）；常规单向推送/拉取不再归档（合并结果已包含被覆盖方的全部信息）。
+  // 每次同步后把归档目录修剪到每科最多 KEEP 份，防止仓库无限膨胀。
+  const ARCHIVE_KEEP = 10;
+
+  function syncLastUp(sid) {
+    const cfg = syncCfg();
+    return (cfg.lastSyncUp && cfg.lastSyncUp[sid]) || 0;
+  }
+  function syncSetLastUp(sid, ts) {
+    const cfg = syncCfg();
+    if (!cfg.lastSyncUp) cfg.lastSyncUp = {};
+    cfg.lastSyncUp[sid] = ts;
+    saveSyncCfg(cfg);
+  }
+
+  async function pruneArchives(sid) {
+    try {
+      const j = await ghRequest(SYNC_DIR + '/archive/' + sid + '/');
+      if (j.notFound || !Array.isArray(j)) return 0;
+      if (j.length <= ARCHIVE_KEEP) return 0;
+      const sorted = j.slice().sort(function (x, y) { return x.name < y.name ? -1 : 1; }); // ISO 文件名字典序=时间序
+      const victims = sorted.slice(0, sorted.length - ARCHIVE_KEEP);
+      for (const v of victims) {
+        try { await ghRequest(SYNC_DIR + '/archive/' + sid + '/' + v.name, { method: 'DELETE', body: { message: 'Athena 归档修剪', sha: v.sha } }); }
+        catch (e) { /* 单个删除失败不影响同步 */ }
+      }
+      return victims.length;
+    } catch (e) { return 0; } // 修剪失败不影响同步
+  }
+
   // 对单个学科执行一次合并式同步（内置 409 重试：两台设备同时写入时，后到的 PUT 会被
   // GitHub 以 sha 不匹配拒绝——重新拉取云端、重新合并后再写，最多 3 次）。
   // 返回 { action: push / pull / merge / skip }
   // push = 云端被本地更新；pull = 本地被云端更新；merge = 两端都更新为合并结果。
   async function syncSubject(sid) {
     const local = syncLocalDb(sid);
+    const seenUp = syncLastUp(sid); // 本机上次同步所见的云端时间戳
     let lastErr = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -253,14 +285,15 @@
         const merged = mergeDb(local, remote.data);
         const changedFromRemote = merged.__changedFromRemote === true;
         const mergedUp = (typeof merged.updatedAt === 'number') ? merged.updatedAt : 0;
+        const cloudDiverged = remoteUp > seenUp + SYNC_TOLERANCE_MS; // 云端在本机上次同步后被别的设备改过
         let action = 'skip';
-        if (changedFromRemote) { // 覆盖本地（先归档本地旧版）
-          await ghPutJson(syncArchivePath(sid), local);
+        if (changedFromRemote) { // 覆盖本地（分歧冲突时先归档本地旧版，常规拉取不归档）
+          if (cloudDiverged) await ghPutJson(syncArchivePath(sid), local);
           if (!syncWriteLocalDb(sid, merged)) throw new Error('本地写入失败（存储空间不足？）');
           action = 'pull';
         }
-        if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 本机有云端没有的变化（或合并结果更新）→ 更新云端（先归档云端旧版）
-          await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
+        if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 本机有云端没有的变化（或合并结果更新）→ 更新云端
+          if (remote && cloudDiverged) await ghPutJson(syncArchivePath(sid), remote.data, remote.sha); // 覆盖未见过的云端版本才归档
           try {
             await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', merged, remote.sha);
           } catch (err) {
@@ -269,6 +302,7 @@
           }
           action = changedFromRemote ? 'merge' : 'push';
         }
+        syncSetLastUp(sid, Math.max(remoteUp, mergedUp));
         return { action: action };
       } catch (err) {
         if (isShaConflict(err)) { lastErr = err; continue; }
@@ -317,6 +351,8 @@
       await loadDBAsync();
       renderApp();
     }
+    // 归档修剪：每科仅保留最近 ARCHIVE_KEEP 份（修剪失败不影响同步）
+    for (const sid of sids) { await pruneArchives(sid); }
     return summary;
   }
 

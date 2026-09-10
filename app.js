@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.22.0';
+  const VERSION = '1.22.1';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.22.1', date: '2026-09', items: ['同步归档治理：归档只在检测到「另一设备有本机未见的变化」（分歧冲突）时发生，常规单向推送/拉取不再归档——归档量下降约 95%', '每次同步后自动修剪归档目录：每科仅保留最近 10 份，仓库不再随使用无限膨胀（GitHub 仓库软上限约 1-5GB）'] },
     { v: '1.22.0', date: '2026-09', items: ['数据库审查第二轮：新增 6 张核心考点变式卡——数三「中值定理：严格单调与差商不等式」（2025 解答题）、「变限积分函数：极值与拐点判别」（2025 真题）、「抽象交错级数敛散判别」（2025 真题）；微观「跨期利率变动的斯勒茨基分解」「最优投保量的决定」；统计「两类错误与样本量的确定」', '内容修复：微观「边际效用递减规律」缺答案、数三 2023 旋转体例题公式定界符错位、2016 例题中间步骤笔误（上一版已修，本版合并说明）；含 $\iff$ 等符号的小修正'] },
     { v: '1.21.2', date: '2026-09', items: ['数据库审查（四科 903 卡全覆盖 + 数三 455 条公式逐条审阅）：修复 3 处内容错误——微观「边际效用递减规律」卡缺答案（front/back 错位）、数三 2023 旋转体真题例题公式定界符错位（后半段渲染异常）、2016 数三例题中间步骤笔误（sin x 应为 sin 1，2 处）', '审查结论：四科 0 重复标题、0 空 front、0 奇数 $，455 条公式无数学错误；缺口与变式卡清单见「数据审查报告」'] },
     { v: '1.21.1', date: '2026-09', items: ['修复：当前学科的云同步单向失效（表现为「其他三科能合并，唯独当前学科合不并，还把本机旧数据推上云端」）——根因有二：每次打开页面时的数据规范化回写会把 updatedAt 刷成「打开时刻」，切后台/关页的兜底落盘即使无修改也会再刷一次，让本机旧数据冒充较新版本；现在落盘只发生在真实修改时，时间戳随之前进', '同步写回本地改为内容判定：只要合并结果包含云端有而本机没有的内容，就写回本地并刷新界面（此前依赖时间差判断，当前学科几乎永远不触发）'] },
@@ -3163,7 +3164,7 @@
       ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + '（云端更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.cloud : 0) + ' / 本地更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.local : 0) + ' / 双向合并 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.both : 0) + ' 科）' + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
       : '尚未同步过。';
     note(last);
-    note('准备步骤：① 在 GitHub 新建一个【私有】仓库；② 创建 Fine-grained Token，仅勾选该仓库、权限 Contents: Read and write；③ 填入上方并「保存并验证」。同步把四科整库快照存入仓库 athena-sync/ 目录；合并式同步按卡片逐张取较新记录，多端同时打开不会互相覆盖，任何合并前两侧都会自动归档到 archive/。数据为明文 JSON，请确保仓库为私有。');
+    note('准备步骤：① 在 GitHub 新建一个【私有】仓库；② 创建 Fine-grained Token，仅勾选该仓库、权限 Contents: Read and write；③ 填入上方并「保存并验证」。同步把四科整库快照存入仓库 athena-sync/ 目录；合并式同步按卡片逐张取较新记录，多端同时打开不会互相覆盖。仅在检测到另一设备有本机未见的变化时才归档旧版，归档每科只保留最近 10 份，仓库不会无限膨胀。数据为明文 JSON，请确保仓库为私有。');
 
     }
 
@@ -4194,12 +4195,44 @@
     return err && /409|does not match|wasn't supplied/i.test(String(err.message || err));
   }
 
+  // 归档治理：仅「分歧冲突」时归档（云端版本比本机上次同步所见的更新，说明另一端有本机未见的变化，
+  // 此时的覆盖才真正丢弃信息）；常规单向推送/拉取不再归档（合并结果已包含被覆盖方的全部信息）。
+  // 每次同步后把归档目录修剪到每科最多 KEEP 份，防止仓库无限膨胀。
+  const ARCHIVE_KEEP = 10;
+
+  function syncLastUp(sid) {
+    const cfg = syncCfg();
+    return (cfg.lastSyncUp && cfg.lastSyncUp[sid]) || 0;
+  }
+  function syncSetLastUp(sid, ts) {
+    const cfg = syncCfg();
+    if (!cfg.lastSyncUp) cfg.lastSyncUp = {};
+    cfg.lastSyncUp[sid] = ts;
+    saveSyncCfg(cfg);
+  }
+
+  async function pruneArchives(sid) {
+    try {
+      const j = await ghRequest(SYNC_DIR + '/archive/' + sid + '/');
+      if (j.notFound || !Array.isArray(j)) return 0;
+      if (j.length <= ARCHIVE_KEEP) return 0;
+      const sorted = j.slice().sort(function (x, y) { return x.name < y.name ? -1 : 1; }); // ISO 文件名字典序=时间序
+      const victims = sorted.slice(0, sorted.length - ARCHIVE_KEEP);
+      for (const v of victims) {
+        try { await ghRequest(SYNC_DIR + '/archive/' + sid + '/' + v.name, { method: 'DELETE', body: { message: 'Athena 归档修剪', sha: v.sha } }); }
+        catch (e) { /* 单个删除失败不影响同步 */ }
+      }
+      return victims.length;
+    } catch (e) { return 0; } // 修剪失败不影响同步
+  }
+
   // 对单个学科执行一次合并式同步（内置 409 重试：两台设备同时写入时，后到的 PUT 会被
   // GitHub 以 sha 不匹配拒绝——重新拉取云端、重新合并后再写，最多 3 次）。
   // 返回 { action: push / pull / merge / skip }
   // push = 云端被本地更新；pull = 本地被云端更新；merge = 两端都更新为合并结果。
   async function syncSubject(sid) {
     const local = syncLocalDb(sid);
+    const seenUp = syncLastUp(sid); // 本机上次同步所见的云端时间戳
     let lastErr = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -4227,14 +4260,15 @@
         const merged = mergeDb(local, remote.data);
         const changedFromRemote = merged.__changedFromRemote === true;
         const mergedUp = (typeof merged.updatedAt === 'number') ? merged.updatedAt : 0;
+        const cloudDiverged = remoteUp > seenUp + SYNC_TOLERANCE_MS; // 云端在本机上次同步后被别的设备改过
         let action = 'skip';
-        if (changedFromRemote) { // 覆盖本地（先归档本地旧版）
-          await ghPutJson(syncArchivePath(sid), local);
+        if (changedFromRemote) { // 覆盖本地（分歧冲突时先归档本地旧版，常规拉取不归档）
+          if (cloudDiverged) await ghPutJson(syncArchivePath(sid), local);
           if (!syncWriteLocalDb(sid, merged)) throw new Error('本地写入失败（存储空间不足？）');
           action = 'pull';
         }
-        if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 本机有云端没有的变化（或合并结果更新）→ 更新云端（先归档云端旧版）
-          await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
+        if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 本机有云端没有的变化（或合并结果更新）→ 更新云端
+          if (remote && cloudDiverged) await ghPutJson(syncArchivePath(sid), remote.data, remote.sha); // 覆盖未见过的云端版本才归档
           try {
             await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', merged, remote.sha);
           } catch (err) {
@@ -4243,6 +4277,7 @@
           }
           action = changedFromRemote ? 'merge' : 'push';
         }
+        syncSetLastUp(sid, Math.max(remoteUp, mergedUp));
         return { action: action };
       } catch (err) {
         if (isShaConflict(err)) { lastErr = err; continue; }
@@ -4291,6 +4326,8 @@
       await loadDBAsync();
       renderApp();
     }
+    // 归档修剪：每科仅保留最近 ARCHIVE_KEEP 份（修剪失败不影响同步）
+    for (const sid of sids) { await pruneArchives(sid); }
     return summary;
   }
 

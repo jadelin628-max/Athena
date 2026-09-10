@@ -762,6 +762,12 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
 \underline{后向选择 Backward}：从全变量起，逐次剔除\textbf{最不显著}变量，直到留下的都显著。
 \underline{逐步选择 Stepwise}：前向+后向结合（可进可出），每加一个显著变量后再检验并剔除变得不显著的。
 \underline{判据}：调整 $\bar R^2$、AIC/BIC、$F$ 检验、$p$ 值、VIF（共线性）。\underline{易混}：逐步回归是\textbf{数据驱动}、可能过拟合，不同准则结果不同；模型设定应以\textbf{理论}为先。`),
+    F('test17', 'testing', '两类错误与样本量的确定',
+      R`简述假设检验的两类错误及其概率关系；若要同时控制显著性水平 $\alpha$ 并把犯 Ⅱ 类错误的概率压到 $\beta$，应如何确定样本量？`,
+      R`\textbf{两类错误}：Ⅰ 类错误——$H_0$ 为真却拒绝，$P(\text{Ⅰ 类})=\alpha$（显著性水平）；Ⅱ 类错误——$H_0$ 不真却不拒绝，$P(\text{Ⅱ 类})=\beta$（$1-\beta$ 称检验功效）。
+\underline{关系}：$n$ 固定时 $\alpha$ 与 $\beta$ 此消彼长（$\alpha$ 越小临界值越靠外，越难拒绝、$\beta$ 越大）；同时压低两者的唯一途径是\underline{增大样本量} $n$。
+\underline{样本量公式}（正态总体、单侧检验、可检测差异 $\delta$）：$$n=\left[\dfrac{(z_\alpha+z_\beta)\,\sigma}{\delta}\right]^{2}\quad(\text{双侧用 } z_{\alpha/2})$$ 例：$\alpha=0.05$、$\beta=0.10$、$\sigma=1$、$\delta=0.5$ 时 $n=\left[\dfrac{1.645+1.282}{0.5}\right]^2\approx34.3$，故 $n\ge35$。
+\textbf{易混}：$p$ 值是在给定数据下犯 Ⅰ 类错误的条件度量，与 $\beta$ 无关；功效分析要在收集数据前做。`),
   ];
 
   const META = {
@@ -884,6 +890,7 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
     test14: [4, '拟合优度检验'],
     test15: [3, '检验功效'],
     test16: [3, '正态性检验'],
+    test17: [4, '假设检验与样本量'],
     reg07: [4, '回归系数显著性检验'],
     reg08: [4, '回归方程显著性检验'],
     reg09: [3, '回归预测区间'],

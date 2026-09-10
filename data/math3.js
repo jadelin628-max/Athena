@@ -1025,10 +1025,29 @@ $$\begin{pmatrix}A&O\\O&B\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\O&B^{-1}\en
       R`$$\int\ln x\,dx=x\ln x-x+C$$$$\int e^{ax}\sin bx\,dx=\frac{e^{ax}(a\sin bx-b\cos bx)}{a^{2}+b^{2}}+C$$$$\int e^{ax}\cos bx\,dx=\frac{e^{ax}(a\cos bx+b\sin bx)}{a^{2}+b^{2}}+C$$`),
     F('zb33', 'linalg', R`线性方程组同解与公共解`,
       R`写出两线性方程组同解、公共解的判定`,
-      R`$Ax=b$ 与 $Bx=c$ **同解** $iff$ $r(A)=r(B)=r\begin{pmatrix}A\\B\end{pmatrix}=r\begin{pmatrix}A&b\\B&c\end{pmatrix}$。**公共解**：联立 $\begin{pmatrix}A\\B\end{pmatrix}x=\begin{pmatrix}b\\c\end{pmatrix}$ 解之（公共解即联立方程组的解）。`),
+      R`$Ax=b$ 与 $Bx=c$ **同解** $\iff$ $r(A)=r(B)=r\begin{pmatrix}A\\B\end{pmatrix}=r\begin{pmatrix}A&b\\B&c\end{pmatrix}$。**公共解**：联立 $\begin{pmatrix}A\\B\end{pmatrix}x=\begin{pmatrix}b\\c\end{pmatrix}$ 解之（公共解即联立方程组的解）。`),
     F('zb34', 'multi', R`一阶全微分形式不变性`,
       R`叙述一阶全微分形式不变性`,
       R`对 $z=f(u,v)$，无论 $u,v$ 是自变量还是中间变量（$u=u(x,y),v=v(x,y)$），都有$$dz=\frac{\partial z}{\partial u}du+\frac{\partial z}{\partial v}dv$$（即一阶全微分的形式不随 $u,v$ 角色改变）。`),
+    F('mvt05', 'mvt', '中值定理：严格单调与差商不等式',
+      R`设 $f(x)$ 在 $(a,b)$ 内可导。证明：$f'(x)$ 在 $(a,b)$ 内严格单调增加 $\iff$ 对任意 $a<x_1<x_2<x_3<b$，都有 $\frac{f(x_2)-f(x_1)}{x_2-x_1}<\frac{f(x_3)-f(x_2)}{x_3-x_2}$。`,
+      R`（2025 数三解答题）
+必要性（$\Rightarrow$）：在 $[x_1,x_2]$ 与 $[x_2,x_3]$ 上分别用拉格朗日中值定理：存在 $\xi_1\in(x_1,x_2)$，$\xi_2\in(x_2,x_3)$，使 $\frac{f(x_2)-f(x_1)}{x_2-x_1}=f'(\xi_1)$，$\frac{f(x_3)-f(x_2)}{x_3-x_2}=f'(\xi_2)$。由 $x_1<\xi_1<x_2<\xi_2<x_3$ 与 $f'$ 严格递增得 $f'(\xi_1)<f'(\xi_2)$，即证。
+充分性（$\Leftarrow$）：任取 $\xi_1<\xi_2$，补足端点使 $x_1<\xi_1<x_2<\xi_2<x_3$，在 $[x_1,x_2]$ 与 $[x_2,x_3]$ 上用拉格朗日中值定理，条件即给出 $f'(\xi_1)<f'(\xi_2)$。由 $\xi_1,\xi_2$ 的任意性，$f'$ 在 $(a,b)$ 内严格单调增加。`),
+    F('int33', 'integral', '变限积分函数：极值与拐点的判别',
+      R`设 $f(x)=\int_0^x e^{t^2}\sin t\,dt$，$g(x)=\int_0^x e^{t^2}\,dt\cdot\sin^2x$。判断 $x=0$ 是否为 $f$、$g$ 的极值点，点 $(0,0)$ 是否为曲线 $y=g(x)$ 的拐点。`,
+      R`（2025 数三真题）
+$f'(x)=e^{x^2}\sin x$：在 $x=0$ 两侧由负变正，故 $x=0$ 是 $f$ 的极小值点。
+$g'(x)=e^{x^2}\sin^2x+2\sin x\cos x\int_0^x e^{t^2}dt$，$g'(0)=0$；
+$g''(x)=2xe^{x^2}\sin^2x+4e^{x^2}\sin x\cos x+2\cos 2x\int_0^x e^{t^2}dt$，$g''(0)=0$；
+$g'''(0)=4>0$，故 $g''$ 在 $x=0$ 附近由负变正 $\Rightarrow$ $(0,0)$ 是 $g$ 的拐点，且 $g'(x)\ge0$（两侧同号），$x=0$ 不是 $g$ 的极值点。
+方法：变限积分定义的函数判极值/拐点，先求 $f'(x_0)$，为零则逐阶求导看变号（高阶导数判别法）。`),
+    F('ser18', 'series', '抽象交错级数敛散判别',
+      R`判断级数 $\sum_{n=1}^{\infty}(-1)^n\left[\frac1n-\ln\left(1+\frac{k}{n^2}\right)\right]$（$k$ 为常数）的敛散性。`,
+      R`（2025 数三真题）记 $u_n=\frac1n-\ln\left(1+\frac{k}{n^2}\right)$。
+① 绝对收敛？$n\to\infty$ 时 $\ln\left(1+\frac{k}{n^2}\right)\sim\frac{k}{n^2}$ 是比 $\frac1n$ 高阶的无穷小，故 $u_n\sim\frac1n$，$\sum|u_n|$ 与调和级数同阶、发散。
+② 原级数：$u_n\to0^+$，且 $n$ 充分大后 $u_n$ 单调递减（$\frac{d}{dx}\left[\frac1x-\ln\left(1+\frac{k}{x^2}\right)\right]=-\frac{1}{x^2}+\frac{2k}{x^2(x^2+k)}$，当 $x^2>2k$ 时为负），由莱布尼茨判别法收敛。
+③ 结论：条件收敛，与 $k$ 无关（$k$ 只影响收敛快慢）。关键：高阶无穷小不改变与 $\frac1n$ 的同阶性。`),
 
   ];
 
@@ -1306,6 +1325,9 @@ $$\begin{pmatrix}A&O\\O&B\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\O&B^{-1}\en
     zb32: [4, '分部积分成品公式'],
     zb33: [5, '线性方程组同解/公共解'],
     zb34: [3, '一阶全微分形式不变性'],
+    mvt05: [5, '中值定理证明题'],
+    int33: [5, '变限积分函数性质'],
+    ser18: [5, '级数敛散性判别'],
     // 概率论与数理统计
   };
 

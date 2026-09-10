@@ -80,15 +80,13 @@
       Object.keys(a).forEach(function (d) { m[d] = Math.max(a[d] || 0, b[d] || 0); });
       lg[k] = m;
     });
-    (function () { // counts：每日 {n,r,w} 逐字段取大
+    (function () { // counts：每日逐字段取大（n/r/w/a，按并集遍历——新增计数字段自动兼容）
       const a = (local.log && local.log.counts) || {}, b = (rlog && rlog.counts) || {};
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) {
-        m[d] = {
-          n: Math.max((a[d] && a[d].n) || 0, (b[d] && b[d].n) || 0),
-          r: Math.max((a[d] && a[d].r) || 0, (b[d] && b[d].r) || 0),
-          w: Math.max((a[d] && a[d].w) || 0, (b[d] && b[d].w) || 0)
-        };
+        const day = Object.assign({}, b[d] || {});
+        Object.keys(a[d] || {}).forEach(function (k) { day[k] = Math.max((a[d] && a[d][k]) || 0, (b[d] && b[d][k]) || 0); });
+        m[d] = day;
       });
       lg.counts = m;
     })();

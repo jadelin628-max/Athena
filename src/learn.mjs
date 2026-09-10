@@ -289,24 +289,7 @@
     });
     return { fresh: fresh, learn: learn, review: review, grad: grad };
   }
-  // 记忆强度（半衰期 h，天）分桶柱状图数据：[桶标签, 张数]
-  function halflifeHistogram() {
-    const buckets = [
-      ['<7d', 0], ['7-30d', 0], ['30-90d', 0], ['90-180d', 0], ['180-365d', 0], ['≥365d', 0]
-    ];
-    DATA.forEach(function (f) {
-      const h = cardHalflife(card(f.id));
-      if (!(h > 0)) return;
-      if (h < 7) buckets[0][1]++;
-      else if (h < 30) buckets[1][1]++;
-      else if (h < 90) buckets[2][1]++;
-      else if (h < 180) buckets[3][1]++;
-      else if (h < 365) buckets[4][1]++;
-      else buckets[5][1]++;
-    });
-    return buckets;
-  }
-
+  // 记忆强度相关指标（供统计页可视化）
   function cardHalflife(c) { return (c.state === 'review' && typeof c.stab === 'number') ? fsrsHalflife(c.stab) : 0; }
   // 毕业目标稳定度 S（天）：卡片稳定度达到该值即视为「毕业/稳固」——语义为「停止复习后仍能 ≥90% 记得」的天数。
   // 开「与目标倒计时挂钩」：目标 S = 剩余天数（下限 TARGET_MIN_DAYS），等价要求目标日可提取性 ≥ TARGET_CONFIDENCE（90%）。

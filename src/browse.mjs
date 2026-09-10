@@ -650,6 +650,7 @@
     lastMasteryDelta = afterM - beforeM;
     markReviewed(id);
     bumpCount(wasNew ? 'n' : 'r');
+    if (r === 0) bumpCount('a'); // 遗忘率分子：评「再来一次」的次数
     // 记录掌握度历史快照（每次评分后的掌握度，供「掌握度趋势图」）
     {
       const c = card(id);

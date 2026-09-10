@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.20.0';
+  const VERSION = '1.21.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.21.0', date: '2026-09', items: ['统计页精简重构：移除总览 KPI 行与「记忆强度分布（半衰期）」——均为重复或与其他视图同信息异刻度（总卡片与平均掌握并入「记忆状态分布」标题；半衰期仍保留在卡片面）', '记忆趋势 6 条精简为 2 条（平均掌握度、待复习数量）——删除的「已毕业/累计遗忘/学习中新卡」为爬梯图或与状态分布重复，「可提取 R」保留在卡片面与考试日预期', '学习报告新增「遗忘率」：「再来一次」占总评分的比例——FSRS 期望保留率 90%，约 10% 为设计工作点（偏高=挫败区，偏低=间隔偏保守）；同步合并自动兼容该新计数字段'] },
     { v: '1.20.0', date: '2026-09', items: ['统计页新增「未来负载预测」：未来 14 天到期量柱状图（知识卡+错题卡，考试日在窗口内时高亮 🎯）', '新增考试日预期：假设「每次到期都按良好复习」，模拟到考试日的 FSRS 稳定度增长，给出预计仍能 ≥90% 记得的卡片比例与平均可提取性——与目标倒计时毕业目标配套，用于规划学习节奏'] },
     { v: '1.19.1', date: '2026-09', items: ['修复：同步偶发「HTTP 409 does not match」——两台设备同时写入（或同一设备的启动同步/防抖推送/前台回归/手动按钮重叠执行）时，后到的 PUT 会因文件 sha 已变化被 GitHub 拒绝；现在同一设备的同步请求串行排队，PUT 遇 409 自动重新拉取云端、重新合并后再写（最多 3 次），多端同时同步平滑收敛'] },
     { v: '1.19.0', date: '2026-09', items: ['同步升级为「合并式」：多端同时打开不再互相覆盖——同步时按卡片逐张归并（调度状态取最近复习一方、笔记独立取最近编辑一方，复习与笔记互不挤掉），学习日志逐日取大，两端进度都保留；任何合并前两侧仍自动归档', '切回前台自动同步（距上次超过 5 分钟）：手机切回前台先吸收云端变化再学习', '设置页移除「强制上传/强制下载」——合并式同步下不再需要手动覆盖，恢复走仓库 archive/ 目录', '移动端二级导航（学习/浏览等）吸顶：滚动时始终可见', '设置页分栏：学习偏好 / 数据与同步 / 关于 三个栏目切换'] },
@@ -1232,24 +1233,7 @@
     });
     return { fresh: fresh, learn: learn, review: review, grad: grad };
   }
-  // 记忆强度（半衰期 h，天）分桶柱状图数据：[桶标签, 张数]
-  function halflifeHistogram() {
-    const buckets = [
-      ['<7d', 0], ['7-30d', 0], ['30-90d', 0], ['90-180d', 0], ['180-365d', 0], ['≥365d', 0]
-    ];
-    DATA.forEach(function (f) {
-      const h = cardHalflife(card(f.id));
-      if (!(h > 0)) return;
-      if (h < 7) buckets[0][1]++;
-      else if (h < 30) buckets[1][1]++;
-      else if (h < 90) buckets[2][1]++;
-      else if (h < 180) buckets[3][1]++;
-      else if (h < 365) buckets[4][1]++;
-      else buckets[5][1]++;
-    });
-    return buckets;
-  }
-
+  // 记忆强度相关指标（供统计页可视化）
   function cardHalflife(c) { return (c.state === 'review' && typeof c.stab === 'number') ? fsrsHalflife(c.stab) : 0; }
   // 毕业目标稳定度 S（天）：卡片稳定度达到该值即视为「毕业/稳固」——语义为「停止复习后仍能 ≥90% 记得」的天数。
   // 开「与目标倒计时挂钩」：目标 S = 剩余天数（下限 TARGET_MIN_DAYS），等价要求目标日可提取性 ≥ TARGET_CONFIDENCE（90%）。
@@ -2114,6 +2098,7 @@
     lastMasteryDelta = afterM - beforeM;
     markReviewed(id);
     bumpCount(wasNew ? 'n' : 'r');
+    if (r === 0) bumpCount('a'); // 遗忘率分子：评「再来一次」的次数
     // 记录掌握度历史快照（每次评分后的掌握度，供「掌握度趋势图」）
     {
       const c = card(id);
@@ -3303,7 +3288,7 @@
     const daily = (DB.log && DB.log.daily) || {};
     const masteryLog = (DB.log && DB.log.mastery) || {};
 
-    let studyMs = 0, n = 0, r = 0, w = 0, activeDays = 0;
+    let studyMs = 0, n = 0, r = 0, w = 0, a = 0, activeDays = 0;
     for (let i = 0; i < days; i++) {
       const d = new Date(); d.setDate(d.getDate() - i);
       const key = fmtDate(d);
@@ -3311,7 +3296,7 @@
       const c = counts[key];
       if (st > 0 || (daily[key] || 0) > 0 || c) activeDays++;
       studyMs += st;
-      if (c) { n += (c.n || 0); r += (c.r || 0); w += (c.w || 0); }
+      if (c) { n += (c.n || 0); r += (c.r || 0); w += (c.w || 0); a += (c.a || 0); }
     }
 
     // 掌握度变化：今日 vs 窗口起点前最近一次快照（日报即「vs 昨天」，最多回看 30 天）
@@ -3331,10 +3316,15 @@
     kpi('新学', n, ' 张');
     kpi('复习', r, ' 张');
     kpi('错题重做', w, ' 道');
+    kpi('遗忘率', (n + r > 0) ? Math.round(a / (n + r) * 100) + '%' : '—', '');
     kpi('学习天数', activeDays + '/' + days, '');
     kpi('掌握度变化', deltaTxt, '');
     box.appendChild(ov);
-    box.appendChild(el('p', 'muted', '窗口：近 ' + days + ' 天。学习时长自 v1.16.0、新学/复习/错题分类计数自 v1.17.0 起记录，更早时段的聚合不完整。'));
+    box.appendChild(el('p', 'muted', (function () {
+      let base = '窗口：近 ' + days + ' 天。学习时长自 v1.16.0、新学/复习/错题分类计数自 v1.17.0 起记录，更早时段的聚合不完整。';
+      if (n + r > 0) base += ' 遗忘率 = 「再来一次」÷ 总评分——FSRS 期望保留率 90%，约 10% 为设计工作点（偏高=挫败区，偏低=间隔偏保守）。';
+      return base;
+    })()));
     return box;
   }
 
@@ -3452,18 +3442,8 @@
     const wrap = el('div', 'principles-wrap');
     wrap.appendChild(el('h2', null, '📈 学习统计'));
 
-    // —— 总览 ——
     const s = stats();
     const sc = stateCounts();
-    const ov = el('div', 'stat-overview');
-    const kpi = function (label, val, unit) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label + (unit || ''))); ov.appendChild(c); };
-    kpi('总卡片', s.total, '');
-    kpi('已毕业', sc.grad, '');
-    kpi('待复习', s.due, '');
-    kpi('平均掌握(存储)', s.avg, '%');
-    kpi('平均可提取 R', avgCurrentR(), '%');
-    kpi('累计遗忘', totalLapses(), '');
-    wrap.appendChild(ov);
 
     // —— 学习报告（日/周/月/年聚合）——
     wrap.appendChild(el('h3', null, '📋 学习报告'));
@@ -3473,6 +3453,18 @@
     wrap.appendChild(el('h3', null, '📅 未来负载预测（14 天）'));
     wrap.appendChild(renderForecastCard());
 
+    // —— 记忆算法关键指标趋势（每日快照 DB.log.metrics）——
+    wrap.appendChild(el('h3', null, '🧠 记忆趋势（每日）'));
+    const metrics = (DB.log && DB.log.metrics) || {};
+    const mKeys = Object.keys(metrics).sort();
+    const mSeries = function (f) { return mKeys.map(function (k) { return { label: k, value: metrics[k][f] }; }); };
+    const tg = el('div', 'trend-grid');
+    tg.appendChild(sparkTrend('平均掌握度（存储强度·%）', mSeries('avg'), '#378ADD', '%', 100));
+    tg.appendChild(sparkTrend('待复习数量', mSeries('due'), '#D4537E', ''));
+    wrap.appendChild(tg);
+    wrap.appendChild(el('p', 'muted', '每天打开应用自动记录一次指标（掌握度按存储强度），积累几天后即可看趋势。'));
+
+    // —— 学习日历（近 16 周热力图，点击查看当日明细）——
     wrap.appendChild(el('h3', null, '🔥 学习日历（近 16 周）'));
     const daily = (DB.log && DB.log.daily) || {};
     const detailLog = (DB.log && DB.log.detail) || {};
@@ -3527,23 +3519,8 @@
       wrap.appendChild(det);
     }
 
-    // —— 记忆算法关键指标趋势（每日快照 DB.log.metrics）——
-    wrap.appendChild(el('h3', null, '🧠 记忆算法关键指标趋势（每日）'));
-    const metrics = (DB.log && DB.log.metrics) || {};
-    const mKeys = Object.keys(metrics).sort();
-    const mSeries = function (f) { return mKeys.map(function (k) { return { label: k, value: metrics[k][f] }; }); };
-    const tg = el('div', 'trend-grid');
-    tg.appendChild(sparkTrend('平均掌握度（存储强度·%）', mSeries('avg'), '#378ADD', '%', 100));
-    tg.appendChild(sparkTrend('平均可提取性 R（%）', mSeries('avgR'), '#B5D4F4', '%', 100));
-    tg.appendChild(sparkTrend('待复习数量', mSeries('due'), '#D4537E', ''));
-    tg.appendChild(sparkTrend('已毕业卡数', mSeries('grad'), '#2A75C0', ''));
-    tg.appendChild(sparkTrend('累计遗忘次数', mSeries('lapses'), '#E24B4A', ''));
-    tg.appendChild(sparkTrend('学习中新卡', mSeries('learn'), '#76AFE8', ''));
-    wrap.appendChild(tg);
-    wrap.appendChild(el('p', 'muted', '每天打开应用自动记录一次上述指标（掌握度按存储强度、可提取性 R 按当前回忆概率），积累几天后即可看趋势。'));
-
     // —— 记忆状态分布 ——
-    wrap.appendChild(el('h3', null, '📌 记忆状态分布'));
+    wrap.appendChild(el('h3', null, '📌 记忆状态分布（共 ' + s.total + ' 张 · 平均掌握 ' + s.avg + '%）'));
     const sd = el('div', 'stat-card');
     [['新卡', sc.fresh], ['学习中', sc.learn], ['复习中', sc.review], ['已毕业', sc.grad]].forEach(function (p) {
       const row = el('div', 'cat-bar-row');
@@ -3558,26 +3535,6 @@
       sd.appendChild(row);
     });
     wrap.appendChild(sd);
-
-    // —— 记忆强度（半衰期 h）分布 ——
-    wrap.appendChild(el('h3', null, '💪 记忆强度分布（半衰期 h）'));
-    const hb2 = el('div', 'stat-card');
-    const hist = halflifeHistogram();
-    const maxH = Math.max.apply(null, hist.map(function (x) { return x[1]; }).concat([1]));
-    hist.forEach(function (b) {
-      const row = el('div', 'cat-bar-row');
-      row.appendChild(el('span', 'cat-bar-name', b[0]));
-      const bar = el('div', 'cat-bar');
-      const fill = el('div', 'cat-bar-fill');
-      fill.style.width = Math.round(b[1] / maxH * 100) + '%';
-      fill.style.background = masteryColor(b[1] ? 70 : 10);
-      bar.appendChild(fill);
-      row.appendChild(bar);
-      row.appendChild(el('span', 'cat-bar-val', b[1] + ' 张'));
-      hb2.appendChild(row);
-    });
-    wrap.appendChild(hb2);
-    wrap.appendChild(el('p', 'muted', '半衰期 h 表示「停止复习后回忆概率掉到 50%」所需天数，越大记忆越牢固（h=3·S/F，由 FSRS 稳定性 S 换算）。'));
 
     wrap.appendChild(el('h3', null, '📊 各分类掌握度'));
     const cc = el('div', 'stat-card');
@@ -4089,15 +4046,13 @@
       Object.keys(a).forEach(function (d) { m[d] = Math.max(a[d] || 0, b[d] || 0); });
       lg[k] = m;
     });
-    (function () { // counts：每日 {n,r,w} 逐字段取大
+    (function () { // counts：每日逐字段取大（n/r/w/a，按并集遍历——新增计数字段自动兼容）
       const a = (local.log && local.log.counts) || {}, b = (rlog && rlog.counts) || {};
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) {
-        m[d] = {
-          n: Math.max((a[d] && a[d].n) || 0, (b[d] && b[d].n) || 0),
-          r: Math.max((a[d] && a[d].r) || 0, (b[d] && b[d].r) || 0),
-          w: Math.max((a[d] && a[d].w) || 0, (b[d] && b[d].w) || 0)
-        };
+        const day = Object.assign({}, b[d] || {});
+        Object.keys(a[d] || {}).forEach(function (k) { day[k] = Math.max((a[d] && a[d][k]) || 0, (b[d] && b[d][k]) || 0); });
+        m[d] = day;
       });
       lg.counts = m;
     })();

@@ -68,7 +68,7 @@ test('mergeDb：日志逐日取大、counts 逐字段取大、checkins 取或、
     updatedAt: 1, cards: {}, wrongs: {}, settings: {},
     log: {
       daily: { d1: 5, d2: 2 }, studyTime: { d1: 60000, d2: 1000 },
-      counts: { d1: { n: 2, r: 3, w: 0 } }, checkins: { d1: true },
+      counts: { d1: { n: 2, r: 3, w: 0, a: 1 } }, checkins: { d1: true },
       detail: { d1: { c1: 2 } }, mastery: { d1: 10 }, metrics: { d1: { avg: 10 } },
       newIntro: { ids: ['a', 'b'] }
     }
@@ -77,7 +77,7 @@ test('mergeDb：日志逐日取大、counts 逐字段取大、checkins 取或、
     updatedAt: 2, cards: {}, wrongs: {}, settings: {},
     log: {
       daily: { d1: 3, d3: 7 }, studyTime: { d1: 30000, d3: 80000 },
-      counts: { d1: { n: 1, r: 5, w: 1 } }, checkins: { d3: true },
+      counts: { d1: { n: 1, r: 5, w: 1, a: 0 } }, checkins: { d3: true },
       detail: { d1: { c2: 4 } }, mastery: { d1: 30 }, metrics: { d1: { avg: 30 } },
       newIntro: { ids: ['b', 'c'] }
     }
@@ -85,7 +85,7 @@ test('mergeDb：日志逐日取大、counts 逐字段取大、checkins 取或、
   const m = mergeDb(local, remote);
   assert.deepEqual(m.log.daily, { d1: 5, d2: 2, d3: 7 });
   assert.deepEqual(m.log.studyTime, { d1: 60000, d2: 1000, d3: 80000 });
-  assert.deepEqual(m.log.counts.d1, { n: 2, r: 5, w: 1 });
+  assert.deepEqual(m.log.counts.d1, { n: 2, r: 5, w: 1, a: 1 });
   assert.deepEqual(m.log.checkins, { d1: true, d3: true });
   assert.deepEqual(m.log.detail.d1, { c1: 2, c2: 4 });
   assert.equal(m.log.mastery.d1, 10);       // d1 本地专注更长 → 取本地快照

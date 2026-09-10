@@ -54,6 +54,7 @@
   // 设置：本地优先（正在使用的设备）。updatedAt/schemaVersion 取大。
   function mergeDb(local, remote) {
     const out = {};
+    let changed = false; // 相对 local 是否采用了 remote 的内容（决定是否写回本地）
     Object.keys(local).forEach(function (k) { out[k] = local[k]; });
     out.updatedAt = Math.max(local.updatedAt || 0, remote.updatedAt || 0);
     out.schemaVersion = Math.max(local.schemaVersion || 0, remote.schemaVersion || 0);
@@ -63,7 +64,10 @@
       const merged = {};
       Object.keys(a).forEach(function (id) { merged[id] = a[id]; });
       Object.keys(b).forEach(function (id) {
-        merged[id] = merged[id] ? mergeCard(merged[id], b[id], key === 'cards') : b[id];
+        if (!merged[id]) { merged[id] = b[id]; changed = true; return; } // 仅云端有 → 采用
+        const before = merged[id];
+        merged[id] = mergeCard(merged[id], b[id], key === 'cards');
+        if (merged[id] !== before) changed = true; // 采用了云端的较新版本
       });
       out[key] = merged;
     });
@@ -78,6 +82,7 @@
       const a = (local.log && local.log[k]) || {}, b = (rlog && rlog[k]) || {};
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) { m[d] = Math.max(a[d] || 0, b[d] || 0); });
+      Object.keys(b).forEach(function (d) { if ((b[d] || 0) > (a[d] || 0)) changed = true; });
       lg[k] = m;
     });
     (function () { // counts：每日逐字段取大（n/r/w/a，按并集遍历——新增计数字段自动兼容）
@@ -86,6 +91,7 @@
       Object.keys(a).forEach(function (d) {
         const day = Object.assign({}, b[d] || {});
         Object.keys(a[d] || {}).forEach(function (k) { day[k] = Math.max((a[d] && a[d][k]) || 0, (b[d] && b[d][k]) || 0); });
+        Object.keys(b[d] || {}).forEach(function (k) { if ((b[d][k] || 0) > ((a[d] && a[d][k]) || 0)) changed = true; });
         m[d] = day;
       });
       lg.counts = m;
@@ -96,6 +102,7 @@
       Object.keys(a).forEach(function (d) {
         const day = Object.assign({}, b[d] || {});
         Object.keys(a[d]).forEach(function (id) { day[id] = Math.max(a[d][id] || 0, (b[d] && b[d][id]) || 0); });
+        Object.keys(b[d] || {}).forEach(function (id) { if ((b[d][id] || 0) > ((a[d] && a[d][id]) || 0)) changed = true; });
         m[d] = day;
       });
       lg.detail = m;
@@ -104,6 +111,7 @@
       const a = (local.log && local.log.checkins) || {}, b = (rlog && rlog.checkins) || {};
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) { if (a[d]) m[d] = true; });
+      Object.keys(b).forEach(function (d) { if (b[d] && !a[d]) changed = true; });
       lg.checkins = m;
     })();
     (function () { // mastery/metrics：取当日专注较长一侧的快照
@@ -115,16 +123,22 @@
           const aSt = (local.log && local.log.studyTime && local.log.studyTime[d]) || 0;
           const bSt = (rlog && rlog.studyTime && rlog.studyTime[d]) || 0;
           m[d] = (aSt >= bSt) ? a[d] : b[d];
+          if (bSt > aSt && b[d] != null) changed = true;
         });
+        Object.keys(b).forEach(function (d) { if (m[d] == null && b[d] != null) changed = true; });
         lg[k] = m;
       });
     })();
     (function () { // newIntro：已引入新卡并集（本地在前）
       const ai = (local.log && local.log.newIntro && local.log.newIntro.ids) || [];
       const bi = (rlog && rlog.newIntro && rlog.newIntro.ids) || [];
-      lg.newIntro = { ids: ai.concat(bi.filter(function (id) { return ai.indexOf(id) === -1; })) };
+      const extra = bi.filter(function (id) { return ai.indexOf(id) === -1; });
+      if (extra.length) changed = true;
+      lg.newIntro = { ids: ai.concat(extra) };
     })();
     out.log = lg;
+    // 供同步层判断是否需要写回本地；enumerable=false 使 JSON 序列化自动跳过
+    Object.defineProperty(out, '__changedFromRemote', { value: changed, enumerable: false });
     return out;
   }
 
@@ -212,7 +226,6 @@
   // push = 云端被本地更新；pull = 本地被云端更新；merge = 两端都更新为合并结果。
   async function syncSubject(sid) {
     const local = syncLocalDb(sid);
-    const localUp = (local && typeof local.updatedAt === 'number') ? local.updatedAt : 0;
     let lastErr = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -234,11 +247,19 @@
         }
         if (!local && !remote) return { action: 'skip' };
 
-        // 两侧都有：合并（多端同时打开的安全基石），再按结果决定哪边需要更新
+        // 两侧都有：合并（多端同时打开的安全基石）。
+        // 云端有本机没有的内容 → 必须写回本地（不再用时间差判断——本机打开/评分会推高自己的时间戳，
+        // 旧逻辑会因此拒绝写回，表现为「当前学科永远合不并」）；本机有云端没有的内容 → 推送云端。
         const merged = mergeDb(local, remote.data);
+        const changedFromRemote = merged.__changedFromRemote === true;
         const mergedUp = (typeof merged.updatedAt === 'number') ? merged.updatedAt : 0;
         let action = 'skip';
-        if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 合并结果比云端新 → 更新云端（先归档云端旧版）
+        if (changedFromRemote) { // 覆盖本地（先归档本地旧版）
+          await ghPutJson(syncArchivePath(sid), local);
+          if (!syncWriteLocalDb(sid, merged)) throw new Error('本地写入失败（存储空间不足？）');
+          action = 'pull';
+        }
+        if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 本机有云端没有的变化（或合并结果更新）→ 更新云端（先归档云端旧版）
           await ghPutJson(syncArchivePath(sid), remote.data, remote.sha);
           try {
             await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', merged, remote.sha);
@@ -246,12 +267,7 @@
             if (isShaConflict(err)) { lastErr = err; continue; } // 云端刚被别的设备更新：重拉重合
             throw err;
           }
-          action = 'push';
-        }
-        if (mergedUp > localUp + SYNC_TOLERANCE_MS) { // 合并结果比本地新 → 更新本地（先归档本地旧版）
-          await ghPutJson(syncArchivePath(sid), local);
-          if (!syncWriteLocalDb(sid, merged)) throw new Error('本地写入失败（存储空间不足？）');
-          action = (action === 'push') ? 'merge' : 'pull';
+          action = changedFromRemote ? 'merge' : 'push';
         }
         return { action: action };
       } catch (err) {

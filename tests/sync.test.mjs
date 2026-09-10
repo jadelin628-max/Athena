@@ -51,6 +51,22 @@ test('mergeDb：卡片并集 + 调度整组按 lastR 选边 + 笔记独立按 no
   assert.equal(m.cards.z.lastR, 50);
   assert.equal(m.updatedAt, 2000);         // 取大
   assert.deepEqual(m.settings, { a: 1 });  // 设置本地优先
+  assert.equal(m.__changedFromRemote, true); // 采用了云端内容 → 必须写回本地
+});
+
+test('mergeDb：云端无新内容时不标记变化（本机旧数据不再盲目推送覆盖云端）', () => {
+  const base = { updatedAt: 500, schemaVersion: 1, settings: { a: 1 }, cards: { x: { lastR: 100, stab: 5, notes: '' } }, wrongs: {}, log: { daily: { d1: 3 }, counts: { d1: { n: 1 } } } };
+  const m = mergeDb(base, JSON.parse(JSON.stringify(base)));
+  assert.equal(m.__changedFromRemote, false);
+});
+
+test('mergeDb：仅本机较新、云端陈旧 → 不标记变化（本地内容照常推送，云端无需写回本地）', () => {
+  const local = { updatedAt: 900, schemaVersion: 1, settings: {}, cards: { x: { lastR: 900, stab: 9, notes: '' } }, wrongs: {}, log: {} };
+  const remote = { updatedAt: 100, schemaVersion: 1, settings: {}, cards: { x: { lastR: 100, stab: 1, notes: '' } }, wrongs: {}, log: {} };
+  const m = mergeDb(local, remote);
+  assert.equal(m.cards.x.lastR, 900);      // 本地较新 → 保留本地
+  assert.equal(m.__changedFromRemote, false);
+  assert.equal(m.updatedAt, 900);
 });
 
 test('mergeDb：调度与笔记来自不同侧时互不挤掉', () => {

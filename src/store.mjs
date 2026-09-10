@@ -145,7 +145,7 @@
       const c = DB.cards[f.id];
       if (typeof c.notes !== 'string') c.notes = '';
     });
-    saveDB();
+    saveDB(true); // 加载时的规范化回写不是数据修改：保留原 updatedAt，否则「最后打开时间」会冒充数据版本、破坏云同步的新旧判断
   }
   function loadDBAsync() {
     return new Promise(function (resolve) {
@@ -283,12 +283,14 @@
   // 合并写：短时间窗口内的多次 saveDB 只落一次盘，且把序列化挪出评分点击的绘制路径。
   let saveDirty = false;
   let saveFlushScheduled = false;
+  let saveKeepTimestamp = false; // 本次落盘是否保留原 updatedAt（加载时的规范化回写不算数据修改）
   let idbBackupTimer = null;
   function flushSave() {
-    if (!DB) return;
+    if (!DB || !saveDirty) return; // 无待写内容：不落盘、不刷新时间戳（纯刷新页面不应冒充数据修改）
     saveDirty = false;
     saveFlushScheduled = false;
-    DB.updatedAt = Date.now(); // 同步时间戳（云同步「新者胜」的依据）
+    if (!saveKeepTimestamp) DB.updatedAt = Date.now(); // 同步时间戳（云同步「新者胜」的依据），只在真实修改时前进
+    saveKeepTimestamp = false;
     let json = null;
     try { json = JSON.stringify(DB); } catch (e) { warnStorageFailure(); return; }
     try {
@@ -304,7 +306,9 @@
       idbSet(dbKey(), DB);
     }, 2000);
   }
-  function saveDB() {
+  // keepTimestamp=true：加载时的规范化回写，保留原 updatedAt（不算数据修改）
+  function saveDB(keepTimestamp) {
+    saveKeepTimestamp = !!keepTimestamp;
     saveDirty = true;
     if (saveFlushScheduled) return;
     saveFlushScheduled = true;

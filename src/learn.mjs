@@ -332,6 +332,7 @@
         if (!DB.log.studyTime) DB.log.studyTime = {};
         const t = todayStr();
         DB.log.studyTime[t] = (DB.log.studyTime[t] || 0) + Math.min(delta, 60000);
+        saveDirty = true; // 有新内容待落盘（pagehide 兜底 flush 依赖此标记）
       }
       // 节律提示：连续学习约 50 分钟，温和提醒起身休息（脚手架，非强制）
       if (now - continuousSince >= 50 * 60000 && now - lastBreakNudgeMs >= 50 * 60000) {

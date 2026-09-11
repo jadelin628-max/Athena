@@ -52,6 +52,28 @@
     wrap.appendChild(s4b);
     wrap.appendChild(el('p', 'muted', '设置目标日期后，每次打开应用会弹出倒计时提醒；毕业目标可自动随倒计时变化。留空则全部关闭。'));
 
+    // 期望保留率（FSRS 间隔目标）
+    const sFdr = row('期望保留率');
+    const fdrInput = el('input', 'num');
+    fdrInput.type = 'number';
+    fdrInput.min = '0.8'; fdrInput.max = '0.98'; fdrInput.step = '0.01';
+    fdrInput.style.width = '96px';
+    fdrInput.value = desiredRetention();
+    fdrInput.title = 'FSRS 按此保留率计算下次复习间隔（0.80–0.98，默认 0.90）';
+    fdrInput.addEventListener('change', function () {
+      let v = parseFloat(fdrInput.value);
+      if (isNaN(v)) v = 0.9;
+      v = Math.max(0.8, Math.min(0.98, v));
+      DB.settings.fdr = v;
+      saveDB();
+      fdrInput.value = v;
+      toast('期望保留率已设为 ' + v + '：调高则间隔更短、复习更密（考前适用），调低更省时');
+      renderApp();
+    });
+    sFdr.appendChild(fdrInput);
+    wrap.appendChild(sFdr);
+    note('FSRS 按期望保留率计算下次复习间隔：0.90 为默认工作点；调高（如考前 0.95）间隔约缩短一半、复习更密，调低更省时。只影响之后评分计算的新间隔，不改动已排期卡片。与毕业目标「考试日 ≥90% 记得」的判据相互独立。');
+
     const sBare = el('div', 'setting-row');
     sBare.appendChild(el('span', null, '裸回忆'));
     const bareCb = el('input', 'chk');

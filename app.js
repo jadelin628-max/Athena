@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.22.1';
+  const VERSION = '1.23.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.23.0', date: '2026-09', items: ['新增「期望保留率」设置（学习偏好栏，0.80–0.98，默认 0.90）：FSRS 按此计算复习间隔——调高（如考前 0.95）间隔约缩短一半、复习更密，调低更省时；只影响之后评分计算的新间隔，不改动已排期卡片；统计页「考试日预期」模拟同步采用该设置', '专注块模式经评估不再内置（现有第三方应用已覆盖）'] },
     { v: '1.22.1', date: '2026-09', items: ['同步归档治理：归档只在检测到「另一设备有本机未见的变化」（分歧冲突）时发生，常规单向推送/拉取不再归档——归档量下降约 95%', '每次同步后自动修剪归档目录：每科仅保留最近 10 份，仓库不再随使用无限膨胀（GitHub 仓库软上限约 1-5GB）'] },
     { v: '1.22.0', date: '2026-09', items: ['数据库审查第二轮：新增 6 张核心考点变式卡——数三「中值定理：严格单调与差商不等式」（2025 解答题）、「变限积分函数：极值与拐点判别」（2025 真题）、「抽象交错级数敛散判别」（2025 真题）；微观「跨期利率变动的斯勒茨基分解」「最优投保量的决定」；统计「两类错误与样本量的确定」', '内容修复：微观「边际效用递减规律」缺答案、数三 2023 旋转体例题公式定界符错位、2016 例题中间步骤笔误（上一版已修，本版合并说明）；含 $\iff$ 等符号的小修正'] },
     { v: '1.21.2', date: '2026-09', items: ['数据库审查（四科 903 卡全覆盖 + 数三 455 条公式逐条审阅）：修复 3 处内容错误——微观「边际效用递减规律」卡缺答案（front/back 错位）、数三 2023 旋转体真题例题公式定界符错位（后半段渲染异常）、2016 数三例题中间步骤笔误（sin x 应为 sin 1，2 处）', '审查结论：四科 0 重复标题、0 空 front、0 奇数 $，455 条公式无数学错误；缺口与变式卡清单见「数据审查报告」'] },
@@ -173,8 +174,10 @@
     return Math.pow(1 + FSRS_FACTOR * Math.max(0, daysSince) / S, FSRS_DECAY);
   }
   // 期望保留率(DR) → 下次复习间隔（天）：I(r,s) = (r^{1/decay} − 1)/factor × s，DR=0.9 时 I=S
-  function fsrsInterval(S) {
-    const mod = (Math.pow(FDR, 1 / FSRS_DECAY) - 1) / FSRS_FACTOR;
+  // dr 可选：传入自定义期望保留率（0.8–0.98）时按其计算；缺省用官方默认 FDR=0.9
+  function fsrsInterval(S, dr) {
+    const r = (typeof dr === 'number' && dr > 0 && dr < 1) ? dr : FDR;
+    const mod = (Math.pow(r, 1 / FSRS_DECAY) - 1) / FSRS_FACTOR;
     return Math.max(1, Math.round(Math.max(FSRS_S_MIN, S) * mod));
   }
   // 初始稳定性 S0(G) = max(w[G-1], 0.1)，G=1..4
@@ -490,6 +493,7 @@
     if (DB.settings.targetS == null) DB.settings.targetS = TARGET_S_DEFAULT;
     if (DB.settings.targetH != null) delete DB.settings.targetH;
     if (DB.settings.targetLinkExam == null) DB.settings.targetLinkExam = true;
+    if (DB.settings.fdr == null) DB.settings.fdr = 0.9; // 期望保留率（FSRS 间隔目标，设置可调 0.80–0.98）
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
@@ -726,6 +730,9 @@
     }
     if (payload.settings && typeof payload.settings.targetS === 'number') {
       fresh.settings.targetS = Math.max(7, Math.min(730, Math.round(payload.settings.targetS)));
+    }
+    if (payload.settings && typeof payload.settings.fdr === 'number') {
+      fresh.settings.fdr = Math.max(0.8, Math.min(0.98, payload.settings.fdr));
     }
     if (payload.settings && typeof payload.settings.targetLinkExam === 'boolean') {
       fresh.settings.targetLinkExam = payload.settings.targetLinkExam;
@@ -1256,6 +1263,12 @@
   }
   // 是否与目标倒计时挂钩（用于记忆框/设置页文案）
   function targetLinked() { return !(DB && DB.settings && DB.settings.targetLinkExam === false) && countdownDays() != null; }
+  // 期望保留率（FSRS 安排间隔的目标保留率）：设置可调 0.80–0.98，默认 0.90（官方默认工作点）。
+  // 只影响间隔计算（下次复习排多远），不影响毕业判据与掌握度。
+  function desiredRetention() {
+    const v = DB && DB.settings && DB.settings.fdr;
+    return (typeof v === 'number' && v >= 0.8 && v <= 0.98) ? v : 0.9;
+  }
   function bareRecallOn() { return !!(DB && DB.settings && DB.settings.bareRecall); }
   function isGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
 
@@ -1315,7 +1328,7 @@
   function graduateReview(c, stab) {
     c.grad = 1; c.reps = 1; c.state = 'review';
     c.stab = Math.max(FSRS_S_MIN, (typeof stab === 'number') ? stab : c.stab);
-    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+    c.ivl = fsrsInterval(c.stab, desiredRetention());
     c.due = dayStart(Date.now()) + c.ivl * DAY;
   }
 
@@ -1335,7 +1348,7 @@
     learningDue: function (now, steps, step) { return now + steps[step]; },
     relearnDue: function (now) { return now + RELEARN_MS[0]; },
     graduate: graduateReview,
-    reviewIvl: function (c) { return Math.max(1, Math.round(fsrsInterval(c.stab))); }
+    reviewIvl: function (c) { return fsrsInterval(c.stab, desiredRetention()); }
   };
   function applyRatingToCard(c, rating) { applySchedRating(c, rating, LEARN_SCHED); }
 
@@ -2193,7 +2206,7 @@
     }
     c.diff = fsrsDifficulty(c.diff, G);
     c.stab = fsrsSuccessStability(c.diff, c.stab, R, G);
-    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+    c.ivl = fsrsInterval(c.stab, desiredRetention());
     c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
   }
 
@@ -3008,6 +3021,28 @@
     wrap.appendChild(s4b);
     wrap.appendChild(el('p', 'muted', '设置目标日期后，每次打开应用会弹出倒计时提醒；毕业目标可自动随倒计时变化。留空则全部关闭。'));
 
+    // 期望保留率（FSRS 间隔目标）
+    const sFdr = row('期望保留率');
+    const fdrInput = el('input', 'num');
+    fdrInput.type = 'number';
+    fdrInput.min = '0.8'; fdrInput.max = '0.98'; fdrInput.step = '0.01';
+    fdrInput.style.width = '96px';
+    fdrInput.value = desiredRetention();
+    fdrInput.title = 'FSRS 按此保留率计算下次复习间隔（0.80–0.98，默认 0.90）';
+    fdrInput.addEventListener('change', function () {
+      let v = parseFloat(fdrInput.value);
+      if (isNaN(v)) v = 0.9;
+      v = Math.max(0.8, Math.min(0.98, v));
+      DB.settings.fdr = v;
+      saveDB();
+      fdrInput.value = v;
+      toast('期望保留率已设为 ' + v + '：调高则间隔更短、复习更密（考前适用），调低更省时');
+      renderApp();
+    });
+    sFdr.appendChild(fdrInput);
+    wrap.appendChild(sFdr);
+    note('FSRS 按期望保留率计算下次复习间隔：0.90 为默认工作点；调高（如考前 0.95）间隔约缩短一半、复习更密，调低更省时。只影响之后评分计算的新间隔，不改动已排期卡片。与毕业目标「考试日 ≥90% 记得」的判据相互独立。');
+
     const sBare = el('div', 'setting-row');
     sBare.appendChild(el('span', null, '裸回忆'));
     const bareCb = el('input', 'chk');
@@ -3365,7 +3400,7 @@
       const R = fsrsRetention(Math.max(0, (due - lastR) / DAY), stab);
       diff = fsrsDifficulty(diff, 3); // 良好
       stab = fsrsSuccessStability(diff, stab, R, 3);
-      const ivl = Math.max(1, Math.round(fsrsInterval(stab)));
+      const ivl = fsrsInterval(stab, desiredRetention());
       lastR = due;
       due = dayStart(due) + ivl * DAY;
     }

@@ -124,6 +124,7 @@
     if (DB.settings.targetS == null) DB.settings.targetS = TARGET_S_DEFAULT;
     if (DB.settings.targetH != null) delete DB.settings.targetH;
     if (DB.settings.targetLinkExam == null) DB.settings.targetLinkExam = true;
+    if (DB.settings.fdr == null) DB.settings.fdr = 0.9; // 期望保留率（FSRS 间隔目标，设置可调 0.80–0.98）
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
@@ -360,6 +361,9 @@
     }
     if (payload.settings && typeof payload.settings.targetS === 'number') {
       fresh.settings.targetS = Math.max(7, Math.min(730, Math.round(payload.settings.targetS)));
+    }
+    if (payload.settings && typeof payload.settings.fdr === 'number') {
+      fresh.settings.fdr = Math.max(0.8, Math.min(0.98, payload.settings.fdr));
     }
     if (payload.settings && typeof payload.settings.targetLinkExam === 'boolean') {
       fresh.settings.targetLinkExam = payload.settings.targetLinkExam;

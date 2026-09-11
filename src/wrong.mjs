@@ -39,7 +39,7 @@
     }
     c.diff = fsrsDifficulty(c.diff, G);
     c.stab = fsrsSuccessStability(c.diff, c.stab, R, G);
-    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+    c.ivl = fsrsInterval(c.stab, desiredRetention());
     c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
   }
 

@@ -304,6 +304,12 @@
   }
   // 是否与目标倒计时挂钩（用于记忆框/设置页文案）
   function targetLinked() { return !(DB && DB.settings && DB.settings.targetLinkExam === false) && countdownDays() != null; }
+  // 期望保留率（FSRS 安排间隔的目标保留率）：设置可调 0.80–0.98，默认 0.90（官方默认工作点）。
+  // 只影响间隔计算（下次复习排多远），不影响毕业判据与掌握度。
+  function desiredRetention() {
+    const v = DB && DB.settings && DB.settings.fdr;
+    return (typeof v === 'number' && v >= 0.8 && v <= 0.98) ? v : 0.9;
+  }
   function bareRecallOn() { return !!(DB && DB.settings && DB.settings.bareRecall); }
   function isGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
 
@@ -363,7 +369,7 @@
   function graduateReview(c, stab) {
     c.grad = 1; c.reps = 1; c.state = 'review';
     c.stab = Math.max(FSRS_S_MIN, (typeof stab === 'number') ? stab : c.stab);
-    c.ivl = Math.max(1, Math.round(fsrsInterval(c.stab)));
+    c.ivl = fsrsInterval(c.stab, desiredRetention());
     c.due = dayStart(Date.now()) + c.ivl * DAY;
   }
 
@@ -383,7 +389,7 @@
     learningDue: function (now, steps, step) { return now + steps[step]; },
     relearnDue: function (now) { return now + RELEARN_MS[0]; },
     graduate: graduateReview,
-    reviewIvl: function (c) { return Math.max(1, Math.round(fsrsInterval(c.stab))); }
+    reviewIvl: function (c) { return fsrsInterval(c.stab, desiredRetention()); }
   };
   function applyRatingToCard(c, rating) { applySchedRating(c, rating, LEARN_SCHED); }
 

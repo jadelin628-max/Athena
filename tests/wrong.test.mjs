@@ -9,6 +9,7 @@ import {
 // 单测时把这两个依赖注入为全局，再动态加载被测模块。
 globalThis.DAY = 86400000;
 globalThis.dayStart = (ts) => { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); };
+globalThis.desiredRetention = () => 0.9;
 Object.assign(globalThis, {
   fsrsInitDifficulty, fsrsInitStability, fsrsRetention,
   fsrsDifficulty, fsrsLapseStability, fsrsSuccessStability, fsrsInterval

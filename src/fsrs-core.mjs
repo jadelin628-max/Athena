@@ -13,8 +13,10 @@
     return Math.pow(1 + FSRS_FACTOR * Math.max(0, daysSince) / S, FSRS_DECAY);
   }
   // 期望保留率(DR) → 下次复习间隔（天）：I(r,s) = (r^{1/decay} − 1)/factor × s，DR=0.9 时 I=S
-  function fsrsInterval(S) {
-    const mod = (Math.pow(FDR, 1 / FSRS_DECAY) - 1) / FSRS_FACTOR;
+  // dr 可选：传入自定义期望保留率（0.8–0.98）时按其计算；缺省用官方默认 FDR=0.9
+  function fsrsInterval(S, dr) {
+    const r = (typeof dr === 'number' && dr > 0 && dr < 1) ? dr : FDR;
+    const mod = (Math.pow(r, 1 / FSRS_DECAY) - 1) / FSRS_FACTOR;
     return Math.max(1, Math.round(Math.max(FSRS_S_MIN, S) * mod));
   }
   // 初始稳定性 S0(G) = max(w[G-1], 0.1)，G=1..4

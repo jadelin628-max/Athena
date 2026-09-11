@@ -16,6 +16,7 @@ const DB = { cards: {}, wrongs: {} };
 globalThis.DB = DB;
 globalThis.DATA = [];
 globalThis.card = (id) => DB.cards[id];
+globalThis.desiredRetention = () => 0.9;
 globalThis.countdownDays = () => 100;
 globalThis.goalTitle = () => '考研';
 globalThis.stats = () => ({ total: 0 });

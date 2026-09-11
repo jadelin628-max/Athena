@@ -78,3 +78,15 @@ test('halflife is K·S and clamped at S_MIN', () => {
   approx(fsrsHalflife(10), Math.max(FSRS_S_MIN, 10) * FSRS_HALFLIFE_K, 'h(10)');
   approx(fsrsHalflife(0), FSRS_S_MIN * FSRS_HALFLIFE_K, 'h(0) clamps');
 });
+
+test('fsrsInterval 支持自定义期望保留率（公式对拍 + 单调性 + 单参数兼容）', () => {
+  const mod = (dr) => (Math.pow(dr, 1 / FSRS_DECAY) - 1) / FSRS_FACTOR;
+  for (const S of [1, 10, 90]) {
+    for (const dr of [0.8, 0.85, 0.9, 0.95]) {
+      approx(fsrsInterval(S, dr), Math.max(1, Math.round(Math.max(FSRS_S_MIN, S) * mod(dr))), `I(${S},${dr})`);
+    }
+    assert.ok(fsrsInterval(S, 0.95) <= fsrsInterval(S, 0.9), '保留率越高间隔越短');
+    assert.ok(fsrsInterval(S, 0.9) <= fsrsInterval(S, 0.85), '保留率越低间隔越长');
+  }
+  assert.equal(fsrsInterval(90), interval(90)); // 单参数默认 0.9，向后兼容
+});

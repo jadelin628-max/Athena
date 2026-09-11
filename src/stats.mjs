@@ -148,7 +148,7 @@
       const R = fsrsRetention(Math.max(0, (due - lastR) / DAY), stab);
       diff = fsrsDifficulty(diff, 3); // 良好
       stab = fsrsSuccessStability(diff, stab, R, 3);
-      const ivl = Math.max(1, Math.round(fsrsInterval(stab)));
+      const ivl = fsrsInterval(stab, desiredRetention());
       lastR = due;
       due = dayStart(due) + ivl * DAY;
     }

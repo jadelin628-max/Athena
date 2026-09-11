@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.23.0';
+  const VERSION = '1.23.1';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.23.1', date: '2026-09', items: ['修复：同步后「新学功能瘫痪」——同步更新数据库后沿用旧学习会话（deck/pos 基于同步前数据），导致已学卡片被反复推出、新卡片永不进入队列；现在同步写入数据库时使该学科旧会话失效，当前学科被更新后强制重建学习队列'] },
     { v: '1.23.0', date: '2026-09', items: ['新增「期望保留率」设置（学习偏好栏，0.80–0.98，默认 0.90）：FSRS 按此计算复习间隔——调高（如考前 0.95）间隔约缩短一半、复习更密，调低更省时；只影响之后评分计算的新间隔，不改动已排期卡片；统计页「考试日预期」模拟同步采用该设置', '专注块模式经评估不再内置（现有第三方应用已覆盖）'] },
     { v: '1.22.1', date: '2026-09', items: ['同步归档治理：归档只在检测到「另一设备有本机未见的变化」（分歧冲突）时发生，常规单向推送/拉取不再归档——归档量下降约 95%', '每次同步后自动修剪归档目录：每科仅保留最近 10 份，仓库不再随使用无限膨胀（GitHub 仓库软上限约 1-5GB）'] },
     { v: '1.22.0', date: '2026-09', items: ['数据库审查第二轮：新增 6 张核心考点变式卡——数三「中值定理：严格单调与差商不等式」（2025 解答题）、「变限积分函数：极值与拐点判别」（2025 真题）、「抽象交错级数敛散判别」（2025 真题）；微观「跨期利率变动的斯勒茨基分解」「最优投保量的决定」；统计「两类错误与样本量的确定」', '内容修复：微观「边际效用递减规律」缺答案、数三 2023 旋转体例题公式定界符错位、2016 例题中间步骤笔误（上一版已修，本版合并说明）；含 $\iff$ 等符号的小修正'] },
@@ -4216,6 +4217,9 @@
   function syncWriteLocalDb(sid, db) {
     try {
       localStorage.setItem(sid + '_formula_srs_v1', JSON.stringify(db));
+      // 同步改变了卡片状态，旧学习会话（deck/pos/frontier）基于同步前数据，必须失效
+      // ——否则重建逻辑不触发，表现为「不断推出已学过的卡、新卡不进来」
+      try { localStorage.removeItem(sid + '_formula_session_v2'); } catch (e) {}
       try { idbSet(sid + '_formula_srs_v1', db); } catch (e) {}
       return true;
     } catch (e) { warnStorageFailure(); return false; }
@@ -4356,9 +4360,12 @@
     cfg.lastError = summary.failed.length ? summary.failed.join('；') : '';
     saveSyncCfg(cfg);
 
-    // 当前学科被更新时：重载数据并刷新界面
+    // 当前学科被更新时：重载数据、重建学习队列并刷新界面。
+    // 旧会话（deck/pos/frontier）基于同步前的卡片状态，直接沿用会卡死新卡引入
+    // （syncWriteLocalDb 已删除对应会话，这里无条件重建）。
     if (summary.local.concat(summary.both).indexOf(currentSubjectId) !== -1) {
       await loadDBAsync();
+      buildSession(0);
       renderApp();
     }
     // 归档修剪：每科仅保留最近 ARCHIVE_KEEP 份（修剪失败不影响同步）

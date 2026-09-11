@@ -206,6 +206,9 @@
   function syncWriteLocalDb(sid, db) {
     try {
       localStorage.setItem(sid + '_formula_srs_v1', JSON.stringify(db));
+      // 同步改变了卡片状态，旧学习会话（deck/pos/frontier）基于同步前数据，必须失效
+      // ——否则重建逻辑不触发，表现为「不断推出已学过的卡、新卡不进来」
+      try { localStorage.removeItem(sid + '_formula_session_v2'); } catch (e) {}
       try { idbSet(sid + '_formula_srs_v1', db); } catch (e) {}
       return true;
     } catch (e) { warnStorageFailure(); return false; }
@@ -346,9 +349,12 @@
     cfg.lastError = summary.failed.length ? summary.failed.join('；') : '';
     saveSyncCfg(cfg);
 
-    // 当前学科被更新时：重载数据并刷新界面
+    // 当前学科被更新时：重载数据、重建学习队列并刷新界面。
+    // 旧会话（deck/pos/frontier）基于同步前的卡片状态，直接沿用会卡死新卡引入
+    // （syncWriteLocalDb 已删除对应会话，这里无条件重建）。
     if (summary.local.concat(summary.both).indexOf(currentSubjectId) !== -1) {
       await loadDBAsync();
+      buildSession(0);
       renderApp();
     }
     // 归档修剪：每科仅保留最近 ARCHIVE_KEEP 份（修剪失败不影响同步）

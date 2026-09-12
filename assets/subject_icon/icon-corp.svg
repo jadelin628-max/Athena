@@ -1,1 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#2A75C0"/><text x="32" y="44" font-size="32" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="bold">财</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Corporate finance : balance scale, weighing capital structure -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 56 92 H 184" stroke="#D4537E"/>
+    <path d="M 120 92 V 158" stroke="#D4537E"/>
+    <path d="M 92 170 H 148" stroke="#D4537E"/>
+    <path d="M 56 92 V 116" stroke="#378ADD"/>
+    <path d="M 184 92 V 116" stroke="#378ADD"/>
+    <path d="M 40 116 Q 56 138 72 116" stroke="#378ADD"/>
+    <path d="M 168 116 Q 184 138 200 116" stroke="#378ADD"/>
+  </g>
+</svg>

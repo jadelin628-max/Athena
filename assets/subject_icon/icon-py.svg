@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#3572A5"/><text x="32" y="43" font-size="24" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="bold">Py</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Python : angle brackets of code -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 94 84 L 54 124 L 94 164" stroke="#D4537E"/>
+    <path d="M 146 84 L 186 124 L 146 164" stroke="#378ADD"/>
+    <path d="M 128 70 L 112 178" stroke="#D4537E"/>
+  </g>
+</svg>

@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#C9822F"/><text x="32" y="44" font-size="32" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="bold">投</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Investments : two candlesticks climbing -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 84 62 V 146" stroke="#378ADD"/>
+    <path d="M 154 76 V 168" stroke="#D4537E"/>
+  </g>
+  <rect x="70" y="94" width="28" height="40" rx="8" fill="#378ADD"/>
+  <rect x="140" y="104" width="28" height="48" rx="8" fill="#D4537E"/>
+</svg>

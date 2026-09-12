@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#7A5FB5"/><text x="32" y="44" font-size="32" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="bold">音</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Music theory : single eighth note -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 110 148 V 64" stroke="#378ADD"/>
+    <path d="M 110 64 C 138 78, 144 102, 124 120" stroke="#D4537E"/>
+  </g>
+  <ellipse cx="94" cy="152" rx="18" ry="13" fill="#378ADD" transform="rotate(-14 94 152)"/>
+</svg>

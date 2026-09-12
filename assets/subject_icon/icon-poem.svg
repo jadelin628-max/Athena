@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#3A8F6F"/><text x="32" y="44" font-size="32" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="bold">诗</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Classical poetry : hanging scroll with two ink columns -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 56 76 H 184" stroke="#378ADD"/>
+    <path d="M 56 168 H 184" stroke="#378ADD"/>
+    <path d="M 78 84 V 160" stroke="#378ADD"/>
+    <path d="M 162 84 V 160" stroke="#378ADD"/>
+    <path d="M 108 100 V 146" stroke="#D4537E"/>
+    <path d="M 134 100 V 146" stroke="#D4537E"/>
+  </g>
+</svg>

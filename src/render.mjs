@@ -110,6 +110,11 @@
       // 5) 普通文本：前进到下一个特殊字符
       const nx = nextSpecial(str, i);
       if (nx === -1) { el.appendChild(document.createTextNode(str.slice(i))); break; }
+      if (nx === i) { // 当前字符本身是无法处理的特殊字符（如孤立的 *）：按字面输出并前进，避免死循环
+        el.appendChild(document.createTextNode(ch));
+        i++;
+        continue;
+      }
       el.appendChild(document.createTextNode(str.slice(i, nx)));
       i = nx;
     }

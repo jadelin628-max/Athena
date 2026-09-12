@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DATA_DIR = path.join(ROOT, 'data');
-const FILES = ['math3.js', 'econ.js', 'stats.js', 'politics.js'];
+const FILES = ['math3.js', 'econ.js', 'stats.js', 'politics.js', 'corp.js', 'inv.js', 'music.js', 'poem.js', 'py.js'];
 
 // —— 加载：在隔离 vm 里执行每个数据文件，复用同一个 window.SUBJECTS ——
 const sandbox = { window: { SUBJECTS: {} }, String, Math, console };

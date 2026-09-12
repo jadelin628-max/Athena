@@ -25,6 +25,7 @@ const ORDER = [
   'settings.mjs',
   'stats.mjs',
   'map.mjs',
+  'home.mjs',
   'sync.mjs',
   'actions.mjs'
 ];

@@ -485,24 +485,53 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 /* 学习统计 */
 .heatmap-grid { display: grid; gap: 3px; grid-auto-rows: 12px; margin-bottom: 8px; overflow-x: auto; }
 
-/* 全局今日面板（跨科目概览） */
-.global-panel { padding: 6px 14px; }
-.global-head {
-  display: flex; align-items: center; gap: 10px; width: 100%;
-  border: none; background: transparent; cursor: pointer; padding: 8px 0; color: var(--text); font-size: 14px;
+/* 仪表盘主页 */
+.home-wrap { display: flex; flex-direction: column; gap: 14px; animation: cardIn .26s ease; }
+.home-greet { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.home-greet h2 { margin: 0; font-size: 20px; }
+.home-kpis { margin-bottom: 0; }
+.home-hero {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
+  border: none; border-radius: var(--radius); padding: 18px 20px; cursor: pointer;
+  box-shadow: var(--shadow);
 }
-.global-head strong { flex: none; }
-.global-head .muted { flex: 1; text-align: left; }
-.global-toggle { color: var(--muted); font-size: 12px; flex: none; }
-.global-row {
-  display: flex; align-items: center; gap: 12px; padding: 8px 2px;
-  border-top: 1px dashed var(--border); font-size: 13px;
+.home-hero-main { flex: 1; min-width: 0; }
+.home-hero-title { font-size: 17px; font-weight: 700; margin-bottom: 3px; }
+.home-hero .muted { color: rgba(255,255,255,.85); }
+.home-hero-go { flex: none; font-weight: 700; font-size: 14px; background: rgba(255,255,255,.22); padding: 8px 14px; border-radius: 999px; }
+.home-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.home-card {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 14px 8px 12px; cursor: pointer; color: var(--text); box-shadow: var(--shadow-sm);
+  transition: box-shadow .15s, border-color .15s;
 }
-.global-row.current .global-name { color: var(--accent); }
-.global-name { flex: 0 0 78px; font-weight: 600; }
-.global-stat { color: var(--muted); flex: 1; white-space: nowrap; }
-.global-here { color: var(--accent); font-weight: 600; font-size: 12px; flex: none; }
-.global-row .btn { margin-left: auto; flex: none; }
+.home-card:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+.home-card.current { border-color: var(--accent); }
+.home-card-icon { height: 34px; width: 34px; object-fit: contain; }
+span.home-card-icon { font-size: 28px; line-height: 34px; }
+.home-card-name { font-weight: 600; font-size: 13.5px; }
+.home-card .muted { font-size: 11.5px; }
+.home-card-now {
+  position: absolute; top: 8px; right: 8px; font-size: 10.5px; font-weight: 700;
+  color: var(--accent); background: var(--accent-weak); padding: 1px 8px; border-radius: 999px;
+}
+.home-quote {
+  width: 100%; text-align: left; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 16px 18px; cursor: pointer; color: var(--text);
+}
+.home-quote:hover { border-color: var(--accent); }
+.home-quote-text { font-size: 15.5px; font-weight: 600; margin-bottom: 4px; }
+.home-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.home-tile {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 13px 10px; cursor: pointer; color: var(--text); font-size: 14px; font-weight: 600;
+  transition: border-color .15s;
+}
+.home-tile:hover { border-color: var(--accent); color: var(--accent); }
+.home-tile-icon { font-size: 17px; }
 .heat-cell { width: 12px; height: 12px; border-radius: 3px; background: var(--border); }
 .heat-cell.l1 { background: #B5D4F4; }
 .heat-cell.l2 { background: #76AFE8; }

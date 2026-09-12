@@ -1,6 +1,7 @@
     const app = document.getElementById('app');
     app.innerHTML = '';
-    if (currentView === 'learn') renderLearn();
+    if (currentView === 'home') renderHome();
+    else if (currentView === 'learn') renderLearn();
     else if (currentView === 'browse') renderBrowse();
     else if (currentView === 'quiz') renderQuiz();
     else if (currentView === 'statistics') renderStatistics();
@@ -148,71 +149,6 @@
     if (pos < 0) pos = 0;
     if (pos > deck.length) pos = deck.length;
   }
-  // 自适应步进：学习阶段的卡若等待过久（超过阈值），把它从队列靠后拉近，尽早重现
-  // ---------------- 全局今日面板：跨科目待复习概览 ----------------
-  // 直接读各科 localStorage 快照统计（不切换学科、不加载 DATA），一行一科 + 一键跳转。
-  function renderGlobalPanel() {
-    if (renderGlobalPanel._open === undefined) renderGlobalPanel._open = false;
-    const today = todayStr();
-    const now = Date.now();
-    const rows = [];
-    let totalDue = 0, totalLearned = 0, totalMin = 0;
-    Object.keys(subjectList()).forEach(function (sid) {
-      let db = null;
-      try { db = JSON.parse(localStorage.getItem(sid + '_formula_srs_v1')); } catch (e) {}
-      if (!db || !db.cards) { rows.push({ sid: sid, short: subjectList()[sid].short, current: sid === currentSubjectId }); return; }
-      let due = 0;
-      Object.keys(db.cards).forEach(function (id) {
-        const c = db.cards[id];
-        if ((c.state === 'review' || c.state === 'learning' || c.state === 'relearning') && c.due && c.due <= now) due++;
-      });
-      Object.keys(db.wrongs || {}).forEach(function (wid) {
-        const w = db.wrongs[wid];
-        if (w.state === 'review' && w.due && w.due <= now) due++;
-      });
-      const detail = (db.log && db.log.detail && db.log.detail[today]) || {};
-      const learned = Object.keys(detail).length;
-      const min = Math.round(((db.log && db.log.studyTime && db.log.studyTime[today]) || 0) / 60000);
-      totalDue += due; totalLearned += learned; totalMin += min;
-      rows.push({ sid: sid, short: subjectList()[sid].short, due: due, learned: learned, min: min, current: sid === currentSubjectId });
-    });
-
-    const box = el('div', 'stat-card global-panel');
-    const head = el('button', 'global-head');
-    head.appendChild(el('strong', null, '🌐 全科目今日'));
-    head.appendChild(el('span', 'muted', '待复习 ' + totalDue + ' · 已学 ' + totalLearned + ' · 专注 ' + totalMin + ' 分钟'));
-    head.appendChild(el('span', 'global-toggle', renderGlobalPanel._open ? '收起 ▲' : '展开 ▼'));
-    head.addEventListener('click', function () { renderGlobalPanel._open = !renderGlobalPanel._open; renderApp(); });
-    box.appendChild(head);
-    if (renderGlobalPanel._open) {
-      // 今日功成：没有任何待复习且今天确实学过 → 庆祝时刻
-      if (totalDue === 0 && totalLearned > 0) {
-        box.appendChild(illus('all-clear'));
-        box.appendChild(el('p', 'muted', '🎉 今日所有科目的复习都已完成——好好休息，明天见。'));
-      }
-      rows.forEach(function (r) {
-        const row = el('div', 'global-row' + (r.current ? ' current' : ''));
-        row.appendChild(el('span', 'global-name', r.short));
-        if (r.due == null) {
-          row.appendChild(el('span', 'global-stat muted', '尚未开始'));
-        } else {
-          row.appendChild(el('span', 'global-stat', '⏳ ' + r.due));
-          row.appendChild(el('span', 'global-stat', '✅ ' + r.learned));
-          row.appendChild(el('span', 'global-stat', '⏱ ' + r.min + ' 分'));
-        }
-        if (r.current) {
-          row.appendChild(el('span', 'global-here', '当前'));
-        } else {
-          const go = el('button', 'btn small', '前往');
-          go.addEventListener('click', function () { switchSubject(r.sid); });
-          row.appendChild(go);
-        }
-        box.appendChild(row);
-      });
-    }
-    return box;
-  }
-
   function renderLearn() {
     const app = document.getElementById('app');
     surfaceDue();
@@ -222,7 +158,6 @@
     tb.appendChild(add);
     app.appendChild(tb);
     app.appendChild(statsBar());
-    app.appendChild(renderGlobalPanel());
 
     const done = (deck.length === 0) || (frontier >= deck.length && pos >= frontier);
     if (done) {

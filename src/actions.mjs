@@ -491,7 +491,7 @@
     migrateLegacy();
     loadDBAsync().then(function () {
       if (!loadSession()) buildSession(0);
-      currentView = 'learn';
+      currentView = 'home'; // 启动落仪表盘主页；「继续学习」一键进入上次学科
       currentModule = 'cards';
       renderApp();
       setTimeout(maybeShowCountdownPopup, 350);

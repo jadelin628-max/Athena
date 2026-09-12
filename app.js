@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.25.2';
+  const VERSION = '1.25.3';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.25.3', date: '2026-09', items: ['美术：三张新插画入库——错题本轮完成（雅典娜复盘）、全科目今日功成（卡牌环绕庆祝）、倒计时换为远山旗帜中性版（适配自定义目标名）；「全科目今日」面板在待复习清零且当日有学习时展示庆祝时刻'] },
     { v: '1.25.2', date: '2026-09', items: ['美术：全部 12 个学科都有专属顶栏渐变色（切科换氛围）；插画加浅色圆角托盘，暗色主题下更协调；插画进场淡入动效与按钮按压微反馈', '自测完成页与错题本轮完成页补插画'] },
     { v: '1.25.1', date: '2026-09', items: ['美术：公司金融/投资学/乐理/古诗词/Python 五科 logo 更换为与考研四科同风格的线条画（天平权衡/双K线/八分音符/卷轴墨行/代码括号），全套 12 枚学科 logo 视觉统一'] },
     { v: '1.25.0', date: '2026-09', items: ['新增三个学科（共 109 张卡）：货币金融学（38 卡，货币制度/利率结构/货币创造/货币政策/IS-LM/通胀/汇率/巴塞尔）、财务报表分析（32 卡，三表/比率/杜邦/现金流/盈余质量与舞弊识别/估值衔接）、四书背诵（39 卡，《大学》《中庸》《论语》《孟子》名段原文背诵）', '新增「全科目今日」面板：学习页一键查看九个学科的待复习、已学与专注时长，可展开逐科跳转——多学科并学时的总控台', '新学科 logo 与考研四科风格统一（240 圆角浅底 + 品牌双色线条画：外圆内方铜钱/台账箭头/摊开书页）'] },
@@ -1673,6 +1674,11 @@
     head.addEventListener('click', function () { renderGlobalPanel._open = !renderGlobalPanel._open; renderApp(); });
     box.appendChild(head);
     if (renderGlobalPanel._open) {
+      // 今日功成：没有任何待复习且今天确实学过 → 庆祝时刻
+      if (totalDue === 0 && totalLearned > 0) {
+        box.appendChild(illus('all-clear'));
+        box.appendChild(el('p', 'muted', '🎉 今日所有科目的复习都已完成——好好休息，明天见。'));
+      }
       rows.forEach(function (r) {
         const row = el('div', 'global-row' + (r.current ? ' current' : ''));
         row.appendChild(el('span', 'global-name', r.short));
@@ -2368,7 +2374,7 @@
     if (wrongFrontier >= wrongDeck.length) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 错题本轮完成'));
-      wrap.appendChild(illus('learn-done'));
+      wrap.appendChild(illus('wrong-done'));
       wrap.appendChild(el('p', 'muted', '本轮错题已做完——按排期到期的错题会自动重现。'));
       app.appendChild(wrap);
       return;

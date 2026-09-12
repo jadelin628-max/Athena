@@ -123,7 +123,7 @@
     if (wrongFrontier >= wrongDeck.length) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 错题本轮完成'));
-      wrap.appendChild(illus('learn-done'));
+      wrap.appendChild(illus('wrong-done'));
       wrap.appendChild(el('p', 'muted', '本轮错题已做完——按排期到期的错题会自动重现。'));
       app.appendChild(wrap);
       return;

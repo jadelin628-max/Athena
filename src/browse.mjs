@@ -185,6 +185,11 @@
     head.addEventListener('click', function () { renderGlobalPanel._open = !renderGlobalPanel._open; renderApp(); });
     box.appendChild(head);
     if (renderGlobalPanel._open) {
+      // 今日功成：没有任何待复习且今天确实学过 → 庆祝时刻
+      if (totalDue === 0 && totalLearned > 0) {
+        box.appendChild(illus('all-clear'));
+        box.appendChild(el('p', 'muted', '🎉 今日所有科目的复习都已完成——好好休息，明天见。'));
+      }
       rows.forEach(function (r) {
         const row = el('div', 'global-row' + (r.current ? ' current' : ''));
         row.appendChild(el('span', 'global-name', r.short));

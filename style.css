@@ -613,6 +613,7 @@ body.immersive #immersiveExit { display: block; }
   .module-tab { padding: 7px 11px; font-size: 13px; }
   .subnav { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   header .module-tab { display: none; }
+  #homeBtn { display: none; } /* 移动端主页入口在底栏 Dock */
   .dock {
     display: flex; align-items: center; justify-content: center; gap: 10px;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;

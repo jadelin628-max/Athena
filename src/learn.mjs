@@ -494,13 +494,17 @@
     document.documentElement.style.setProperty('--chrome-h', (headerH + sub.offsetHeight) + 'px');
   }
 
-  // 移动端底部 Dock：仅两个一级模块；二级导航（学习/浏览等）在顶栏下方 subnav 横滑条
+  // 移动端底部 Dock：主页 + 两个一级模块；二级导航（学习/浏览等）在顶栏下方 subnav 横滑条
   function renderDock() {
     const dock = document.getElementById('dock');
     if (!dock) return;
     dock.innerHTML = '';
+    const home = el('button', 'dock-btn' + (currentView === 'home' ? ' active' : ''), '🏠 主页');
+    home.setAttribute('data-action', 'nav');
+    home.setAttribute('data-arg', 'home');
+    dock.appendChild(home);
     [['cards', '📚 知识卡'], ['wrong', '📕 错题本']].forEach(function (m) {
-      const b = el('button', 'dock-btn' + (currentModule === m[0] ? ' active' : ''), m[1]);
+      const b = el('button', 'dock-btn' + (currentView !== 'home' && currentModule === m[0] ? ' active' : ''), m[1]);
       b.setAttribute('data-action', 'module');
       b.setAttribute('data-arg', m[0]);
       dock.appendChild(b);

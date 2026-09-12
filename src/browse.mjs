@@ -14,6 +14,8 @@
     document.querySelectorAll('.module-tab').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-arg') === currentModule);
     });
+    const homeBtn = document.getElementById('homeBtn');
+    if (homeBtn) homeBtn.classList.toggle('active', currentView === 'home');
     renderSubnav();
     renderDock();
     const vf = el('div', 'app-version');

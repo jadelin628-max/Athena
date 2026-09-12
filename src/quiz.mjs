@@ -237,6 +237,7 @@
     const app = document.getElementById('app');
     const wrap = el('div', 'center-card');
     wrap.appendChild(el('h2', null, '测验完成'));
+    wrap.appendChild(illus('learn-done'));
     wrap.appendChild(el('p', 'big-score', quiz.score + ' / ' + quiz.qs.length));
     const again = el('button', 'btn primary', '再来一组');
     again.setAttribute('data-action', 'qstart');

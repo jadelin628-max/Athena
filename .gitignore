@@ -32,3 +32,6 @@ PROGRESS.md
 数据审查报告.md
 
 # 注意：tools/ 为工程校验脚本，需要纳入版本控制，故不忽略。
+
+# 生图工具工作目录（本地私有）
+assets/.workbuddy/

@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.24.0';
+  const VERSION = '1.25.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.25.0', date: '2026-09', items: ['新增三个学科（共 109 张卡）：货币金融学（38 卡，货币制度/利率结构/货币创造/货币政策/IS-LM/通胀/汇率/巴塞尔）、财务报表分析（32 卡，三表/比率/杜邦/现金流/盈余质量与舞弊识别/估值衔接）、四书背诵（39 卡，《大学》《中庸》《论语》《孟子》名段原文背诵）', '新增「全科目今日」面板：学习页一键查看九个学科的待复习、已学与专注时长，可展开逐科跳转——多学科并学时的总控台', '新学科 logo 与考研四科风格统一（240 圆角浅底 + 品牌双色线条画：外圆内方铜钱/台账箭头/摊开书页）'] },
     { v: '1.24.0', date: '2026-09', items: ['新增五个学科（共 217 张卡，无例题、可独立开关学习）：公司金融（45 卡，估值/资本预算/CAPM/资本结构等罗斯框架）、投资学（38 卡，组合/因子/固收/衍生品等博迪框架）、乐理（40 卡，音程/调式/和弦/记谱）、古诗词背诵（46 卡，篇名+首句提示 → 背全文，覆盖先秦至明清名篇）、Python 知识（48 卡，语法/数据结构/OOP/进阶特性）', '古诗词模块定位为「可背诵的诗词原文」而非诗词知识讲解；各新学科配专属图标并纳入离线缓存与云同步'] },
     { v: '1.23.1', date: '2026-09', items: ['修复：同步后「新学功能瘫痪」——同步更新数据库后沿用旧学习会话（deck/pos 基于同步前数据），导致已学卡片被反复推出、新卡片永不进入队列；现在同步写入数据库时使该学科旧会话失效，当前学科被更新后强制重建学习队列'] },
     { v: '1.23.0', date: '2026-09', items: ['新增「期望保留率」设置（学习偏好栏，0.80–0.98，默认 0.90）：FSRS 按此计算复习间隔——调高（如考前 0.95）间隔约缩短一半、复习更密，调低更省时；只影响之后评分计算的新间隔，不改动已排期卡片；统计页「考试日预期」模拟同步采用该设置', '专注块模式经评估不再内置（现有第三方应用已覆盖）'] },
@@ -380,7 +381,10 @@
     inv: 'assets/subject_icon/icon-inv.svg',
     music: 'assets/subject_icon/icon-music.svg',
     poem: 'assets/subject_icon/icon-poem.svg',
-    py: 'assets/subject_icon/icon-py.svg'
+    py: 'assets/subject_icon/icon-py.svg',
+    mon: 'assets/subject_icon/icon-mon.svg',
+    fsa: 'assets/subject_icon/icon-fsa.svg',
+    sishu: 'assets/subject_icon/icon-sishu.svg'
   };
   function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配
@@ -1631,6 +1635,65 @@
     if (pos > deck.length) pos = deck.length;
   }
   // 自适应步进：学习阶段的卡若等待过久（超过阈值），把它从队列靠后拉近，尽早重现
+  // ---------------- 全局今日面板：跨科目待复习概览 ----------------
+  // 直接读各科 localStorage 快照统计（不切换学科、不加载 DATA），一行一科 + 一键跳转。
+  function renderGlobalPanel() {
+    if (renderGlobalPanel._open === undefined) renderGlobalPanel._open = false;
+    const today = todayStr();
+    const now = Date.now();
+    const rows = [];
+    let totalDue = 0, totalLearned = 0, totalMin = 0;
+    Object.keys(subjectList()).forEach(function (sid) {
+      let db = null;
+      try { db = JSON.parse(localStorage.getItem(sid + '_formula_srs_v1')); } catch (e) {}
+      if (!db || !db.cards) { rows.push({ sid: sid, short: subjectList()[sid].short, current: sid === currentSubjectId }); return; }
+      let due = 0;
+      Object.keys(db.cards).forEach(function (id) {
+        const c = db.cards[id];
+        if ((c.state === 'review' || c.state === 'learning' || c.state === 'relearning') && c.due && c.due <= now) due++;
+      });
+      Object.keys(db.wrongs || {}).forEach(function (wid) {
+        const w = db.wrongs[wid];
+        if (w.state === 'review' && w.due && w.due <= now) due++;
+      });
+      const detail = (db.log && db.log.detail && db.log.detail[today]) || {};
+      const learned = Object.keys(detail).length;
+      const min = Math.round(((db.log && db.log.studyTime && db.log.studyTime[today]) || 0) / 60000);
+      totalDue += due; totalLearned += learned; totalMin += min;
+      rows.push({ sid: sid, short: subjectList()[sid].short, due: due, learned: learned, min: min, current: sid === currentSubjectId });
+    });
+
+    const box = el('div', 'stat-card global-panel');
+    const head = el('button', 'global-head');
+    head.appendChild(el('strong', null, '🌐 全科目今日'));
+    head.appendChild(el('span', 'muted', '待复习 ' + totalDue + ' · 已学 ' + totalLearned + ' · 专注 ' + totalMin + ' 分钟'));
+    head.appendChild(el('span', 'global-toggle', renderGlobalPanel._open ? '收起 ▲' : '展开 ▼'));
+    head.addEventListener('click', function () { renderGlobalPanel._open = !renderGlobalPanel._open; renderApp(); });
+    box.appendChild(head);
+    if (renderGlobalPanel._open) {
+      rows.forEach(function (r) {
+        const row = el('div', 'global-row' + (r.current ? ' current' : ''));
+        row.appendChild(el('span', 'global-name', r.short));
+        if (r.due == null) {
+          row.appendChild(el('span', 'global-stat muted', '尚未开始'));
+        } else {
+          row.appendChild(el('span', 'global-stat', '⏳ ' + r.due));
+          row.appendChild(el('span', 'global-stat', '✅ ' + r.learned));
+          row.appendChild(el('span', 'global-stat', '⏱ ' + r.min + ' 分'));
+        }
+        if (r.current) {
+          row.appendChild(el('span', 'global-here', '当前'));
+        } else {
+          const go = el('button', 'btn small', '前往');
+          go.addEventListener('click', function () { switchSubject(r.sid); });
+          row.appendChild(go);
+        }
+        box.appendChild(row);
+      });
+    }
+    return box;
+  }
+
   function renderLearn() {
     const app = document.getElementById('app');
     surfaceDue();
@@ -1640,6 +1703,7 @@
     tb.appendChild(add);
     app.appendChild(tb);
     app.appendChild(statsBar());
+    app.appendChild(renderGlobalPanel());
 
     const done = (deck.length === 0) || (frontier >= deck.length && pos >= frontier);
     if (done) {

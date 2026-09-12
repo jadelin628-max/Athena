@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Monetary finance : Chinese coin, round outside & square hole -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="120" cy="120" r="58" stroke="#D4537E"/>
+    <rect x="99" y="99" width="42" height="42" rx="4" stroke="#378ADD"/>
+  </g>
+</svg>

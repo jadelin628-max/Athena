@@ -9,7 +9,10 @@
     inv: 'assets/subject_icon/icon-inv.svg',
     music: 'assets/subject_icon/icon-music.svg',
     poem: 'assets/subject_icon/icon-poem.svg',
-    py: 'assets/subject_icon/icon-py.svg'
+    py: 'assets/subject_icon/icon-py.svg',
+    mon: 'assets/subject_icon/icon-mon.svg',
+    fsa: 'assets/subject_icon/icon-fsa.svg',
+    sishu: 'assets/subject_icon/icon-sishu.svg'
   };
   function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配

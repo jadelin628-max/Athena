@@ -1,6 +1,6 @@
 {
   "name": "athena",
-  "version": "1.24.0",
+  "version": "1.25.0",
   "private": true,
   "description": "Athena —— 考研知识点记忆应用（FSRS-6，纯静态 PWA + Tauri 桌面版，零 npm 依赖）",
   "type": "module",

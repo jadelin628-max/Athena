@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Financial statement analysis : ledger rows crossed by a rising trend arrow -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 58 84 H 182" stroke="#378ADD"/>
+    <path d="M 58 120 H 150" stroke="#378ADD"/>
+    <path d="M 58 156 H 120" stroke="#378ADD"/>
+    <path d="M 62 180 C 100 168 128 128 166 76" stroke="#D4537E"/>
+    <path d="M 146 74 L 168 72 L 162 94" stroke="#D4537E"/>
+  </g>
+</svg>

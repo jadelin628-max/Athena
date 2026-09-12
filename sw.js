@@ -2,7 +2,7 @@
  * Service Worker：缓存应用与 KaTeX，实现离线可用
  * 说明：仅在 http(s) 环境下生效（file:// 下浏览器不注册 SW）。
  */
-const VERSION = 'ms3-v74';
+const VERSION = 'ms3-v75';
 const APP_CACHE = VERSION + '-app';
 const KATEX_CACHE = VERSION + '-katex';
 
@@ -20,6 +20,9 @@ const APP_ASSETS = [
   './data/music.js',
   './data/poem.js',
   './data/py.js',
+  './data/mon.js',
+  './data/fsa.js',
+  './data/sishu.js',
   './manifest.webmanifest',
   './katex/katex.min.js',
   './katex/katex.min.css',
@@ -37,6 +40,9 @@ const APP_ASSETS = [
   './assets/subject_icon/icon-music.svg',
   './assets/subject_icon/icon-poem.svg',
   './assets/subject_icon/icon-py.svg',
+  './assets/subject_icon/icon-mon.svg',
+  './assets/subject_icon/icon-fsa.svg',
+  './assets/subject_icon/icon-sishu.svg',
   './assets/countdown.webp',
   './assets/empty-search.webp',
   './assets/empty-wrong.webp',

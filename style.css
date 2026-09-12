@@ -452,6 +452,25 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 
 /* 学习统计 */
 .heatmap-grid { display: grid; gap: 3px; grid-auto-rows: 12px; margin-bottom: 8px; overflow-x: auto; }
+
+/* 全局今日面板（跨科目概览） */
+.global-panel { padding: 6px 14px; }
+.global-head {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  border: none; background: transparent; cursor: pointer; padding: 8px 0; color: var(--text); font-size: 14px;
+}
+.global-head strong { flex: none; }
+.global-head .muted { flex: 1; text-align: left; }
+.global-toggle { color: var(--muted); font-size: 12px; flex: none; }
+.global-row {
+  display: flex; align-items: center; gap: 12px; padding: 8px 2px;
+  border-top: 1px dashed var(--border); font-size: 13px;
+}
+.global-row.current .global-name { color: var(--accent); }
+.global-name { flex: 0 0 78px; font-weight: 600; }
+.global-stat { color: var(--muted); flex: 1; white-space: nowrap; }
+.global-here { color: var(--accent); font-weight: 600; font-size: 12px; flex: none; }
+.global-row .btn { margin-left: auto; flex: none; }
 .heat-cell { width: 12px; height: 12px; border-radius: 3px; background: var(--border); }
 .heat-cell.l1 { background: #B5D4F4; }
 .heat-cell.l2 { background: #76AFE8; }

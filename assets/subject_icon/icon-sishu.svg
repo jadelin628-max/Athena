@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Four Books : open book, pages spread from the spine -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 120 100 C 102 88 76 88 60 96 L 60 164 C 76 156 102 156 120 168" stroke="#378ADD"/>
+    <path d="M 120 100 C 138 88 164 88 180 96 L 180 164 C 164 156 138 156 120 168" stroke="#378ADD"/>
+    <path d="M 120 96 V 172" stroke="#D4537E"/>
+  </g>
+</svg>

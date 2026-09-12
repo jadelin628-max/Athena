@@ -532,6 +532,14 @@ span.home-card-icon { font-size: 28px; line-height: 34px; }
 }
 .home-tile:hover { border-color: var(--accent); color: var(--accent); }
 .home-tile-icon { font-size: 17px; }
+
+/* 功能入口线稿图标（currentColor 随文字颜色自适应：默认灰、激活白、hover 品牌色） */
+.ui-icon {
+  width: 1.15em; height: 1.15em; vertical-align: -0.2em; flex: none;
+}
+.ui-icon path, .ui-icon rect, .ui-icon circle {
+  fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
 .heat-cell { width: 12px; height: 12px; border-radius: 3px; background: var(--border); }
 .heat-cell.l1 { background: #B5D4F4; }
 .heat-cell.l2 { background: #76AFE8; }

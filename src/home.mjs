@@ -79,6 +79,26 @@
     return { sid: pick.sid, id: pick.id, title: pick.title, quote: pick.text.split('。')[0] + '。' };
   }
 
+  // ---------------- 功能入口线稿图标（currentColor 单色，随文字颜色自适应） ----------------
+  const UI_ICONS = {
+    home: '<path d="M3.5 11 L12 3.5 L20.5 11"/><path d="M6 9.5 V20 H18 V9.5"/><path d="M10 20 V14.5 H14 V20"/>',
+    deck: '<rect x="4" y="7.5" width="12.5" height="12.5" rx="2"/><path d="M8.5 4.5 H18 A2 2 0 0 1 20 6.5 V16"/>',
+    wrong: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9 L15 15 M15 9 L9 15"/>',
+    search: '<circle cx="11" cy="11" r="6"/><path d="M15.5 15.5 L20.5 20.5"/>',
+    pencil: '<path d="M4 20 L5.2 15.4 L16 4.6 A2.1 2.1 0 0 1 19 7.6 L8.2 18.4 Z"/><path d="M14.5 6.1 L17.5 9.1"/>',
+    chart: '<path d="M5 20 V11 M12 20 V4.5 M19 20 V14"/><path d="M3 20.5 H21"/>',
+    cap: '<path d="M2.5 9.5 L12 4.5 L21.5 9.5 L12 14.5 Z"/><path d="M6.5 11.8 V16.2 C6.5 17.8 17.5 17.8 17.5 16.2 V11.8"/><path d="M21.5 9.5 V14.5"/>',
+    sliders: '<path d="M4 7 H20 M4 12 H20 M4 17 H20"/><circle cx="9.5" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="10.5" cy="17" r="2.1"/>'
+  };
+  function icon(name) {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('class', 'ui-icon');
+    s.setAttribute('aria-hidden', 'true');
+    s.innerHTML = UI_ICONS[name] || '';
+    return s;
+  }
+
   function renderHome() {
     const app = document.getElementById('app');
     const wrap = el('div', 'home-wrap');
@@ -175,9 +195,11 @@
     // 快捷入口
     wrap.appendChild(el('h3', null, '⚡ 快捷入口'));
     const tiles = el('div', 'home-tiles');
-    [['✏️', '自测', 'quiz'], ['📈', '统计', 'statistics'], ['🧠', '原理', 'principle'], ['⚙️', '设置', 'settings']].forEach(function (t) {
+    [['pencil', '自测', 'quiz'], ['chart', '统计', 'statistics'], ['cap', '原理', 'principle'], ['sliders', '设置', 'settings']].forEach(function (t) {
       const b = el('button', 'home-tile');
-      b.appendChild(el('span', 'home-tile-icon', t[0]));
+      const ic = icon(t[0]);
+      ic.classList.add('home-tile-icon');
+      b.appendChild(ic);
       b.appendChild(el('span', null, t[1]));
       b.setAttribute('data-action', 'nav');
       b.setAttribute('data-arg', t[2]);

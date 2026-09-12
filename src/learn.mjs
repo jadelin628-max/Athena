@@ -480,10 +480,15 @@
     if (!sub) return;
     sub.innerHTML = '';
     const items = currentModule === 'wrong'
-      ? [['wrong', '📕 重做'], ['wrongBrowse', '📋 浏览'], ['wrongStats', '📊 统计']]
-      : [['learn', '📚 学习'], ['browse', '🔍 浏览'], ['quiz', '✏️ 自测'], ['statistics', '📈 统计']];
+      ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
+      : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计']];
+    const icons = currentModule === 'wrong'
+      ? { wrong: 'wrong', wrongBrowse: 'search', wrongStats: 'chart' }
+      : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart' };
     items.forEach(function (it) {
-      const b = el('button', 'nav-btn sub-btn' + (currentView === it[0] ? ' active' : ''), it[1]);
+      const b = el('button', 'nav-btn sub-btn' + (currentView === it[0] ? ' active' : ''));
+      b.appendChild(icon(icons[it[0]]));
+      b.appendChild(document.createTextNode(' ' + it[1]));
       b.setAttribute('data-action', 'nav');
       b.setAttribute('data-arg', it[0]);
       sub.appendChild(b);
@@ -499,12 +504,16 @@
     const dock = document.getElementById('dock');
     if (!dock) return;
     dock.innerHTML = '';
-    const home = el('button', 'dock-btn' + (currentView === 'home' ? ' active' : ''), '🏠 主页');
+    const home = el('button', 'dock-btn' + (currentView === 'home' ? ' active' : ''));
+    home.appendChild(icon('home'));
+    home.appendChild(document.createTextNode('主页'));
     home.setAttribute('data-action', 'nav');
     home.setAttribute('data-arg', 'home');
     dock.appendChild(home);
-    [['cards', '📚 知识卡'], ['wrong', '📕 错题本']].forEach(function (m) {
-      const b = el('button', 'dock-btn' + (currentView !== 'home' && currentModule === m[0] ? ' active' : ''), m[1]);
+    [['cards', 'deck', '知识卡'], ['wrong', 'wrong', '错题本']].forEach(function (m) {
+      const b = el('button', 'dock-btn' + (currentView !== 'home' && currentModule === m[0] ? ' active' : ''));
+      b.appendChild(icon(m[1]));
+      b.appendChild(document.createTextNode(m[2]));
       b.setAttribute('data-action', 'module');
       b.setAttribute('data-arg', m[0]);
       dock.appendChild(b);

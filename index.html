@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Athena">
-  <link rel="manifest" href="manifest.webmanifest?v=60">
-  <link rel="icon" type="image/png" href="icons/favicon.png?v=60">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=60">
+  <link rel="manifest" href="manifest.webmanifest?v=61">
+  <link rel="icon" type="image/png" href="icons/favicon.png?v=61">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=61">
   <title>Athena · 考研知识点记忆</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -22,9 +22,9 @@
       </div>
     </div>
     <nav>
-      <button class="nav-btn" id="homeBtn" data-action="nav" data-arg="home" title="主页">🏠</button>
-      <button class="nav-btn module-tab" data-action="module" data-arg="cards">📚 知识卡</button>
-      <button class="nav-btn module-tab" data-action="module" data-arg="wrong">📕 错题本</button>
+      <button class="nav-btn" id="homeBtn" data-action="nav" data-arg="home" title="主页"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 L12 3.5 L20.5 11"/><path d="M6 9.5 V20 H18 V9.5"/><path d="M10 20 V14.5 H14 V20"/></svg></button>
+      <button class="nav-btn module-tab" data-action="module" data-arg="cards"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7.5" width="12.5" height="12.5" rx="2"/><path d="M8.5 4.5 H18 A2 2 0 0 1 20 6.5 V16"/></svg> 知识卡</button>
+      <button class="nav-btn module-tab" data-action="module" data-arg="wrong"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9 L15 15 M15 9 L9 15"/></svg> 错题本</button>
       <button class="icon-btn" id="themeToggle" title="切换明暗主题">🌓</button>
       <button class="icon-btn" id="immersiveToggle" title="沉浸模式（Esc 退出）">⛶</button>
       <button class="icon-btn" id="menuToggle" title="菜单" aria-label="打开菜单">☰</button>
@@ -39,9 +39,9 @@
   <div class="drawer-backdrop" id="drawerBackdrop" data-action="menuclose"></div>
   <nav class="drawer" id="drawer" aria-label="导航菜单">
     <div class="drawer-head">📚 菜单</div>
-    <button class="nav-btn drawer-item" data-action="nav" data-arg="home">🏠 主页</button>
-    <button class="nav-btn drawer-item" data-action="nav" data-arg="principle">🧠 原理</button>
-    <button class="nav-btn drawer-item" data-action="nav" data-arg="settings">⚙️ 设置</button>
+    <button class="nav-btn drawer-item" data-action="nav" data-arg="home"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 L12 3.5 L20.5 11"/><path d="M6 9.5 V20 H18 V9.5"/><path d="M10 20 V14.5 H14 V20"/></svg> 主页</button>
+    <button class="nav-btn drawer-item" data-action="nav" data-arg="principle"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5 L12 4.5 L21.5 9.5 L12 14.5 Z"/><path d="M6.5 11.8 V16.2 C6.5 17.8 17.5 17.8 17.5 16.2 V11.8"/><path d="M21.5 9.5 V14.5"/></svg> 原理</button>
+    <button class="nav-btn drawer-item" data-action="nav" data-arg="settings"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7 H20 M4 12 H20 M4 17 H20"/><circle cx="9.5" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="10.5" cy="17" r="2.1"/></svg> 设置</button>
     <div class="drawer-foot">Athena · 考研知识点记忆</div>
   </nav>
 

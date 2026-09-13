@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- C language : broad arc of the letter C -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 176 74 C 156 52 84 52 64 74 C 46 94 46 146 64 166 C 84 188 156 188 176 166" stroke="#378ADD"/>
+  </g>
+</svg>

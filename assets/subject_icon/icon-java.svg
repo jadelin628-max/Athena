@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Java : steaming coffee cup -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 64 140 H 168 C 168 168 148 182 116 182 C 84 182 64 168 64 140 Z" stroke="#378ADD"/>
+    <path d="M 168 146 C 186 146 192 158 184 168" stroke="#378ADD"/>
+    <path d="M 100 112 C 96 100 106 96 102 84 C 99 74 108 68 112 64" stroke="#D4537E"/>
+    <path d="M 130 112 C 126 100 136 96 132 84" stroke="#D4537E"/>
+  </g>
+</svg>

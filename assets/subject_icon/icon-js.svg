@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- JavaScript : rounded square with the letters J and S -->
+  <rect x="48" y="48" width="144" height="144" rx="20" fill="none" stroke="#378ADD" stroke-width="16"/>
+  <text x="120" y="150" font-size="68" text-anchor="middle" fill="#D4537E" font-family="sans-serif" font-weight="bold">JS</text>
+</svg>

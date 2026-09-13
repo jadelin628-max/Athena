@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- C plus plus : arc of C with two plus strokes -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 148 74 C 130 56 78 56 60 78 C 44 98 44 142 60 162 C 78 184 130 184 148 166" stroke="#378ADD"/>
+    <path d="M 158 96 V 144 M 134 120 H 182" stroke="#D4537E"/>
+  </g>
+</svg>

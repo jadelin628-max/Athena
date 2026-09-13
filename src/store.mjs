@@ -13,7 +13,12 @@
     mon: 'assets/subject_icon/icon-mon.svg',
     fsa: 'assets/subject_icon/icon-fsa.svg',
     sishu: 'assets/subject_icon/icon-sishu.svg',
-    acct: 'assets/subject_icon/icon-acct.svg'
+    acct: 'assets/subject_icon/icon-acct.svg',
+    clang: 'assets/subject_icon/icon-clang.svg',
+    cppl: 'assets/subject_icon/icon-cppl.svg',
+    java: 'assets/subject_icon/icon-java.svg',
+    js: 'assets/subject_icon/icon-js.svg',
+    rust: 'assets/subject_icon/icon-rust.svg'
   };
   function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配

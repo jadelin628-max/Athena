@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.28.0';
+  const VERSION = '1.29.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.29.0', date: '2026-09', items: ['新增编程五科（技能类，共 196 卡）：C 语言（42 卡，K&R 框架：指针与内存/数组字符串/预处理编译）、C++（34 卡，现代 C++：RAII/移动语义/Rule of Zero/STL/智能指针/lambda）、Java（37 卡，JVM 与集合框架/异常泛型/Stream/并发基础）、JavaScript（27 卡，事件循环/Promise 与 async/原型链/闭包/DOM）、Rust（28 卡，所有权与借用/生命周期思想/模式匹配/Result 错误处理/迭代器零成本抽象）', 'Rust 内容按 The Book 框架编写，所有权与借用检查的"编译期拒绝"思想贯穿；五科均配线稿风格 logo 并纳入离线缓存与云同步'] },
     { v: '1.28.0', date: '2026-09', items: ['金融专业深化（阶段 2，CFA 一级 / CPA 财管口径）：公司金融 +35（杠杆系数/EPS 无差别点/实物期权/APV/FCFE/米勒模型/股利政策/营运资本/并购估值）、投资学 +31（交易指令/估值家族/固收进阶/另类投资/Brinson 归因）、货币金融学 +25（央行资产负债表/利率走廊/结构性工具/危机模型/数字人民币）、财务报表分析 +28（存货计价/折旧/收入五步法/EPS/金融资产分类/递延所得税/舞弊识别）', '新增《会计学基础》学科（51 卡，学业类）：借贷记账法/会计循环/流动与非流动资产/负债与权益/收入确认/报表编制/会计调整——CPA 会计入门完整骨架'] },
 
     { v: '1.27.0', date: '2026-09', items: ['学科分类体系：12 科分为学业类（数三/微观/统计/政治/公司金融/投资学/货币金融/财报分析）、技能类（Python）、爱好类（乐理/古诗词/四书）——学科选择器改为二级分组菜单，主页学科网格支持分类切换（空分组自动隐藏）', '主页掌握度实时化：不再依赖每日快照，跨科按各科自身目标稳定度即时计算（含考试挂钩科目）', '修复：移动端浏览页搜索「不起效」——拼音输入法组合期间（上屏未选字）拼音中间态会触发过滤得到空结果；现在组合期间跳过过滤、选字上屏后立即按最终文本过滤'] },
@@ -396,7 +397,12 @@
     mon: 'assets/subject_icon/icon-mon.svg',
     fsa: 'assets/subject_icon/icon-fsa.svg',
     sishu: 'assets/subject_icon/icon-sishu.svg',
-    acct: 'assets/subject_icon/icon-acct.svg'
+    acct: 'assets/subject_icon/icon-acct.svg',
+    clang: 'assets/subject_icon/icon-clang.svg',
+    cppl: 'assets/subject_icon/icon-cppl.svg',
+    java: 'assets/subject_icon/icon-java.svg',
+    js: 'assets/subject_icon/icon-js.svg',
+    rust: 'assets/subject_icon/icon-rust.svg'
   };
   function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配

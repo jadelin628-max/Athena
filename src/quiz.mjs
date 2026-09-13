@@ -7,15 +7,29 @@
     search.placeholder = subjKind() === 'qa' ? '搜索知识点（名称 / 内容）…' : '搜索公式（名称 / 内容）…';
     search.value = browseQuery;
     // 输入时只重绘列表，不重建整个视图（避免销毁搜索框导致输入/IME 被打断）；
-    // 150ms 防抖：停止输入后才做全量过滤 + 重建列表，逐键不再卡顿
+    // 150ms 防抖：停止输入后才做全量过滤 + 重建列表，逐键不再卡顿。
+    // IME 保护：拼音等输入法组合期间（上屏未选字）value 是拼音中间态，
+    // 此时过滤会得到"没有匹配"的假象（移动端搜索失效报告的根因）——
+    // 组合期间跳过过滤，compositionend（选字/上屏）后立即按最终文本过滤。
     let searchTimer = null;
-    search.addEventListener('input', function () {
-      browseQuery = search.value;
+    let composing = false;
+    const scheduleList = function () {
       clearTimeout(searchTimer);
       searchTimer = setTimeout(function () {
         const old = app.querySelector('.browse-list');
         if (old) old.replaceWith(buildBrowseList());
       }, 150);
+    };
+    search.addEventListener('compositionstart', function () { composing = true; });
+    search.addEventListener('compositionend', function () {
+      composing = false;
+      browseQuery = search.value;
+      scheduleList();
+    });
+    search.addEventListener('input', function () {
+      if (composing) return;
+      browseQuery = search.value;
+      scheduleList();
     });
     head.appendChild(search);
     app.appendChild(head);

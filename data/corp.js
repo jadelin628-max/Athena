@@ -269,5 +269,5 @@ SML：横轴为**系统风险 β**，对**一切资产与组合**（含非有效
     ma01: R`EPS 增厚不等于创造价值；付溢价吃掉全部协同效应是常见败局。`
   };
 
-  return { id: 'corp', name: '公司金融', short: '公司金融', icon: '💰', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['tv', 'sec', 'cb', 'rr', 'cs', 'div', 'wc', 'ma'] };
+  return { id: 'corp', group: 'acad', name: '公司金融', short: '公司金融', icon: '💰', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['tv', 'sec', 'cb', 'rr', 'cs', 'div', 'wc', 'ma'] };
 })();

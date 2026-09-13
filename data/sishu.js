@@ -162,5 +162,5 @@ window.SUBJECTS.sishu = (function () {
     mz03: R`「舍鱼而取熊掌」非轻生重义的全部：落脚点是「舍生取义」。`
   };
 
-  return { id: 'sishu', name: '四书背诵', short: '四书', icon: '📖', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['dx', 'zy', 'ly', 'mz'] };
+  return { id: 'sishu', group: 'hobby', name: '四书背诵', short: '四书', icon: '📖', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['dx', 'zy', 'ly', 'mz'] };
 })();

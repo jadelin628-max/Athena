@@ -1690,5 +1690,5 @@ window.SUBJECTS.econ = (function () {
     ad10: '筛选（劣势方设计菜单）与信号（优势方发信号）方向相反；类型差异不足时出现混同、筛选失效',
   };
 
-  return { id: 'econ', name: '微观经济学', short: '微观', icon: '📈', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, PITFALL: PITFALL, ORDER: ['consumer', 'demand', 'slutsky', 'uncertainty', 'production', 'cost', 'profit', 'competition', 'monopoly', 'oligopoly', 'game', 'moncomp', 'factor', 'equilibrium', 'welfare', 'externality', 'information', 'auction'] };
+  return { id: 'econ', group: 'acad', name: '微观经济学', short: '微观', icon: '📈', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, PITFALL: PITFALL, ORDER: ['consumer', 'demand', 'slutsky', 'uncertainty', 'production', 'cost', 'profit', 'competition', 'monopoly', 'oligopoly', 'game', 'moncomp', 'factor', 'equilibrium', 'welfare', 'externality', 'information', 'auction'] };
 })();

@@ -301,5 +301,5 @@ for 循环底层：对可迭代对象调用可迭代方法拿迭代器，反复�
     ad04: R`多线程不加速 CPU 密集任务（GIL）：算得快的路是多进程或把热点交给 NumPy/C 扩展。`
   };
 
-  return { id: 'py', name: 'Python 知识', short: 'Python', icon: '🐍', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['base', 'ctrl', 'ds', 'str', 'func', 'oo', 'io', 'mod', 'adv'] };
+  return { id: 'py', group: 'skill', name: 'Python 知识', short: 'Python', icon: '🐍', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['base', 'ctrl', 'ds', 'str', 'func', 'oo', 'io', 'mod', 'adv'] };
 })();

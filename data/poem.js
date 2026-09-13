@@ -218,5 +218,5 @@ window.SUBJECTS.poem = (function () {
     pn42: R`「断肠人在天涯」是全曲点睛句，前面三句全是景物铺陈——默写勿丢「夕阳西下」。`
   };
 
-  return { id: 'poem', name: '古诗词背诵', short: '古诗词', icon: '📜', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['pre', 'tang', 'song', 'late'] };
+  return { id: 'poem', group: 'hobby', name: '古诗词背诵', short: '古诗词', icon: '📜', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['pre', 'tang', 'song', 'late'] };
 })();

@@ -224,5 +224,5 @@ SMB（Small Minus Big）：小市值减大市值——小公司历史平均收�
     pe01: R`未充分分散的组合不能用特雷纳比率比较；组合间比较用夏普。`
   };
 
-  return { id: 'inv', name: '投资学', short: '投资学', icon: '📈', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['mk', 'pt', 'cm', 'em', 'fi', 'dr', 'pe'] };
+  return { id: 'inv', group: 'acad', name: '投资学', short: '投资学', icon: '📈', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['mk', 'pt', 'cm', 'em', 'fi', 'dr', 'pe'] };
 })();

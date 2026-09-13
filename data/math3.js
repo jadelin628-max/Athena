@@ -1783,5 +1783,5 @@ $g'''(0)=4>0$，故 $g''$ 在 $x=0$ 附近由负变正 $\Rightarrow$ $(0,0)$ 是
     zt07: R`幂级数求和目标：凑成 $\frac{1}{1-x}$、$\ln(1-x)$、$\arctan x$ 等已知展开；"分母有 n 先求导、分子有 n 先积分"。`,
   };
 
-  return { id: 'math3', name: '考研数学三', short: '数三', icon: '📐', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['limit', 'infinitesimal', 'derivative', 'drule', 'taylor', 'mvt', 'integral', 'multi', 'doubleint', 'series', 'ode', 'trig', 'inequality', 'linalg'] };
+  return { id: 'math3', group: 'acad', name: '考研数学三', short: '数三', icon: '📐', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['limit', 'infinitesimal', 'derivative', 'drule', 'taylor', 'mvt', 'integral', 'multi', 'doubleint', 'series', 'ode', 'trig', 'inequality', 'linalg'] };
 })();

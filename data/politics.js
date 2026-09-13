@@ -904,5 +904,5 @@ window.SUBJECTS.politics = (function () {
     tl08: R`万能兜底：「是什么 → 为什么 → 怎么办」；一定先定义、再原理、后对策。`,
   };
 
-  return { id: 'politics', name: '思想政治理论', short: '政治', icon: '🏛️', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: REL, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['philo', 'pecon', 'soc', 'maozt', 'hist', 'morality', 'shizheng', 'taolu'] };
+  return { id: 'politics', group: 'acad', name: '思想政治理论', short: '政治', icon: '🏛️', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: REL, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['philo', 'pecon', 'soc', 'maozt', 'hist', 'morality', 'shizheng', 'taolu'] };
 })();

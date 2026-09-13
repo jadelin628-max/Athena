@@ -197,5 +197,5 @@ P/E 与 P/B 联动：P/E = P/B ÷ ROE——高 ROE 支撑高估值（与杜邦�
     qu02: R`总额法确认收入是虚增收入的重灾区：平台类/贸易类业务先问"谁是主责人"。`
   };
 
-  return { id: 'fsa', name: '财务报表分析', short: '财报分析', icon: '📊', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['stmt', 'ratio', 'dupont', 'cash', 'quality', 'val'] };
+  return { id: 'fsa', group: 'acad', name: '财务报表分析', short: '财报分析', icon: '📊', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['stmt', 'ratio', 'dupont', 'cash', 'quality', 'val'] };
 })();

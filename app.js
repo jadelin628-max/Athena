@@ -21,10 +21,12 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.26.2';
+  const VERSION = '1.27.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.27.0', date: '2026-09', items: ['学科分类体系：12 科分为学业类（数三/微观/统计/政治/公司金融/投资学/货币金融/财报分析）、技能类（Python）、爱好类（乐理/古诗词/四书）——学科选择器改为二级分组菜单，主页学科网格支持分类切换（空分组自动隐藏）', '主页掌握度实时化：不再依赖每日快照，跨科按各科自身目标稳定度即时计算（含考试挂钩科目）', '修复：移动端浏览页搜索「不起效」——拼音输入法组合期间（上屏未选字）拼音中间态会触发过滤得到空结果；现在组合期间跳过过滤、选字上屏后立即按最终文本过滤'] },
+
     { v: '1.26.2', date: '2026-09', items: ['美术：功能分发入口的 emoji 换为手绘 SVG 线稿图标（主页/知识卡/错题本/浏览/自测/统计/原理/设置，共 8 枚）——单色 currentColor 随文字颜色自适应（激活白、hover 品牌色、暗色自动）；subnav 同步更换；内容层小 emoji（⏳✅⏱ 等）保留'] },
 
     { v: '1.26.1', date: '2026-09', items: ['导航：主页入口集成至桌面端顶栏（🏠 按钮，当前所在页高亮）与移动端底部 Dock（三键：主页/知识卡/错题本）——不再需要打开抽屉菜单回主页'] },
@@ -2754,15 +2756,29 @@
     search.placeholder = subjKind() === 'qa' ? '搜索知识点（名称 / 内容）…' : '搜索公式（名称 / 内容）…';
     search.value = browseQuery;
     // 输入时只重绘列表，不重建整个视图（避免销毁搜索框导致输入/IME 被打断）；
-    // 150ms 防抖：停止输入后才做全量过滤 + 重建列表，逐键不再卡顿
+    // 150ms 防抖：停止输入后才做全量过滤 + 重建列表，逐键不再卡顿。
+    // IME 保护：拼音等输入法组合期间（上屏未选字）value 是拼音中间态，
+    // 此时过滤会得到"没有匹配"的假象（移动端搜索失效报告的根因）——
+    // 组合期间跳过过滤，compositionend（选字/上屏）后立即按最终文本过滤。
     let searchTimer = null;
-    search.addEventListener('input', function () {
-      browseQuery = search.value;
+    let composing = false;
+    const scheduleList = function () {
       clearTimeout(searchTimer);
       searchTimer = setTimeout(function () {
         const old = app.querySelector('.browse-list');
         if (old) old.replaceWith(buildBrowseList());
       }, 150);
+    };
+    search.addEventListener('compositionstart', function () { composing = true; });
+    search.addEventListener('compositionend', function () {
+      composing = false;
+      browseQuery = search.value;
+      scheduleList();
+    });
+    search.addEventListener('input', function () {
+      if (composing) return;
+      browseQuery = search.value;
+      scheduleList();
     });
     head.appendChild(search);
     app.appendChild(head);
@@ -4071,9 +4087,14 @@
         });
         learned = Object.keys((db.log && db.log.detail && db.log.detail[today]) || {}).length;
         min = Math.round(((db.log && db.log.studyTime && db.log.studyTime[today]) || 0) / 60000);
-        const mlog = (db.log && db.log.mastery) || {};
-        const keys = Object.keys(mlog).sort();
-        if (keys.length) mastery = mlog[keys[keys.length - 1]];
+        // 实时掌握度：遍历卡片按当前稳定度即时计算（不再依赖每日快照；隐藏卡剔除）
+        let sum = 0, cnt = 0;
+        Object.keys(db.cards).forEach(function (id) {
+          if (db.cardOverrides && db.cardOverrides[id] && db.cardOverrides[id].hidden) return;
+          cnt++;
+          sum += homeMasteryOf(db.cards[id], db);
+        });
+        mastery = cnt ? Math.round(sum / cnt) : 0;
       }
       rows.push({ sid: sid, name: meta.name, short: meta.short, icon: meta.icon, due: due, learned: learned, min: min, mastery: mastery, has: has, current: sid === currentSubjectId });
     });
@@ -4149,6 +4170,21 @@
     return s;
   }
 
+  // 跨科实时掌握度：与单科 mastery() 同公式，S_N 取该科自身设置（免切换学科）
+  function homeMasteryOf(cardObj, db) {
+    if (!cardObj || cardObj.state === 'new' || !(cardObj.stab > 0)) return 0;
+    const st = (db && db.settings) || {};
+    let sN = (typeof st.targetS === 'number' && st.targetS >= 7) ? st.targetS : TARGET_S_DEFAULT;
+    if (st.targetLinkExam !== false && st.examDate) {
+      const d = new Date(st.examDate + 'T00:00:00');
+      if (!isNaN(d.getTime())) {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        sN = Math.max(TARGET_MIN_DAYS, Math.round((d - today) / DAY));
+      }
+    }
+    return Math.round(100 * Math.max(0, Math.min(1, Math.log(1 + cardObj.stab) / Math.log(1 + sN))));
+  }
+
   function renderHome() {
     const app = document.getElementById('app');
     const wrap = el('div', 'home-wrap');
@@ -4199,10 +4235,21 @@
       wrap.appendChild(hero);
     }
 
-    // 学科网格
-    wrap.appendChild(el('h3', null, '📚 学科'));
+    // 学科网格（分类切换：全部/学业/技能/语言/爱好，会话内状态）
+    if (renderHome._cat === undefined) renderHome._cat = 'all';
+    const CAT_LABELS = { acad: '学业类', skill: '技能类', lang: '语言类', hobby: '爱好类' };
+    const catChips = el('div', 'chips home-cats');
+    [['all', '全部'], ['acad', '学业类'], ['skill', '技能类'], ['lang', '语言类'], ['hobby', '爱好类']].forEach(function (c) {
+      if (c[0] !== 'all' && !rows.some(function (r) { return (subjectList()[r.sid].group || 'acad') === c[0]; })) return; // 空分组不显示
+      const chip = el('button', 'chip' + (renderHome._cat === c[0] ? ' active' : ''), c[1]);
+      chip.addEventListener('click', function () { renderHome._cat = c[0]; renderApp(); });
+      catChips.appendChild(chip);
+    });
+    wrap.appendChild(catChips);
+    const cat = renderHome._cat;
+    wrap.appendChild(el('h3', null, cat === 'all' ? '📚 全部学科' : '📚 ' + CAT_LABELS[cat]));
     const grid = el('div', 'home-grid');
-    rows.forEach(function (r) {
+    rows.filter(function (r) { return cat === 'all' || (subjectList()[r.sid].group || 'acad') === cat; }).forEach(function (r) {
       const card = el('button', 'home-card' + (r.current ? ' current' : ''));
       const url = subjectIconUrl(r.sid);
       if (url) {
@@ -5055,21 +5102,28 @@
     cur.innerHTML = '';
     menu.innerHTML = '';
     const list = subjectList();
-    Object.keys(list).forEach(function (id) {
-      const s = list[id];
-      const item = el('button', 'subject-dd-item' + (id === currentSubjectId ? ' active' : ''), '');
-      item.type = 'button';
-      const img = document.createElement('img');
-      img.src = subjectIconUrl(id) || '';
-      img.className = 'subject-icon';
-      img.alt = '';
-      item.appendChild(img);
-      item.appendChild(document.createTextNode(s.short));
-      item.addEventListener('click', function () {
-        closeSubjectDropdown();
-        switchSubject(id);
+    const GROUP_LABELS = { acad: '学业类', skill: '技能类', lang: '语言类', hobby: '爱好类' };
+    // 按分组渲染二级菜单；未标注 group 的学科归入学业类（兼容）
+    ['acad', 'skill', 'lang', 'hobby'].forEach(function (g) {
+      const sids = Object.keys(list).filter(function (id) { return (list[id].group || 'acad') === g; });
+      if (!sids.length) return;
+      menu.appendChild(el('div', 'subject-dd-group', GROUP_LABELS[g]));
+      sids.forEach(function (id) {
+        const s = list[id];
+        const item = el('button', 'subject-dd-item' + (id === currentSubjectId ? ' active' : ''), '');
+        item.type = 'button';
+        const img = document.createElement('img');
+        img.src = subjectIconUrl(id) || '';
+        img.className = 'subject-icon';
+        img.alt = '';
+        item.appendChild(img);
+        item.appendChild(document.createTextNode(s.short));
+        item.addEventListener('click', function () {
+          closeSubjectDropdown();
+          switchSubject(id);
+        });
+        menu.appendChild(item);
       });
-      menu.appendChild(item);
     });
     const cs = list[currentSubjectId];
     if (cs) {

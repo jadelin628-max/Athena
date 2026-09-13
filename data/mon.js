@@ -223,5 +223,5 @@ M1 增速反映企业活期资金与交易活跃度（"M1 剪刀口"），M2 反
     fx03: R`三元悖论选其二：说"既要汇率稳定又要货币独立还要资本自由流动"必错。`
   };
 
-  return { id: 'mon', name: '货币金融学', short: '货币金融', icon: '🏦', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['money', 'rate', 'bank', 'cb', 'islm', 'infl', 'fx', 'reg'] };
+  return { id: 'mon', group: 'acad', name: '货币金融学', short: '货币金融', icon: '🏦', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['money', 'rate', 'bank', 'cb', 'islm', 'infl', 'fx', 'reg'] };
 })();

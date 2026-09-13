@@ -406,21 +406,28 @@
     cur.innerHTML = '';
     menu.innerHTML = '';
     const list = subjectList();
-    Object.keys(list).forEach(function (id) {
-      const s = list[id];
-      const item = el('button', 'subject-dd-item' + (id === currentSubjectId ? ' active' : ''), '');
-      item.type = 'button';
-      const img = document.createElement('img');
-      img.src = subjectIconUrl(id) || '';
-      img.className = 'subject-icon';
-      img.alt = '';
-      item.appendChild(img);
-      item.appendChild(document.createTextNode(s.short));
-      item.addEventListener('click', function () {
-        closeSubjectDropdown();
-        switchSubject(id);
+    const GROUP_LABELS = { acad: '学业类', skill: '技能类', lang: '语言类', hobby: '爱好类' };
+    // 按分组渲染二级菜单；未标注 group 的学科归入学业类（兼容）
+    ['acad', 'skill', 'lang', 'hobby'].forEach(function (g) {
+      const sids = Object.keys(list).filter(function (id) { return (list[id].group || 'acad') === g; });
+      if (!sids.length) return;
+      menu.appendChild(el('div', 'subject-dd-group', GROUP_LABELS[g]));
+      sids.forEach(function (id) {
+        const s = list[id];
+        const item = el('button', 'subject-dd-item' + (id === currentSubjectId ? ' active' : ''), '');
+        item.type = 'button';
+        const img = document.createElement('img');
+        img.src = subjectIconUrl(id) || '';
+        img.className = 'subject-icon';
+        img.alt = '';
+        item.appendChild(img);
+        item.appendChild(document.createTextNode(s.short));
+        item.addEventListener('click', function () {
+          closeSubjectDropdown();
+          switchSubject(id);
+        });
+        menu.appendChild(item);
       });
-      menu.appendChild(item);
     });
     const cs = list[currentSubjectId];
     if (cs) {

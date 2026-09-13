@@ -220,5 +220,5 @@ D.C. al Fine（从头反复至 Fine 结束）；D.S. al Coda（从 ♬ 记号反
     in04: R`转位级数和为 9：三度转六度；纯音程转位仍纯，大小互换、增减互换。`
   };
 
-  return { id: 'music', name: '乐理', short: '乐理', icon: '🎵', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['pitch', 'notate', 'rhythm', 'interval', 'key', 'chord', 'term'] };
+  return { id: 'music', group: 'hobby', name: '乐理', short: '乐理', icon: '🎵', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['pitch', 'notate', 'rhythm', 'interval', 'key', 'chord', 'term'] };
 })();

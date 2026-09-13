@@ -21,9 +21,14 @@
         });
         learned = Object.keys((db.log && db.log.detail && db.log.detail[today]) || {}).length;
         min = Math.round(((db.log && db.log.studyTime && db.log.studyTime[today]) || 0) / 60000);
-        const mlog = (db.log && db.log.mastery) || {};
-        const keys = Object.keys(mlog).sort();
-        if (keys.length) mastery = mlog[keys[keys.length - 1]];
+        // 实时掌握度：遍历卡片按当前稳定度即时计算（不再依赖每日快照；隐藏卡剔除）
+        let sum = 0, cnt = 0;
+        Object.keys(db.cards).forEach(function (id) {
+          if (db.cardOverrides && db.cardOverrides[id] && db.cardOverrides[id].hidden) return;
+          cnt++;
+          sum += homeMasteryOf(db.cards[id], db);
+        });
+        mastery = cnt ? Math.round(sum / cnt) : 0;
       }
       rows.push({ sid: sid, name: meta.name, short: meta.short, icon: meta.icon, due: due, learned: learned, min: min, mastery: mastery, has: has, current: sid === currentSubjectId });
     });
@@ -99,6 +104,21 @@
     return s;
   }
 
+  // 跨科实时掌握度：与单科 mastery() 同公式，S_N 取该科自身设置（免切换学科）
+  function homeMasteryOf(cardObj, db) {
+    if (!cardObj || cardObj.state === 'new' || !(cardObj.stab > 0)) return 0;
+    const st = (db && db.settings) || {};
+    let sN = (typeof st.targetS === 'number' && st.targetS >= 7) ? st.targetS : TARGET_S_DEFAULT;
+    if (st.targetLinkExam !== false && st.examDate) {
+      const d = new Date(st.examDate + 'T00:00:00');
+      if (!isNaN(d.getTime())) {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        sN = Math.max(TARGET_MIN_DAYS, Math.round((d - today) / DAY));
+      }
+    }
+    return Math.round(100 * Math.max(0, Math.min(1, Math.log(1 + cardObj.stab) / Math.log(1 + sN))));
+  }
+
   function renderHome() {
     const app = document.getElementById('app');
     const wrap = el('div', 'home-wrap');
@@ -149,10 +169,21 @@
       wrap.appendChild(hero);
     }
 
-    // 学科网格
-    wrap.appendChild(el('h3', null, '📚 学科'));
+    // 学科网格（分类切换：全部/学业/技能/语言/爱好，会话内状态）
+    if (renderHome._cat === undefined) renderHome._cat = 'all';
+    const CAT_LABELS = { acad: '学业类', skill: '技能类', lang: '语言类', hobby: '爱好类' };
+    const catChips = el('div', 'chips home-cats');
+    [['all', '全部'], ['acad', '学业类'], ['skill', '技能类'], ['lang', '语言类'], ['hobby', '爱好类']].forEach(function (c) {
+      if (c[0] !== 'all' && !rows.some(function (r) { return (subjectList()[r.sid].group || 'acad') === c[0]; })) return; // 空分组不显示
+      const chip = el('button', 'chip' + (renderHome._cat === c[0] ? ' active' : ''), c[1]);
+      chip.addEventListener('click', function () { renderHome._cat = c[0]; renderApp(); });
+      catChips.appendChild(chip);
+    });
+    wrap.appendChild(catChips);
+    const cat = renderHome._cat;
+    wrap.appendChild(el('h3', null, cat === 'all' ? '📚 全部学科' : '📚 ' + CAT_LABELS[cat]));
     const grid = el('div', 'home-grid');
-    rows.forEach(function (r) {
+    rows.filter(function (r) { return cat === 'all' || (subjectList()[r.sid].group || 'acad') === cat; }).forEach(function (r) {
       const card = el('button', 'home-card' + (r.current ? ' current' : ''));
       const url = subjectIconUrl(r.sid);
       if (url) {

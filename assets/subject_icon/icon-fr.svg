@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- French : line art of the Eiffel Tower -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 120 24 V 44" stroke="#D4537E"/>
+    <path d="M 117 44 C 111 88 97 130 72 172" stroke="#D4537E"/>
+    <path d="M 123 44 C 129 88 143 130 168 172" stroke="#D4537E"/>
+    <path d="M 101 88 H 139" stroke="#378ADD"/>
+    <path d="M 87 134 H 153" stroke="#378ADD"/>
+    <path d="M 72 172 C 96 148 144 148 168 172" stroke="#378ADD"/>
+  </g>
+</svg>

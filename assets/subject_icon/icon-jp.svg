@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Japanese : line art of hiragana あ -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 74 80 H 166" stroke="#378ADD"/>
+    <path d="M 140 60 C 132 94 114 120 92 142" stroke="#D4537E"/>
+    <path d="M 106 62 C 104 96 102 120 106 142 C 112 172 168 174 172 140 C 175 114 142 106 124 134" stroke="#D4537E"/>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Korean : line art of hangul 한 -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="70" cy="74" r="14" stroke="#D4537E"/>
+    <path d="M 88 58 V 132" stroke="#D4537E"/>
+    <path d="M 112 84 H 168 V 132" stroke="#378ADD"/>
+  </g>
+</svg>

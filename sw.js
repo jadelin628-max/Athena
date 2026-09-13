@@ -2,7 +2,7 @@
  * Service Worker：缓存应用与 KaTeX，实现离线可用
  * 说明：仅在 http(s) 环境下生效（file:// 下浏览器不注册 SW）。
  */
-const VERSION = 'ms3-v85';
+const VERSION = 'ms3-v86';
 const APP_CACHE = VERSION + '-app';
 const KATEX_CACHE = VERSION + '-katex';
 
@@ -31,6 +31,10 @@ const APP_ASSETS = [
   './data/rust.js',
   './data/ai.js',
   './data/social.js',
+  './data/jp.js',
+  './data/kr.js',
+  './data/fr.js',
+  './data/es.js',
   './manifest.webmanifest',
   './katex/katex.min.js',
   './katex/katex.min.css',
@@ -51,6 +55,18 @@ const APP_ASSETS = [
   './assets/subject_icon/icon-mon.svg',
   './assets/subject_icon/icon-fsa.svg',
   './assets/subject_icon/icon-sishu.svg',
+  './assets/subject_icon/icon-acct.svg',
+  './assets/subject_icon/icon-clang.svg',
+  './assets/subject_icon/icon-cppl.svg',
+  './assets/subject_icon/icon-java.svg',
+  './assets/subject_icon/icon-js.svg',
+  './assets/subject_icon/icon-rust.svg',
+  './assets/subject_icon/icon-ai.svg',
+  './assets/subject_icon/icon-social.svg',
+  './assets/subject_icon/icon-jp.svg',
+  './assets/subject_icon/icon-kr.svg',
+  './assets/subject_icon/icon-fr.svg',
+  './assets/subject_icon/icon-es.svg',
   './assets/countdown.webp',
   './assets/wrong-done.webp',
   './assets/all-clear.webp',

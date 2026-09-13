@@ -473,6 +473,18 @@
     }, 60);
   }
 
+  // 语言科卡面朗读（Web Speech，零依赖）：按学科映射语音 locale，语速放缓便于跟读
+  function speakCardText(text) {
+    if (!('speechSynthesis' in window)) return;
+    const langs = { jp: 'ja-JP', kr: 'ko-KR', fr: 'fr-FR', es: 'es-ES' };
+    const plain = String(text).replace(/\*\*/g, '').replace(/[`]/g, '');
+    const u = new SpeechSynthesisUtterance(plain);
+    u.lang = (BASE_SUBJ && (langs[BASE_SUBJ.id] || (BASE_SUBJ.group === 'lang' ? 'en-US' : null))) || 'en-US';
+    u.rate = 0.85;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+
   function renderLearnCard(id) {
     const app = document.getElementById('app');
     const f = DATA.find(function (x) { return x.id === id; });
@@ -483,6 +495,11 @@
     const catBadge = el('span', 'badge cat-badge', CATS[f.cat]);
     if (bareRecallOn() && !reviewed) catBadge.classList.add('hidden');
     top.appendChild(catBadge);
+    if (BASE_SUBJ && BASE_SUBJ.group === 'lang' && 'speechSynthesis' in window) {
+      const speakBtn = el('button', 'btn small learn-speak', '🔊 朗读');
+      speakBtn.addEventListener('click', function () { speakCardText(reviewed ? f.back : f.front); });
+      top.appendChild(speakBtn);
+    }
     // 直接编辑当前卡（桌面/移动通用；沉浸模式下随 learn-top 一并隐藏）
     const editBtn = el('button', 'btn small learn-edit', '✏️ 编辑');
     editBtn.addEventListener('click', function () { openCardEdit(id); });

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Spanish : line art of a folding fan -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 46 130 A 86 86 0 0 1 194 130" stroke="#D4537E"/>
+    <path d="M 86 152 A 40 40 0 0 1 154 152" stroke="#D4537E"/>
+    <path d="M 120 172 L 46 130" stroke="#378ADD"/>
+    <path d="M 120 172 L 194 130" stroke="#378ADD"/>
+    <path d="M 120 172 L 77 98" stroke="#378ADD"/>
+    <path d="M 120 172 V 86" stroke="#378ADD"/>
+    <path d="M 120 172 L 163 98" stroke="#378ADD"/>
+  </g>
+</svg>

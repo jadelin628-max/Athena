@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Five Classics : hexagram of six lines (solid and broken) -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 64 58 H 176" stroke="#D4537E"/>
+    <path d="M 64 88 H 108" stroke="#378ADD"/>
+    <path d="M 132 88 H 176" stroke="#378ADD"/>
+    <path d="M 64 118 H 176" stroke="#D4537E"/>
+    <path d="M 64 148 H 176" stroke="#D4537E"/>
+    <path d="M 64 178 H 108" stroke="#378ADD"/>
+    <path d="M 132 178 H 176" stroke="#378ADD"/>
+  </g>
+</svg>

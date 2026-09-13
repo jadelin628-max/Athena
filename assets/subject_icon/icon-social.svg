@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Social etiquette : two speech bubbles in conversation -->
+  <g fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 46 66 H 132 C 142 66 148 72 148 82 V 108 C 148 118 142 124 132 124 H 78 L 56 144 V 76 C 46 76 46 66 46 66" stroke="#D4537E"/>
+    <path d="M 116 140 H 184 C 194 140 200 146 200 156 V 176 C 200 186 194 192 184 192 H 140 L 122 208 V 140" stroke="#378ADD"/>
+  </g>
+  <circle cx="80" cy="95" r="6" fill="#378ADD"/>
+  <circle cx="102" cy="95" r="6" fill="#378ADD"/>
+  <circle cx="124" cy="95" r="6" fill="#378ADD"/>
+</svg>

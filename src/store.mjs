@@ -18,7 +18,9 @@
     cppl: 'assets/subject_icon/icon-cppl.svg',
     java: 'assets/subject_icon/icon-java.svg',
     js: 'assets/subject_icon/icon-js.svg',
-    rust: 'assets/subject_icon/icon-rust.svg'
+    rust: 'assets/subject_icon/icon-rust.svg',
+    ai: 'assets/subject_icon/icon-ai.svg',
+    social: 'assets/subject_icon/icon-social.svg'
   };
   function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配

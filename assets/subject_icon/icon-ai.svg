@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- AI basics : neural network nodes and connections -->
+  <g fill="none" stroke-width="14" stroke-linecap="round">
+    <path d="M 74 84 L 120 120 L 74 156 M 120 120 L 166 88 M 120 120 L 166 152" stroke="#378ADD"/>
+  </g>
+  <circle cx="74" cy="84" r="15" fill="#D4537E"/>
+  <circle cx="74" cy="156" r="15" fill="#D4537E"/>
+  <circle cx="120" cy="120" r="15" fill="#D4537E"/>
+  <circle cx="166" cy="88" r="13" fill="#378ADD"/>
+  <circle cx="166" cy="152" r="13" fill="#378ADD"/>
+</svg>

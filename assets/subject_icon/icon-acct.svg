@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- Accounting : T-account ledger with balancing dot -->
+  <g fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 48 84 H 192" stroke="#D4537E"/>
+    <path d="M 120 84 V 180" stroke="#378ADD"/>
+    <path d="M 60 128 H 96" stroke="#378ADD"/>
+    <path d="M 144 128 H 180" stroke="#378ADD"/>
+    <circle cx="120" cy="120" r="6" fill="#D4537E" stroke="none"/>
+  </g>
+</svg>

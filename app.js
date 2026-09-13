@@ -21,10 +21,12 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.27.0';
+  const VERSION = '1.28.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.28.0', date: '2026-09', items: ['金融专业深化（阶段 2，CFA 一级 / CPA 财管口径）：公司金融 +35（杠杆系数/EPS 无差别点/实物期权/APV/FCFE/米勒模型/股利政策/营运资本/并购估值）、投资学 +31（交易指令/估值家族/固收进阶/另类投资/Brinson 归因）、货币金融学 +25（央行资产负债表/利率走廊/结构性工具/危机模型/数字人民币）、财务报表分析 +28（存货计价/折旧/收入五步法/EPS/金融资产分类/递延所得税/舞弊识别）', '新增《会计学基础》学科（51 卡，学业类）：借贷记账法/会计循环/流动与非流动资产/负债与权益/收入确认/报表编制/会计调整——CPA 会计入门完整骨架'] },
+
     { v: '1.27.0', date: '2026-09', items: ['学科分类体系：12 科分为学业类（数三/微观/统计/政治/公司金融/投资学/货币金融/财报分析）、技能类（Python）、爱好类（乐理/古诗词/四书）——学科选择器改为二级分组菜单，主页学科网格支持分类切换（空分组自动隐藏）', '主页掌握度实时化：不再依赖每日快照，跨科按各科自身目标稳定度即时计算（含考试挂钩科目）', '修复：移动端浏览页搜索「不起效」——拼音输入法组合期间（上屏未选字）拼音中间态会触发过滤得到空结果；现在组合期间跳过过滤、选字上屏后立即按最终文本过滤'] },
 
     { v: '1.26.2', date: '2026-09', items: ['美术：功能分发入口的 emoji 换为手绘 SVG 线稿图标（主页/知识卡/错题本/浏览/自测/统计/原理/设置，共 8 枚）——单色 currentColor 随文字颜色自适应（激活白、hover 品牌色、暗色自动）；subnav 同步更换；内容层小 emoji（⏳✅⏱ 等）保留'] },
@@ -393,7 +395,8 @@
     py: 'assets/subject_icon/icon-py.svg',
     mon: 'assets/subject_icon/icon-mon.svg',
     fsa: 'assets/subject_icon/icon-fsa.svg',
-    sishu: 'assets/subject_icon/icon-sishu.svg'
+    sishu: 'assets/subject_icon/icon-sishu.svg',
+    acct: 'assets/subject_icon/icon-acct.svg'
   };
   function subjectIconUrl(id) { return SUBJECT_ICON_URLS[id] || null; }
   // 学科内容类型：formula（公式学科）/ qa（背诵类学科，如政治），驱动界面文案适配

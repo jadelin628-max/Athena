@@ -166,6 +166,15 @@
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
       if (typeof c.notes !== 'string') c.notes = '';
+      // 调度自愈：学习/重学步进只应是分钟级（1/10 分钟），复习态 due 必为有限数值。
+      // due 缺失/NaN/被时钟偏移写远时，卡片会带「学习中」标识却永远过不了 due<=now 的入队检查——
+      // 表现为「队列结束后仍有学习中卡片、且永不进入队列」。加载时按「即刻到期」修复。
+      const badDue = !(typeof c.due === 'number' && isFinite(c.due));
+      if (c.state === 'learning' || c.state === 'relearning') {
+        if (badDue || c.due > Date.now() + 3600000) c.due = Date.now();
+      } else if (c.state === 'review' && badDue) {
+        c.due = Date.now();
+      }
     });
     saveDB(true); // 加载时的规范化回写不是数据修改：保留原 updatedAt，否则「最后打开时间」会冒充数据版本、破坏云同步的新旧判断
   }

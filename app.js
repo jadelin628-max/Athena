@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.35.0';
+  const VERSION = '1.35.1';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.35.1', date: '2026-09', items: ['修复：本日复习队列结束后，仍有「学习中」卡片不回到队列。根因有二：① 完成画面是静态的——学习/重学短步进（1/10 分钟）中的卡不占当前队列，画面既无提示也不会自动刷新，用户在步进窗口内回访只见「本轮已完成」+「未学完新卡 N」并存；② 少数卡的到期时刻被污染（缺失/NaN/时钟偏移写远）后永远无法通过到期检查，真正滞留队列之外', '修复方案：① 完成画面改为「⏳ 巩固步进中」——显示待回归卡数与最早回归倒计时，到点自动刷新把卡片接回队列（无需手动切换页面）；② 加载时对调度数据自愈——学习/重学卡 due 缺失/非法/被写远超 1 小时、复习卡 due 缺失/非法，一律修复为「即刻到期」，杜绝永久滞留'] },
     { v: '1.35.0', date: '2026-09', items: ['统计学对齐茆诗松《概率论与数理统计教程》全面补全（+18 卡 / 修订 8 卡，共 199 卡）：新增相互独立与两两独立、概率的统计定义、依概率收敛、李雅普诺夫 CLT、两正态总体抽样分布（合并方差 t 与方差比 F）、样本中位数与极差、频数频率表与直方图、箱线图、正态概率图、变异系数、偏度与峰度、协方差矩阵、全方差公式、均方误差准则、MLE 不变性、单侧置信限、多重比较（LSD/Tukey）、一元非线性回归', '修订既有卡：样本空间补对偶律、独立性补三事件推论、几何分布补无记忆性、联合分布函数补矩形公式与联合分布律、MLE 补求解步骤、估计量评选补 MSE 路线、单因素方差分析补三假定、贝叶斯卡补后验均值估计', '新增 8 条 PITFALL（两两独立陷阱/全方差公式两项勿换/峰度减 3 基准/F 自由度顺序/单双侧临界值/LSD 错误率膨胀/线性化 R² 不可比）与 18 组知识点关联标签'] },
     { v: '1.34.0', date: '2026-09', items: ['语言四科各新增「高频单词」分类（共 120 卡）：每科 30 个最常用词——人称/时间/核心动词/常用形容词/高频名词；卡面为单词+读音（日语附假名、法语名词带冠词记阴阳性、西语标性数、韩语标注汉字词来源），背面为词性释义与高频搭配/不规则提示', '单词卡与本卡语法/文化卡共用 FSRS 调度：主页掌握度、待复习数、云同步自动覆盖新卡，无需额外配置'] },
     { v: '1.33.0', date: '2026-09', items: ['主页「每日精选」升级：每日一句可一键刷新（↻ 换一条，会话内记忆，换日自动回到按日轮换）；新增「语言每日一句」（日/韩/法/西各 6 句实用句 + 译文 + 🔊 Web Speech 朗读）与「爱好每日小知识」（自动汇聚古诗词/四书/五经/乐理/社交 49 条「常见陷阱」浓缩知识点，点击直达原卡）', '修复：移动端学科选择器无法向下滑动——25 学科的二级菜单远超小屏视口，现按视口高度限高滚动（overscroll-behavior 防滚动穿透），下方空间不足时自动改为向上弹出'] },
@@ -556,6 +557,15 @@
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
       if (typeof c.notes !== 'string') c.notes = '';
+      // 调度自愈：学习/重学步进只应是分钟级（1/10 分钟），复习态 due 必为有限数值。
+      // due 缺失/NaN/被时钟偏移写远时，卡片会带「学习中」标识却永远过不了 due<=now 的入队检查——
+      // 表现为「队列结束后仍有学习中卡片、且永不进入队列」。加载时按「即刻到期」修复。
+      const badDue = !(typeof c.due === 'number' && isFinite(c.due));
+      if (c.state === 'learning' || c.state === 'relearning') {
+        if (badDue || c.due > Date.now() + 3600000) c.due = Date.now();
+      } else if (c.state === 'review' && badDue) {
+        c.due = Date.now();
+      }
     });
     saveDB(true); // 加载时的规范化回写不是数据修改：保留原 updatedAt，否则「最后打开时间」会冒充数据版本、破坏云同步的新旧判断
   }
@@ -1694,9 +1704,34 @@
     const done = (deck.length === 0) || (frontier >= deck.length && pos >= frontier);
     if (done) {
       const wrap = el('div', 'center-card');
-      wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
-      wrap.appendChild(illus('learn-done'));
-      wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
+      // 学习/重学步进中的卡不占当前队列，到点后由 surfaceDue 吸回队首。
+      // 此前「本轮已完成」是静态画面：步进窗口内回访只见「已完成 + 学习中标识仍在」，
+      // 用户无从得知卡片将在几分钟后回归——现给出倒计时并在最早到期时刻自动刷新。
+      const stepDues = [];
+      DATA.forEach(function (f) {
+        const c = card(f.id);
+        if ((c.state === 'learning' || c.state === 'relearning') && typeof c.due === 'number' && c.due > Date.now()) stepDues.push(c.due);
+      });
+      if (stepDues.length) {
+        stepDues.sort(function (a, b) { return a - b; });
+        const waitMs = stepDues[0] - Date.now();
+        wrap.appendChild(el('h2', null, '⏳ 巩固步进中'));
+        wrap.appendChild(illus('learn-done'));
+        wrap.appendChild(el('p', 'muted', stepDues.length + ' 张卡在短间隔巩固中——最早约 ' + fmtPreview(waitMs) + '后自动回到队列，本页到点会自动刷新。'));
+        const back = el('button', 'btn', '🏠 回主页');
+        back.setAttribute('data-action', 'nav');
+        back.setAttribute('data-arg', 'home');
+        wrap.appendChild(back);
+        // 到点自动重渲：surfaceDue 把到期卡吸回队首，队列无缝续上（上限 15 分钟兜底）
+        clearTimeout(renderLearn._stepTimer);
+        renderLearn._stepTimer = setTimeout(function () {
+          if (currentView === 'learn' && currentModule === 'cards') renderApp();
+        }, Math.min(waitMs + 250, 15 * 60 * 1000));
+      } else {
+        wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
+        wrap.appendChild(illus('learn-done'));
+        wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
+      }
       app.appendChild(wrap);
       return;
     }

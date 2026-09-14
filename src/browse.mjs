@@ -164,9 +164,34 @@
     const done = (deck.length === 0) || (frontier >= deck.length && pos >= frontier);
     if (done) {
       const wrap = el('div', 'center-card');
-      wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
-      wrap.appendChild(illus('learn-done'));
-      wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
+      // 学习/重学步进中的卡不占当前队列，到点后由 surfaceDue 吸回队首。
+      // 此前「本轮已完成」是静态画面：步进窗口内回访只见「已完成 + 学习中标识仍在」，
+      // 用户无从得知卡片将在几分钟后回归——现给出倒计时并在最早到期时刻自动刷新。
+      const stepDues = [];
+      DATA.forEach(function (f) {
+        const c = card(f.id);
+        if ((c.state === 'learning' || c.state === 'relearning') && typeof c.due === 'number' && c.due > Date.now()) stepDues.push(c.due);
+      });
+      if (stepDues.length) {
+        stepDues.sort(function (a, b) { return a - b; });
+        const waitMs = stepDues[0] - Date.now();
+        wrap.appendChild(el('h2', null, '⏳ 巩固步进中'));
+        wrap.appendChild(illus('learn-done'));
+        wrap.appendChild(el('p', 'muted', stepDues.length + ' 张卡在短间隔巩固中——最早约 ' + fmtPreview(waitMs) + '后自动回到队列，本页到点会自动刷新。'));
+        const back = el('button', 'btn', '🏠 回主页');
+        back.setAttribute('data-action', 'nav');
+        back.setAttribute('data-arg', 'home');
+        wrap.appendChild(back);
+        // 到点自动重渲：surfaceDue 把到期卡吸回队首，队列无缝续上（上限 15 分钟兜底）
+        clearTimeout(renderLearn._stepTimer);
+        renderLearn._stepTimer = setTimeout(function () {
+          if (currentView === 'learn' && currentModule === 'cards') renderApp();
+        }, Math.min(waitMs + 250, 15 * 60 * 1000));
+      } else {
+        wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
+        wrap.appendChild(illus('learn-done'));
+        wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
+      }
       app.appendChild(wrap);
       return;
     }

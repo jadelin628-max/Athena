@@ -14,6 +14,7 @@ window.SUBJECTS.fr = (function () {
     noun: '名词与冠词',
     verb: '动词与变位',
     sent: '句型与表达',
+    words: '高频单词',
     culture: '文化与场景'
   };
 
@@ -171,6 +172,67 @@ Je voudrais + 名词/原形 = 法语礼貌万能钥——点餐、购物、求�
       R`① **语音两周**：拼读规则 + 鼻化元音 + 联诵听感（法语入门的关键投资——此后见词能读）；② **动词三件套**：être/avoir/aller 变位 → 第一组规则 → 复合过去时与 imparfait 分工；③ **教材主线**：《你好法语》或 Reflets——A1-A2 骨架；④ **输入**：慢速法语播客 + 双语字幕影视。
 节奏参考：A1 约 100 小时、A2 再 150 小时、B1 再 250 小时。
 本卡组用法：语音卡配朗读按钮（fr-FR）跟读纠音，变位卡按 FSRS 滚动。`),
+    // ==================== 高频单词 ====================
+    F('fw01', 'words', 'le temps', R`le temps`,
+      R`名词（阳）· 时间；天气。多义：Je n'ai pas le temps（没时间）／Il fait beau temps（天气好）。`),
+    F('fw02', 'words', "l'ami(e)", R`l'ami / l'amie`,
+      R`名词（阳 ami／阴 amie）· 朋友。元音前缩合成 l'；复数：amis。`),
+    F('fw03', 'words', 'la famille', R`la famille`,
+      R`名词（阴）· 家庭。搭配：dans ma famille（在我家）。`),
+    F('fw04', 'words', 'le professeur', R`le professeur`,
+      R`名词（阳）· 老师。女教师规范形：la professeure；口语常缩为 prof。`),
+    F('fw05', 'words', "aujourd'hui", R`aujourd'hui`,
+      R`副词 · 今天。固定撇号词形，h 永远不发音。`),
+    F('fw06', 'words', 'demain', R`demain`,
+      R`副词 · 明天。搭配：à demain（明天见）。`),
+    F('fw07', 'words', 'maintenant', R`maintenant`,
+      R`副词 · 现在。口语常吞音读快，收听感近似「 montnang 」。`),
+    F('fw08', 'words', "l'heure", R`l'heure`,
+      R`名词（阴）· 钟点、小时。核心问句：Quelle heure est-il ?（现在几点）。`),
+    F('fw09', 'words', 'manger', R`manger`,
+      R`动词 · 吃。nous 变位加 e：mangeons（保 g 软音）；Je mange du pain。`),
+    F('fw10', 'words', 'boire', R`boire`,
+      R`动词 · 喝。不规则：je bois / nous buvons；搭配：boire un café。`),
+    F('fw11', 'words', 'aller', R`aller`,
+      R`动词 · 去。全不规则：je vais / nous allons——近未来时（aller + 原形）的载体。`),
+    F('fw12', 'words', 'venir', R`venir`,
+      R`动词 · 来。je viens / nous venons；venir de + 原形 = 刚刚做过某事。`),
+    F('fw13', 'words', 'voir', R`voir`,
+      R`动词 · 看见。je vois / nous voyons；口语：On va voir（看看再说）。`),
+    F('fw14', 'words', 'écouter', R`écouter`,
+      R`动词 · 听。规则 -er 变位：J'écoute de la musique（听音乐）。`),
+    F('fw15', 'words', 'parler', R`parler`,
+      R`动词 · 说。搭配：parler français（说法语）；Je parle un peu français。`),
+    F('fw16', 'words', 'lire', R`lire`,
+      R`动词 · 读。je lis / nous lisons；搭配：lire un livre（读书）。`),
+    F('fw17', 'words', 'écrire', R`écrire`,
+      R`动词 · 写。j'écris / nous écrivons；搭配：écrire un mail（写邮件）。`),
+    F('fw18', 'words', 'acheter', R`acheter`,
+      R`动词 · 买。词根重读音节加 è：j'achète / nous achetons。`),
+    F('fw19', 'words', 'dormir', R`dormir`,
+      R`动词 · 睡。je dors / nous dormons；搭配：dormir bien（睡得好）。`),
+    F('fw20', 'words', 'travailler', R`travailler`,
+      R`动词 · 工作。名词：le travail；搭配：travailler à Paris（在巴黎工作）。`),
+    F('fw21', 'words', 'grand(e)', R`grand / grande`,
+      R`形容词 · 大的；高的。常置名词前：une grande ville（大城市）。`),
+    F('fw22', 'words', 'petit(e)', R`petit / petite`,
+      R`形容词 · 小的。un petit café 既指小杯咖啡也是「浓缩咖啡」的口语说法。`),
+    F('fw23', 'words', 'nouveau / nouvelle', R`nouveau / nouvelle`,
+      R`形容词 · 新的。阳性元音前特殊形：un nouvel an（新年）。`),
+    F('fw24', 'words', 'vieux / vieille', R`vieux / vieille`,
+      R`形容词 · 旧的；老的。阳性元音前：vieil（un vieil ami 老朋友）。`),
+    F('fw25', 'words', 'cher / chère', R`cher / chère`,
+      R`形容词 · 贵的；亲爱的。信件开头：Cher Jean；感叹：C'est trop cher !（太贵了）。`),
+    F('fw26', 'words', 'bon(ne)', R`bon / bonne`,
+      R`形容词 · 好的。C'est bon !（好吃／行）；反义：mauvais。`),
+    F('fw27', 'words', "l'eau", R`l'eau`,
+      R`名词（阴）· 水。une bouteille d'eau（一瓶水）；气泡水：eau gazeuse。`),
+    F('fw28', 'words', 'le magasin', R`le magasin`,
+      R`名词（阳）· 商店。搭配：faire les magasins（逛街购物）。`),
+    F('fw29', 'words', "l'école", R`l'école`,
+      R`名词（阴）· 学校。搭配：aller à l'école（去上学）；大学是 université。`),
+    F('fw30', 'words', 'la gare', R`la gare`,
+      R`名词（阴）· 火车站。la gare de Lyon（里昂车站）——站名保持阴阳性搭配。`),
   ];
 
   const META = {
@@ -178,7 +240,12 @@ Je voudrais + 名词/原形 = 法语礼貌万能钥——点餐、购物、求�
     no01: [5, '阴阳性'], no02: [5, '冠词'], no03: [4, '缩合部分冠词'], no04: [3, '否定 de'], no05: [4, '形容词一致'], no06: [3, '疑问句'], no07: [4, '代词'],
     vb01: [5, '动词三组'], vb02: [5, 'être avoir'], vb03: [5, '第一组变位'], vb04: [4, 'aller faire'], vb05: [5, '复合过去时'], vb06: [4, 'imparfait'], vb07: [3, '将来时'], vb08: [4, '代动词命令式'],
     se01: [3, '问候介绍'], se02: [4, '数字时间'], se03: [3, '购物餐饮'], se04: [3, '问路'], se05: [4, '意愿表达'],
-    cu01: [3, 'tu vous'], cu02: [2, '文化核查'], cu03: [3, '省略美学'], cu04: [2, '法餐礼仪'], cu05: [2, '学习路径']
+    cu01: [3, 'tu vous'], cu02: [2, '文化核查'], cu03: [3, '省略美学'], cu04: [2, '法餐礼仪'], cu05: [2, '学习路径'],
+    fw01: [4, '单词·名词'], fw02: [3, '单词·名词'], fw03: [3, '单词·名词'], fw04: [3, '单词·名词'], fw05: [4, '单词·时间'], fw06: [4, '单词·时间'],
+    fw07: [3, '单词·时间'], fw08: [3, '单词·时间'], fw09: [4, '单词·动词'], fw10: [4, '单词·动词'], fw11: [5, '单词·动词'], fw12: [4, '单词·动词'],
+    fw13: [3, '单词·动词'], fw14: [3, '单词·动词'], fw15: [4, '单词·动词'], fw16: [3, '单词·动词'], fw17: [3, '单词·动词'], fw18: [3, '单词·动词'],
+    fw19: [3, '单词·动词'], fw20: [3, '单词·动词'], fw21: [3, '单词·形容词'], fw22: [2, '单词·形容词'], fw23: [3, '单词·形容词'], fw24: [3, '单词·形容词'],
+    fw25: [3, '单词·形容词'], fw26: [3, '单词·形容词'], fw27: [3, '单词·名词'], fw28: [2, '单词·名词'], fw29: [3, '单词·名词'], fw30: [3, '单词·名词']
   };
 
   const PITFALL = {
@@ -198,5 +265,5 @@ Je voudrais + 名词/原形 = 法语礼貌万能钥——点餐、购物、求�
     { lang: 'fr-FR', t: 'J\'adore cette ville.', n: '我太喜欢这座城市了。' }
   ];
 
-  return { id: 'fr', name: '法语', short: '法语', icon: '🗼', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['phon', 'noun', 'verb', 'sent', 'culture'] };
+  return { id: 'fr', name: '法语', short: '法语', icon: '🗼', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['phon', 'noun', 'verb', 'sent', 'words', 'culture'] };
 })();

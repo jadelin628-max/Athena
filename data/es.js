@@ -14,6 +14,7 @@ window.SUBJECTS.es = (function () {
     noun: '名词与冠词',
     verb: '动词与变位',
     sent: '句型与表达',
+    words: '高频单词',
     culture: '文化与场景'
   };
 
@@ -162,6 +163,67 @@ querer/poder 是表达意愿能力的双引擎：Quiero...（我想）/ Puedo...
       R`① **拼读一周**：元音 + 重音规则 + rr 大舌音启动练习（rr 可后期慢慢磨）；② **动词三阶梯**：现在时三组 → ser/estar/gustar → 不规则 yo 与词干变化；③ **教材主线**：《现代西班牙语》第一册或 Aula Internacional；④ **输入**：西语慢速播客（Duolingo Spanish Podcast 等）+ 拉美剧（Narcos 有西语字幕）。
 节奏参考：A1 约 100 小时、A2 再 150 小时、B1 再 250 小时——拼读透明使西语的"启动成本"居欧语最低。
 本卡组用法：语音卡配朗读按钮（es-ES）跟读；ser/estar 与 gustar 卡是思维重建重点。`),
+    // ==================== 高频单词 ====================
+    F('ew01', 'words', 'el tiempo', R`el tiempo`,
+      R`名词（阳）· 时间；天气。多义：No tengo tiempo（没时间）／¿Qué tiempo hace?（天气怎样）。`),
+    F('ew02', 'words', 'el amigo / la amiga', R`el amigo / la amiga`,
+      R`名词（阳/阴）· 朋友。复数 amigos 覆盖混性群体；阴性加 a。`),
+    F('ew03', 'words', 'la familia', R`la familia`,
+      R`名词（阴）· 家庭。搭配：mi familia es grande（我家人口多）。`),
+    F('ew04', 'words', 'el profesor / la profesora', R`el profesor / la profesora`,
+      R`名词（阳/阴）· 老师。拉美口语也用 maestro／maestra。`),
+    F('ew05', 'words', 'hoy', R`hoy`,
+      R`副词 · 今天。h 不发音；搭配：hoy mismo（就是今天）。`),
+    F('ew06', 'words', 'mañana', R`mañana`,
+      R`名词/副词 · 明天；早晨。双义：Hasta mañana（明天见）／por la mañana（在早上）。`),
+    F('ew07', 'words', 'ahora', R`ahora`,
+      R`副词 · 现在。拉美口语的 ahorita（「马上」）弹性极大——5 分钟到 2 小时都可能。`),
+    F('ew08', 'words', 'la hora', R`la hora`,
+      R`名词（阴）· 钟点。核心问句：¿Qué hora es?（现在几点）。`),
+    F('ew09', 'words', 'comer', R`comer`,
+      R`动词 · 吃。yo como；搭配：comer en casa（在家吃饭）。`),
+    F('ew10', 'words', 'beber', R`beber`,
+      R`动词 · 喝。yo bebo；拉美口语更常用 tomar（tomar agua 喝水）。`),
+    F('ew11', 'words', 'ir', R`ir`,
+      R`动词 · 去。全不规则：voy / vas / va；ir a + 原形 = 将要做（口语主力将来式）。`),
+    F('ew12', 'words', 'venir', R`venir`,
+      R`动词 · 来。vengo / vienes；命令式：¡Ven!（过来！）。`),
+    F('ew13', 'words', 'ver', R`ver`,
+      R`动词 · 看见。veo / ves；告别口语：Nos vemos（回头见）。`),
+    F('ew14', 'words', 'escuchar', R`escuchar`,
+      R`动词 · 听。规则 -ar 变位；搭配：escuchar música（听音乐）。`),
+    F('ew15', 'words', 'hablar', R`hablar`,
+      R`动词 · 说。hablo español（我说西语）——第一组 -ar 变位模板动词。`),
+    F('ew16', 'words', 'leer', R`leer`,
+      R`动词 · 读。leo / leemos；搭配：leer un libro（读书）。`),
+    F('ew17', 'words', 'escribir', R`escribir`,
+      R`动词 · 写。第三组 -ir：escribo / escribimos；搭配：escribir un mensaje。`),
+    F('ew18', 'words', 'comprar', R`comprar`,
+      R`动词 · 买。规则 -ar 变位；搭配：comprar ropa（买衣服）。`),
+    F('ew19', 'words', 'dormir', R`dormir`,
+      R`动词 · 睡。o→ue 靴子动词：duermo / dormimos；搭配：dormir bien（睡得好）。`),
+    F('ew20', 'words', 'trabajar', R`trabajar`,
+      R`动词 · 工作。搭配：trabajo en…（我在……工作）；名词：el trabajo。`),
+    F('ew21', 'words', 'grande', R`grande`,
+      R`形容词 · 大的。前置缩形 gran 义变：un gran hombre（伟人）≠ un hombre grande（大块头）。`),
+    F('ew22', 'words', 'pequeño', R`pequeño / pequeña`,
+      R`形容词 · 小的。口语也用 chico／chica；反义：grande。`),
+    F('ew23', 'words', 'nuevo', R`nuevo / nueva`,
+      R`形容词 · 新的。搭配：ropa nueva（新衣服）；de nuevo = 重新、再来一次。`),
+    F('ew24', 'words', 'viejo', R`viejo / vieja`,
+      R`形容词 · 旧的；老的。un amigo viejo（岁数大的朋友）与 antiguo（老物件）分用。`),
+    F('ew25', 'words', 'caro', R`caro / cara`,
+      R`形容词 · 贵的。感叹：Es muy caro !（太贵了）；反义：barato。`),
+    F('ew26', 'words', 'barato', R`barato / barata`,
+      R`形容词 · 便宜的。砍价用语：más barato（再便宜点）。`),
+    F('ew27', 'words', 'el agua', R`el agua`,
+      R`名词（阴）· 水。阴性但重读 a 开头 → 冠词用 el（el agua fría），复数 las aguas。`),
+    F('ew28', 'words', 'la tienda', R`la tienda`,
+      R`名词（阴）· 商店。搭配：en la tienda（在商店）；市场：el mercado。`),
+    F('ew29', 'words', 'la escuela', R`la escuela`,
+      R`名词（阴）· 学校。搭配：ir a la escuela（去上学）；大学：la universidad。`),
+    F('ew30', 'words', 'la estación', R`la estación`,
+      R`名词（阴）· 车站；季节。la estación de tren（火车站）——同词兼表四季。`),
   ];
 
   const META = {
@@ -169,7 +231,12 @@ querer/poder 是表达意愿能力的双引擎：Quiero...（我想）/ Puedo...
     no01: [4, '阴阳性'], no02: [4, '冠词'], no03: [3, '物主名词句'], no04: [5, 'ser estar'], no05: [3, '形容词一致'], no06: [4, '疑问词'],
     vb01: [5, '三组变位'], vb02: [5, 'ser estar 变位'], vb03: [5, '不规则现在时'], vb04: [5, 'gustar'], vb05: [5, '两套过去时'], vb06: [4, '近将来时'], vb07: [3, '命令式'], vb08: [4, '进行自复'],
     se01: [3, '问候介绍'], se02: [3, '数字时间'], se03: [3, '购物餐饮'], se04: [3, '问路'], se05: [4, '意愿能力'],
-    cu01: [4, '西语版图'], cu02: [3, 'tú usted'], cu03: [3, '词汇迁移'], cu04: [2, '文化关键词'], cu05: [2, '学习路径']
+    cu01: [4, '西语版图'], cu02: [3, 'tú usted'], cu03: [3, '词汇迁移'], cu04: [2, '文化关键词'], cu05: [2, '学习路径'],
+    ew01: [4, '单词·名词'], ew02: [3, '单词·名词'], ew03: [3, '单词·名词'], ew04: [3, '单词·名词'], ew05: [4, '单词·时间'], ew06: [4, '单词·时间'],
+    ew07: [3, '单词·时间'], ew08: [3, '单词·时间'], ew09: [3, '单词·动词'], ew10: [3, '单词·动词'], ew11: [5, '单词·动词'], ew12: [3, '单词·动词'],
+    ew13: [3, '单词·动词'], ew14: [3, '单词·动词'], ew15: [4, '单词·动词'], ew16: [3, '单词·动词'], ew17: [3, '单词·动词'], ew18: [3, '单词·动词'],
+    ew19: [4, '单词·动词'], ew20: [3, '单词·动词'], ew21: [4, '单词·形容词'], ew22: [2, '单词·形容词'], ew23: [3, '单词·形容词'], ew24: [3, '单词·形容词'],
+    ew25: [3, '单词·形容词'], ew26: [2, '单词·形容词'], ew27: [4, '单词·名词'], ew28: [2, '单词·名词'], ew29: [3, '单词·名词'], ew30: [3, '单词·名词']
   };
 
   const PITFALL = {
@@ -189,5 +256,5 @@ querer/poder 是表达意愿能力的双引擎：Quiero...（我想）/ Puedo...
     { lang: 'es-ES', t: '¡Hasta mañana!', n: '明天见！' }
   ];
 
-  return { id: 'es', name: '西班牙语', short: '西语', icon: '🌞', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['phon', 'noun', 'verb', 'sent', 'culture'] };
+  return { id: 'es', name: '西班牙语', short: '西语', icon: '🌞', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['phon', 'noun', 'verb', 'sent', 'words', 'culture'] };
 })();

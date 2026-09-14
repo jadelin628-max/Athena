@@ -162,5 +162,15 @@ window.SUBJECTS.kr = (function () {
     gr08: R`数词配错量词是高频错：五小时（固有 다섯 시간）与五点（汉字 5 시）用不同数词。`
   };
 
-  return { id: 'kr', name: '韩语', short: '韩语', icon: '🇰🇷', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['hangul', 'gram', 'vocab', 'culture'] };
+  // 主页「语言每日一句」池：lang 为 Web Speech locale，t 原文，n 译文
+  const SENTENCES = [
+    { lang: 'ko-KR', t: '오늘 하루도 수고 많으셨어요.', n: '今天一天也辛苦了。' },
+    { lang: 'ko-KR', t: '잠시만 기다려 주세요.', n: '请稍等一下。' },
+    { lang: 'ko-KR', t: '여기가 명동이 맞나요?', n: '这里是明洞吗？（问路确认句）' },
+    { lang: 'ko-KR', t: '정말 맛있어요!', n: '真好吃！（餐桌万能夸奖）' },
+    { lang: 'ko-KR', t: '천천히 말씀해 주세요.', n: '请慢一点说。（听力求助句）' },
+    { lang: 'ko-KR', t: '내일 봐요!', n: '明天见！' }
+  ];
+
+  return { id: 'kr', name: '韩语', short: '韩语', icon: '🇰🇷', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['hangul', 'gram', 'vocab', 'culture'] };
 })();

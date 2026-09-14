@@ -188,5 +188,15 @@ Je voudrais + 名词/原形 = 法语礼貌万能钥——点餐、购物、求�
     ph03: R`没有联诵的法语单词串听起来不像法语——les amis 要读 le-za-mi。`
   };
 
-  return { id: 'fr', name: '法语', short: '法语', icon: '🗼', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['phon', 'noun', 'verb', 'sent', 'culture'] };
+  // 主页「语言每日一句」池：lang 为 Web Speech locale，t 原文，n 译文
+  const SENTENCES = [
+    { lang: 'fr-FR', t: 'Je voudrais un café, s\'il vous plaît.', n: '我想要一杯咖啡，麻烦了。（Je voudrais 是法语礼貌万能钥）' },
+    { lang: 'fr-FR', t: 'Bonne chance pour ton examen !', n: '祝你的考试顺利！' },
+    { lang: 'fr-FR', t: 'Excusez-moi, où sont les toilettes ?', n: '不好意思，洗手间在哪里？' },
+    { lang: 'fr-FR', t: 'C\'est la vie !', n: '这就是生活啊！（法语名句，感叹人生的起伏）' },
+    { lang: 'fr-FR', t: 'Ça ne prend que cinq minutes.', n: '这只要五分钟。' },
+    { lang: 'fr-FR', t: 'J\'adore cette ville.', n: '我太喜欢这座城市了。' }
+  ];
+
+  return { id: 'fr', name: '法语', short: '法语', icon: '🗼', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['phon', 'noun', 'verb', 'sent', 'culture'] };
 })();

@@ -173,5 +173,15 @@ window.SUBJECTS.jp = (function () {
     ka08: R`おばあさん（奶奶）与 おばさん（阿姨）只差一个长音——长音丢拍即换义。`
   };
 
-  return { id: 'jp', name: '日语', short: '日语', icon: '🌸', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['kana', 'gram', 'vocab', 'culture'] };
+  // 主页「语言每日一句」池：lang 为 Web Speech locale，t 原文，n 译文
+  const SENTENCES = [
+    { lang: 'ja-JP', t: '今日もお疲れ様でした。', n: '今天也辛苦了。（日式日常问候的标配）' },
+    { lang: 'ja-JP', t: 'よろしくお願いします。', n: '请多关照。（日语社交的万能收尾语）' },
+    { lang: 'ja-JP', t: 'すみません、これをください。', n: '劳驾，请给我这个。（购物万能句）' },
+    { lang: 'ja-JP', t: '海外旅行は初めてですか。', n: '是第一次出国旅行吗？' },
+    { lang: 'ja-JP', t: 'まだ急いでいませんので、ご安心ください。', n: '还不着急，请放心。' },
+    { lang: 'ja-JP', t: '落とし物にご注意ください。', n: '请注意随身物品。（电车报站常用语）' }
+  ];
+
+  return { id: 'jp', name: '日语', short: '日语', icon: '🌸', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['kana', 'gram', 'vocab', 'culture'] };
 })();

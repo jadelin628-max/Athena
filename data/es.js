@@ -179,5 +179,15 @@ querer/poder 是表达意愿能力的双引擎：Quiero...（我想）/ Puedo...
     vb03: R`querer/poder 是靴子动词：quiero/puedo 变化只发生在单数三形与第三人称复数，nosotros 例外规则。`
   };
 
-  return { id: 'es', name: '西班牙语', short: '西语', icon: '🌞', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['phon', 'noun', 'verb', 'sent', 'culture'] };
+  // 主页「语言每日一句」池：lang 为 Web Speech locale，t 原文，n 译文
+  const SENTENCES = [
+    { lang: 'es-ES', t: 'El que la sigue, la consigue.', n: '坚持就能成功。（西语谚语）' },
+    { lang: 'es-ES', t: '¿Me lo puede repetir, por favor?', n: '能请您再说一遍吗？（礼貌求助句）' },
+    { lang: 'es-ES', t: 'Estoy aprendiendo español.', n: '我正在学西班牙语。' },
+    { lang: 'es-ES', t: '¡Buen provecho!', n: '用餐愉快！（开饭前的标准祝福）' },
+    { lang: 'es-ES', t: 'No pasa nada.', n: '没关系，别担心。（西语世界的万能宽慰语）' },
+    { lang: 'es-ES', t: '¡Hasta mañana!', n: '明天见！' }
+  ];
+
+  return { id: 'es', name: '西班牙语', short: '西语', icon: '🌞', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['phon', 'noun', 'verb', 'sent', 'culture'] };
 })();

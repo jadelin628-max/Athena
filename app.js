@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.32.0';
+  const VERSION = '1.33.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.33.0', date: '2026-09', items: ['主页「每日精选」升级：每日一句可一键刷新（↻ 换一条，会话内记忆，换日自动回到按日轮换）；新增「语言每日一句」（日/韩/法/西各 6 句实用句 + 译文 + 🔊 Web Speech 朗读）与「爱好每日小知识」（自动汇聚古诗词/四书/五经/乐理/社交 49 条「常见陷阱」浓缩知识点，点击直达原卡）', '修复：移动端学科选择器无法向下滑动——25 学科的二级菜单远超小屏视口，现按视口高度限高滚动（overscroll-behavior 防滚动穿透），下方空间不足时自动改为向上弹出'] },
     { v: '1.32.0', date: '2026-09', items: ['古诗词背诵扩至 200 篇（+154）：先秦汉魏六朝 16 篇（诗经名篇/离骚/古诗十九首/乐府）、唐诗 94 篇（初唐四杰至小李杜全名家覆盖）、两宋诗词 66 篇（苏轼/辛弃疾/李清照词作大扩）、元明清 24 篇（散曲/明诗/清诗/近代志士之作）', '四书背诵扩至 151 段（+112）：《论语》72 段实现二十篇逐篇覆盖（学而至尧曰），《孟子》51 段覆盖七篇主体章句（四端/得道多助/五伦/反求诸己/知人论世/专心致志等），《大学》《中庸》名段补全', '新增《五经选读》学科（85 段，爱好类）：周易（乾坤谦泰诸卦与系辞名句）、尚书（诗言志/十六字心传/民惟邦本）、礼记（大同小康/学记/乐记/苛政猛于虎）、诗经（切磋琢磨/执子之手/七月流火）、春秋左传（一鼓作气/唇亡齿寒/居安思危/三不朽）——配六爻卦象线稿 logo'] },
     { v: '1.31.0', date: '2026-09', items: ['新增语言类四科（单列第四分组，共 111 卡）：日语（28 卡，五十音与发音/基础语法/词汇表达/文化场景）、韩语（25 卡，한글 创制与音变/助词语法/双轨数词/称呼文化）、法语（30 卡，鼻化元音与联诵/阴阳性冠词/动词变位与两大过去时/tu-vous 礼仪）、西班牙语（28 卡，拼读透明与特色字母/ser-estar 之分/gustar 句法/西语世界版图）', '语言科卡面新增 🔊 朗读按钮：Web Speech API 零依赖实现（日语 ja-JP / 韩语 ko-KR / 法语 fr-FR / 西语 es-ES，语速 0.85 便于跟读），未揭示读卡面、揭示后读答案', '四科配线稿 logo（あ字线稿/한字线稿/埃菲尔铁塔/折扇）并纳入离线缓存与云同步；补齐此前编程与 AI/社交科图标缺失的离线缓存项'] },
     { v: '1.30.0', date: '2026-09', items: ['新增两科：《AI 基础》43 卡（技能类）——原理基础（LLM/Token/上下文窗口/幻觉机制/RAG/Agent）、提示词工程（四要素模板/少样本/思维链/迭代优化）、应用工具（写作/代码/学习/数据分析）、前沿与局限（能力边界/隐私红线/AI 依赖）', '新增《社交礼仪》36 卡（爱好类）——尊重与分寸感、沟通表达（赞美/拒绝/道歉/话题）、职场场景（邮件/汇报/与上级相处）、餐桌宴请（座次/敬酒/点菜）、线上社交（微信结构/语音分寸）、礼物与人情', '两科配线稿 logo（神经网络节点/对话气泡）并纳入离线缓存与云同步'] },
@@ -4172,8 +4173,26 @@
     return best;
   }
 
-  // 每日一句：从古诗词 + 四书按日期确定性轮换
-  function homeQuote() {
+  // ---------------- 每日精选：每日一句 / 语言每日一句 / 爱好每日小知识 ----------------
+  // 按日期确定性轮换；刷新按钮随机换一条并记在会话内（换日自动回到轮换值）
+  const homeSlots = { quote: null, lang: null, fact: null };
+
+  function pickDaily(pool, key) {
+    if (!pool.length) return null;
+    const base = Math.floor(Date.now() / DAY) % pool.length;
+    const i = (typeof homeSlots[key] === 'number' && homeSlots[key] < pool.length) ? homeSlots[key] : base;
+    return { item: pool[i], i: i };
+  }
+  function refreshDaily(pool, key) {
+    if (!pool.length) return;
+    const base = Math.floor(Date.now() / DAY) % pool.length;
+    const cur = (typeof homeSlots[key] === 'number' && homeSlots[key] < pool.length) ? homeSlots[key] : base;
+    homeSlots[key] = (cur + 1 + Math.floor(Math.random() * (pool.length - 1))) % pool.length;
+    renderApp();
+  }
+
+  // 每日一句池：古诗词 + 四书全文首句
+  function quotePool() {
     const pool = [];
     ['poem', 'sishu'].forEach(function (sid) {
       const mod = subjectList()[sid];
@@ -4181,9 +4200,80 @@
         if (c && String(c.back).length > 10) pool.push({ sid: sid, id: c.id, title: c.title, text: String(c.back) });
       });
     });
-    if (!pool.length) return null;
-    const pick = pool[Math.floor(Date.now() / DAY) % pool.length];
-    return { sid: pick.sid, id: pick.id, title: pick.title, quote: pick.text.split('。')[0] + '。' };
+    return pool;
+  }
+
+  // 语言每日一句池：语言科的 SENTENCES（t 原文 / n 译文 / lang 朗读 locale）
+  function langPool() {
+    const pool = [];
+    Object.keys(subjectList()).forEach(function (sid) {
+      const mod = subjectList()[sid];
+      if (!mod || mod.group !== 'lang' || !mod.SENTENCES) return;
+      mod.SENTENCES.forEach(function (s) {
+        if (s && s.t && s.n) pool.push({ sid: sid, name: mod.short, lang: s.lang || 'en-US', text: s.t, note: s.n });
+      });
+    });
+    return pool;
+  }
+
+  // 爱好每日小知识池：各爱好科的「常见陷阱」条目（本身就是一条条浓缩知识点）
+  function factPool() {
+    const pool = [];
+    Object.keys(subjectList()).forEach(function (sid) {
+      const mod = subjectList()[sid];
+      if (!mod || mod.group !== 'hobby' || !mod.PITFALL) return;
+      Object.keys(mod.PITFALL).forEach(function (cid) {
+        const v = String(mod.PITFALL[cid]).trim();
+        if (v.length > 6) pool.push({ sid: sid, name: mod.short, id: cid, text: v });
+      });
+    });
+    return pool;
+  }
+
+  // 语言句朗读（独立于学习页的 speakCardText：这里显式指定 locale）
+  function speakSentence(text, lang) {
+    if (!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(String(text));
+    u.lang = lang || 'en-US';
+    u.rate = 0.85;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+
+  // 可刷新的每日卡：卡片本体可点击跳转，右上角 ↻ 换一条（语言卡另有 🔊 朗读）
+  function dailyCard(opts) {
+    const box = el('div', 'home-quote-box');
+    const card = el('button', 'home-quote');
+    if (opts.tag) card.appendChild(el('span', 'home-quote-tag', opts.tag));
+    card.appendChild(el('div', 'home-quote-text', opts.text));
+    if (opts.sub) card.appendChild(el('div', 'muted', opts.sub));
+    card.addEventListener('click', opts.onOpen);
+    box.appendChild(card);
+    const acts = el('div', 'home-quote-actions');
+    if (opts.onSpeak) {
+      const sp = el('button', 'home-speak', '🔊');
+      sp.type = 'button';
+      sp.title = '朗读';
+      sp.setAttribute('aria-label', '朗读');
+      sp.addEventListener('click', function (e) { e.stopPropagation(); opts.onSpeak(); });
+      acts.appendChild(sp);
+    }
+    const rf = el('button', 'home-refresh', '↻');
+    rf.type = 'button';
+    rf.title = '换一条';
+    rf.setAttribute('aria-label', '换一条');
+    rf.addEventListener('click', function (e) { e.stopPropagation(); opts.onRefresh(); });
+    acts.appendChild(rf);
+    box.appendChild(acts);
+    return box;
+  }
+
+  // 每日一句（旧版入口：保留函数名兼容）
+  function homeQuote() {
+    const pool = quotePool();
+    const p = pickDaily(pool, 'quote');
+    if (!p) return null;
+    return { sid: p.item.sid, id: p.item.id, title: p.item.title, quote: p.item.text.split('。')[0] + '。' };
   }
 
   // ---------------- 功能入口线稿图标（currentColor 单色，随文字颜色自适应） ----------------
@@ -4309,20 +4399,57 @@
     });
     wrap.appendChild(grid);
 
-    // 每日一句
-    const q = homeQuote();
+    // 每日精选：每日一句 + 语言每日一句 + 爱好每日小知识
+    const qPool = quotePool();
+    const q = pickDaily(qPool, 'quote');
     if (q) {
-      wrap.appendChild(el('h3', null, '🗓 每日一句'));
-      const quote = el('button', 'home-quote');
-      quote.appendChild(el('div', 'home-quote-text', '「' + q.quote + '」'));
-      quote.appendChild(el('div', 'muted', '—— ' + q.title));
-      quote.addEventListener('click', function () {
-        switchSubject(q.sid);
-        currentView = 'browse';
-        renderApp();
-        setTimeout(function () { jumpToCard(q.id); }, 350);
-      });
-      wrap.appendChild(quote);
+      wrap.appendChild(el('h3', null, '🗓 每日精选'));
+      wrap.appendChild(dailyCard({
+        text: '「' + (q.item.text.split('。')[0]) + '。」',
+        sub: '—— ' + q.item.title,
+        onOpen: function () {
+          switchSubject(q.item.sid);
+          currentView = 'browse';
+          renderApp();
+          setTimeout(function () { jumpToCard(q.item.id); }, 350);
+        },
+        onRefresh: function () { refreshDaily(qPool, 'quote'); }
+      }));
+      const lPool = langPool();
+      const s = pickDaily(lPool, 'lang');
+      const fPool = factPool();
+      const f = pickDaily(fPool, 'fact');
+      if (s || f) {
+        const duo = el('div', 'home-duo');
+        if (s) {
+          duo.appendChild(dailyCard({
+            tag: '每日一句 · ' + s.item.name,
+            text: s.item.text,
+            sub: s.item.note,
+            onOpen: function () {
+              switchSubject(s.item.sid);
+              currentView = 'learn';
+              renderApp();
+            },
+            onSpeak: function () { speakSentence(s.item.text, s.item.lang); },
+            onRefresh: function () { refreshDaily(lPool, 'lang'); }
+          }));
+        }
+        if (f) {
+          duo.appendChild(dailyCard({
+            tag: '每日小知识 · ' + f.item.name,
+            text: f.item.text,
+            onOpen: function () {
+              switchSubject(f.item.sid);
+              currentView = 'browse';
+              renderApp();
+              setTimeout(function () { jumpToCard(f.item.id); }, 350);
+            },
+            onRefresh: function () { refreshDaily(fPool, 'fact'); }
+          }));
+        }
+        wrap.appendChild(duo);
+      }
     }
 
     // 快捷入口
@@ -5187,17 +5314,30 @@
         // 菜单挂在 body 根节点：fixed 定位到按钮下方（视口坐标），
         // 不受 sticky/backdrop-filter 祖先的包含块与命中测试影响（移动端 WebKit 曾因此无法选中其他学科）
         const r = cur.getBoundingClientRect();
-        menu.style.top = (r.bottom + 4) + 'px';
+        const vh = window.innerHeight;
         menu.style.left = r.left + 'px';
         menu.style.minWidth = Math.max(r.width, 150) + 'px';
-      }
-      menu.classList.toggle('hidden');
-      if (!menu.classList.contains('hidden')) {
+        // 高度兜底：学科数超过一屏时菜单限高并允许滚动；下方空间放不下时改为向上弹出
+        const below = vh - r.bottom - 12;
+        const above = r.top - 12;
+        const cap = Math.max(200, Math.round(vh * 0.62));
+        if (below >= 180 || below >= above) {
+          menu.style.removeProperty('bottom');
+          menu.style.top = (r.bottom + 4) + 'px';
+          menu.style.maxHeight = Math.min(cap, Math.max(below, 160)) + 'px';
+        } else {
+          menu.style.removeProperty('top');
+          menu.style.bottom = (vh - r.top + 4) + 'px';
+          menu.style.maxHeight = Math.min(cap, above) + 'px';
+        }
+        menu.classList.remove('hidden');
         // 屏幕右缘溢出兜底：窄屏上按钮靠右时把菜单收回屏内
         const mr = menu.getBoundingClientRect();
         if (mr.right > window.innerWidth - 8) {
           menu.style.left = Math.max(8, window.innerWidth - mr.width - 8) + 'px';
         }
+      } else {
+        menu.classList.add('hidden');
       }
       cur.setAttribute('aria-expanded', willShow ? 'true' : 'false');
     });

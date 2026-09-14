@@ -70,8 +70,26 @@
     return best;
   }
 
-  // 每日一句：从古诗词 + 四书按日期确定性轮换
-  function homeQuote() {
+  // ---------------- 每日精选：每日一句 / 语言每日一句 / 爱好每日小知识 ----------------
+  // 按日期确定性轮换；刷新按钮随机换一条并记在会话内（换日自动回到轮换值）
+  const homeSlots = { quote: null, lang: null, fact: null };
+
+  function pickDaily(pool, key) {
+    if (!pool.length) return null;
+    const base = Math.floor(Date.now() / DAY) % pool.length;
+    const i = (typeof homeSlots[key] === 'number' && homeSlots[key] < pool.length) ? homeSlots[key] : base;
+    return { item: pool[i], i: i };
+  }
+  function refreshDaily(pool, key) {
+    if (!pool.length) return;
+    const base = Math.floor(Date.now() / DAY) % pool.length;
+    const cur = (typeof homeSlots[key] === 'number' && homeSlots[key] < pool.length) ? homeSlots[key] : base;
+    homeSlots[key] = (cur + 1 + Math.floor(Math.random() * (pool.length - 1))) % pool.length;
+    renderApp();
+  }
+
+  // 每日一句池：古诗词 + 四书全文首句
+  function quotePool() {
     const pool = [];
     ['poem', 'sishu'].forEach(function (sid) {
       const mod = subjectList()[sid];
@@ -79,9 +97,80 @@
         if (c && String(c.back).length > 10) pool.push({ sid: sid, id: c.id, title: c.title, text: String(c.back) });
       });
     });
-    if (!pool.length) return null;
-    const pick = pool[Math.floor(Date.now() / DAY) % pool.length];
-    return { sid: pick.sid, id: pick.id, title: pick.title, quote: pick.text.split('。')[0] + '。' };
+    return pool;
+  }
+
+  // 语言每日一句池：语言科的 SENTENCES（t 原文 / n 译文 / lang 朗读 locale）
+  function langPool() {
+    const pool = [];
+    Object.keys(subjectList()).forEach(function (sid) {
+      const mod = subjectList()[sid];
+      if (!mod || mod.group !== 'lang' || !mod.SENTENCES) return;
+      mod.SENTENCES.forEach(function (s) {
+        if (s && s.t && s.n) pool.push({ sid: sid, name: mod.short, lang: s.lang || 'en-US', text: s.t, note: s.n });
+      });
+    });
+    return pool;
+  }
+
+  // 爱好每日小知识池：各爱好科的「常见陷阱」条目（本身就是一条条浓缩知识点）
+  function factPool() {
+    const pool = [];
+    Object.keys(subjectList()).forEach(function (sid) {
+      const mod = subjectList()[sid];
+      if (!mod || mod.group !== 'hobby' || !mod.PITFALL) return;
+      Object.keys(mod.PITFALL).forEach(function (cid) {
+        const v = String(mod.PITFALL[cid]).trim();
+        if (v.length > 6) pool.push({ sid: sid, name: mod.short, id: cid, text: v });
+      });
+    });
+    return pool;
+  }
+
+  // 语言句朗读（独立于学习页的 speakCardText：这里显式指定 locale）
+  function speakSentence(text, lang) {
+    if (!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(String(text));
+    u.lang = lang || 'en-US';
+    u.rate = 0.85;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+
+  // 可刷新的每日卡：卡片本体可点击跳转，右上角 ↻ 换一条（语言卡另有 🔊 朗读）
+  function dailyCard(opts) {
+    const box = el('div', 'home-quote-box');
+    const card = el('button', 'home-quote');
+    if (opts.tag) card.appendChild(el('span', 'home-quote-tag', opts.tag));
+    card.appendChild(el('div', 'home-quote-text', opts.text));
+    if (opts.sub) card.appendChild(el('div', 'muted', opts.sub));
+    card.addEventListener('click', opts.onOpen);
+    box.appendChild(card);
+    const acts = el('div', 'home-quote-actions');
+    if (opts.onSpeak) {
+      const sp = el('button', 'home-speak', '🔊');
+      sp.type = 'button';
+      sp.title = '朗读';
+      sp.setAttribute('aria-label', '朗读');
+      sp.addEventListener('click', function (e) { e.stopPropagation(); opts.onSpeak(); });
+      acts.appendChild(sp);
+    }
+    const rf = el('button', 'home-refresh', '↻');
+    rf.type = 'button';
+    rf.title = '换一条';
+    rf.setAttribute('aria-label', '换一条');
+    rf.addEventListener('click', function (e) { e.stopPropagation(); opts.onRefresh(); });
+    acts.appendChild(rf);
+    box.appendChild(acts);
+    return box;
+  }
+
+  // 每日一句（旧版入口：保留函数名兼容）
+  function homeQuote() {
+    const pool = quotePool();
+    const p = pickDaily(pool, 'quote');
+    if (!p) return null;
+    return { sid: p.item.sid, id: p.item.id, title: p.item.title, quote: p.item.text.split('。')[0] + '。' };
   }
 
   // ---------------- 功能入口线稿图标（currentColor 单色，随文字颜色自适应） ----------------
@@ -207,20 +296,57 @@
     });
     wrap.appendChild(grid);
 
-    // 每日一句
-    const q = homeQuote();
+    // 每日精选：每日一句 + 语言每日一句 + 爱好每日小知识
+    const qPool = quotePool();
+    const q = pickDaily(qPool, 'quote');
     if (q) {
-      wrap.appendChild(el('h3', null, '🗓 每日一句'));
-      const quote = el('button', 'home-quote');
-      quote.appendChild(el('div', 'home-quote-text', '「' + q.quote + '」'));
-      quote.appendChild(el('div', 'muted', '—— ' + q.title));
-      quote.addEventListener('click', function () {
-        switchSubject(q.sid);
-        currentView = 'browse';
-        renderApp();
-        setTimeout(function () { jumpToCard(q.id); }, 350);
-      });
-      wrap.appendChild(quote);
+      wrap.appendChild(el('h3', null, '🗓 每日精选'));
+      wrap.appendChild(dailyCard({
+        text: '「' + (q.item.text.split('。')[0]) + '。」',
+        sub: '—— ' + q.item.title,
+        onOpen: function () {
+          switchSubject(q.item.sid);
+          currentView = 'browse';
+          renderApp();
+          setTimeout(function () { jumpToCard(q.item.id); }, 350);
+        },
+        onRefresh: function () { refreshDaily(qPool, 'quote'); }
+      }));
+      const lPool = langPool();
+      const s = pickDaily(lPool, 'lang');
+      const fPool = factPool();
+      const f = pickDaily(fPool, 'fact');
+      if (s || f) {
+        const duo = el('div', 'home-duo');
+        if (s) {
+          duo.appendChild(dailyCard({
+            tag: '每日一句 · ' + s.item.name,
+            text: s.item.text,
+            sub: s.item.note,
+            onOpen: function () {
+              switchSubject(s.item.sid);
+              currentView = 'learn';
+              renderApp();
+            },
+            onSpeak: function () { speakSentence(s.item.text, s.item.lang); },
+            onRefresh: function () { refreshDaily(lPool, 'lang'); }
+          }));
+        }
+        if (f) {
+          duo.appendChild(dailyCard({
+            tag: '每日小知识 · ' + f.item.name,
+            text: f.item.text,
+            onOpen: function () {
+              switchSubject(f.item.sid);
+              currentView = 'browse';
+              renderApp();
+              setTimeout(function () { jumpToCard(f.item.id); }, 350);
+            },
+            onRefresh: function () { refreshDaily(fPool, 'fact'); }
+          }));
+        }
+        wrap.appendChild(duo);
+      }
     }
 
     // 快捷入口

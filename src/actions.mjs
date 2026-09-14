@@ -455,17 +455,30 @@
         // 菜单挂在 body 根节点：fixed 定位到按钮下方（视口坐标），
         // 不受 sticky/backdrop-filter 祖先的包含块与命中测试影响（移动端 WebKit 曾因此无法选中其他学科）
         const r = cur.getBoundingClientRect();
-        menu.style.top = (r.bottom + 4) + 'px';
+        const vh = window.innerHeight;
         menu.style.left = r.left + 'px';
         menu.style.minWidth = Math.max(r.width, 150) + 'px';
-      }
-      menu.classList.toggle('hidden');
-      if (!menu.classList.contains('hidden')) {
+        // 高度兜底：学科数超过一屏时菜单限高并允许滚动；下方空间放不下时改为向上弹出
+        const below = vh - r.bottom - 12;
+        const above = r.top - 12;
+        const cap = Math.max(200, Math.round(vh * 0.62));
+        if (below >= 180 || below >= above) {
+          menu.style.removeProperty('bottom');
+          menu.style.top = (r.bottom + 4) + 'px';
+          menu.style.maxHeight = Math.min(cap, Math.max(below, 160)) + 'px';
+        } else {
+          menu.style.removeProperty('top');
+          menu.style.bottom = (vh - r.top + 4) + 'px';
+          menu.style.maxHeight = Math.min(cap, above) + 'px';
+        }
+        menu.classList.remove('hidden');
         // 屏幕右缘溢出兜底：窄屏上按钮靠右时把菜单收回屏内
         const mr = menu.getBoundingClientRect();
         if (mr.right > window.innerWidth - 8) {
           menu.style.left = Math.max(8, window.innerWidth - mr.width - 8) + 'px';
         }
+      } else {
+        menu.classList.add('hidden');
       }
       cur.setAttribute('aria-expanded', willShow ? 'true' : 'false');
     });

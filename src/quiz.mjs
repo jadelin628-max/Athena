@@ -1,3 +1,57 @@
+  // ---------------- 帮助栏目：本科目的指导与答疑文章（检索用，不参与学习调度） ----------------
+  let helpState = { open: {} };
+
+  function renderHelp() {
+    if (!helpState.open) helpState.open = {};
+    const app = document.getElementById('app');
+    app.innerHTML = ''; // 搜索/展开会直接重入本函数：先清容器，避免 DOM 叠加
+    const wrap = el('div', 'help-wrap');
+    wrap.appendChild(el('h2', null, '❓ 帮助 · ' + (BASE_SUBJ ? BASE_SUBJ.name : '')));
+    wrap.appendChild(el('p', 'muted', '本科目的学习方法、环境准备与常见疑问——供检索查阅，不进入学习队列与统计。'));
+
+    const search = el('input', 'help-search');
+    search.type = 'search';
+    search.placeholder = '搜索帮助文章…';
+    search.value = helpState.q || '';
+    search.addEventListener('input', function () {
+      helpState.q = search.value;
+      renderHelp();
+      const box = document.querySelector('.help-search');
+      if (box) { box.focus(); box.setSelectionRange(box.value.length, box.value.length); }
+    });
+    wrap.appendChild(search);
+
+    const arts = (BASE_SUBJ && BASE_SUBJ.HELP) || [];
+    const q = (helpState.q || '').trim().toLowerCase();
+    const list = arts.filter(function (a) {
+      return !q || a.title.toLowerCase().indexOf(q) !== -1 || String(a.body).toLowerCase().indexOf(q) !== -1;
+    });
+    if (!arts.length) {
+      wrap.appendChild(el('p', 'muted', '本学科暂无帮助文章。'));
+    } else if (!list.length) {
+      wrap.appendChild(el('p', 'muted', '没有匹配「' + helpState.q + '」的文章。'));
+    }
+    list.forEach(function (a) {
+      const item = el('div', 'help-item');
+      const head = el('button', 'help-head' + (helpState.open[a.id] ? ' open' : ''), '');
+      head.type = 'button';
+      head.appendChild(el('span', null, a.title));
+      head.appendChild(el('span', 'help-arrow', helpState.open[a.id] ? '▾' : '▸'));
+      head.addEventListener('click', function () {
+        helpState.open[a.id] = !helpState.open[a.id];
+        renderHelp();
+      });
+      item.appendChild(head);
+      if (helpState.open[a.id]) {
+        const body = el('div', 'help-body');
+        renderTex(body, a.body);
+        item.appendChild(body);
+      }
+      wrap.appendChild(item);
+    });
+    app.appendChild(wrap);
+  }
+
   function renderBrowse() {
     const app = document.getElementById('app');
 

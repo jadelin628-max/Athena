@@ -182,7 +182,8 @@
     pencil: '<path d="M4 20 L5.2 15.4 L16 4.6 A2.1 2.1 0 0 1 19 7.6 L8.2 18.4 Z"/><path d="M14.5 6.1 L17.5 9.1"/>',
     chart: '<path d="M5 20 V11 M12 20 V4.5 M19 20 V14"/><path d="M3 20.5 H21"/>',
     cap: '<path d="M2.5 9.5 L12 4.5 L21.5 9.5 L12 14.5 Z"/><path d="M6.5 11.8 V16.2 C6.5 17.8 17.5 17.8 17.5 16.2 V11.8"/><path d="M21.5 9.5 V14.5"/>',
-    sliders: '<path d="M4 7 H20 M4 12 H20 M4 17 H20"/><circle cx="9.5" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="10.5" cy="17" r="2.1"/>'
+    sliders: '<path d="M4 7 H20 M4 12 H20 M4 17 H20"/><circle cx="9.5" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="10.5" cy="17" r="2.1"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6 a2.4 2.4 0 1 1 3.9 1.9 c-.9.7-1.5 1.2-1.5 2.3"/><path d="M12 16.6 v.5"/>'
   };
   function icon(name) {
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

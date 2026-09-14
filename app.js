@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.38.0';
+  const VERSION = '1.39.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.39.0', date: '2026-09', items: ['学习内容与帮助内容分离（重要架构调整）：技能与语言科的 76 张「起步」类描述性/答疑性卡片（环境安装、学习方法、常见疑问等）全部移出学习队列，迁入二级导航新增的「帮助」栏目——按科目组织、支持搜索与展开阅读，仅供检索查阅，不参与 FSRS 调度与学习统计', '学习库补入 48 张纯知识卡（全库 2399 卡）：技能六科各 5 张 + AI 3 张「架构与规则」章（程序入口与执行模型、内存布局、未定义行为、翻译单元与 ODR、JVM 运行时数据区、类加载、访问修饰符四档、值传递、垃圾回收、Error 体系、宏系统、Copy/Move 语义、标准库地图等）；语言四科各 3~4 张「基础体系」章（文字分工规则、量词体系、人称代词、한글 全表、敬语三档、不规则变形、拼读总表、变位族总表、宾语代词、日期星期、字母表、指示物主全表、gustar 家族、礼貌用语分工）', '初学者模式的推荐路径同步更新为纯知识章节（如 Python：基础语法→控制流；日语：五十音→基础语法）'] },
     { v: '1.38.0', date: '2026-09', items: ['学习卡面新增「🆕 今日新学」标签：仅标记今天首次评分、新进入复习规划的卡片（复习中重学不会刷新标记），学习条同步显示「🆕 今日新学 N 张」', '技能与语言科基础内容扩容（共 +99 卡，全库 2427 卡）：语言四科各 +15 张高频单词（动物/物品/时间/情感/动作/评价）与 +3 张基础句型（指示词、并列助词、存在句、比较级、天气等）；技能科基础章各 +4~5 张（f-string 与格式化、关键字总览、常见内置函数、printf/scanf、短路求值与位运算、cin 与函数重载、static_cast、Scanner 与 String 方法、模板字符串与算术陷阱、console 调试、println 格式化、整数溢出、as 转换、一切皆表达式）——AI 基础已厚不再扩'] },
     { v: '1.37.0', date: '2026-09', items: ['初学者模式（设置页可调，章节自选）：开启后新卡只从勾选章节引入，默认勾选各科推荐的起步章节（可增减），关闭即解锁全部——11 科各配 BEGINNER 推荐路径', '每日上限后可「再来一批」：完成画面新增「➕ 再来一批」按钮，手动越过当日上限继续引入（批量 = 每日上限值，计入今日计数），学多少由自己决定', '新增 11 科「起步」章共 76 卡：技能科（Python/C/C++/Java/JS/Rust/AI）各 8 卡——语言定位、环境安装、第一个程序、怎么读报错、工具链、学习路径；语言科（日/韩/法/西）各 5 卡——文字总览、发音难点预览、第一周节奏、常见放弃点对策。全库 25 学科 2328 卡', '终端数据库编辑 CLI（阶段 A）：tools/athena-cli.mjs——init/list/pull/push/status 四组命令，把云端学习数据库拉成本地 JSON 用任意编辑器修改，推回前跑与加载同口径的校验（非法调度数据点名拒绝），改动经现有同步通道全端生效'] },
     { v: '1.36.0', date: '2026-09', items: ['每日新卡上限生效（设置页新增「每日新卡上限」，默认 10，0 = 暂停引入）：每天最多把 N 张新卡引入学习队列，已引入但未学完的卡与到期复习不受限；完成画面新增「另有 N 张新卡将按每日上限逐步引入」提示。无上限一次性引入虽让完成画面可达，但新学科会一次性涌入数百张卡——软上限让每日负载可控', '错题关联降级的根治：降级（错题答「不会/思路错」时关联知识卡进入重学）现在会更新 lastR——跨端合并按 lastR 选边，此前降级可能被另一端的旧副本静默丢弃、行为在两端反复；导入净化与加载自愈扩展到全部调度数值字段（NaN/null 一律拒收），彻底封死「学习中但到期时刻无效」的滞留来源', '说明：删除错题不会撤销已发生的关联降级——那是对应知识点当天真实遗忘的记录；但其调度状态自本版起跨端一致、且不再可能因数据损坏而滞留'] },
@@ -1507,10 +1508,10 @@
     sub.innerHTML = '';
     const items = currentModule === 'wrong'
       ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
-      : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计']];
+      : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计'], ['help', '帮助']];
     const icons = currentModule === 'wrong'
       ? { wrong: 'wrong', wrongBrowse: 'search', wrongStats: 'chart' }
-      : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart' };
+      : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart', help: 'help' };
     items.forEach(function (it) {
       const b = el('button', 'nav-btn sub-btn' + (currentView === it[0] ? ' active' : ''));
       b.appendChild(icon(icons[it[0]]));
@@ -1555,6 +1556,7 @@
     else if (currentView === 'browse') renderBrowse();
     else if (currentView === 'quiz') renderQuiz();
     else if (currentView === 'statistics') renderStatistics();
+    else if (currentView === 'help') renderHelp();
     else if (currentView === 'wrong') renderWrongLearn();
     else if (currentView === 'wrongBrowse') renderWrongBrowse();
     else if (currentView === 'wrongStats') renderWrongStats();
@@ -2904,6 +2906,60 @@
     wrongInput = null;
   }
 
+
+  // ---------------- 帮助栏目：本科目的指导与答疑文章（检索用，不参与学习调度） ----------------
+  let helpState = { open: {} };
+
+  function renderHelp() {
+    if (!helpState.open) helpState.open = {};
+    const app = document.getElementById('app');
+    app.innerHTML = ''; // 搜索/展开会直接重入本函数：先清容器，避免 DOM 叠加
+    const wrap = el('div', 'help-wrap');
+    wrap.appendChild(el('h2', null, '❓ 帮助 · ' + (BASE_SUBJ ? BASE_SUBJ.name : '')));
+    wrap.appendChild(el('p', 'muted', '本科目的学习方法、环境准备与常见疑问——供检索查阅，不进入学习队列与统计。'));
+
+    const search = el('input', 'help-search');
+    search.type = 'search';
+    search.placeholder = '搜索帮助文章…';
+    search.value = helpState.q || '';
+    search.addEventListener('input', function () {
+      helpState.q = search.value;
+      renderHelp();
+      const box = document.querySelector('.help-search');
+      if (box) { box.focus(); box.setSelectionRange(box.value.length, box.value.length); }
+    });
+    wrap.appendChild(search);
+
+    const arts = (BASE_SUBJ && BASE_SUBJ.HELP) || [];
+    const q = (helpState.q || '').trim().toLowerCase();
+    const list = arts.filter(function (a) {
+      return !q || a.title.toLowerCase().indexOf(q) !== -1 || String(a.body).toLowerCase().indexOf(q) !== -1;
+    });
+    if (!arts.length) {
+      wrap.appendChild(el('p', 'muted', '本学科暂无帮助文章。'));
+    } else if (!list.length) {
+      wrap.appendChild(el('p', 'muted', '没有匹配「' + helpState.q + '」的文章。'));
+    }
+    list.forEach(function (a) {
+      const item = el('div', 'help-item');
+      const head = el('button', 'help-head' + (helpState.open[a.id] ? ' open' : ''), '');
+      head.type = 'button';
+      head.appendChild(el('span', null, a.title));
+      head.appendChild(el('span', 'help-arrow', helpState.open[a.id] ? '▾' : '▸'));
+      head.addEventListener('click', function () {
+        helpState.open[a.id] = !helpState.open[a.id];
+        renderHelp();
+      });
+      item.appendChild(head);
+      if (helpState.open[a.id]) {
+        const body = el('div', 'help-body');
+        renderTex(body, a.body);
+        item.appendChild(body);
+      }
+      wrap.appendChild(item);
+    });
+    app.appendChild(wrap);
+  }
 
   function renderBrowse() {
     const app = document.getElementById('app');
@@ -4485,7 +4541,8 @@
     pencil: '<path d="M4 20 L5.2 15.4 L16 4.6 A2.1 2.1 0 0 1 19 7.6 L8.2 18.4 Z"/><path d="M14.5 6.1 L17.5 9.1"/>',
     chart: '<path d="M5 20 V11 M12 20 V4.5 M19 20 V14"/><path d="M3 20.5 H21"/>',
     cap: '<path d="M2.5 9.5 L12 4.5 L21.5 9.5 L12 14.5 Z"/><path d="M6.5 11.8 V16.2 C6.5 17.8 17.5 17.8 17.5 16.2 V11.8"/><path d="M21.5 9.5 V14.5"/>',
-    sliders: '<path d="M4 7 H20 M4 12 H20 M4 17 H20"/><circle cx="9.5" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="10.5" cy="17" r="2.1"/>'
+    sliders: '<path d="M4 7 H20 M4 12 H20 M4 17 H20"/><circle cx="9.5" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="10.5" cy="17" r="2.1"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6 a2.4 2.4 0 1 1 3.9 1.9 c-.9.7-1.5 1.2-1.5 2.3"/><path d="M12 16.6 v.5"/>'
   };
   function icon(name) {
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

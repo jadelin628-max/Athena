@@ -5,6 +5,7 @@
     else if (currentView === 'browse') renderBrowse();
     else if (currentView === 'quiz') renderQuiz();
     else if (currentView === 'statistics') renderStatistics();
+    else if (currentView === 'help') renderHelp();
     else if (currentView === 'wrong') renderWrongLearn();
     else if (currentView === 'wrongBrowse') renderWrongBrowse();
     else if (currentView === 'wrongStats') renderWrongStats();

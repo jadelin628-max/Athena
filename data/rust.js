@@ -10,7 +10,7 @@ window.SUBJECTS.rust = (function () {
   const R = String.raw;
 
   const CATS = {
-    start: '起步与环境',
+arch: '架构与规则',
     base: '基础与所有权',
     types: '类型系统',
     flow: '控制流与模式匹配',
@@ -23,49 +23,33 @@ window.SUBJECTS.rust = (function () {
   const F = (id, cat, title, front, back) => ({ id, cat, title, front, back });
 
   const DATA = [
-    // ==================== 起步与环境 ====================
-    F('bs01', 'start', 'Rust 适合做什么',
-      R`Rust 是一门什么样的语言？为什么值得学？`,
-      R`**系统级编译语言**，两大承诺：**内存安全**（编译期杜绝空指针/悬垂指针等）与**零成本抽象**（高级写法不损失性能）。
-场景：系统工具、命令行程序、WebAssembly、性能敏感的后端；连续多年「最受喜爱语言」榜首。
-诚实预告：**学习曲线陡**——所有权概念会卡住几乎所有人。但编译器报错是教科书级的，它会一步步教你写对——本卡组也会陪你过这关。`),
-    F('bs02', 'start', '安装 rustup：一行命令全套',
-      R`怎么安装 Rust 环境？`,
-      R`官方安装器 **rustup** 一行命令装全套（rustc 编译器 + cargo 构建工具 + 标准库）；Windows 也一样顺畅（官网下载 rustup-init）。
-验证：终端敲 **cargo --version** 与 rustc --version 出版本号即成功。
-升级也一条命令：rustup update——Rust 版本节奏稳定（六周一版），工具链升级从没负担。`),
-    F('bs03', 'start', '第一个程序：cargo new',
-      R`怎么创建并运行第一个 Rust 程序？`,
-      R`**cargo new hello**（创建项目目录，自带 Cargo.toml 与 src/main.rs）→ 进入目录敲 **cargo run**——编译加运行一步到位。
-main.rs 里 main 函数是入口，println! 宏负责输出（带感叹号——宏的标志）。
-注意：默认就建好了「项目」而非单个文件——Rust 从第一天就是工程化姿势，包管理不用学第二次。`),
-    F('bs04', 'start', 'cargo 是什么：三合一工具',
-      R`cargo 在 Rust 工作流里扮演什么角色？`,
-      R`**构建工具 + 包管理器 + 测试器**三合一——Rust 生态的中央枢纽：
-cargo run（编译运行）、cargo build（只编译）、**cargo add 包名**（引入第三方库，自动写进 Cargo.toml）、cargo test（跑测试）。
-**Cargo.toml** 是项目清单：名字、版本、依赖——看一眼就懂。
-别处语言要拼装的工具链，Rust 出厂即全套——这是新手体验最好的编译语言之一。`),
-    F('bs05', 'start', '怎么读 rustc 报错',
-      R`都说 Rust 编译器报错是「教科书」，怎么利用它？`,
-      R`Rust 报错是**三段式教学**：① 错误是什么（带精确行号与高亮）；② **为什么**（解释背后的规则，如「值在这里被移动了」）；③ **怎么改**（直接给出修复建议代码，很多照抄即可）。
-心法：**把编译器当老师不当拦路虎**——它拒绝你，是因为这段代码在运行时真的会出事。
-报错看不懂时先读 suggestion 部分，再回头读规则解释。`),
-    F('bs06', 'start', '注释与文档注释',
-      R`Rust 的注释与文档怎么写？`,
-      R`普通注释 **//**（行）与 /* */（块）——与其他语言相同。
-Rust 特色：**文档注释 ///**（三个斜杠）——写在函数上方，cargo doc 命令自动生成 HTML 文档站，标准库文档就是这么来的。
-惯例：公开函数写文档注释（含示例），内部实现写普通注释——「文档即代码的一部分」是 Rust 工程文化的入口。`),
-    F('bs07', 'start', '工具链总览：clippy 与 rust-analyzer',
-      R`Rust 的常用工具链有哪些？`,
-      R`**rust-analyzer**：编辑器插件（VS Code 装 Rust 扩展自动带上）——类型提示、补全、行内报错，**第一优先级装它**。
-**clippy**：官方代码检查器（cargo clippy），几百条「更地道的写法」建议——初学就开始跑。
-**rustfmt**：自动格式化（cargo fmt）——风格争论终结者。
-测试：cargo test 内置——测试框架都第三方都不用装。`),
-    F('bs08', 'start', 'Rust 学习路径建议',
-      R`Rust 入门的推荐节奏？`,
-      R`① 起步章 + 基础章打底；② **所有权是最大关卡**（base 章后段）——被借用检查器拒绝时回到这两张卡，配合画「值的所有权箭头图」；③ 类型与模式匹配按 ORDER 走；④ 错误处理章（Result/问号运算符）是 Rust 工程品味的核心；⑤ 集合与迭代器让代码现代起来。
-节奏参考：每天 10 张卡 + 每周一个小工具（grep 简化版、todo CLI）。
-心态：前两周被编译器拒绝是所有人的常态——坚持过所有权，后面一马平川。`),
+    // ==================== 架构与规则 ====================
+    F('ar01', 'arch', '宏系统概览：声明宏与过程宏',
+      R`println! 结尾的感叹号是什么？`,
+      R`感叹号标记**宏**（编译期代码生成）——不是函数：println!（输出）、vec!（建向量）、assert!（断言）都是**声明宏**（模式匹配生成代码）。
+**过程宏**更进一步：直接操作语法树（derive 宏——#[derive(Debug)] 自动实现 trait 的原理）。
+为什么用宏：参数个数可变、编译期展开零运行时开销——println! 的格式串是**编译期检查**的（占位符与参数不匹配直接编译错误——比 printf 安全一代）。`),
+    F('ar02', 'arch', '内存布局与 Box：栈与堆的视角',
+      R`Rust 的值住在哪里？`,
+      R`默认在**栈**（大小编译期已知的类型——i32、固定数组）；需要堆时用 **Box**（智能指针——指针在栈、数据在堆）。
+Rust 的纪律：谁拥有堆数据，谁负责释放——Box 离开作用域自动释放堆内存（无需手动 free，也无 GC）。
+递归类型必须 Box（编译期算不出大小）；大对象 Box 避免栈拷贝——所有权模型与内存布局咬合的入门视角。`),
+    F('ar03', 'arch', 'Copy 与 Move：赋值的字节语义',
+      R`赋值时发生了什么？什么时候会「移动」？`,
+      R`规则：实现了 **Copy trait** 的类型（整数/浮点/bool/char/由 Copy 组成的元组数组）——赋值与传参**按位拷贝**，原值仍可用。
+没有 Copy 的类型（String/Vec/自定义结构体）——赋值即 **Move**：所有权转移，原变量编译器禁止再使用。
+想保留原值又不拷贝堆数据：**clone()**（显式深拷贝——性能代价写在明面上）。
+这是所有权系统的第一层：Rust 把「浅拷贝引用失效」这类 C++ 经典坑变成了编译错误。`),
+    F('ar04', 'arch', '标准库地图',
+      R`Rust 标准库的常用模块有哪些？`,
+      R`**std::collections**——Vec/HashMap/HashSet/BTreeMap（coll 章主场）；**std::io**——stdin/stdout/文件读写；**std::fs 与 std::path**——文件系统操作；**std::string 与 std::fmt**——String 与格式化；**std::iter**——迭代器工具；**std::sync 与 std::thread**——并发（进阶）。
+字符串双类型：String（拥有）与 str（切片）——标准库设计的代表案例。
+习惯：标准库文档（doc.rust-lang.org/std）按模块树浏览——Rust 的 std 覆盖面决定你不用装多少第三方包。`),
+    F('ar05', 'arch', 'Debug 与 Release：编译 profile',
+      R`cargo run 和 cargo run --release 差在哪？`,
+      R`两套编译配置：**dev（默认）**——不优化、溢出检查开启、编译快、运行慢；**release（--release）**——全优化、溢出回绕（不检查）、编译慢、快十倍以上。
+推论一：初学永远用默认配置——溢出/越界等错误立刻 panic 暴露。
+推论二：**测性能必须用 release**——Debug 下测出的耗时没有意义；Release 的优化可能改变浮点细节与溢出行为——行为差异要心里有数。`),
     // ==================== 基础与所有权 ====================
     F('ba01', 'base', 'Rust 的定位与核心承诺',
       R`Rust 是什么？它的核心卖点是什么？`,
@@ -250,13 +234,18 @@ impl 块也可泛化（impl<T> 结构体<T>）。
   ];
 
   const META = {
+    ar01: [3, '宏系统'],
+    ar02: [4, '内存布局Box'],
+    ar03: [5, 'Copy与Move'],
+    ar04: [3, '标准库地图'],
+    ar05: [3, 'Debug与Release'],
+
     ba09: [4, 'println 格式化'],
     ba10: [4, '溢出'],
     ba11: [4, '关键字'],
     ba12: [4, 'as 转换'],
     ba13: [4, '表达式控制流'],
 
-    bs01: [4, '起步·Rust'], bs02: [4, '起步·Rust'], bs03: [4, '起步·Rust'], bs04: [4, '起步·Rust'], bs05: [4, '起步·Rust'], bs06: [4, '起步·Rust'], bs07: [4, '起步·Rust'], bs08: [4, '起步·Rust'],
     ba01: [4, '语言定位'], ba02: [4, 'Cargo'], ba03: [4, '可变性与遮蔽'], ba04: [4, '基本类型'], ba05: [4, '表达式返回'], ba06: [5, '所有权三规则'], ba07: [5, '借用规则'], ba08: [3, '切片'],
     ty01: [4, '类型转换'], ty02: [5, 'Option'],
     fl01: [3, 'if 表达式'], fl02: [5, 'match 穷尽性'], fl03: [3, 'if let'],
@@ -274,6 +263,36 @@ impl 块也可泛化（impl<T> 结构体<T>）。
     er03: R`库代码返回 Result 把决策交给调用方；unwrap 只该出现在测试与"逻辑上不可能失败"处。`
   };
 
-  const BEGINNER = ['start', 'base', 'types'];
-  return { BEGINNER: BEGINNER, id: 'rust', name: 'Rust', short: 'Rust', icon: '🦀', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'base', 'types', 'flow', 'data', 'err', 'coll', 'eco'] };
+  // —— 帮助栏目文章（检索用，不参与学习调度；内容由原起步章迁移）——
+  const HELP = [
+    { id: 'bs01', title: 'Rust 适合做什么', body: R`**系统级编译语言**，两大承诺：**内存安全**（编译期杜绝空指针/悬垂指针等）与**零成本抽象**（高级写法不损失性能）。
+场景：系统工具、命令行程序、WebAssembly、性能敏感的后端；连续多年「最受喜爱语言」榜首。
+诚实预告：**学习曲线陡**——所有权概念会卡住几乎所有人。但编译器报错是教科书级的，它会一步步教你写对——本卡组也会陪你过这关。` },
+    { id: 'bs02', title: '安装 rustup：一行命令全套', body: R`官方安装器 **rustup** 一行命令装全套（rustc 编译器 + cargo 构建工具 + 标准库）；Windows 也一样顺畅（官网下载 rustup-init）。
+验证：终端敲 **cargo --version** 与 rustc --version 出版本号即成功。
+升级也一条命令：rustup update——Rust 版本节奏稳定（六周一版），工具链升级从没负担。` },
+    { id: 'bs03', title: '第一个程序：cargo new', body: R`**cargo new hello**（创建项目目录，自带 Cargo.toml 与 src/main.rs）→ 进入目录敲 **cargo run**——编译加运行一步到位。
+main.rs 里 main 函数是入口，println! 宏负责输出（带感叹号——宏的标志）。
+注意：默认就建好了「项目」而非单个文件——Rust 从第一天就是工程化姿势，包管理不用学第二次。` },
+    { id: 'bs04', title: 'cargo 是什么：三合一工具', body: R`**构建工具 + 包管理器 + 测试器**三合一——Rust 生态的中央枢纽：
+cargo run（编译运行）、cargo build（只编译）、**cargo add 包名**（引入第三方库，自动写进 Cargo.toml）、cargo test（跑测试）。
+**Cargo.toml** 是项目清单：名字、版本、依赖——看一眼就懂。
+别处语言要拼装的工具链，Rust 出厂即全套——这是新手体验最好的编译语言之一。` },
+    { id: 'bs05', title: '怎么读 rustc 报错', body: R`Rust 报错是**三段式教学**：① 错误是什么（带精确行号与高亮）；② **为什么**（解释背后的规则，如「值在这里被移动了」）；③ **怎么改**（直接给出修复建议代码，很多照抄即可）。
+心法：**把编译器当老师不当拦路虎**——它拒绝你，是因为这段代码在运行时真的会出事。
+报错看不懂时先读 suggestion 部分，再回头读规则解释。` },
+    { id: 'bs06', title: '注释与文档注释', body: R`普通注释 **//**（行）与 /* */（块）——与其他语言相同。
+Rust 特色：**文档注释 ///**（三个斜杠）——写在函数上方，cargo doc 命令自动生成 HTML 文档站，标准库文档就是这么来的。
+惯例：公开函数写文档注释（含示例），内部实现写普通注释——「文档即代码的一部分」是 Rust 工程文化的入口。` },
+    { id: 'bs07', title: '工具链总览：clippy 与 rust-analyzer', body: R`**rust-analyzer**：编辑器插件（VS Code 装 Rust 扩展自动带上）——类型提示、补全、行内报错，**第一优先级装它**。
+**clippy**：官方代码检查器（cargo clippy），几百条「更地道的写法」建议——初学就开始跑。
+**rustfmt**：自动格式化（cargo fmt）——风格争论终结者。
+测试：cargo test 内置——测试框架都第三方都不用装。` },
+    { id: 'bs08', title: 'Rust 学习路径建议', body: R`① 起步章 + 基础章打底；② **所有权是最大关卡**（base 章后段）——被借用检查器拒绝时回到这两张卡，配合画「值的所有权箭头图」；③ 类型与模式匹配按 ORDER 走；④ 错误处理章（Result/问号运算符）是 Rust 工程品味的核心；⑤ 集合与迭代器让代码现代起来。
+节奏参考：每天 10 张卡 + 每周一个小工具（grep 简化版、todo CLI）。
+心态：前两周被编译器拒绝是所有人的常态——坚持过所有权，后面一马平川。` }
+  ];
+
+  const BEGINNER = ['base', 'types'];
+  return { BEGINNER: BEGINNER, id: 'rust', name: 'Rust', short: 'Rust', icon: '🦀', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['arch', 'base', 'types', 'flow', 'data', 'err', 'coll', 'eco'] };
 })();

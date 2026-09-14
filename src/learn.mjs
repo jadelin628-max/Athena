@@ -481,10 +481,10 @@
     sub.innerHTML = '';
     const items = currentModule === 'wrong'
       ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
-      : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计']];
+      : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计'], ['help', '帮助']];
     const icons = currentModule === 'wrong'
       ? { wrong: 'wrong', wrongBrowse: 'search', wrongStats: 'chart' }
-      : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart' };
+      : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart', help: 'help' };
     items.forEach(function (it) {
       const b = el('button', 'nav-btn sub-btn' + (currentView === it[0] ? ' active' : ''));
       b.appendChild(icon(icons[it[0]]));

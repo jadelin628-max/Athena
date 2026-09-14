@@ -100,6 +100,26 @@ window.SUBJECTS.py = (function () {
       R`显式转换函数：int(x)、float(x)、str(x)、list(x)、tuple(x)、set(x)、bool(x)。
 int 解析字符串失败抛 ValueError；int("3.5") 直接报错（先转 float 再转 int 或用 round）。
 **input() 一律返回字符串**——数字输入必须手动 int() 或 float() 转换，新手第一大坑。`),
+    F('ba08', 'base', 'f-string 与输出格式化',
+      R`怎么把变量嵌进字符串？`,
+      R`**f-string**（字符串前加 f）：f"你好，{name}"——花括号里直接写变量或表达式，是现代 Python 输出的标准做法。
+常用格式化后缀：{x:.2f}（保留两位小数）、{n:5d}（占五位）、{p:.0%}（百分比）。
+旧写法 % 格式化与 str.format() 能看懂即可——新代码一律 f-string。`),
+    F('ba09', 'base', '关键字总览：保留字一览',
+      R`Python 有哪些关键字？`,
+      R`关键字是语言保留的名字，不能用作变量名（共三十余个）：
+**控制流**：if/elif/else、for/while/break/continue；**定义**：def/class/lambda/return/yield；**逻辑**：and/or/not/in/is；**异常**：try/except/finally/raise；**导入**：import/from/as；**其他**：None/True/False/pass/global/with/del/await/async。
+查看全部：进入 REPL 敲 help("keywords")。误用关键字命名会直接 SyntaxError——报错一眼定位。`),
+    F('ba10', 'base', '常见内置函数：len/range/type',
+      R`不用导入就能用的内置函数有哪些？`,
+      R`**len(x)**：取长度（字符串/列表/字典通用）；**range(n)**：生成 0 到 n-1 的序列（for 循环标配）；**type(x)**：看类型；**print/str/int/float**：输出与转换；**sum/min/max/sorted**：对序列快速聚合。
+输入输出：input（读一行字符串）、print（输出）。
+技巧：这些函数覆盖日常八成需求——写代码前先想想「有没有内置函数」，比手写循环简洁得多。`),
+    F('ba11', 'base', '整除、取模与数学运算',
+      R`除法的三种形态与坑？`,
+      R`**/** 真除法：永远得 float（7/2 得 3.5）；**//** 整除：向下取整（7//2 得 3，-7//2 得 -4——负数向下不是向零！）；**%** 取模：余数符号跟随除数（-7%2 得 1）。
+幂运算用两个星号（2 的 10 次方写 2 后跟两个星号再跟 10）；常用 math 库：math.sqrt、math.floor。
+与 C 语言的最大差异：/ 的结果类型——C 的整数除法直接截断。`),
     // ==================== 控制流 ====================
     F('ct01', 'ctrl', '条件分支：if、elif、else',
       R`写出 Python 条件分支的结构与要点。`,
@@ -324,6 +344,11 @@ for 循环底层：对可迭代对象调用可迭代方法拿迭代器，反复�
   ];
 
   const META = {
+    ba08: [4, 'f-string'],
+    ba09: [4, '关键字'],
+    ba10: [4, '内置函数'],
+    ba11: [4, '整除取模'],
+
     pz01: [3, '起步·Python'], pz02: [3, '起步·Python'], pz03: [3, '起步·Python'], pz04: [3, '起步·Python'], pz05: [3, '起步·Python'], pz06: [3, '起步·Python'], pz07: [3, '起步·Python'], pz08: [3, '起步·Python'],
     ba01: [3, '语言特征'], ba02: [4, '变量与命名'], ba03: [5, '数字类型'], ba04: [4, '真值判断'], ba05: [4, 'None 判断'], ba06: [3, '运算符与短路'], ba07: [4, '类型转换'],
     ct01: [3, '条件分支'], ct02: [5, 'for 与 range'], ct03: [4, 'while 与 break'], ct04: [2, 'match-case'],

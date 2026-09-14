@@ -94,6 +94,31 @@ typeof 判断：返回字符串——但 **typeof null 返回 object**（历史 
       R`**解构**：从数组/对象按模式提取值——const { name, age } = 对象、const [第一个, 第二个] = 数组；可设默认值、可嵌套、可重命名（旧名: 新名）。
 **展开运算符**（三个点）：数组/对象展开合并（浅拷贝、合并配置）、函数收集剩余参数（rest 参数）。
 组合：函数参数的"收集与展开"是一对镜像操作。`),
+    F('ba07', 'base', '模板字符串与字符串方法',
+      R`怎么优雅地拼字符串？`,
+      R`**模板字符串**用反引号（键盘 Esc 下方那个键）包住字符串，变量用「美元符 + 花括号」嵌入——你好，加美元括号包 name，输出时自动替换，支持换行，是现代 JS 拼串的唯一正解。
+常用方法：length、toUpperCase/lowerCase、includes、indexOf、slice、split（切成数组）、trim、replace。
+老写法加号拼接能看懂但易错（类型隐转陷阱见下张卡）——新代码一律模板字符串。`),
+    F('ba08', 'base', '算术运算与类型转换陷阱',
+      R`为什么 1 加 1 会等于 11？`,
+      R`加号**遇字符串就变拼接**：1 + "1" 得 "11"（数字被转成字符串粘上去）；而减号始终是数学：3 - "1" 得 2。
+显式转换：**Number(x)**（转数字）、**String(x)**（转字符串）、**parseInt/parseFloat**（从字符串开头解析数字）。
+另一个坑：0.1 + 0.2 不精确等于 0.3（二进制浮点通病）——金额计算用整数分或专用库。`),
+    F('ba09', 'base', '条件与循环写法',
+      R`JS 的条件与循环有哪几种？`,
+      R`**条件**：if/else if/else、switch/case（记得 break）、三元运算符（条件 ? 值A : 值B——赋值场景神器）。
+**循环**：for（经典计数）、**for...of**（遍历数组元素——首选）、**for...in**（遍历对象键名——别拿它遍历数组）、while/do...while。
+跳出：break 退出循环、continue 跳过本次；数组另有一族高阶方法（map/filter/forEach——async 章后更顺）。`),
+    F('ba10', 'base', '关键字与保留字总览',
+      R`JS 有哪些关键字？`,
+      R`**声明**：let/const/var/function/class/return；**控制流**：if/else/for/while/do/switch/case/break/continue；**对象与原型**：this/new/extends/super/delete/in/instanceof/typeof/void；**异常**：try/catch/finally/throw；**异步**：async/await/yield；**字面量**：true/false/null/undefined。
+保留字（未来可能用）：enum、package 等——都别拿来当变量名。
+typeof 是运算符不是函数：typeof x 合法、typeof(x) 也能跑但别这么写。`),
+    F('ba11', 'base', 'console 调试家族',
+      R`除了 log 还有哪些调试输出？`,
+      R`**console.log** 万能输出；**console.warn/error**（黄/红色，语义化提示）；**console.table(数组)**——表格化展示，看数据结构神器。
+**console.dir(对象)** 展开对象属性树（DOM 节点尤其有用）；console.time 加 timeEnd 测一段代码耗时。
+调试心法：在关键行前后各 log 一次变量——「打印调试」是 JS 学习期最诚实的老师，断点调试（Sources 面板）随后再上。`),
     // ==================== 函数与作用域 ====================
     F('fn01', 'fn', '函数的三种定义方式',
       R`函数声明、函数表达式与箭头函数的区别？`,
@@ -206,6 +231,12 @@ POST 请求：method、headers（内容类型）、body（JSON 序列化）配�
   ];
 
   const META = {
+    ba07: [4, '模板字符串'],
+    ba08: [5, '算术陷阱'],
+    ba09: [3, '条件循环'],
+    ba10: [4, '关键字'],
+    ba11: [3, 'console 调试'],
+
     bs01: [3, '起步·JS'], bs02: [3, '起步·JS'], bs03: [3, '起步·JS'], bs04: [3, '起步·JS'], bs05: [3, '起步·JS'], bs06: [3, '起步·JS'], bs07: [3, '起步·JS'], bs08: [3, '起步·JS'],
     ba01: [3, '运行时特征'], ba02: [5, 'var let const'], ba03: [4, '类型判断'], ba04: [5, '相等比较'], ba05: [3, 'null 与 undefined'], ba06: [4, '解构与展开'],
     fn01: [4, '函数三形态'], fn02: [5, 'this 绑定'], fn03: [5, '闭包'], fn04: [4, '高阶函数'], fn05: [3, '词法作用域'],

@@ -29,8 +29,11 @@
   function statsBar() {
     const s = stats();
     const incNew = incompleteNewCount();
+    const today = todayStr();
+    const firstToday = DATA.filter(function (f) { return card(f.id).firstLearn === today; }).length;
     const bar = el('div', 'stats-bar');
     bar.appendChild(el('span', 'stat', '今天已学习 ' + todayReviewed() + ' 张'));
+    bar.appendChild(el('span', 'stat', '🆕 今日新学 ' + firstToday + ' 张'));
     bar.appendChild(el('span', 'stat', '⏱ 今日已学 ' + todayStudyMin() + ' 分钟'));
     bar.appendChild(el('span', 'stat', '待复习 ' + s.due + ' 张'));
     bar.appendChild(el('span', 'stat', '未学完新卡 ' + incNew + ' 张'));
@@ -584,6 +587,9 @@
     const catBadge = el('span', 'badge cat-badge', CATS[f.cat]);
     if (bareRecallOn() && !reviewed) catBadge.classList.add('hidden');
     top.appendChild(catBadge);
+    // 今日新学标签：仅当该卡今日首次评分进入复习规划（新卡首学；复习中重学不刷新标记）
+    const fc = card(id);
+    if (fc.firstLearn === todayStr()) top.appendChild(el('span', 'badge first-learn-badge', '🆕 今日新学'));
     if (BASE_SUBJ && BASE_SUBJ.group === 'lang' && 'speechSynthesis' in window) {
       const speakBtn = el('button', 'btn small learn-speak', '🔊 朗读');
       speakBtn.addEventListener('click', function () { speakCardText(reviewed ? f.back : f.front); });
@@ -754,6 +760,7 @@
       detailBefore: (DB.log && DB.log.detail && DB.log.detail[todayStr()] && DB.log.detail[todayStr()][id]) || 0
     };
     applyRating(id, r);
+    if (wasNew) card(id).firstLearn = todayStr(); // 标记「新进入复习规划」的日期——今日新学标签依据（复习中重学不会刷新此标记）
     const afterM = mastery(id).pct;
     lastMasteryDelta = afterM - beforeM;
     markReviewed(id);

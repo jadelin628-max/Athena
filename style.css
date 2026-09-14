@@ -255,6 +255,11 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   background: var(--accent-weak); color: var(--accent);
   padding: 3px 11px; border-radius: 999px; font-size: 12px; font-weight: 600;
 }
+/* 今日新学标签：紧随分类徽标，绿色系与分类徽标区分（新进入复习规划的卡） */
+.first-learn-badge {
+  background: #EAF4EA; color: #3E7D46;
+}
+[data-theme="dark"] .first-learn-badge { background: #233B26; color: #8FCB97; }
 .controls { text-align: center; margin-top: 10px; }
 .rating { display: flex; gap: 9px; margin-top: 10px; }
 .rating .btn { flex: 1; }

@@ -209,6 +209,31 @@ lambda：参数 -> 表达式或语句块——如排序比较器写成一行的�
       R`控制流语法与 C 一致（if/switch/for/while——switch 支持**字符串**与枚举，Java 七起）；无 goto（保留字但不可用）；有标号 break/continue（跳出多层）。
 **String 的相等比较用 equals**——相等运算符比较引用（字符串池内字面量可能相等但语义上不可依赖）。
 三元、短路逻辑与 C 相同。`),
+    F('ba08', 'basic', 'Scanner 与控制台输入',
+      R`怎么读入用户输入？`,
+      R`**Scanner**（java.util 包，需 import）：new Scanner(System.in) 后——nextInt()（读整数）、nextDouble()、next()（读一个词）、nextLine()（读一整行）。
+经典坑：nextInt() 后接 nextLine() 会**读到一个空行**（数字后的换行没被消化）——先补一次 nextLine() 再读。
+用完关闭：scanner.close()。IDE 里练输入输出，Scanner 是第一课。`),
+    F('ba09', 'basic', 'String 常用方法',
+      R`字符串的常用操作有哪些？`,
+      R`**length()** 长度、**charAt(i)** 取字符、**substring(a, b)** 截取、**indexOf** 查找位置；**toUpperCase/lowerCase** 大小写、**trim** 去首尾空白、**replace** 替换；**split** 按分隔符切成数组、**contains/startsWith** 判断包含。
+记住「String 不可变」的前提：所有方法都**返回新字符串**（原串不变）——s.toUpperCase() 必须接住返回值才生效。
+链式调用：s.trim().toLowerCase() 是惯用风格。`),
+    F('ba10', 'basic', '关键字总览：保留字一览',
+      R`Java 有哪些关键字？`,
+      R`约五十个保留字，按功能分组：
+**类型**：int/long/double/boolean/char/byte/short/float/void；**面向对象**：class/interface/extends/implements/new/this/super/public/private/protected/abstract/final/static；**控制流**：if/else/switch/case/default/for/while/do/break/continue/return；**异常**：try/catch/finally/throw/throws；**其他**：import/package/instanceof/null/true/false。
+两个「保留但不可用」：goto 与 const——误用保留字命名直接编译错误。`),
+    F('ba11', 'basic', '格式化输出：printf 与 String.format',
+      R`怎么按格式输出？`,
+      R`**System.out.printf**（"格式串", 参数们）——与 C 同源：**%d** 整数、**%f** 浮点（%.2f 两位小数）、**%s** 字符串、**%n** 平台换行。
+**String.format** 同一套格式符，但返回字符串（拼消息用）。
+不格式化的简单拼接：加号运算符（"共" + n + "张"）——快速输出够用，格式化留给对齐与小数位。`),
+    F('ba12', 'basic', '命名规范：驼峰与帕斯卡',
+      R`Java 的命名惯例？`,
+      R`**类/接口**：大驼峰（PascalCase）——Student、ArrayList；**方法/变量**：小驼峰（camelCase）——getUserName、studentCount；**常量**：全大写下划线（MAX_VALUE）。
+**包名**：全小写、域名倒写（com.company.project）；缩写词惯例上驼峰处理（HtmlParser，而非 HTMLParser——有争议但主流如此）。
+命名是「可读性工程」的第一道门——编译器不管，团队与未来的你在乎。`),
     F('oo07', 'oop', 'Object 类的核心方法',
       R`Object 类有哪些必须掌握的方法？`,
       R`**toString**：字符串表示（打印默认是类名加哈希——通常重写）；**equals 与 hashCode**：相等的契约对（见基础卡）；**getClass**：运行时类型。
@@ -258,6 +283,12 @@ lambda：参数 -> 表达式或语句块——如排序比较器写成一行的�
   ];
 
   const META = {
+    ba08: [4, 'Scanner'],
+    ba09: [4, 'String 方法'],
+    ba10: [4, '关键字'],
+    ba11: [4, '格式化输出'],
+    ba12: [3, '命名规范'],
+
     bs01: [4, '起步·Java'], bs02: [4, '起步·Java'], bs03: [4, '起步·Java'], bs04: [4, '起步·Java'], bs05: [4, '起步·Java'], bs06: [4, '起步·Java'], bs07: [4, '起步·Java'], bs08: [4, '起步·Java'],
     ba01: [4, 'JVM 机制'], ba02: [4, '包装类缓存'], ba03: [5, 'String 不可变'], ba04: [3, 'main 签名'], ba05: [5, 'equals 契约'],
     oo01: [3, '封装'], oo02: [5, '继承与重写'], oo03: [5, '多态'], oo04: [5, '抽象类与接口'], oo05: [4, 'static 与 final'], oo06: [3, '内部类'],

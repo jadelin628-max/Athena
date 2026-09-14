@@ -94,7 +94,64 @@
     });
     sNew.appendChild(newInput);
     wrap.appendChild(sNew);
-    note('每天最多把多少张新卡引入学习队列（每科独立生效，已引入但未学完的卡不受限）。到量后队列只剩到期复习与巩固中的卡；明天自动继续引入。设 0 可临时冻结新内容、专心清复习积压。到期复习永远不受限——那是 FSRS 的排期承诺。');
+    note('每天最多把多少张新卡引入学习队列（每科独立生效，已引入但未学完的卡不受限）。到量后队列只剩到期复习与巩固中的卡；明天自动继续引入。设 0 可临时冻结新内容、专心清复习积压。到期复习永远不受限——那是 FSRS 的排期承诺。到量后也可在完成画面点「再来一批」手动越过上限。');
+
+    // 初学者模式：只从选定章节引入新卡（章节可自选，默认取学科的 BEGINNER 推荐路径）
+    const subj = subjectList()[currentSubjectId];
+    if (subj) {
+      const begCfg = (DB.settings && DB.settings.beginner) || { on: false, cats: null };
+      const allCats = subj.ORDER || Object.keys(subj.CATS || {});
+      const recCats = (subj.BEGINNER && subj.BEGINNER.length) ? subj.BEGINNER : allCats.slice(0, 2);
+      const sBeg = el('div', 'setting-row');
+      sBeg.appendChild(el('span', null, '初学者模式'));
+      const begCb = el('input', 'chk');
+      begCb.type = 'checkbox';
+      begCb.checked = !!(begCfg && begCfg.on);
+      begCb.title = '开启后，新卡只从下方勾选的章节引入';
+      const begWrap = el('div', 'beg-cats');
+      function renderBegCats() {
+        begWrap.innerHTML = '';
+        if (!begCb.checked) return;
+        const cats = (begCfg && Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats : recCats;
+        allCats.forEach(function (k) {
+          const chip = el('button', 'chip' + (cats.indexOf(k) !== -1 ? ' active' : ''), (subj.CATS && subj.CATS[k]) || k);
+          chip.type = 'button';
+          chip.addEventListener('click', function () {
+            const cur = (begCfg && Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats.slice() : cats.slice();
+            const i = cur.indexOf(k);
+            if (i !== -1) { if (cur.length > 1) cur.splice(i, 1); else return; }
+            else cur.push(k);
+            begCfg.cats = cur;
+            DB.settings.beginner = { on: true, cats: cur };
+            saveDB();
+            renderBegCats();
+          });
+          begWrap.appendChild(chip);
+        });
+        begWrap.appendChild(el('span', 'muted', '推荐起步：' + recCats.map(function (k) { return (subj.CATS && subj.CATS[k]) || k; }).join(' → ')));
+      }
+      begCb.addEventListener('change', function () {
+        if (begCb.checked) {
+          begCfg.on = true;
+          if (!Array.isArray(begCfg.cats) || !begCfg.cats.length) begCfg.cats = recCats.slice();
+          DB.settings.beginner = { on: true, cats: begCfg.cats };
+          toast('初学者模式已开启：新卡只从「' + begCfg.cats.map(function (k) { return (subj.CATS && subj.CATS[k]) || k; }).join('、') + '」引入，可随时调整或关闭');
+        } else {
+          DB.settings.beginner = { on: false, cats: (begCfg && begCfg.cats) || null };
+          toast('初学者模式已关闭：全部章节的新卡恢复引入');
+        }
+        saveDB();
+        renderBegCats();
+      });
+      const begLabel = el('label', 'setting-check', '');
+      begLabel.appendChild(begCb);
+      begLabel.appendChild(el('span', null, '新卡只从选定章节引入（其余章节之后解锁）'));
+      sBeg.appendChild(begLabel);
+      wrap.appendChild(sBeg);
+      renderBegCats();
+      wrap.appendChild(begWrap);
+      note('初学者模式按「章节」控制新卡引入：勾选的章节照常进入每日队列，未勾选的章节暂不引入（不影响已引入的卡与到期复习）。默认勾选本学科推荐的起步章节，点击章节名可增减；关闭开关即解锁全部章节。');
+    }
 
     const sBare = el('div', 'setting-row');
     sBare.appendChild(el('span', null, '裸回忆'));

@@ -12,6 +12,7 @@ window.SUBJECTS.py = (function () {
   const R = String.raw;
 
   const CATS = {
+    start: '起步与环境',
     base: '基础语法与类型',
     ctrl: '控制流',
     ds: '数据结构',
@@ -26,6 +27,47 @@ window.SUBJECTS.py = (function () {
   const F = (id, cat, title, front, back) => ({ id, cat, title, front, back });
 
   const DATA = [
+    // ==================== 起步与环境 ====================
+    F('pz01', 'start', 'Python 适合做什么',
+      R`Python 是一门什么样的语言？适合哪些场景？`,
+      R`**解释型动态语言**：写完直接运行，不用编译——语法接近自然语言，是公认「最适合入门」的通用语言之一。
+典型场景：自动化脚本（批量处理文件/表格）、数据分析（pandas 库）、人工智能（PyTorch 等）、爬虫、Web 后端。
+不适合：追求极致性能的底层程序、手机 App——知道边界即可，不必纠结。`),
+    F('pz02', 'start', '安装 Python 与版本选择',
+      R`怎么安装 Python？版本怎么选？`,
+      R`去 **python.org** 下载最新稳定版安装；Windows 安装时务必勾选 **Add Python to PATH**（新手第一坑：不勾则终端找不到命令）。
+验证：终端敲 python --version 或 py --version，出现版本号即成功。Mac 用户自带 python 3（终端敲 python3）。
+版本纠结症不必犯：装最新稳定版即可，各版本语法差异极小。`),
+    F('pz03', 'start', '第一个程序与运行方式',
+      R`怎么写出并运行第一个 Python 程序？`,
+      R`① 新建文本文件 hello.py，内容一行：print("你好，世界")；② 终端切到该目录，敲 **python hello.py**——看到输出即完成第一次运行。
+三个贯穿全程的细节：py 后缀、print 是内置函数、字符串用引号包住。
+改代码 → 保存 → 重新运行，这个循环就是 Python 开发的全部节奏。`),
+    F('pz04', 'start', 'REPL：交互式草稿纸',
+      R`什么是 REPL？为什么初学者离不开它？`,
+      R`终端直接敲 **python**（不带文件名）进入交互模式（提示符为三个大于号）：输入一行立刻执行一行，exit() 退出。
+用途：当**草稿纸**——不确定某函数怎么用、某表达式结果是什么，先进来试一下再写进文件。
+这是「边写边验证」习惯的起点，比反复改文件快得多。`),
+    F('pz05', 'start', '怎么读报错（Traceback）',
+      R`Python 报错怎么读？`,
+      R`报错叫 **Traceback**：**从下往上读**——最后一行是错误类型与说明，往上是调用路径（文件名与行号定位问题所在）。
+先认识三大类：SyntaxError（语法写错，没跑起来）、NameError（用了未定义的名字，常是拼写错）、TypeError（类型用错，如数字加字符串）。
+心态：报错不是失败，是解释器在指出路——读完报错再改，别瞎猜。`),
+    F('pz06', 'start', '注释与缩进：Python 的门面规矩',
+      R`Python 的注释与缩进规则？`,
+      R`注释：**#** 开头（整行或行尾），解释器直接忽略——写给人看。
+缩进是**语法本身**：同一代码块缩进必须一致（惯例 4 个空格），不像 C 系用花括号。IndentationError 是新手最高频报错，混用 Tab 与空格是典型原因。
+一开始就用正经编辑器（VS Code），自动缩进与高亮能避开九成格式坑。`),
+    F('pz07', 'start', '工具链总览：编辑器与包管理',
+      R`Python 的常用工具链有哪些？`,
+      R`**编辑器**：VS Code 加 Python 扩展（自动补全/报错提示/一键运行）是默认答案。
+**第三方包**：pip install 包名——PyPI 上有几十万个现成库，是 Python 生态的护城河。
+**虚拟环境**（venv）：给每个项目独立的包空间——初学先知道概念，遇到装包冲突时再回来学。`),
+    F('pz08', 'start', 'Python 学习路径建议',
+      R`Python 入门的推荐节奏？`,
+      R`① 本卡组起步章 + 基础章打底（变量/类型/控制流的直觉）；② 打通控制流后**写小脚本**：猜数字、批量改文件名——输出驱动的学习最牢固；③ 数据结构与字符串是日常主力，多练；④ 函数与面向对象在写过两百行代码后再攻。
+节奏参考：每天 10 张卡 + 半小时动手，一个月可写实用脚本。
+本卡组用法：起步章先过一遍，之后按 FSRS 节奏滚动，卡壳的卡配合 REPL 实操。`),
     // ==================== 基础语法与类型 ====================
     F('ba01', 'base', 'Python 的核心语言特征',
       R`Python 是什么类型的语言？有哪些核心特征？`,
@@ -282,6 +324,7 @@ for 循环底层：对可迭代对象调用可迭代方法拿迭代器，反复�
   ];
 
   const META = {
+    pz01: [3, '起步·Python'], pz02: [3, '起步·Python'], pz03: [3, '起步·Python'], pz04: [3, '起步·Python'], pz05: [3, '起步·Python'], pz06: [3, '起步·Python'], pz07: [3, '起步·Python'], pz08: [3, '起步·Python'],
     ba01: [3, '语言特征'], ba02: [4, '变量与命名'], ba03: [5, '数字类型'], ba04: [4, '真值判断'], ba05: [4, 'None 判断'], ba06: [3, '运算符与短路'], ba07: [4, '类型转换'],
     ct01: [3, '条件分支'], ct02: [5, 'for 与 range'], ct03: [4, 'while 与 break'], ct04: [2, 'match-case'],
     ds01: [5, '列表操作'], ds02: [4, '元组'], ds03: [5, '字典'], ds04: [3, '集合运算'], ds05: [5, '切片'], ds06: [5, '深浅拷贝'], ds07: [4, '推导式'], ds08: [3, '解包与星号收集'],
@@ -301,5 +344,6 @@ for 循环底层：对可迭代对象调用可迭代方法拿迭代器，反复�
     ad04: R`多线程不加速 CPU 密集任务（GIL）：算得快的路是多进程或把热点交给 NumPy/C 扩展。`
   };
 
-  return { id: 'py', group: 'skill', name: 'Python 知识', short: 'Python', icon: '🐍', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['base', 'ctrl', 'ds', 'str', 'func', 'oo', 'io', 'mod', 'adv'] };
+  const BEGINNER = ['start', 'base', 'ctrl'];
+  return { BEGINNER: BEGINNER, id: 'py', group: 'skill', name: 'Python 知识', short: 'Python', icon: '🐍', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'base', 'ctrl', 'ds', 'str', 'func', 'oo', 'io', 'mod', 'adv'] };
 })();

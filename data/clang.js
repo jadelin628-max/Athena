@@ -10,6 +10,7 @@ window.SUBJECTS.clang = (function () {
   const R = String.raw;
 
   const CATS = {
+    start: '起步与环境',
     basic: '基础与类型',
     flow: '控制流',
     fn: '函数与作用域',
@@ -23,6 +24,48 @@ window.SUBJECTS.clang = (function () {
   const F = (id, cat, title, front, back) => ({ id, cat, title, front, back });
 
   const DATA = [
+    // ==================== 起步与环境 ====================
+    F('bz01', 'start', 'C 语言适合做什么',
+      R`C 是一门什么样的语言？今天还值得学吗？`,
+      R`**编译型静态语言**：代码先翻译成机器码再运行——极快、极贴近硬件。操作系统（Linux/Windows 内核）、嵌入式设备、数据库几乎都是 C 写的。
+它是现代语言的祖师爷：C++、Java、Python 的语法都受它影响。学 C 的最大价值是**理解计算机真正在做什么**（内存、指针、字节）。
+今天仍值得学：嵌入式与系统领域是主力语言；作为第一门语言能打下最扎实的底层直觉。`),
+    F('bz02', 'start', '安装编译器：gcc 与验证',
+      R`怎么准备 C 的编译环境？`,
+      R`C 源码必须经**编译器**翻译才能运行：Windows 装 **MinGW-w64**（或用 WSL），Mac 自带 clang（终端敲 cc 即可）。
+验证：终端敲 gcc --version 出现版本号即成功。
+编辑器用 VS Code 加 C/C++ 扩展——编译与报错提示都有。`),
+    F('bz03', 'start', '第一个程序：从源码到运行',
+      R`怎么写出并运行第一个 C 程序？`,
+      R`① 新建 hello.c，写最经典的程序（include 头文件、main 函数、printf 输出、return 0）；② 终端敲 **gcc hello.c -o hello**（编译成可执行文件 hello）；③ 敲 **./hello**（Windows 是 hello.exe）运行。
+四步走：写源码 → 编译 → 得到可执行文件 → 运行。
+「改了代码必须重新编译」——与 Python 直接跑是本质区别，这是 C 的第一直觉。`),
+    F('bz04', 'start', '编译是什么：与解释型的分野',
+      R`「编译」到底在做什么？`,
+      R`编译器把你写的源码**整体翻译成机器码**（CPU 能直接执行的指令）——翻译一次，以后每次运行都直接跑机器码，所以 C 极快。
+对比 Python：解释器**边读边执行**源码，灵活但慢。
+推论：**编译错误**（编译器拒绝翻译，如少了分号）与**运行时错误**（能编译，跑的时候崩了，如除零）是两类问题，处理方式不同。`),
+    F('bz05', 'start', '怎么读编译报错',
+      R`gcc 的报错怎么读？`,
+      R`报错格式：**文件:行号: error/warning: 说明**——行号直接定位问题。
+关键习惯：**先修第一个错误**——后面的报错常常只是连锁反应（比如少了个花括号，后面全乱），第一个修完往往连锁消失。
+warning（警告）不是 error，但初学阶段**把警告当错误修**——它们几乎都预示真 bug。`),
+    F('bz06', 'start', '注释与代码风格',
+      R`C 的注释与风格惯例？`,
+      R`注释两种：**//** 单行、**/* …… */** 多行（不可嵌套）。注释解释「为什么」，不逐行复述「做了什么」。
+C 对缩进无强制（编译器不管），但风格必须统一：四空格缩进、花括号位置自选一种保持一致。
+命名：变量小写加下划线（user_name）、常量大写（MAX_SIZE）——社区惯例。`),
+    F('bz07', 'start', '工具链总览：make 与 gdb',
+      R`C 的常用工具链有哪些？`,
+      R`**编译器**：gcc（Linux/MinGW）、clang（Mac）——必装。
+**make**：项目大了后自动执行「一串编译命令」的工具——先知道名字，多文件项目时再学。
+**gdb / lldb**：调试器，可以单步执行、看变量——新手先会用 printf 打印调试，进阶再上调试器。
+编辑器：VS Code 加 C/C++ 扩展足够入门全程。`),
+    F('bz08', 'start', 'C 学习路径建议',
+      R`C 语言入门的推荐节奏？`,
+      R`① 本卡组起步章 + 基础章打底；② 控制流与函数写熟后（能写百行小程序），进入 **指针章——C 的灵魂，也是最大关卡**，卡多过几遍、配合画内存图；③ 数组与字符串紧随指针（两者本质相连）；④ 预处理编译章在读多文件项目前过一遍。
+节奏参考：每天 10 张卡 + 每周一个小程序（计算器、字符串反转）。
+心态：C 的报错与段错误是常态——每次崩溃都是理解内存模型的机会。`),
     // ==================== 基础与类型 ====================
     F('ba01', 'basic', 'C 语言的定位与特征',
       R`C 语言是什么？它为什么长盛不衰？`,
@@ -236,6 +279,7 @@ math.h：pow、sqrt、fabs（浮点绝对值，abs 是整数版）、floor/ceil�
   ];
 
   const META = {
+    bz01: [4, '起步·C'], bz02: [4, '起步·C'], bz03: [4, '起步·C'], bz04: [4, '起步·C'], bz05: [4, '起步·C'], bz06: [4, '起步·C'], bz07: [4, '起步·C'], bz08: [4, '起步·C'],
     ba01: [4, '语言特征'], ba02: [4, '程序结构'], ba03: [5, '类型与 sizeof'], ba04: [4, '声明与定义'], ba05: [4, 'const 与宏'], ba06: [4, '运算符陷阱'], ba07: [4, '类型转换'],
     fl01: [5, 'switch 穿透'], fl02: [3, '三种循环'], fl03: [3, 'break 与 goto'], fl04: [2, 'C99 特性'],
     fn01: [5, '函数原型'], fn02: [5, '传值调用'], fn03: [3, '递归'], fn04: [4, 'static 两义性'],
@@ -254,5 +298,6 @@ math.h：pow、sqrt、fabs（浮点绝对值，abs 是整数版）、floor/ceil�
     bu03: R`宏是文本替换：参数与整体都要加括号，副作用参数会被重复求值。`
   };
 
-  return { id: 'clang', name: 'C 语言', short: 'C 语言', icon: '🅲', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['basic', 'flow', 'fn', 'ptr', 'arr', 'struct', 'build', 'lib'] };
+  const BEGINNER = ['start', 'basic', 'flow'];
+  return { BEGINNER: BEGINNER, id: 'clang', name: 'C 语言', short: 'C 语言', icon: '🅲', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'basic', 'flow', 'fn', 'ptr', 'arr', 'struct', 'build', 'lib'] };
 })();

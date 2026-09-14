@@ -10,6 +10,7 @@ window.SUBJECTS.cppl = (function () {
   const R = String.raw;
 
   const CATS = {
+    start: '起步与环境',
     basic: '基础与增强',
     oop: '面向对象',
     spec: '拷贝与移动',
@@ -22,6 +23,47 @@ window.SUBJECTS.cppl = (function () {
   const F = (id, cat, title, front, back) => ({ id, cat, title, front, back });
 
   const DATA = [
+    // ==================== 起步与环境 ====================
+    F('bs01', 'start', 'C++ 适合做什么',
+      R`C++ 是一门什么样的语言？适合哪些场景？`,
+      R`在 C 的基础上加上**面向对象、标准库、泛型编程**——既要 C 级性能，又要高级抽象。
+典型场景：游戏引擎（Unreal）、高频交易、图形渲染、浏览器内核——性能敏感的大型软件。
+学习路线之争：可先学 C 再学 C++，也可**直接学现代 C++**（C++11 起）——本卡组按现代 C++ 为主线。`),
+    F('bs02', 'start', '安装编译器与环境',
+      R`怎么准备 C++ 的编译环境？`,
+      R`编译器三选一：**g++**（MinGW-w64/WSL）、clang++（Mac 自带）、MSVC（Visual Studio）。
+验证：终端敲 g++ --version 出现版本号即成功。编辑器 VS Code 加 C++ 扩展，或直接上 CLion。
+版本意识：编译时加 **-std=c++17**（或更高）启用现代特性——老标准会编译不过新写法。`),
+    F('bs03', 'start', '第一个程序：iostream 与 cout',
+      R`怎么写出并运行第一个 C++ 程序？`,
+      R`标准骨架：include 输入输出头文件 → main 函数 → 用 **std::cout** 输出（左移符号连着写）→ return 0。
+编译运行两步：**g++ main.cpp -o main**，然后 **./main**。
+与 C 的 printf 相比，cout 自动识别类型——这是 C++ 「类型感知」风格的第一个体验。`),
+    F('bs04', 'start', '头文件与编译模型',
+      R`头文件（#include）在做什么？`,
+      R`**#include 就是复制粘贴**：预处理阶段把头文件内容原样拷进当前文件——理解了这点，很多编译错误都好懂。
+惯例：**头文件（.h/.hpp）放声明，源文件（.cpp）放实现**；自己写的头文件用双引号 include，系统的用尖括号。
+多文件项目的编译与**链接**是 C++ 的独门功课——先见怪不怪，build 章细讲。`),
+    F('bs05', 'start', '怎么读 C++ 报错',
+      R`C++ 的报错为什么那么长？怎么读？`,
+      R`C++ 报错（尤其涉及模板/STL）动辄几十行——**别慌，策略有三**：
+① 看编译器给出的**第一个** error（后面的多是连锁）；② 在长报错里搜索**你自己文件的名字与行号**——那一行才是你的问题；③ 模板报错看**最后几行**的「required from」链。
+开启 **-Wall** 警告：初学阶段把警告当错误修。`),
+    F('bs06', 'start', '命名空间与 std',
+      R`std:: 是什么？要不要 using namespace std?`,
+      R`**命名空间**是名字的分区：标准库所有名字都住在 std 里（std::cout、std::string）——避免你自己的 cout 之类撞名。
+**using namespace std;**（用 std 前缀）写小练习方便，但工程上不推荐放头文件——会污染所有包含者的命名空间。
+初学建议：练习时图省事可用，从写正式代码起就老老实实写 std:: 前缀——肌肉记忆从第一天养成。`),
+    F('bs07', 'start', '工具链总览：CMake 与调试',
+      R`C++ 的常用工具链有哪些？`,
+      R`**编译选项**：-std=c++17（标准版本）、-Wall -Wextra（警告全开）、-g（带调试信息）——记这三个起步够用。
+**CMake**：多文件项目的构建系统事实标准——先知道名字，项目超过两三个文件时再学。
+**gdb/lldb**：调试器；**valgrind/ sanitizer**：内存错误检测工具（mem 章会用到）——先混个脸熟。`),
+    F('bs08', 'start', 'C++ 学习路径建议',
+      R`C++ 入门的推荐节奏？`,
+      R`① 起步章 + 基础章打底（重点：引用、const、auto）；② 面向对象章是 C++ 的骨架——类、构造析构、虚函数逐一过；③ **STL 优先于模板元编程**：vector/string/map 用起来，90% 的日常需求就够了；④ 拷贝移动与智能指针（mem 章）是现代 C++ 的核心，值得反复。
+节奏参考：每天 10 张卡 + 每周一个小项目（通讯录、简单容器实现）。
+心态：C++ 广而深——按本卡组 ORDER 顺序走，别在模板章死磕而跳过 STL 实用主义。`),
     // ==================== 基础与增强 ====================
     F('ba01', 'basic', 'C++ 与 C 的关系',
       R`C++ 相对 C 增强了什么？两者如何选择？`,
@@ -208,6 +250,7 @@ malloc/free：纯内存分配释放、不调用构造析构——C++ 中仅用�
   ];
 
   const META = {
+    bs01: [3, '起步·C++'], bs02: [3, '起步·C++'], bs03: [3, '起步·C++'], bs04: [3, '起步·C++'], bs05: [3, '起步·C++'], bs06: [3, '起步·C++'], bs07: [3, '起步·C++'], bs08: [3, '起步·C++'],
     ba01: [3, '语言定位'], ba02: [3, 'iostream 与命名空间'], ba03: [5, '引用'], ba04: [4, 'const 语义'], ba05: [3, 'auto 推导'], ba06: [3, '范围 for'],
     oo01: [4, '封装'], oo02: [5, '初始化列表'], oo03: [5, 'RAII'], oo04: [3, 'this 指针'], oo05: [4, '继承'], oo06: [5, '虚函数与切片'], oo07: [4, '抽象类'], oo08: [3, '运算符重载'],
     sp01: [5, '拷贝构造'], sp02: [5, 'Rule of Zero'], sp03: [5, '移动语义'], sp04: [4, 'std::move 误用'],
@@ -225,5 +268,6 @@ malloc/free：纯内存分配释放、不调用构造析构——C++ 中仅用�
     mo01: R`按引用捕获的局部变量在 lambda 存活超作用域后悬空——异步回调用按值捕获。`
   };
 
-  return { id: 'cppl', name: 'C++', short: 'C++', icon: '➕', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['basic', 'oop', 'spec', 'tmpl', 'stl', 'mem', 'modern'] };
+  const BEGINNER = ['start', 'basic'];
+  return { BEGINNER: BEGINNER, id: 'cppl', name: 'C++', short: 'C++', icon: '➕', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'basic', 'oop', 'spec', 'tmpl', 'stl', 'mem', 'modern'] };
 })();

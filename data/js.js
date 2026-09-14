@@ -10,6 +10,7 @@ window.SUBJECTS.js = (function () {
   const R = String.raw;
 
   const CATS = {
+    start: '起步与环境',
     base: '语言基础',
     fn: '函数与作用域',
     proto: '对象与原型',
@@ -21,6 +22,47 @@ window.SUBJECTS.js = (function () {
   const F = (id, cat, title, front, back) => ({ id, cat, title, front, back });
 
   const DATA = [
+    // ==================== 起步与环境 ====================
+    F('bs01', 'start', 'JS 适合做什么',
+      R`JavaScript 是一门什么样的语言？适合哪些场景？`,
+      R`**网页的专用语言**——浏览器唯一直接执行的语言，也是动态弱类型的脚本语言。
+场景三件套：网页交互（前端）、服务器（Node.js）、小程序/桌面应用（Electron）——学会一门，三端通用。
+特点：单线程 + 异步模型（async 章细讲）、动态类型（变量不声明类型）——灵活但容易踩坑，本卡组会逐个排雷。`),
+    F('bs02', 'start', '零成本环境：浏览器控制台',
+      R`怎么最快开始写 JS？一行代码都不用装。`,
+      R`浏览器按 **F12**（或右键检查）打开开发者工具，切到 **Console（控制台）**——这就是一个现成的 JS 交互环境。
+敲一行 console.log("你好")，回车立即执行——**不需要安装任何东西**，这是 JS 对初学者最大的善意。
+控制台就是 REPL：试语法、看变量、查报错——学习全程开着它。`),
+    F('bs03', 'start', '把 JS 接入网页',
+      R`JS 代码怎么放进网页？`,
+      R`两种方式：① 页面里直接写 script 标签；② 外部文件引用（script src="app.js"）——**外部文件是正道**（结构与逻辑分离、可缓存）。
+script 标签放 body 末尾（页面元素加载完再执行，避免找不到元素）——新手期最省心的位置。
+验证接入成功：在 JS 里 console.log 一句，控制台看得到即通。`),
+    F('bs04', 'start', 'Node.js：脱离浏览器的 JS',
+      R`Node.js 是什么？和浏览器里的 JS 什么关系？`,
+      R`**Node.js = 装在电脑上的 JS 运行环境**——同一门语言，不用浏览器也能跑，还能读写文件、开服务器。
+安装后：终端敲 node hello.js 直接运行；敲 node 进入交互模式（同浏览器控制台的用法）。
+附带得到 **npm**（包管理器）：npm install 包名——JS 生态的万库之门。前端后端共用一套语言，正是 Node 的意义。`),
+    F('bs05', 'start', '怎么读控制台报错',
+      R`JS 报错怎么读？`,
+      R`控制台红色信息三段式：**错误类型 + 说明 + 出错位置**（点位置链接直达代码行）。
+最常见三兄弟：TypeError: x is not a function（把非函数当函数调了）、is not defined（名字拼错或未声明）、Cannot read properties of undefined（访问了不存在的东西的属性——async 章之前的高频客）。
+习惯：报错先读第一行，点行号跳过去看代码——九成问题当场就能定位。`),
+    F('bs06', 'start', 'let 与 const：从第一天就别用 var',
+      R`声明变量用什么？`,
+      R`现代 JS 只用两个：**const**（不会重新赋值的量——默认选它）与 **let**（会变的量）。**var 是历史遗留，别再用**（作用域规则反直觉，proto 章细说坑）。
+直觉法：先写 const，编辑器/运行报错说要变，再改成 let——这是社区公认的最佳实践。
+命名：驼峰式（userName），常量全大写下划线（MAX_SIZE）。`),
+    F('bs07', 'start', '工具链总览：编辑器与生态',
+      R`JS 的常用工具链有哪些？`,
+      R`**编辑器**：VS Code（对 JS 支持开箱即用，装 Live Server 插件可一键起本地服务器、保存即刷新）。
+**包管理**：npm（Node 自带）；**打包器**（Vite/Webpack）——把多文件项目压成浏览器友好的产物，框架时代再学。
+**浏览器兼容**概念：新语法老浏览器可能不认——现代开发用打包器转译解决，初学期用最新 Chrome 即可无视。`),
+    F('bs08', 'start', 'JS 学习路径建议',
+      R`JS 入门的推荐节奏？`,
+      R`① 起步章 + 语言基础章打底（控制台随手试每个知识点）；② **DOM 章**——学 JS 的动力来源：让网页真正动起来（按钮点击、列表渲染）；③ 函数与异步是两道坎：函数写熟后再攻异步（回调→Promise→await 一条线）；④ 原型链理解「对象从哪来」，框架的根基。
+节奏参考：每天 10 张卡 + 每周一个小交互（todo 列表、图片切换）。
+铁律：JS 是「开着控制台学」的语言——每个卡片的示例都亲手敲一遍。`),
     // ==================== 语言基础 ====================
     F('ba01', 'base', 'JavaScript 的运行时特征',
       R`JavaScript 是什么类型的语言？单线程如何处理并发？`,
@@ -164,6 +206,7 @@ POST 请求：method、headers（内容类型）、body（JSON 序列化）配�
   ];
 
   const META = {
+    bs01: [3, '起步·JS'], bs02: [3, '起步·JS'], bs03: [3, '起步·JS'], bs04: [3, '起步·JS'], bs05: [3, '起步·JS'], bs06: [3, '起步·JS'], bs07: [3, '起步·JS'], bs08: [3, '起步·JS'],
     ba01: [3, '运行时特征'], ba02: [5, 'var let const'], ba03: [4, '类型判断'], ba04: [5, '相等比较'], ba05: [3, 'null 与 undefined'], ba06: [4, '解构与展开'],
     fn01: [4, '函数三形态'], fn02: [5, 'this 绑定'], fn03: [5, '闭包'], fn04: [4, '高阶函数'], fn05: [3, '词法作用域'],
     pr01: [3, '对象操作'], pr02: [5, '原型链'], pr03: [4, 'class 语法'], pr04: [3, 'Map 与 Set'],
@@ -180,5 +223,6 @@ POST 请求：method、headers（内容类型）、body（JSON 序列化）配�
     do01: R`innerHTML 插入用户提供的内容就是 XSS——纯文本用 textContent、必须用 HTML 时先净化。`
   };
 
-  return { id: 'js', name: 'JavaScript', short: 'JavaScript', icon: '🌐', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['base', 'fn', 'proto', 'dom', 'async', 'modern'] };
+  const BEGINNER = ['start', 'base', 'dom'];
+  return { BEGINNER: BEGINNER, id: 'js', name: 'JavaScript', short: 'JavaScript', icon: '🌐', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'base', 'fn', 'proto', 'dom', 'async', 'modern'] };
 })();

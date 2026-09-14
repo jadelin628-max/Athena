@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.36.0';
+  const VERSION = '1.37.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.37.0', date: '2026-09', items: ['初学者模式（设置页可调，章节自选）：开启后新卡只从勾选章节引入，默认勾选各科推荐的起步章节（可增减），关闭即解锁全部——11 科各配 BEGINNER 推荐路径', '每日上限后可「再来一批」：完成画面新增「➕ 再来一批」按钮，手动越过当日上限继续引入（批量 = 每日上限值，计入今日计数），学多少由自己决定', '新增 11 科「起步」章共 76 卡：技能科（Python/C/C++/Java/JS/Rust/AI）各 8 卡——语言定位、环境安装、第一个程序、怎么读报错、工具链、学习路径；语言科（日/韩/法/西）各 5 卡——文字总览、发音难点预览、第一周节奏、常见放弃点对策。全库 25 学科 2328 卡', '终端数据库编辑 CLI（阶段 A）：tools/athena-cli.mjs——init/list/pull/push/status 四组命令，把云端学习数据库拉成本地 JSON 用任意编辑器修改，推回前跑与加载同口径的校验（非法调度数据点名拒绝），改动经现有同步通道全端生效'] },
     { v: '1.36.0', date: '2026-09', items: ['每日新卡上限生效（设置页新增「每日新卡上限」，默认 10，0 = 暂停引入）：每天最多把 N 张新卡引入学习队列，已引入但未学完的卡与到期复习不受限；完成画面新增「另有 N 张新卡将按每日上限逐步引入」提示。无上限一次性引入虽让完成画面可达，但新学科会一次性涌入数百张卡——软上限让每日负载可控', '错题关联降级的根治：降级（错题答「不会/思路错」时关联知识卡进入重学）现在会更新 lastR——跨端合并按 lastR 选边，此前降级可能被另一端的旧副本静默丢弃、行为在两端反复；导入净化与加载自愈扩展到全部调度数值字段（NaN/null 一律拒收），彻底封死「学习中但到期时刻无效」的滞留来源', '说明：删除错题不会撤销已发生的关联降级——那是对应知识点当天真实遗忘的记录；但其调度状态自本版起跨端一致、且不再可能因数据损坏而滞留'] },
     { v: '1.35.1', date: '2026-09', items: ['修复：本日复习队列结束后，仍有「学习中」卡片不回到队列。根因有二：① 完成画面是静态的——学习/重学短步进（1/10 分钟）中的卡不占当前队列，画面既无提示也不会自动刷新，用户在步进窗口内回访只见「本轮已完成」+「未学完新卡 N」并存；② 少数卡的到期时刻被污染（缺失/NaN/时钟偏移写远）后永远无法通过到期检查，真正滞留队列之外', '修复方案：① 完成画面改为「⏳ 巩固步进中」——显示待回归卡数与最早回归倒计时，到点自动刷新把卡片接回队列（无需手动切换页面）；② 加载时对调度数据自愈——学习/重学卡 due 缺失/非法/被写远超 1 小时、复习卡 due 缺失/非法，一律修复为「即刻到期」，杜绝永久滞留'] },
     { v: '1.35.0', date: '2026-09', items: ['统计学对齐茆诗松《概率论与数理统计教程》全面补全（+18 卡 / 修订 8 卡，共 199 卡）：新增相互独立与两两独立、概率的统计定义、依概率收敛、李雅普诺夫 CLT、两正态总体抽样分布（合并方差 t 与方差比 F）、样本中位数与极差、频数频率表与直方图、箱线图、正态概率图、变异系数、偏度与峰度、协方差矩阵、全方差公式、均方误差准则、MLE 不变性、单侧置信限、多重比较（LSD/Tukey）、一元非线性回归', '修订既有卡：样本空间补对偶律、独立性补三事件推论、几何分布补无记忆性、联合分布函数补矩形公式与联合分布律、MLE 补求解步骤、估计量评选补 MSE 路线、单因素方差分析补三假定、贝叶斯卡补后验均值估计', '新增 8 条 PITFALL（两两独立陷阱/全方差公式两项勿换/峰度减 3 基准/F 自由度顺序/单双侧临界值/LSD 错误率膨胀/线性化 R² 不可比）与 18 组知识点关联标签'] },
@@ -1631,7 +1632,19 @@
     const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
     const introducedToday = DB.log.counts[t].intro || 0;
     const room = Math.max(0, cap - introducedToday);
-    const pending = shuffle(all.filter(function (id) { return card(id).state === 'new' && st.ids.indexOf(id) === -1; })).slice(0, room);
+    // 初学者模式：开启时只在选定章节内引入新卡（章节可在设置页调整）
+    const beg = (DB.settings && DB.settings.beginner) || null;
+    const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
+    const begSet = {};
+    if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
+    const pending = shuffle(all.filter(function (id) {
+      if (card(id).state !== 'new' || st.ids.indexOf(id) !== -1) return false;
+      if (begOn) {
+        const f = DATA.find(function (x) { return x.id === id; });
+        if (!f || !begSet[f.cat]) return false;
+      }
+      return true;
+    })).slice(0, room);
     if (pending.length) {
       st.ids = st.ids.concat(pending);
       DB.log.counts[t].intro = introducedToday + pending.length;
@@ -1660,6 +1673,34 @@
     pendingAdvance = false;
     seenAgain = {};
     saveSession();
+  }
+
+  // 「再来一批」：每日上限达到后，用户手动越过上限再引入一批新卡（批量 = 每日上限设置值）。
+  // 手动引入同样计入今日 intro 计数（后续自动引入保持关闭），队列重建后新卡续上。
+  function introMore() {
+    const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
+    const st = introState();
+    if (!DB.log) DB.log = {};
+    if (!DB.log.counts) DB.log.counts = {};
+    const t = todayStr();
+    if (!DB.log.counts[t]) DB.log.counts[t] = {};
+    const beg = (DB.settings && DB.settings.beginner) || null;
+    const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
+    const begSet = {};
+    if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
+    const rest = shuffle(DATA.filter(function (f) {
+      if (card(f.id).state !== 'new' || st.ids.indexOf(f.id) !== -1) return false;
+      if (begOn && !begSet[f.cat]) return false;
+      return true;
+    }).map(function (f) { return f.id; })).slice(0, cap);
+    if (!rest.length) { toast('新卡已全部引入'); return; }
+    st.ids = st.ids.concat(rest);
+    DB.log.counts[t].intro = (DB.log.counts[t].intro || 0) + rest.length;
+    saveDB();
+    buildSession();
+    currentView = 'learn';
+    renderApp();
+    toast('已引入 ' + rest.length + ' 张新卡，继续');
   }
 
   function surfaceDue() {
@@ -1758,6 +1799,11 @@
         wrap.appendChild(el('p', 'muted', waiting > 0
           ? '今日的队列已清空——另有 ' + waiting + ' 张新卡将按「每日新卡上限」在之后的日期逐步引入；到期复习卡会按排期自动进入队列。'
           : '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
+        if (waiting > 0) {
+          const more = el('button', 'btn primary', '➕ 再来一批（' + Math.min(waiting, (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10) + ' 张）');
+          more.addEventListener('click', introMore);
+          wrap.appendChild(more);
+        }
       }
       app.appendChild(wrap);
       return;
@@ -3223,7 +3269,64 @@
     });
     sNew.appendChild(newInput);
     wrap.appendChild(sNew);
-    note('每天最多把多少张新卡引入学习队列（每科独立生效，已引入但未学完的卡不受限）。到量后队列只剩到期复习与巩固中的卡；明天自动继续引入。设 0 可临时冻结新内容、专心清复习积压。到期复习永远不受限——那是 FSRS 的排期承诺。');
+    note('每天最多把多少张新卡引入学习队列（每科独立生效，已引入但未学完的卡不受限）。到量后队列只剩到期复习与巩固中的卡；明天自动继续引入。设 0 可临时冻结新内容、专心清复习积压。到期复习永远不受限——那是 FSRS 的排期承诺。到量后也可在完成画面点「再来一批」手动越过上限。');
+
+    // 初学者模式：只从选定章节引入新卡（章节可自选，默认取学科的 BEGINNER 推荐路径）
+    const subj = subjectList()[currentSubjectId];
+    if (subj) {
+      const begCfg = (DB.settings && DB.settings.beginner) || { on: false, cats: null };
+      const allCats = subj.ORDER || Object.keys(subj.CATS || {});
+      const recCats = (subj.BEGINNER && subj.BEGINNER.length) ? subj.BEGINNER : allCats.slice(0, 2);
+      const sBeg = el('div', 'setting-row');
+      sBeg.appendChild(el('span', null, '初学者模式'));
+      const begCb = el('input', 'chk');
+      begCb.type = 'checkbox';
+      begCb.checked = !!(begCfg && begCfg.on);
+      begCb.title = '开启后，新卡只从下方勾选的章节引入';
+      const begWrap = el('div', 'beg-cats');
+      function renderBegCats() {
+        begWrap.innerHTML = '';
+        if (!begCb.checked) return;
+        const cats = (begCfg && Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats : recCats;
+        allCats.forEach(function (k) {
+          const chip = el('button', 'chip' + (cats.indexOf(k) !== -1 ? ' active' : ''), (subj.CATS && subj.CATS[k]) || k);
+          chip.type = 'button';
+          chip.addEventListener('click', function () {
+            const cur = (begCfg && Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats.slice() : cats.slice();
+            const i = cur.indexOf(k);
+            if (i !== -1) { if (cur.length > 1) cur.splice(i, 1); else return; }
+            else cur.push(k);
+            begCfg.cats = cur;
+            DB.settings.beginner = { on: true, cats: cur };
+            saveDB();
+            renderBegCats();
+          });
+          begWrap.appendChild(chip);
+        });
+        begWrap.appendChild(el('span', 'muted', '推荐起步：' + recCats.map(function (k) { return (subj.CATS && subj.CATS[k]) || k; }).join(' → ')));
+      }
+      begCb.addEventListener('change', function () {
+        if (begCb.checked) {
+          begCfg.on = true;
+          if (!Array.isArray(begCfg.cats) || !begCfg.cats.length) begCfg.cats = recCats.slice();
+          DB.settings.beginner = { on: true, cats: begCfg.cats };
+          toast('初学者模式已开启：新卡只从「' + begCfg.cats.map(function (k) { return (subj.CATS && subj.CATS[k]) || k; }).join('、') + '」引入，可随时调整或关闭');
+        } else {
+          DB.settings.beginner = { on: false, cats: (begCfg && begCfg.cats) || null };
+          toast('初学者模式已关闭：全部章节的新卡恢复引入');
+        }
+        saveDB();
+        renderBegCats();
+      });
+      const begLabel = el('label', 'setting-check', '');
+      begLabel.appendChild(begCb);
+      begLabel.appendChild(el('span', null, '新卡只从选定章节引入（其余章节之后解锁）'));
+      sBeg.appendChild(begLabel);
+      wrap.appendChild(sBeg);
+      renderBegCats();
+      wrap.appendChild(begWrap);
+      note('初学者模式按「章节」控制新卡引入：勾选的章节照常进入每日队列，未勾选的章节暂不引入（不影响已引入的卡与到期复习）。默认勾选本学科推荐的起步章节，点击章节名可增减；关闭开关即解锁全部章节。');
+    }
 
     const sBare = el('div', 'setting-row');
     sBare.appendChild(el('span', null, '裸回忆'));

@@ -35,3 +35,7 @@ PROGRESS.md
 
 # 生图工具工作目录（本地私有）
 assets/.workbuddy/
+
+# CLI 本地数据库编辑副本与令牌配置（不入库）
+data-db/
+.athena-cli.json

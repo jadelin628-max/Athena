@@ -10,6 +10,7 @@ window.SUBJECTS.java = (function () {
   const R = String.raw;
 
   const CATS = {
+    start: '起步与环境',
     basic: '基础与 JVM',
     oop: '面向对象',
     coll: '集合框架',
@@ -21,6 +22,47 @@ window.SUBJECTS.java = (function () {
   const F = (id, cat, title, front, back) => ({ id, cat, title, front, back });
 
   const DATA = [
+    // ==================== 起步与环境 ====================
+    F('bs01', 'start', 'Java 适合做什么',
+      R`Java 是一门什么样的语言？适合哪些场景？`,
+      R`**强类型编译型语言**，跑在 JVM 上——企业后端（银行、电商）、Android（早期主力）、大数据（Hadoop 生态）的支柱语言，就业面极广。
+哲学：「一次编写，到处运行」+ 严格的结构（一切皆对象、强类型）——啰嗦但稳，团队协作友好。
+对初学者：语法比 Python 严格（要声明类型），换来的是大型项目里的可靠性与工具支持。`),
+    F('bs02', 'start', '安装 JDK 与版本选择',
+      R`怎么安装 Java 环境？JDK/JRE/JVM 什么关系？`,
+      R`装 **JDK**（开发工具包，含编译器）——直接装 **LTS 版本**（17 或 21），别装只含运行环境的 JRE。
+验证：终端敲 java -version 与 javac -version 都出版本号（java 跑程序、javac 编译——两个都要有）。
+包含关系：**JDK ⊃ JRE ⊃ JVM**——JDK 是全套工具箱，JVM 是最终执行字节码的引擎。`),
+    F('bs03', 'start', '第一个程序：类与主方法',
+      R`怎么写出并运行第一个 Java 程序？`,
+      R`Java 万物皆类：文件名必须与 public 类同名（HelloWorld.java），程序入口是 main 方法（固定签名：public static void main）。
+两步运行：**javac HelloWorld.java**（编译出 .class 字节码）→ **java HelloWorld**（JVM 执行）。
+初见觉得啰嗦（打印一句话要套三层壳）——这正是 Java 结构化风格的缩影，习惯它。`),
+    F('bs04', 'start', 'JVM 与字节码：跨平台的原理',
+      R`「一次编写，到处运行」是怎么实现的？`,
+      R`javac 把源码编译成 **.class 字节码**（不是机器码）——字节码是给 JVM 看的中间指令。每个平台装对应版本的 JVM，它把字节码翻译成本机指令。
+所以：程序不用改，各平台装好 JVM 就能跑——JVM 替你扛住了平台差异。
+直觉：Python 解释器逐句执行源码，Java 先编译成统一中间码再由 JVM 执行——工程化与性能兼得的关键设计。`),
+    F('bs05', 'start', '怎么读异常堆栈',
+      R`Java 的报错（Exception）怎么读？`,
+      R`报错是**异常堆栈**：**从上往下读**——第一行是异常类型与消息（如 NullPointerException），下面每个 at 行是一层调用位置。
+找 **at 行里你自己的类名**（不是 JDK 内部）——那是你的代码出问题的地方，行号直达。
+最常见的三个：NullPointerException（空指针）、ArrayIndexOutOfBoundsException（下标越界）、ClassCastException（类型转换错）——先混个脸熟。`),
+    F('bs06', 'start', '包与 import：代码的组织',
+      R`package 和 import 是干什么的？`,
+      R`**package** 声明类所在的「文件夹」（命名空间）：域名倒写是惯例（com.company.project）——防止全世界的类重名。
+**import** 引入别的包的类（import java.util.List）——不写就要用全限定名。IDE 会自动管理 import，但要理解它做了什么。
+一个文件只能有一个 public 类，且类名必须与文件名一致——Java 的物理组织纪律。`),
+    F('bs07', 'start', '工具链总览：IDE 与构建工具',
+      R`Java 的常用工具链有哪些？`,
+      R`**IDE**：IntelliJ IDEA（社区版免费，事实标准）或 VS Code 加扩展——Java 手写编译运行太啰嗦，IDE 一键完成。
+**构建工具**：Maven / Gradle——管理依赖（第三方库）与构建流程，pom.xml/build.gradle 是它们的配置。初学先知道名字，引第一个第三方库时再学。
+**JDK 自带三件套**：javac（编译）、java（运行）、javadoc（生成文档）。`),
+    F('bs08', 'start', 'Java 学习路径建议',
+      R`Java 入门的推荐节奏？`,
+      R`① 起步章 + 基础章打底（类型、运算、控制流）；② **面向对象章是 Java 的灵魂**——类/继承/接口/多态必须吃透，这一章值得双倍时间；③ 集合框架（List/Map/Set）是日常代码的主力容器；④ 异常与泛型让代码健壮；⑤ 并发是进阶，入门期不急。
+节奏参考：每天 10 张卡 + 每周一个小程序（学生管理、简易记账）。
+提醒：IDE 的自动补全很好用，但**语法要手写到肌肉记忆**——面试与调试都靠它。`),
     // ==================== 基础与 JVM ====================
     F('ba01', 'basic', 'Java 的核心特征与运行机制',
       R`Java 的"一次编写，到处运行"是如何实现的？`,
@@ -216,6 +258,7 @@ lambda：参数 -> 表达式或语句块——如排序比较器写成一行的�
   ];
 
   const META = {
+    bs01: [4, '起步·Java'], bs02: [4, '起步·Java'], bs03: [4, '起步·Java'], bs04: [4, '起步·Java'], bs05: [4, '起步·Java'], bs06: [4, '起步·Java'], bs07: [4, '起步·Java'], bs08: [4, '起步·Java'],
     ba01: [4, 'JVM 机制'], ba02: [4, '包装类缓存'], ba03: [5, 'String 不可变'], ba04: [3, 'main 签名'], ba05: [5, 'equals 契约'],
     oo01: [3, '封装'], oo02: [5, '继承与重写'], oo03: [5, '多态'], oo04: [5, '抽象类与接口'], oo05: [4, 'static 与 final'], oo06: [3, '内部类'],
     co01: [4, 'List 选择'], co02: [5, 'HashMap 原理'], co03: [4, 'Set 家族'], co04: [3, 'fail-fast'],
@@ -246,5 +289,6 @@ lambda：参数 -> 表达式或语句块——如排序比较器写成一行的�
     co04x: R`线程池参数不设好就是事故：队列无界可能内存耗尽、拒绝策略没配可能静默丢任务。`
   });
 
-  return { id: 'java', name: 'Java', short: 'Java', icon: '☕', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['basic', 'oop', 'coll', 'exgen', 'lib', 'conc'] };
+  const BEGINNER = ['start', 'basic', 'oop'];
+  return { BEGINNER: BEGINNER, id: 'java', name: 'Java', short: 'Java', icon: '☕', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'basic', 'oop', 'coll', 'exgen', 'lib', 'conc'] };
 })();

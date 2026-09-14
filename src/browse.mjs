@@ -83,7 +83,19 @@
     const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
     const introducedToday = DB.log.counts[t].intro || 0;
     const room = Math.max(0, cap - introducedToday);
-    const pending = shuffle(all.filter(function (id) { return card(id).state === 'new' && st.ids.indexOf(id) === -1; })).slice(0, room);
+    // 初学者模式：开启时只在选定章节内引入新卡（章节可在设置页调整）
+    const beg = (DB.settings && DB.settings.beginner) || null;
+    const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
+    const begSet = {};
+    if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
+    const pending = shuffle(all.filter(function (id) {
+      if (card(id).state !== 'new' || st.ids.indexOf(id) !== -1) return false;
+      if (begOn) {
+        const f = DATA.find(function (x) { return x.id === id; });
+        if (!f || !begSet[f.cat]) return false;
+      }
+      return true;
+    })).slice(0, room);
     if (pending.length) {
       st.ids = st.ids.concat(pending);
       DB.log.counts[t].intro = introducedToday + pending.length;
@@ -112,6 +124,34 @@
     pendingAdvance = false;
     seenAgain = {};
     saveSession();
+  }
+
+  // 「再来一批」：每日上限达到后，用户手动越过上限再引入一批新卡（批量 = 每日上限设置值）。
+  // 手动引入同样计入今日 intro 计数（后续自动引入保持关闭），队列重建后新卡续上。
+  function introMore() {
+    const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
+    const st = introState();
+    if (!DB.log) DB.log = {};
+    if (!DB.log.counts) DB.log.counts = {};
+    const t = todayStr();
+    if (!DB.log.counts[t]) DB.log.counts[t] = {};
+    const beg = (DB.settings && DB.settings.beginner) || null;
+    const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
+    const begSet = {};
+    if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
+    const rest = shuffle(DATA.filter(function (f) {
+      if (card(f.id).state !== 'new' || st.ids.indexOf(f.id) !== -1) return false;
+      if (begOn && !begSet[f.cat]) return false;
+      return true;
+    }).map(function (f) { return f.id; })).slice(0, cap);
+    if (!rest.length) { toast('新卡已全部引入'); return; }
+    st.ids = st.ids.concat(rest);
+    DB.log.counts[t].intro = (DB.log.counts[t].intro || 0) + rest.length;
+    saveDB();
+    buildSession();
+    currentView = 'learn';
+    renderApp();
+    toast('已引入 ' + rest.length + ' 张新卡，继续');
   }
 
   function surfaceDue() {
@@ -210,6 +250,11 @@
         wrap.appendChild(el('p', 'muted', waiting > 0
           ? '今日的队列已清空——另有 ' + waiting + ' 张新卡将按「每日新卡上限」在之后的日期逐步引入；到期复习卡会按排期自动进入队列。'
           : '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
+        if (waiting > 0) {
+          const more = el('button', 'btn primary', '➕ 再来一批（' + Math.min(waiting, (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10) + ' 张）');
+          more.addEventListener('click', introMore);
+          wrap.appendChild(more);
+        }
       }
       app.appendChild(wrap);
       return;

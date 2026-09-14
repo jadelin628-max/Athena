@@ -10,6 +10,7 @@ window.SUBJECTS.rust = (function () {
   const R = String.raw;
 
   const CATS = {
+    start: '起步与环境',
     base: '基础与所有权',
     types: '类型系统',
     flow: '控制流与模式匹配',
@@ -22,6 +23,49 @@ window.SUBJECTS.rust = (function () {
   const F = (id, cat, title, front, back) => ({ id, cat, title, front, back });
 
   const DATA = [
+    // ==================== 起步与环境 ====================
+    F('bs01', 'start', 'Rust 适合做什么',
+      R`Rust 是一门什么样的语言？为什么值得学？`,
+      R`**系统级编译语言**，两大承诺：**内存安全**（编译期杜绝空指针/悬垂指针等）与**零成本抽象**（高级写法不损失性能）。
+场景：系统工具、命令行程序、WebAssembly、性能敏感的后端；连续多年「最受喜爱语言」榜首。
+诚实预告：**学习曲线陡**——所有权概念会卡住几乎所有人。但编译器报错是教科书级的，它会一步步教你写对——本卡组也会陪你过这关。`),
+    F('bs02', 'start', '安装 rustup：一行命令全套',
+      R`怎么安装 Rust 环境？`,
+      R`官方安装器 **rustup** 一行命令装全套（rustc 编译器 + cargo 构建工具 + 标准库）；Windows 也一样顺畅（官网下载 rustup-init）。
+验证：终端敲 **cargo --version** 与 rustc --version 出版本号即成功。
+升级也一条命令：rustup update——Rust 版本节奏稳定（六周一版），工具链升级从没负担。`),
+    F('bs03', 'start', '第一个程序：cargo new',
+      R`怎么创建并运行第一个 Rust 程序？`,
+      R`**cargo new hello**（创建项目目录，自带 Cargo.toml 与 src/main.rs）→ 进入目录敲 **cargo run**——编译加运行一步到位。
+main.rs 里 main 函数是入口，println! 宏负责输出（带感叹号——宏的标志）。
+注意：默认就建好了「项目」而非单个文件——Rust 从第一天就是工程化姿势，包管理不用学第二次。`),
+    F('bs04', 'start', 'cargo 是什么：三合一工具',
+      R`cargo 在 Rust 工作流里扮演什么角色？`,
+      R`**构建工具 + 包管理器 + 测试器**三合一——Rust 生态的中央枢纽：
+cargo run（编译运行）、cargo build（只编译）、**cargo add 包名**（引入第三方库，自动写进 Cargo.toml）、cargo test（跑测试）。
+**Cargo.toml** 是项目清单：名字、版本、依赖——看一眼就懂。
+别处语言要拼装的工具链，Rust 出厂即全套——这是新手体验最好的编译语言之一。`),
+    F('bs05', 'start', '怎么读 rustc 报错',
+      R`都说 Rust 编译器报错是「教科书」，怎么利用它？`,
+      R`Rust 报错是**三段式教学**：① 错误是什么（带精确行号与高亮）；② **为什么**（解释背后的规则，如「值在这里被移动了」）；③ **怎么改**（直接给出修复建议代码，很多照抄即可）。
+心法：**把编译器当老师不当拦路虎**——它拒绝你，是因为这段代码在运行时真的会出事。
+报错看不懂时先读 suggestion 部分，再回头读规则解释。`),
+    F('bs06', 'start', '注释与文档注释',
+      R`Rust 的注释与文档怎么写？`,
+      R`普通注释 **//**（行）与 /* */（块）——与其他语言相同。
+Rust 特色：**文档注释 ///**（三个斜杠）——写在函数上方，cargo doc 命令自动生成 HTML 文档站，标准库文档就是这么来的。
+惯例：公开函数写文档注释（含示例），内部实现写普通注释——「文档即代码的一部分」是 Rust 工程文化的入口。`),
+    F('bs07', 'start', '工具链总览：clippy 与 rust-analyzer',
+      R`Rust 的常用工具链有哪些？`,
+      R`**rust-analyzer**：编辑器插件（VS Code 装 Rust 扩展自动带上）——类型提示、补全、行内报错，**第一优先级装它**。
+**clippy**：官方代码检查器（cargo clippy），几百条「更地道的写法」建议——初学就开始跑。
+**rustfmt**：自动格式化（cargo fmt）——风格争论终结者。
+测试：cargo test 内置——测试框架都第三方都不用装。`),
+    F('bs08', 'start', 'Rust 学习路径建议',
+      R`Rust 入门的推荐节奏？`,
+      R`① 起步章 + 基础章打底；② **所有权是最大关卡**（base 章后段）——被借用检查器拒绝时回到这两张卡，配合画「值的所有权箭头图」；③ 类型与模式匹配按 ORDER 走；④ 错误处理章（Result/问号运算符）是 Rust 工程品味的核心；⑤ 集合与迭代器让代码现代起来。
+节奏参考：每天 10 张卡 + 每周一个小工具（grep 简化版、todo CLI）。
+心态：前两周被编译器拒绝是所有人的常态——坚持过所有权，后面一马平川。`),
     // ==================== 基础与所有权 ====================
     F('ba01', 'base', 'Rust 的定位与核心承诺',
       R`Rust 是什么？它的核心卖点是什么？`,
@@ -179,6 +223,7 @@ impl 块也可泛化（impl<T> 结构体<T>）。
   ];
 
   const META = {
+    bs01: [4, '起步·Rust'], bs02: [4, '起步·Rust'], bs03: [4, '起步·Rust'], bs04: [4, '起步·Rust'], bs05: [4, '起步·Rust'], bs06: [4, '起步·Rust'], bs07: [4, '起步·Rust'], bs08: [4, '起步·Rust'],
     ba01: [4, '语言定位'], ba02: [4, 'Cargo'], ba03: [4, '可变性与遮蔽'], ba04: [4, '基本类型'], ba05: [4, '表达式返回'], ba06: [5, '所有权三规则'], ba07: [5, '借用规则'], ba08: [3, '切片'],
     ty01: [4, '类型转换'], ty02: [5, 'Option'],
     fl01: [3, 'if 表达式'], fl02: [5, 'match 穷尽性'], fl03: [3, 'if let'],
@@ -196,5 +241,6 @@ impl 块也可泛化（impl<T> 结构体<T>）。
     er03: R`库代码返回 Result 把决策交给调用方；unwrap 只该出现在测试与"逻辑上不可能失败"处。`
   };
 
-  return { id: 'rust', name: 'Rust', short: 'Rust', icon: '🦀', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['base', 'types', 'flow', 'data', 'err', 'coll', 'eco'] };
+  const BEGINNER = ['start', 'base', 'types'];
+  return { BEGINNER: BEGINNER, id: 'rust', name: 'Rust', short: 'Rust', icon: '🦀', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'base', 'types', 'flow', 'data', 'err', 'coll', 'eco'] };
 })();

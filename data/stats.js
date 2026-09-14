@@ -28,6 +28,7 @@ window.SUBJECTS.stats = (function () {
 - 基本事件：单个样本点（不可再分）；必然事件：$\Omega$；不可能事件：$\varnothing$。
 - 事件运算（集合运算）：交 $AB$（同时发生）、并 $A\cup B$（至少一个发生）、差 $A-B$（$A$ 发生而 $B$ 不发生）、对立 $\bar A$（$A$ 不发生）。
 - 关系：$A\subset B$（$A$ 发生必有 $B$ 发生）；$AB=\varnothing$ 称 $A,B$ \textbf{互斥（不相容）}；若 $A\cup B=\Omega$ 且 $AB=\varnothing$ 则称\textbf{对立}。
+- 对偶律（德摩根律）：$\overline{A\cup B}=\bar A\bar B$、$\overline{AB}=\bar A\cup\bar B$——「至少一个发生」的对立是「都不发生」，求并的对立转成对立的交。
 易混：对立必互斥，但互斥未必对立——互斥只要求“不能同时发生”，对立还要求两者合起来覆盖全部结果。`),
     F('pb02', 'prob_basic', '古典概型',
       R`古典概型的概率计算公式`,
@@ -51,7 +52,9 @@ window.SUBJECTS.stats = (function () {
       R`$$P(A_{i}\,|\,B)=\frac{P(A_{i})P(B\,|\,A_{i})}{\sum_{j=1}^{n}P(A_{j})P(B\,|\,A_{j})}$$`),
     F('pb08', 'prob_basic', '事件的独立性',
       R`事件独立的定义`,
-      R`$$P(AB)=P(A)P(B)$$（一个事件发生不影响另一个的概率）`),
+      R`$$P(AB)=P(A)P(B)$$（一个事件发生不影响另一个的概率）
+- 推论：若 $A,B$ 独立，则 $A$ 与 $\bar B$、$\bar A$ 与 $B$、$\bar A$ 与 $\bar B$ 也都独立。
+- 三个事件的独立性见「相互独立与两两独立」卡——两两独立不蕴含相互独立。`),
     F('pb09', 'prob_basic', '对立事件',
       R`对立事件的概率`,
       R`$$P(\bar{A})=1-P(A)$$`),
@@ -90,7 +93,9 @@ window.SUBJECTS.stats = (function () {
       R`$$P(X=k)=\frac{\lambda^{k}}{k!}e^{-\lambda},\quad E=\lambda,\ D=\lambda$$`),
     F('rv08', 'dist', '几何分布',
       R`几何分布 $X\sim G(p)$ 的分布律与数字特征`,
-      R`$$P(X=k)=(1-p)^{k-1}p,\quad E=\frac{1}{p},\ D=\frac{1-p}{p^{2}}$$`),
+      R`$$P(X=k)=(1-p)^{k-1}p,\quad E=\frac{1}{p},\ D=\frac{1-p}{p^{2}}$$
+- \textbf{无记忆性}：$P(X>s+t\mid X>s)=P(X>t)$——已失败 $s$ 次，再等 $t$ 次才成功的概率与从头等待相同（离散版；连续版是指数分布的无记忆性）。
+- 与负二项分布的关系：负二项是「第 $r$ 次成功所需的试验数」，$r=1$ 时即几何分布。`),
     F('rv09', 'dist', '均匀分布',
       R`均匀分布 $U(a,b)$ 的密度与数字特征`,
       R`$$f(x)=\frac{1}{b-a}\ (a<x<b),\quad E=\frac{a+b}{2},\ D=\frac{(b-a)^{2}}{12}$$`),
@@ -118,8 +123,11 @@ window.SUBJECTS.stats = (function () {
 
     // ============ 多维随机变量 ============
     F('mv01', 'multidim', '联合分布函数',
-      R`二维分布函数的定义`,
-      R`$$F(x,y)=P(X\le x,\ Y\le y)$$`),
+      R`二维分布函数的定义与性质`,
+      R`$$F(x,y)=P(X\le x,\ Y\le y)$$
+- 性质：对每个变量单调不减、右连续；$F(-\infty,y)=F(x,-\infty)=0$、$F(+\infty,+\infty)=1$。
+- \textbf{矩形概率公式}：$P(a<X\le b,\ c<Y\le d)=F(b,d)-F(a,d)-F(b,c)+F(a,c)$——四个顶点函数值交替加减。
+- 离散型更常用\textbf{联合分布律} $P(X=x_i,\ Y=y_j)$ 的表格形式：边缘分布律按行/列求和，条件分布律用联合除以边缘。`),
     F('mv02', 'multidim', '边缘分布',
       R`二维连续型随机变量的边缘密度`,
       R`$$f_{X}(x)=\int_{-\infty}^{+\infty}f(x,y)\,dy,\qquad f_{Y}(y)=\int_{-\infty}^{+\infty}f(x,y)\,dx$$`),
@@ -262,8 +270,9 @@ window.SUBJECTS.stats = (function () {
       R`叙述矩估计的基本思想`,
       R`令样本矩等于总体矩，建立方程解得参数的估计量。\underline{步骤}：设有 $k$ 个未知参数，取总体 $E(X)$、$E(X^2)$、…、$E(X^k)$，令其分别等于样本原点矩 $A_1=\bar X$、$A_2=\frac1n\sum X_i^2$、…，解出 $\hat\theta$。\underline{特点}：计算简单、通常\textbf{相合}；但可能\textbf{无解/多解/不唯一}，且不一定有效。\underline{易混}：矩估计与最大似然结果\textbf{常不相同}（如二阶矩估计用 $A_2$ 时样本方差用 $\frac1n\sum(X_i-\bar X)^2$ 而非 $S^2=\frac{1}{n-1}\sum$）；低阶矩信息少，高阶矩含更多分布信息但噪声大。\underline{应用}：先求 $E(X)$、$E(X^2)$（或利用方差等式）建立若干方程，再联立解参。`),
     F('est06', 'estimation', '最大似然估计',
-      R`叙述最大似然估计的基本思想`,
-      R`选择使似然函数 $L(\theta)=\prod_{i=1}^{n}f(x_{i};\theta)$ 取最大值的 $\hat{\theta}$ 作为估计。`),
+      R`叙述最大似然估计的基本思想与求解步骤`,
+      R`思想：选择使已观测样本出现概率最大的 $\hat{\theta}$——使似然函数 $L(\theta)=\prod_{i=1}^{n}f(x_{i};\theta)$ 达到最大的参数值。
+求解步骤：① 写出 $L(\theta)$；② 取对数 $\ln L$（连乘化连加）；③ 对 $\theta$ 求导并令其为 0（似然方程）；④ 解出驻点并确认最大。离散/含区间参数等场合求导失效时，直接分析 $L$ 的最大值位置。`),
     F('est07', 'estimation', '置信区间',
       R`置信区间与置信水平`,
       R`$$P(\theta_{1}<\theta<\theta_{2})=1-\alpha$$（$1-\alpha$ 为置信水平）`),
@@ -284,7 +293,9 @@ window.SUBJECTS.stats = (function () {
       R`$$L(\theta)=\prod_{i=1}^{n}f(x_{i};\theta)$$`),
     F('est13', 'estimation', '估计量评选标准',
       R`评价估计量的三个标准`,
-      R`无偏性、有效性、一致性。`),
+      R`无偏性、有效性、一致性。
+- 无偏：$E(\hat\theta)=\theta$（靶心不偏）；有效：同为无偏则方差小者好（落点集中）；一致（相合）：$n\to\infty$ 时 $\hat\theta\overset{P}{\to}\theta$（大样本必然准）。
+- 更精细的取舍用\textbf{均方误差}：MSE = 方差 + 偏差平方，允许「略偏但更集中」。`),
 
     // ============ 假设检验 ============
     F('test01', 'testing', '假设检验思想',
@@ -326,8 +337,10 @@ window.SUBJECTS.stats = (function () {
 
     // ============ 方差分析与回归 ============
     F('reg01', 'regress', '单因素方差分析',
-      R`单因素方差分析的目的`,
-      R`检验多个正态总体均值是否相等：$H_{0}:\mu_{1}=\mu_{2}=\cdots=\mu_{k}$。`),
+      R`单因素方差分析的目的与基本假定`,
+      R`目的：检验多个正态总体均值是否相等：$H_{0}:\mu_{1}=\mu_{2}=\cdots=\mu_{k}$。
+\textbf{三个基本假定}：① 各水平下观测相互独立；② 各总体服从正态分布；③ 各总体方差相等（方差齐性）。
+逻辑：若 $H_0$ 真，组间波动与组内波动都只反映随机误差，$F=\dfrac{SSA/(k-1)}{SSE/(n-k)}$ 接近 1；$H_0$ 假时组间波动含处理效应，$F$ 显著大于 1。假定不满足时考虑非参数方法或数据变换。`),
     F('reg02', 'regress', '平方和分解',
       R`方差分析的平方和分解`,
       R`$$SST=SSA+SSE$$（总平方和 = 组间 + 组内）`),
@@ -452,7 +465,9 @@ window.SUBJECTS.stats = (function () {
       R`充分统计量 $T$：给定 $T$ 后样本的条件分布与 $\theta$ 无关（$T$ 含参数全部信息）。C-R 不等式：正则条件下无偏估计 $\hat\theta$ 的方差满足$$D(\hat\theta)\ge\frac{1}{nI(\theta)},\qquad I(\theta)=E\left[\left(\frac{\partial}{\partial\theta}\ln f(X;\theta)\right)^2\right]$$达到下界者为有效估计。`),
     F('sx04', 'estimation', '先验分布与后验分布',
       R`写出贝叶斯方法中后验分布与先验分布、似然函数的关系`,
-      R`$$\pi(\theta\,|\,x)=\frac{\pi(\theta)\,L(\theta;x)}{\int\pi(\theta)\,L(\theta;x)\,d\theta}\ \propto\ \pi(\theta)\,L(\theta;x)$$后验 $\propto$ 先验 $\times$ 似然。常用共轭先验：正态-正态、Beta-二项、Gamma-泊松。`),
+      R`$$\pi(\theta\,|\,x)=\frac{\pi(\theta)\,L(\theta;x)}{\int\pi(\theta)\,L(\theta;x)\,d\theta}\ \propto\ \pi(\theta)\,L(\theta;x)$$后验 $\propto$ 先验 $\times$ 似然。常用共轭先验：正态-正态、Beta-二项、Gamma-泊松。
+- \textbf{贝叶斯估计}：平方损失下取后验均值 $\hat\theta=E(\theta\,|\,x)$（共轭场合有显式解，如 Beta-二项下是「成功次数 + 先验」的加权平均）；绝对值损失取后验中位数。
+- 频率派与贝叶斯派的分野：频率派视 $\theta$ 为未知常数（用置信区间表述不确定性），贝叶斯派视 $\theta$ 为随机变量（用先验吸收既有知识）。`),
     F('sy01', 'estimation', '泊松分布的置信区间',
       R`设 $X\sim P(\lambda)$，$x_1,\dots,x_n$ 为简单随机样本，求 $\lambda$ 的置信区间`,
       R`$\lambda$ 的 MLE 为 $\bar X$，且 $E(\bar X)=\lambda$、$D(\bar X)=\lambda/n$。由中心极限定理 $\sqrt n(\bar X-\lambda)/\sqrt{\lambda}\overset{d}{\to}N(0,1)$，用 $\bar X$ 估计方差得近似区间$$\bar X\pm z_{\alpha/2}\sqrt{\frac{\bar X}{n}}$$`),
@@ -768,6 +783,132 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
 \underline{关系}：$n$ 固定时 $\alpha$ 与 $\beta$ 此消彼长（$\alpha$ 越小临界值越靠外，越难拒绝、$\beta$ 越大）；同时压低两者的唯一途径是\underline{增大样本量} $n$。
 \underline{样本量公式}（正态总体、单侧检验、可检测差异 $\delta$）：$$n=\left[\dfrac{(z_\alpha+z_\beta)\,\sigma}{\delta}\right]^{2}\quad(\text{双侧用 } z_{\alpha/2})$$ 例：$\alpha=0.05$、$\beta=0.10$、$\sigma=1$、$\delta=0.5$ 时 $n=\left[\dfrac{1.645+1.282}{0.5}\right]^2\approx34.3$，故 $n\ge35$。
 \textbf{易混}：$p$ 值是在给定数据下犯 Ⅰ 类错误的条件度量，与 $\beta$ 无关；功效分析要在收集数据前做。`),
+    // ============ 补充：茆诗松教材补全（v1.35.0） ============
+    F('pb12', 'prob_basic', '概率的统计定义（频率与概率）',
+      R`什么是频率？概率的统计定义是什么？`,
+      R`频率：$f_n(A)=\dfrac{n_A}{n}$（$n_A$ 为 $n$ 次重复试验中 $A$ 发生的次数）。
+频率随试验批次波动，但当 $n$ 增大时呈现出\textbf{稳定性}——稳定于某个常数。概率的统计定义：该稳定值就是事件 $A$ 的概率 $P(A)$。
+- 频率满足非负性、规范性、有限可加性（与概率公理一致），故频率可作为概率的估计（蒙特卡洛方法的理论基础）。
+- 理论支撑：伯努利大数定律——频率\textbf{依概率}收敛于概率。`),
+    F('pb13', 'prob_basic', '相互独立与两两独立',
+      R`相互独立与两两独立的区别`,
+      R`\textbf{两两独立}：$P(AB)=P(A)P(B)$、$P(AC)=P(A)P(C)$、$P(BC)=P(B)P(C)$ 三式成立。
+\textbf{相互独立}：以上三式\textbf{再加} $P(ABC)=P(A)P(B)P(C)$，共四式。
+相互独立 $\Rightarrow$ 两两独立，\textbf{反之不成立}。经典反例：掷两枚均匀硬币，$A$=第一枚正面、$B$=第二枚正面、$C$=两枚结果相同——两两独立，但 $P(ABC)=\frac14\ne\frac18=\frac12\cdot\frac12\cdot\frac12$。
+- 两两独立时 $P(ABC)$ 可能大于、小于或等于 $P(A)P(B)P(C)$——必须单独验证。
+- 实际推断常默认「相互独立」：题目说「独立重复」即指相互独立。`),
+    F('ll08', 'limit', '依概率收敛与按分布收敛',
+      R`依概率收敛与按分布收敛的定义及关系`,
+      R`\textbf{依概率收敛}：$\forall\varepsilon>0$，$P(|X_n-X|\ge\varepsilon)\to 0\ (n\to\infty)$，记 $X_n\overset{P}{\longrightarrow}X$——$X_n$ 大幅偏离 $X$ 的可能性随 $n$ 消失。
+\textbf{按分布收敛}（弱收敛）：$X_n$ 的分布函数在 $X$ 的每个连续点处收敛于 $F(x)$，记 $X_n\overset{d}{\longrightarrow}X$——只看分布形状。
+- 关系：依概率收敛 $\Rightarrow$ 按分布收敛，反之\textbf{不成立}（$X$ 与 $-X$ 同分布即可作反例）。
+- 两大极限定理的严格语言：大数定律 = $\bar X_n\overset{P}{\to}\mu$（依概率）；中心极限定理 = 标准化和 $\overset{d}{\to}N(0,1)$（按分布）。
+- 依概率收敛的证明主力工具是切比雪夫不等式。`),
+    F('ll09', 'limit', '李雅普诺夫中心极限定理',
+      R`不同分布下的中心极限定理（李雅普诺夫）`,
+      R`设 $X_1,\dots,X_n$ \textbf{相互独立但可不同分布}，期望与方差都存在且方差一致有界，则当 $n$ 充分大：$$\frac{\sum_{i=1}^{n}X_i-\sum_{i=1}^{n}E(X_i)}{\sqrt{\sum_{i=1}^{n}D(X_i)}}\ \overset{\text{近似}}{\sim}\ N(0,1)$$
+- 与林德伯格-列维定理（独立同分布）的区别：李雅普诺夫\textbf{不要求同分布}——只要每个 $X_i$ 的方差在总方差中占比都不大（无单项主导），标准化和仍近似正态。
+- 直觉：多种来源的独立微小干扰叠加（测量误差 = 仪器误差 + 环境误差 + 人为误差……），总效应趋于正态。
+- 应用：不同分布独立变量之和的概率计算——分别算出总期望与总方差后直接套用。`),
+    F('sm12', 'sampling', '两正态总体的抽样分布',
+      R`两个正态总体下常用统计量的分布（抽样分布定理）`,
+      R`设 $X_1,\dots,X_m$ 与 $Y_1,\dots,Y_n$ 分别来自 $N(\mu_1,\sigma_1^2)$、$N(\mu_2,\sigma_2^2)$，两样本相互独立：
+① \textbf{均值差}：$\bar X-\bar Y\sim N\!\left(\mu_1-\mu_2,\ \dfrac{\sigma_1^2}{m}+\dfrac{\sigma_2^2}{n}\right)$；
+② \textbf{方差相等}（$\sigma_1^2=\sigma_2^2$）时：$$t=\frac{(\bar X-\bar Y)-(\mu_1-\mu_2)}{S_w\sqrt{\dfrac1m+\dfrac1n}}\sim t(m+n-2),\qquad S_w^2=\frac{(m-1)S_1^2+(n-1)S_2^2}{m+n-2}$$（$S_w^2$ 称合并方差/加权平均）
+③ \textbf{方差比}：$\dfrac{S_1^2/\sigma_1^2}{S_2^2/\sigma_2^2}\sim F(m-1,\ n-1)$。
+是两均值差检验与两方差比检验的抽样分布基础。`),
+    F('sm13', 'sampling', '样本中位数与样本极差',
+      R`样本中位数与样本极差的定义与用途`,
+      R`由次序统计量 $X_{(1)}\le X_{(2)}\le\cdots\le X_{(n)}$ 定义：
+\textbf{样本中位数} $Me$：$n$ 为奇数取 $X_{\left(\frac{n+1}{2}\right)}$；$n$ 为偶数取 $\frac{1}{2}\left(X_{\left(\frac n2\right)}+X_{\left(\frac n2+1\right)}\right)$。
+\textbf{样本极差} $R$：$X_{(n)}-X_{(1)}$（最大减最小）。
+- 中位数对\textbf{离群值稳健}——数据重尾或含异常点时比 $\bar X$ 更能代表中心；正态对称下两者接近。
+- 极差是波动的快估计：质量管理中 $\hat\sigma\approx R/d_2$（$d_2$ 查表）；对样本量敏感（$n$ 大时极差高估波动）。
+- 与 $\bar X$、$S$ 相比：计算快、稳健，但统计效率低（同等 $n$ 下信息利用不足）。`),
+    F('sm14', 'sampling', '频数频率表与直方图',
+      R`如何由样本数据作频率直方图？`,
+      R`步骤：① 由 $x_{(1)},x_{(n)}$ 确定数据范围；② 等宽分组（组数经验取 $k\approx\sqrt n$ 或斯特古斯公式）；③ 数各组的频数 $n_i$，算频率 $f_i=n_i/n$ 与「频率/组距」；④ 以组距为宽、「频率/组距」为高画矩形。
+- \textbf{纵轴必须是频率/组距}：这样各矩形面积 = 组内频率，全部矩形面积之和为 1——直方图整体近似\textbf{密度曲线} $f(x)$（面积法估计分布）。
+- 纵轴若用频率，图形形状相同但面积不归一，不能当作密度估计。
+- 茎叶图：把每个数据拆成「茎（高位）+ 叶（末位）」按行排列——等价于保留原始数字的直方图，样本量小时信息不丢失。`),
+    F('sm15', 'sampling', '箱线图',
+      R`箱线图如何构造？如何判别异常值？`,
+      R`\textbf{五数概括}：$x_{(1)}$（最小值）、$Q_1$（下四分位数）、$Me$（中位数）、$Q_3$（上四分位数）、$x_{(n)}$（最大值）。
+画法：箱体从 $Q_1$ 到 $Q_3$（中位数线在箱内）；\textbf{箱界}（内栏）为 $Q_1-1.5\,\mathrm{IQR}$ 与 $Q_3+1.5\,\mathrm{IQR}$，其中 $\mathrm{IQR}=Q_3-Q_1$（四分位差）；须线自箱体延伸至\textbf{箱界内的最远观测值}；超出箱界的观测逐一描点——视为\textbf{疑似异常值}。
+- 解读：中位线在箱中的位置反映对称性（居中≈对称，偏一侧≈偏态）；箱长≈中间 50% 数据的散布。
+- 优点：稳健（分位数不受极端值影响）、适合多组并列比较。`),
+    F('sm16', 'sampling', '正态概率图',
+      R`正态概率图（Q-Q 图）的原理与判读`,
+      R`\textbf{原理}：把样本分位数与正态分布的理论分位数配对描点——若数据来自 $N(\mu,\sigma^2)$，则各点近似落在一条\textbf{直线}上（斜率 $\approx\sigma$，截距 $\approx\mu$）。
+作法：将次序统计量 $x_{(i)}$ 对正态分数 $\Phi^{-1}\!\left(\dfrac{i-0.375}{n+0.25}\right)$（$i=1,\dots,n$）描点。
+- 判读：点近似直线 $\Rightarrow$ 不拒绝正态；两端点偏离直线且右尾上翘 $\Rightarrow$ 右偏；S 形弯曲 $\Rightarrow$ 偏态；两端同时离开直线 $\Rightarrow$ 峰度异常（尖峰或平峰）。
+- 是检验正态性的\textbf{直观图形}方法（看具体形态）；正式的假设检验用正态性检验统计量（如 Shapiro-Wilk）。`),
+    F('nc17', 'numchar', '变异系数',
+      R`变异系数的定义与用途`,
+      R`$$CV=\frac{\sigma(X)}{E(X)}\qquad(E(X)>0)$$
+无量纲的\textbf{相对}波动度量——标准差与均值之比（常写成百分数）。
+- 用途：比较\textbf{量纲不同或量级悬殊}的数据的离散程度——如身高（cm）与体重（kg）谁更「整齐」；同样的 5 kg 绝对差异，对婴儿体重比对成年人体重重要得多。
+- 与标准差的区别：标准差有量纲、受量级影响（把单位从米换成厘米，标准差数值×100）；CV 消除了量纲与量级的影响。
+- 正态分布的 $CV=\sigma/\mu$ 与 $\sigma^2/\mu^2$ 有对应关系——泊松分布 $CV=1/\sqrt\lambda$（$\lambda$ 越大相对越稳定）。`),
+    F('nc18', 'numchar', '偏度与峰度',
+      R`偏度系数与峰度系数的定义与解读`,
+      R`\textbf{偏度}（三阶标准化矩）：$$\mathrm{Sk}=\frac{E[(X-\mu)^3]}{\sigma^3}$$ 衡量\textbf{不对称性}：右偏（右尾长、峰在左）为正；左偏为负；对称分布为 0（正态 $\mathrm{Sk}=0$）。
+\textbf{峰度}（四阶标准化矩减 3）：$$\mathrm{Kur}=\frac{E[(X-\mu)^4]}{\sigma^4}-3$$ 衡量\textbf{尾部厚度}（以正态为 0 基准）：$\mathrm{Kur}>0$ 尖峰厚尾（如 $t$ 分布、拉普拉斯分布）；$\mathrm{Kur}<0$ 平峰薄尾（如均匀分布）。
+- 快速判断偏态方向：均值与中位数比较——右偏时 $\bar X>Me$（长尾把均值拉向右侧）。
+- 样本偏度/样本峰度（用三、四阶样本中心矩代入）是正态性初判的常用统计量。
+- \textbf{减 3} 是把正态分布定为 0 基准——有的软件不减（正态报 3），比较数值前先确认定义。`),
+    F('nc19', 'numchar', '协方差矩阵',
+      R`二维随机变量的协方差矩阵`,
+      R`把 $(X,Y)$ 的四个二阶中心矩排成矩阵：$$\Sigma=\begin{pmatrix}\mathrm{Var}(X) & \mathrm{Cov}(X,Y)\\ \mathrm{Cov}(Y,X) & \mathrm{Var}(Y)\end{pmatrix}$$
+- 性质：\textbf{对称}、\textbf{半正定}——对任意常向量 $a$，$\mathrm{Var}(a^\top X)=a^\top\Sigma a\ge 0$（线性组合的方差非负）。
+- 二维正态的五个参数 $(\mu_1,\mu_2;\sigma_1^2,\sigma_2^2;\rho)$ 中 $\mathrm{Cov}(X,Y)=\rho\,\sigma_1\sigma_2$——由均值向量 + 协方差矩阵完全刻画。
+- $n$ 维正态的重要性质：各分量相互独立 $\Leftrightarrow$ $\Sigma$ 为对角阵（两两不相关即独立）——只对正态成立。
+- 线性变换：$Y=AX$（$A$ 常数矩阵）时 $\mathrm{Cov}(Y)=A\Sigma A^\top$。`),
+    F('nc20', 'numchar', '全方差公式',
+      R`全方差公式（方差分解）`,
+      R`$$\mathrm{Var}(X)=E\big[\mathrm{Var}(X\mid Y)\big]+\mathrm{Var}\big[E(X\mid Y)\big]$$
+方差 = 「组内方差的平均」 + 「组间方差」。
+- 记忆锚：与全概率公式的期望版 $E(X)=E\big[E(X\mid Y)\big]$ 配对——「条件期望的期望」与「条件方差的期望 + 条件期望的方差」。
+- 证明思路：把 $\mathrm{Var}(X)=E(X^2)-[E(X)]^2$ 按条件分布分层展开。
+- 应用：分层/聚类数据的方差分解（总波动有多少来自组间差异）；刻画「对 $Y$ 的了解程度如何削减 $X$ 的不确定性」。
+- 独立时 $\mathrm{Var}(X\mid Y)=\mathrm{Var}(X)$、$E(X\mid Y)$ 为常数——两项退化为 $\mathrm{Var}(X)+0$，自洽。`),
+    F('est22', 'estimation', '均方误差准则',
+      R`均方误差准则；有偏估计可能更优吗？`,
+      R`$$\mathrm{MSE}(\hat\theta)=E\big[(\hat\theta-\theta)^2\big]=\mathrm{Var}(\hat\theta)+b^2(\theta)\qquad(b(\theta)=E(\hat\theta)-\theta \text{ 为偏差})$$
+\textbf{MSE = 方差 + 偏差平方}——落点围绕靶心的散布分解为「散得开不开」与「偏不偏」两部分。
+- 无偏估计未必 MSE 最小：方差很小的有偏估计整体可以更准。经典例子：估计 $N(\mu,\sigma^2)$ 的 $\sigma^2$ 时，$\frac{1}{n}\sum(X_i-\bar X)^2$ 有偏（偏差 $-\sigma^2/n$）但 MSE 小于无偏估计 $\frac{1}{n-1}\sum(X_i-\bar X)^2$。
+- 「以偏换方差」的思想在现代统计中处处可见（岭回归、正则化）——牺牲少量无偏性换取大幅方差缩减。
+- 评选路线：先看无偏性 → 同为无偏比方差（有效性）→ 跨无偏界限比 MSE（本卡）。`),
+    F('est23', 'estimation', '极大似然估计的不变性原则',
+      R`极大似然估计的不变性原则`,
+      R`若 $\hat\theta$ 是 $\theta$ 的 MLE，则 $g(\theta)$ 的 MLE 就是 $g(\hat\theta)$（$g$ 为任意函数；多对一对应时取使 $L$ 达到最大的那个像点）。
+- 免去对 $g(\theta)$ 重新构造似然与求导的麻烦——「先估参数，再代函数」。
+- 例：$N(\mu,\sigma^2)$ 中 $\sigma^2$ 的 MLE 为 $\hat\sigma^2=\frac1n\sum(x_i-\bar x)^2$，故标准差 $\sigma$ 的 MLE 即 $\hat\sigma=\sqrt{\hat\sigma^2}$（有偏但 MLE）；$\lambda$ 的 MLE 为 $\bar x$ 时，$e^{-\lambda}$（泊松零概率）的 MLE 即 $e^{-\bar x}$。
+- 注意：不变性保证 MLE，\textbf{不}保证无偏——$g(\hat\theta)$ 的期望一般不等于 $g(\theta)$。`),
+    F('est24', 'estimation', '单侧置信限',
+      R`单侧置信下限与单侧置信上限`,
+      R`实际问题常只需「不低于 / 不高于」一端：
+① \textbf{单侧置信下限} $\underline\theta$：$P(\theta\ge\underline\theta)=1-\alpha$——如灯泡寿命、合格率的下限；
+② \textbf{单侧置信上限} $\bar\theta$：$P(\theta\le\bar\theta)=1-\alpha$——如废品率、有害物含量的上限。
+构造：与双侧区间用\textbf{同一个枢轴量}，区别只在把 $\alpha/2$ 换成 $\alpha$。正态 $\sigma^2$ 已知时，$\mu$ 的 $1-\alpha$ 单侧置信下限为 $\bar x-z_{\alpha}\dfrac{\sigma}{\sqrt n}$（双侧区间用 $z_{\alpha/2}$）。
+- 与检验的对偶：单侧置信限与同侧的单侧假设检验（水平 $\alpha$）一一对应——下限在 $\mu_0$ 之右 $\Leftrightarrow$ 拒绝 $H_0:\mu\le\mu_0$。`),
+    F('reg13', 'regress', '多重比较',
+      R`方差分析显著后为什么要做多重比较？LSD 法怎么做？`,
+      R`ANOVA 的 $F$ 显著只说明「均值\textbf{不全}相等」，不指明哪两个不同——需逐对比较，即\textbf{多重比较}。
+\textbf{LSD 法}（最小显著差）：用 $S_w^2$（ANOVA 的组内方差估计）替代各对样本方差，第 $i,j$ 两水平均值的比较临界值为 $$t_{\alpha/2}(n-k)\,\sqrt{S_w^2\left(\frac1{n_i}+\frac1{n_j}\right)}$$ 两样本均值之差的绝对值超过该值即判定显著不同。
+- 优点：简单、沿用 ANOVA 的自由度与 $S_w^2$；缺点：比较次数 $m$ 多时，整体犯 Ⅰ 类错误的概率累积膨胀（远超 $\alpha$）。
+- 严格场合的校正：\textbf{Tukey HSD}（基于学生化极差分布，控制所有成对比较的整体错误率）、\textbf{Bonferroni}（每对用 $\alpha/m$）。
+- 方差齐性假定由 ANOVA 继承——比较用的是共同的 $S_w^2$。`),
+    F('reg14', 'regress', '一元非线性回归',
+      R`常见可线性化的一元非线性回归曲线`,
+      R`散点呈曲线形态时：选曲线类型 $\to$ \textbf{变量替换}化为线性 $\to$ 最小二乘 $\to$ 反解回原变量。常见曲线：
+① 双曲线 $\dfrac1y=a+\dfrac bx$（令 $y'=\dfrac1y,\ x'=\dfrac1x$）；
+② 对数曲线 $y=a+b\ln x$（令 $x'=\ln x$）；
+③ 指数曲线 $y=ae^{bx}$（两边取对数：$\ln y=\ln a+bx$）；
+④ 幂函数曲线 $y=ax^b$（取对数：$\ln y=\ln a+b\ln x$）。
+- 选型依据：散点图形态 + 业务机理（如增长饱和选对数、复利式增长选指数）。
+- 注意：线性化后拟合的 $R^2$ 是「替换后变量」的判定系数，\textbf{不能}与原尺度的 $R^2$ 直接比较；最终以残差图与业务合理性定案。
+- 与对数线性模型（弹性解释）衔接：幂函数取对数后系数 $b$ 即弹性。`),
   ];
 
   const META = {
@@ -891,6 +1032,12 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
     test15: [3, '检验功效'],
     test16: [3, '正态性检验'],
     test17: [4, '假设检验与样本量'],
+    pb12: [3, '概率的统计定义'], pb13: [4, '相互独立与两两独立'],
+    ll08: [4, '依概率收敛'], ll09: [3, '李雅普诺夫CLT'],
+    sm12: [5, '两正态总体抽样分布'], sm13: [3, '中位数与极差'], sm14: [3, '直方图'], sm15: [3, '箱线图'], sm16: [2, '正态概率图'],
+    nc17: [3, '变异系数'], nc18: [3, '偏度与峰度'], nc19: [4, '协方差矩阵'], nc20: [4, '全方差公式'],
+    est22: [4, '均方误差准则'], est23: [3, 'MLE不变性'], est24: [3, '单侧置信限'],
+    reg13: [3, '多重比较'], reg14: [3, '非线性回归'],
     reg07: [4, '回归系数显著性检验'],
     reg08: [4, '回归方程显著性检验'],
     reg09: [3, '回归预测区间'],
@@ -1113,6 +1260,24 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
 
   // ============ 知识点关系标签 ============
   const REL = {
+  pb13: [ { to: 'pb08', tag: '前置' }, { to: 'pb10', tag: '相关' } ],
+  pb12: [ { to: 'll03', tag: '应用' }, { to: 'pb02', tag: '相关' } ],
+  ll08: [ { to: 'nc09', tag: '前置' }, { to: 'll01', tag: '应用' }, { to: 'll04', tag: '相关' } ],
+  ll09: [ { to: 'll04', tag: '同类' }, { to: 'll05', tag: '同类' } ],
+  sm12: [ { to: 'sm07', tag: '前置' }, { to: 'sm08', tag: '前置' }, { to: 'test11', tag: '应用' }, { to: 'test12', tag: '应用' }, { to: 'test13', tag: '应用' } ],
+  sm13: [ { to: 'xt01', tag: '前置' }, { to: 'sm02', tag: '相关' } ],
+  sm14: [ { to: 'rv04', tag: '相关' }, { to: 'sm01', tag: '前置' } ],
+  sm15: [ { to: 'sm13', tag: '前置' }, { to: 'sm14', tag: '同类' } ],
+  sm16: [ { to: 'test16', tag: '相关' }, { to: 'rv11', tag: '相关' } ],
+  nc17: [ { to: 'nc03', tag: '前置' }, { to: 'nc13', tag: '应用' } ],
+  nc18: [ { to: 'nc08', tag: '前置' }, { to: 'test16', tag: '相关' } ],
+  nc19: [ { to: 'nc06', tag: '前置' }, { to: 'mv05', tag: '应用' } ],
+  nc20: [ { to: 'nc11', tag: '前置' }, { to: 'nc03', tag: '前置' } ],
+  est22: [ { to: 'est02', tag: '相关' }, { to: 'est03', tag: '相关' } ],
+  est23: [ { to: 'est06', tag: '前置' }, { to: 'est02', tag: '相关' } ],
+  est24: [ { to: 'est16', tag: '前置' }, { to: 'est08', tag: '相关' }, { to: 'test05', tag: '相关' } ],
+  reg13: [ { to: 'reg03', tag: '前置' }, { to: 'reg01', tag: '前置' } ],
+  reg14: [ { to: 'reg04', tag: '前置' }, { to: 'sy03', tag: '相关' } ],
   pb01: [ { to: 'pb02', tag: '前置' }, { to: 'pb11', tag: '相关' }, { to: 'pb11', tag: '同类' } ],
   pb02: [ { to: 'pb01', tag: '前置' }, { to: 'pb03', tag: '相关' }, { to: 'rv17', tag: '相关' }, { to: 'jj01', tag: '同类' } ],
   pb03: [ { to: 'pb10', tag: '特例' }, { to: 'pb04', tag: '相关' }, { to: 'pb05', tag: '相关' }, { to: 'pb04', tag: '同类' } ],
@@ -1334,6 +1499,13 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
     jj07: R`$\bar R^2=1-(1-R^2)\frac{n-1}{n-p-1}$，\textbf{可能为负}，且\textbf{未必}随变量增多而增大；它只度量线性拟合，模型优劣应配合 $F$ 检验，勿单凭 $\bar R^2$ 判定。`,
     jj09: R`DW 近似 $\approx2(1-\hat\rho)$，只检验\textbf{一阶}自相关；模型含\textbf{滞后因变量}时 DW 失效。$d$ 靠近 0（正相关）或 4（负相关）才说明显著自相关，$d\approx2$ 无自相关。`,
     jj10: R`工具变量须\textbf{同时}满足“相关性 $\mathrm{Cov}(Z,x)\ne0$”与“外生性 $\mathrm{Cov}(Z,\varepsilon)=0$”；**弱工具变量**会造成严重偏差；工具变量个数须 $\ge$ 内生变量个数才可识别。`,
+    pb13: R`两两独立（三式）不蕴含相互独立（四式）——差 $P(ABC)=P(A)P(B)P(C)$ 一式；三事件只验证两两独立是不够的。`,
+    nc20: R`全方差公式两项勿交换：$E[\mathrm{Var}(X\mid Y)]$（组内）在前、$\mathrm{Var}[E(X\mid Y)]$（组间）在后——写反了量纲虽对但数值错。`,
+    nc18: R`峰度「减 3」才以正态为 0 基准——不同软件/教材定义可能不减 3（正态报 3），跨工具比较先对齐定义。`,
+    sm12: R`方差比 $F$ 的自由度顺序：$S_1^2/\sigma_1^2$ 在分子则自由度 $(m-1,\ n-1)$——分子自由度在前；F 分布取倒数时自由度也要倒置。`,
+    est24: R`同一置信水平：单侧限用 $z_\alpha$、双侧区间用 $z_{\alpha/2}$——临界值分位不同，勿混用。`,
+    reg13: R`比较次数多时 LSD 的整体 Ⅰ 类错误累积膨胀（10 次成对比较远超 5%）——多次比较需 Tukey/Bonferroni 校正。`,
+    reg14: R`线性化后的 $R^2$ 是替换后变量的判定系数，与原尺度 $R^2$ 不可直接比较——选型要配合残差图与业务含义。`,
   };
 
   // ============ 助记（MNEM，可选） ============

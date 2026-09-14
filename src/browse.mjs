@@ -73,9 +73,22 @@
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
     const st = introState();
-    // 引入全部「未引入的新卡」（时间预算为软上限：超出仅提示，不封顶新卡引入）
-    const pending = shuffle(all.filter(function (id) { return card(id).state === 'new' && st.ids.indexOf(id) === -1; }));
-    if (pending.length) { st.ids = st.ids.concat(pending); saveDB(); }
+    // 新卡摄入：按「每日新卡上限」软限制今日引入量（设置可调，0 = 暂停引入新卡）；
+    // 已引入但未学完的卡不受限（进了管线就要学完），到期复习永不上限（FSRS 的工作量承诺）。
+    // 今日已引入数记在 DB.log.counts[today].intro——同步合并按字段取大，多端安全。
+    if (!DB.log) DB.log = {};
+    if (!DB.log.counts) DB.log.counts = {};
+    const t = todayStr();
+    if (!DB.log.counts[t]) DB.log.counts[t] = {};
+    const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
+    const introducedToday = DB.log.counts[t].intro || 0;
+    const room = Math.max(0, cap - introducedToday);
+    const pending = shuffle(all.filter(function (id) { return card(id).state === 'new' && st.ids.indexOf(id) === -1; })).slice(0, room);
+    if (pending.length) {
+      st.ids = st.ids.concat(pending);
+      DB.log.counts[t].intro = introducedToday + pending.length;
+      saveDB();
+    }
     // 到期复习（review 且到期）
     const due = all.filter(function (id) {
       const c = card(id);
@@ -190,7 +203,13 @@
       } else {
         wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
         wrap.appendChild(illus('learn-done'));
-        wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
+        const waiting = DATA.filter(function (f) {
+          const c = card(f.id);
+          return c.state === 'new' && introState().ids.indexOf(f.id) === -1;
+        }).length;
+        wrap.appendChild(el('p', 'muted', waiting > 0
+          ? '今日的队列已清空——另有 ' + waiting + ' 张新卡将按「每日新卡上限」在之后的日期逐步引入；到期复习卡会按排期自动进入队列。'
+          : '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
       }
       app.appendChild(wrap);
       return;

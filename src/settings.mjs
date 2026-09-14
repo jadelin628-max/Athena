@@ -74,6 +74,28 @@
     wrap.appendChild(sFdr);
     note('FSRS 按期望保留率计算下次复习间隔：0.90 为默认工作点；调高（如考前 0.95）间隔约缩短一半、复习更密，调低更省时。只影响之后评分计算的新间隔，不改动已排期卡片。与毕业目标「考试日 ≥90% 记得」的判据相互独立。');
 
+    // 每日新卡上限（软上限：限制「新引入」量，已引入未学完的卡不受限）
+    const sNew = row('每日新卡上限');
+    const newInput = el('input', 'num');
+    newInput.type = 'number';
+    newInput.min = '0'; newInput.max = '99'; newInput.step = '1';
+    newInput.style.width = '72px';
+    newInput.value = (DB.settings && typeof DB.settings.dailyNew === 'number') ? DB.settings.dailyNew : 10;
+    newInput.title = '每天最多引入多少张新卡进入队列（0 = 暂停引入新卡）';
+    newInput.addEventListener('change', function () {
+      let v = parseInt(newInput.value, 10);
+      if (isNaN(v)) v = 10;
+      v = Math.max(0, Math.min(99, v));
+      DB.settings.dailyNew = v;
+      saveDB();
+      newInput.value = v;
+      toast(v === 0 ? '已暂停引入新卡（明日之前队列不再加入新内容）' : '每日新卡上限已设为 ' + v + ' 张，明日引入量按新上限计算');
+      renderApp();
+    });
+    sNew.appendChild(newInput);
+    wrap.appendChild(sNew);
+    note('每天最多把多少张新卡引入学习队列（每科独立生效，已引入但未学完的卡不受限）。到量后队列只剩到期复习与巩固中的卡；明天自动继续引入。设 0 可临时冻结新内容、专心清复习积压。到期复习永远不受限——那是 FSRS 的排期承诺。');
+
     const sBare = el('div', 'setting-row');
     sBare.appendChild(el('span', null, '裸回忆'));
     const bareCb = el('input', 'chk');

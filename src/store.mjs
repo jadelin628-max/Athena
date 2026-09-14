@@ -166,11 +166,14 @@
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
       if (typeof c.notes !== 'string') c.notes = '';
-      // 调度自愈：学习/重学步进只应是分钟级（1/10 分钟），复习态 due 必为有限数值。
-      // due 缺失/NaN/被时钟偏移写远时，卡片会带「学习中」标识却永远过不了 due<=now 的入队检查——
-      // 表现为「队列结束后仍有学习中卡片、且永不进入队列」。加载时按「即刻到期」修复。
+      // 调度自愈：数值字段只允许有限数（NaN/null/undefined 一律清除或重建），
+      // 学习/重学步进只应是分钟级——due 被写远超 1 小时同样按「即刻到期」修复，
+      // 杜绝「学习中」卡片因调度数据损坏而永久滞留队列之外。
       const badDue = !(typeof c.due === 'number' && isFinite(c.due));
-      if (c.state === 'learning' || c.state === 'relearning') {
+      if (typeof c.lastR === 'number' && !isFinite(c.lastR)) delete c.lastR;
+      if (typeof c.stab === 'number' && !isFinite(c.stab)) delete c.stab;
+      if (typeof c.diff === 'number' && !isFinite(c.diff)) delete c.diff;
+      if ((c.state === 'learning' || c.state === 'relearning')) {
         if (badDue || c.due > Date.now() + 3600000) c.due = Date.now();
       } else if (c.state === 'review' && badDue) {
         c.due = Date.now();
@@ -351,18 +354,22 @@
   function sanitizeCard(c) {
     const out = defaultCard();
     if (c && typeof c === 'object') {
-      if (typeof c.reps === 'number') out.reps = c.reps;
-      if (typeof c.ivl === 'number') out.ivl = c.ivl;
-      if (typeof c.due === 'number') out.due = c.due;
-      if (typeof c.lapses === 'number') out.lapses = c.lapses;
-      if (typeof c.grad === 'number') out.grad = c.grad;
-      if (typeof c.step === 'number') out.step = c.step;
-      if (typeof c.diff === 'number') out.diff = c.diff;
-      if (typeof c.stab === 'number') out.stab = c.stab;
+      // 数值字段一律要求有限数：typeof NaN === 'number'，不设 isFinite 检查会把 NaN 放进调度数据
+      // （JSON.stringify 会把 NaN 变 null，再经导入/同步回流即产生「学习中但 due 无效」的滞留卡）
+      const num = function (v) { return (typeof v === 'number' && isFinite(v)) ? v : null; };
+      let v;
+      if ((v = num(c.reps)) != null) out.reps = v;
+      if ((v = num(c.ivl)) != null) out.ivl = v;
+      if ((v = num(c.due)) != null) out.due = v;
+      if ((v = num(c.lapses)) != null) out.lapses = v;
+      if ((v = num(c.grad)) != null) out.grad = v;
+      if ((v = num(c.step)) != null) out.step = v;
+      if ((v = num(c.diff)) != null) out.diff = v;
+      if ((v = num(c.stab)) != null) out.stab = v;
       if (c.fsrsInit) out.fsrsInit = 1;
-      if (Array.isArray(c.hist)) out.hist = c.hist.map(function (h) { return { t: h.t, m: h.m, ivl: h.ivl || 0 }; });
-      if (typeof c.lastR === 'number') out.lastR = c.lastR;
-      if (typeof c.ivlR === 'number') out.ivlR = c.ivlR;
+      if (Array.isArray(c.hist)) out.hist = c.hist.map(function (h) { return { t: num(h.t) || 0, m: num(h.m) || 0, ivl: num(h.ivl) || 0 }; });
+      if ((v = num(c.lastR)) != null) out.lastR = v;
+      if ((v = num(c.ivlR)) != null) out.ivlR = v;
       if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning' || c.state === 'review') out.state = c.state;
       if (typeof c.notes === 'string') out.notes = c.notes;
     }

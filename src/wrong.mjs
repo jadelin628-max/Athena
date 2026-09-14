@@ -67,7 +67,9 @@
     return '下次 ' + fmtDayMs(w.due) + '（间隔 ' + w.ivl + ' 天）' + (isWrongGraduated(w) ? ' · ✔已稳固' : '');
   }
 
-  // 错题失败（不会/思路错）→ 关联知识卡降级，提前重现补漏
+  // 错题失败（不会/思路错）→ 关联知识卡降级，提前重现补漏。
+  // 降级是一次真实的调度事件：必须更新 lastR——否则跨端合并（按 lastR 选边）时，
+  // 另一端仍持较旧但 lastR 相同的复习态副本，降级会被静默丢弃、行为在两端间反复。
   function demoteLinked(linkedIds) {
     if (!linkedIds || !linkedIds.length) return;
     const now = Date.now();
@@ -81,6 +83,7 @@
       c.step = 0;
       if (c.state === 'review') { c.state = 'relearning'; c.grad = 0; c.reps = 0; c.ivl = 0; }
       c.due = dayStart(now) + DAY;
+      c.lastR = now; // 让降级在合并时胜出（与一次真实评分同权重）
     });
   }
 

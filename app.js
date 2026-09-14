@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.35.1';
+  const VERSION = '1.36.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.36.0', date: '2026-09', items: ['每日新卡上限生效（设置页新增「每日新卡上限」，默认 10，0 = 暂停引入）：每天最多把 N 张新卡引入学习队列，已引入但未学完的卡与到期复习不受限；完成画面新增「另有 N 张新卡将按每日上限逐步引入」提示。无上限一次性引入虽让完成画面可达，但新学科会一次性涌入数百张卡——软上限让每日负载可控', '错题关联降级的根治：降级（错题答「不会/思路错」时关联知识卡进入重学）现在会更新 lastR——跨端合并按 lastR 选边，此前降级可能被另一端的旧副本静默丢弃、行为在两端反复；导入净化与加载自愈扩展到全部调度数值字段（NaN/null 一律拒收），彻底封死「学习中但到期时刻无效」的滞留来源', '说明：删除错题不会撤销已发生的关联降级——那是对应知识点当天真实遗忘的记录；但其调度状态自本版起跨端一致、且不再可能因数据损坏而滞留'] },
     { v: '1.35.1', date: '2026-09', items: ['修复：本日复习队列结束后，仍有「学习中」卡片不回到队列。根因有二：① 完成画面是静态的——学习/重学短步进（1/10 分钟）中的卡不占当前队列，画面既无提示也不会自动刷新，用户在步进窗口内回访只见「本轮已完成」+「未学完新卡 N」并存；② 少数卡的到期时刻被污染（缺失/NaN/时钟偏移写远）后永远无法通过到期检查，真正滞留队列之外', '修复方案：① 完成画面改为「⏳ 巩固步进中」——显示待回归卡数与最早回归倒计时，到点自动刷新把卡片接回队列（无需手动切换页面）；② 加载时对调度数据自愈——学习/重学卡 due 缺失/非法/被写远超 1 小时、复习卡 due 缺失/非法，一律修复为「即刻到期」，杜绝永久滞留'] },
     { v: '1.35.0', date: '2026-09', items: ['统计学对齐茆诗松《概率论与数理统计教程》全面补全（+18 卡 / 修订 8 卡，共 199 卡）：新增相互独立与两两独立、概率的统计定义、依概率收敛、李雅普诺夫 CLT、两正态总体抽样分布（合并方差 t 与方差比 F）、样本中位数与极差、频数频率表与直方图、箱线图、正态概率图、变异系数、偏度与峰度、协方差矩阵、全方差公式、均方误差准则、MLE 不变性、单侧置信限、多重比较（LSD/Tukey）、一元非线性回归', '修订既有卡：样本空间补对偶律、独立性补三事件推论、几何分布补无记忆性、联合分布函数补矩形公式与联合分布律、MLE 补求解步骤、估计量评选补 MSE 路线、单因素方差分析补三假定、贝叶斯卡补后验均值估计', '新增 8 条 PITFALL（两两独立陷阱/全方差公式两项勿换/峰度减 3 基准/F 自由度顺序/单双侧临界值/LSD 错误率膨胀/线性化 R² 不可比）与 18 组知识点关联标签'] },
     { v: '1.34.0', date: '2026-09', items: ['语言四科各新增「高频单词」分类（共 120 卡）：每科 30 个最常用词——人称/时间/核心动词/常用形容词/高频名词；卡面为单词+读音（日语附假名、法语名词带冠词记阴阳性、西语标性数、韩语标注汉字词来源），背面为词性释义与高频搭配/不规则提示', '单词卡与本卡语法/文化卡共用 FSRS 调度：主页掌握度、待复习数、云同步自动覆盖新卡，无需额外配置'] },
@@ -557,11 +558,14 @@
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
       if (typeof c.notes !== 'string') c.notes = '';
-      // 调度自愈：学习/重学步进只应是分钟级（1/10 分钟），复习态 due 必为有限数值。
-      // due 缺失/NaN/被时钟偏移写远时，卡片会带「学习中」标识却永远过不了 due<=now 的入队检查——
-      // 表现为「队列结束后仍有学习中卡片、且永不进入队列」。加载时按「即刻到期」修复。
+      // 调度自愈：数值字段只允许有限数（NaN/null/undefined 一律清除或重建），
+      // 学习/重学步进只应是分钟级——due 被写远超 1 小时同样按「即刻到期」修复，
+      // 杜绝「学习中」卡片因调度数据损坏而永久滞留队列之外。
       const badDue = !(typeof c.due === 'number' && isFinite(c.due));
-      if (c.state === 'learning' || c.state === 'relearning') {
+      if (typeof c.lastR === 'number' && !isFinite(c.lastR)) delete c.lastR;
+      if (typeof c.stab === 'number' && !isFinite(c.stab)) delete c.stab;
+      if (typeof c.diff === 'number' && !isFinite(c.diff)) delete c.diff;
+      if ((c.state === 'learning' || c.state === 'relearning')) {
         if (badDue || c.due > Date.now() + 3600000) c.due = Date.now();
       } else if (c.state === 'review' && badDue) {
         c.due = Date.now();
@@ -742,18 +746,22 @@
   function sanitizeCard(c) {
     const out = defaultCard();
     if (c && typeof c === 'object') {
-      if (typeof c.reps === 'number') out.reps = c.reps;
-      if (typeof c.ivl === 'number') out.ivl = c.ivl;
-      if (typeof c.due === 'number') out.due = c.due;
-      if (typeof c.lapses === 'number') out.lapses = c.lapses;
-      if (typeof c.grad === 'number') out.grad = c.grad;
-      if (typeof c.step === 'number') out.step = c.step;
-      if (typeof c.diff === 'number') out.diff = c.diff;
-      if (typeof c.stab === 'number') out.stab = c.stab;
+      // 数值字段一律要求有限数：typeof NaN === 'number'，不设 isFinite 检查会把 NaN 放进调度数据
+      // （JSON.stringify 会把 NaN 变 null，再经导入/同步回流即产生「学习中但 due 无效」的滞留卡）
+      const num = function (v) { return (typeof v === 'number' && isFinite(v)) ? v : null; };
+      let v;
+      if ((v = num(c.reps)) != null) out.reps = v;
+      if ((v = num(c.ivl)) != null) out.ivl = v;
+      if ((v = num(c.due)) != null) out.due = v;
+      if ((v = num(c.lapses)) != null) out.lapses = v;
+      if ((v = num(c.grad)) != null) out.grad = v;
+      if ((v = num(c.step)) != null) out.step = v;
+      if ((v = num(c.diff)) != null) out.diff = v;
+      if ((v = num(c.stab)) != null) out.stab = v;
       if (c.fsrsInit) out.fsrsInit = 1;
-      if (Array.isArray(c.hist)) out.hist = c.hist.map(function (h) { return { t: h.t, m: h.m, ivl: h.ivl || 0 }; });
-      if (typeof c.lastR === 'number') out.lastR = c.lastR;
-      if (typeof c.ivlR === 'number') out.ivlR = c.ivlR;
+      if (Array.isArray(c.hist)) out.hist = c.hist.map(function (h) { return { t: num(h.t) || 0, m: num(h.m) || 0, ivl: num(h.ivl) || 0 }; });
+      if ((v = num(c.lastR)) != null) out.lastR = v;
+      if ((v = num(c.ivlR)) != null) out.ivlR = v;
       if (c.state === 'new' || c.state === 'learning' || c.state === 'relearning' || c.state === 'review') out.state = c.state;
       if (typeof c.notes === 'string') out.notes = c.notes;
     }
@@ -1613,9 +1621,22 @@
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
     const st = introState();
-    // 引入全部「未引入的新卡」（时间预算为软上限：超出仅提示，不封顶新卡引入）
-    const pending = shuffle(all.filter(function (id) { return card(id).state === 'new' && st.ids.indexOf(id) === -1; }));
-    if (pending.length) { st.ids = st.ids.concat(pending); saveDB(); }
+    // 新卡摄入：按「每日新卡上限」软限制今日引入量（设置可调，0 = 暂停引入新卡）；
+    // 已引入但未学完的卡不受限（进了管线就要学完），到期复习永不上限（FSRS 的工作量承诺）。
+    // 今日已引入数记在 DB.log.counts[today].intro——同步合并按字段取大，多端安全。
+    if (!DB.log) DB.log = {};
+    if (!DB.log.counts) DB.log.counts = {};
+    const t = todayStr();
+    if (!DB.log.counts[t]) DB.log.counts[t] = {};
+    const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
+    const introducedToday = DB.log.counts[t].intro || 0;
+    const room = Math.max(0, cap - introducedToday);
+    const pending = shuffle(all.filter(function (id) { return card(id).state === 'new' && st.ids.indexOf(id) === -1; })).slice(0, room);
+    if (pending.length) {
+      st.ids = st.ids.concat(pending);
+      DB.log.counts[t].intro = introducedToday + pending.length;
+      saveDB();
+    }
     // 到期复习（review 且到期）
     const due = all.filter(function (id) {
       const c = card(id);
@@ -1730,7 +1751,13 @@
       } else {
         wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
         wrap.appendChild(illus('learn-done'));
-        wrap.appendChild(el('p', 'muted', '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
+        const waiting = DATA.filter(function (f) {
+          const c = card(f.id);
+          return c.state === 'new' && introState().ids.indexOf(f.id) === -1;
+        }).length;
+        wrap.appendChild(el('p', 'muted', waiting > 0
+          ? '今日的队列已清空——另有 ' + waiting + ' 张新卡将按「每日新卡上限」在之后的日期逐步引入；到期复习卡会按排期自动进入队列。'
+          : '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
       }
       app.appendChild(wrap);
       return;
@@ -2348,7 +2375,9 @@
     return '下次 ' + fmtDayMs(w.due) + '（间隔 ' + w.ivl + ' 天）' + (isWrongGraduated(w) ? ' · ✔已稳固' : '');
   }
 
-  // 错题失败（不会/思路错）→ 关联知识卡降级，提前重现补漏
+  // 错题失败（不会/思路错）→ 关联知识卡降级，提前重现补漏。
+  // 降级是一次真实的调度事件：必须更新 lastR——否则跨端合并（按 lastR 选边）时，
+  // 另一端仍持较旧但 lastR 相同的复习态副本，降级会被静默丢弃、行为在两端间反复。
   function demoteLinked(linkedIds) {
     if (!linkedIds || !linkedIds.length) return;
     const now = Date.now();
@@ -2362,6 +2391,7 @@
       c.step = 0;
       if (c.state === 'review') { c.state = 'relearning'; c.grad = 0; c.reps = 0; c.ivl = 0; }
       c.due = dayStart(now) + DAY;
+      c.lastR = now; // 让降级在合并时胜出（与一次真实评分同权重）
     });
   }
 
@@ -3172,6 +3202,28 @@
     sFdr.appendChild(fdrInput);
     wrap.appendChild(sFdr);
     note('FSRS 按期望保留率计算下次复习间隔：0.90 为默认工作点；调高（如考前 0.95）间隔约缩短一半、复习更密，调低更省时。只影响之后评分计算的新间隔，不改动已排期卡片。与毕业目标「考试日 ≥90% 记得」的判据相互独立。');
+
+    // 每日新卡上限（软上限：限制「新引入」量，已引入未学完的卡不受限）
+    const sNew = row('每日新卡上限');
+    const newInput = el('input', 'num');
+    newInput.type = 'number';
+    newInput.min = '0'; newInput.max = '99'; newInput.step = '1';
+    newInput.style.width = '72px';
+    newInput.value = (DB.settings && typeof DB.settings.dailyNew === 'number') ? DB.settings.dailyNew : 10;
+    newInput.title = '每天最多引入多少张新卡进入队列（0 = 暂停引入新卡）';
+    newInput.addEventListener('change', function () {
+      let v = parseInt(newInput.value, 10);
+      if (isNaN(v)) v = 10;
+      v = Math.max(0, Math.min(99, v));
+      DB.settings.dailyNew = v;
+      saveDB();
+      newInput.value = v;
+      toast(v === 0 ? '已暂停引入新卡（明日之前队列不再加入新内容）' : '每日新卡上限已设为 ' + v + ' 张，明日引入量按新上限计算');
+      renderApp();
+    });
+    sNew.appendChild(newInput);
+    wrap.appendChild(sNew);
+    note('每天最多把多少张新卡引入学习队列（每科独立生效，已引入但未学完的卡不受限）。到量后队列只剩到期复习与巩固中的卡；明天自动继续引入。设 0 可临时冻结新内容、专心清复习积压。到期复习永远不受限——那是 FSRS 的排期承诺。');
 
     const sBare = el('div', 'setting-row');
     sBare.appendChild(el('span', null, '裸回忆'));

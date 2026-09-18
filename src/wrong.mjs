@@ -122,7 +122,19 @@
       app.appendChild(wrap);
       return;
     }
-    if (!wrongDeck.length) buildWrongSession();
+    if (!wrongDeck.length) {
+      buildWrongSession();
+    } else {
+      // 会话已在进行：吸收「队列外新到期」的错题（隔夜到期、其他端同步新增），不动当前进度
+      const now = Date.now();
+      const inDeck = {};
+      wrongDeck.forEach(function (id) { inDeck[id] = true; });
+      const freshDue = Object.keys(DB.wrongs || {}).some(function (id) {
+        const w = DB.wrongs[id];
+        return !inDeck[id] && w.state === 'review' && w.due <= now;
+      });
+      if (freshDue) buildWrongSession();
+    }
     if (wrongFrontier >= wrongDeck.length) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 错题本轮完成'));
@@ -132,6 +144,19 @@
       return;
     }
     renderWrongCard(wrongDeck[wrongFrontier]);
+  }
+
+  // 错题卡记忆模块（与知识卡 memoryBox 同构：FSRS 状态 + 掌握度趋势）
+  function wrongMemoryBox(wid) {
+    const w = DB.wrongs[wid];
+    const box = el('div', 'memory-box hidden');
+    box.appendChild(el('div', 'memory-badge', '🧠 记忆'));
+    box.appendChild(el('div', 'memory-sched muted', '🗓 ' + wrongNextText(w)));
+    const diff = (typeof w.diff === 'number') ? w.diff : 5;
+    const stab = (typeof w.stab === 'number') ? w.stab : 0;
+    box.appendChild(el('div', 'memory-fsrs muted', '📐 难度 ' + diff.toFixed(1) + ' · 稳定性 S=' + stab.toFixed(1) + ' 天 · 遗忘 ' + (w.lapses || 0) + ' 次' + (isWrongGraduated(w) ? ' · ✔已稳固' : '')));
+    box.appendChild(svgTrendCore(w.hist || []));
+    return box;
   }
 
   function renderWrongCard(wid) {
@@ -187,6 +212,8 @@
       });
       cardEl.appendChild(rb);
     }
+    // 记忆模块置于卡尾（显示解析后展开，与知识卡一致）
+    cardEl.appendChild(wrongMemoryBox(wid));
     wrap.appendChild(cardEl);
 
     const controls = el('div', 'controls');
@@ -220,6 +247,8 @@
     if (a2) a2.classList.remove('hidden');
     const src = app.querySelector('.wrong-src');
     if (src) src.classList.remove('hidden');
+    const mem = app.querySelector('.memory-box');
+    if (mem) mem.classList.remove('hidden');
     app.querySelector('.controls').classList.add('hidden');
     app.querySelector('.rating').classList.remove('hidden');
   }
@@ -272,7 +301,12 @@
     if (!confirm('确定删除这道错题吗？（不可恢复）')) return;
     delete DB.wrongs[wid];
     saveDB();
-    wrongDeck = [];
+    // 从当前会话中摘除该题并保持进度对齐，而非整队重建（重建会把 frontier 归零、队列从头再来）
+    const idx = wrongDeck.indexOf(wid);
+    if (idx !== -1) {
+      wrongDeck.splice(idx, 1);
+      if (idx < wrongFrontier) wrongFrontier--;
+    }
     renderApp();
     toast('已删除错题');
   }
@@ -531,9 +565,9 @@
     DB.wrongs[id] = w;
     saveDB();
     closeWrongInput();
-    wrongDeck = [];
+    // 不重置重做会话：新错题按设计「次日重现」，动队列只会打断当前进度（frontier 归零、已展示未评分的题重现）
     renderApp();
-    toast('已保存到错题本');
+    toast('已保存到错题本，明天进入重做队列');
   }
 
   function closeWrongInput() {

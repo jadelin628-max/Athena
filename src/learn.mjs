@@ -212,9 +212,9 @@
     return '下次复习：' + fmtDayMs(c.due) + '（间隔 ' + c.ivl + ' 天）';
   }
   // 掌握度趋势：实际掌握度历史点（每次评分后跳变）+ 100% 目标参考线
-  function svgMasteryTrend(id) {
-    const c = card(id);
-    const hist = (c.hist || []);
+  function svgMasteryTrend(id) { return svgTrendCore(card(id).hist || []); }
+  // 趋势图核心（hist 元素 {t, m}）——知识卡与错题卡共用
+  function svgTrendCore(hist) {
     const wrap = el('div', 'chart-wrap');
     wrap.appendChild(el('div', 'chart-label muted', '掌握度趋势（时间）· ● 每次评分后的掌握度 · ─ 目标(100%)'));
     if (hist.length < 2) { wrap.appendChild(el('p', 'muted', '📈 数据积累中——学习 2 次后显示趋势。')); return wrap; }

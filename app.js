@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.39.0';
+  const VERSION = '1.40.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.40.0', date: '2026-09', items: ['修复：错题本新增错题后重做队列被整队重置——新错题按设计「次日重现」，不再清空当前重做会话（此前 frontier 归零、已展示未评分的错题全部重现，表现为「错误的进行复习」）；删除错题改为从队列中摘除单题并保持进度对齐；重做页现在会自动吸收队列外新到期的错题（隔夜到期/其他端同步新增）', '修复：主页待复习数量不及时——进入主页先把当前科待写内容落盘再读快照，并挂 60 秒自刷新（停留主页期间学习步进到期也能及时反映）', '修复：数三两张卡片把 2025 真题原题当作知识卡内容（变限积分极值拐点/抽象交错级数）——按知识范围重写为通用方法卡（变限积分求导与逐阶判别、定阶与莱布尼茨流程），真题原题与解析迁入对应卡片的真题模块', '错题卡新增记忆模块：与知识卡同构的「🧠 记忆」面板（下次复习时间、难度/稳定性/遗忘次数/已稳固标记、掌握度趋势图），显示解析后展开'] },
     { v: '1.39.0', date: '2026-09', items: ['学习内容与帮助内容分离（重要架构调整）：技能与语言科的 76 张「起步」类描述性/答疑性卡片（环境安装、学习方法、常见疑问等）全部移出学习队列，迁入二级导航新增的「帮助」栏目——按科目组织、支持搜索与展开阅读，仅供检索查阅，不参与 FSRS 调度与学习统计', '学习库补入 48 张纯知识卡（全库 2399 卡）：技能六科各 5 张 + AI 3 张「架构与规则」章（程序入口与执行模型、内存布局、未定义行为、翻译单元与 ODR、JVM 运行时数据区、类加载、访问修饰符四档、值传递、垃圾回收、Error 体系、宏系统、Copy/Move 语义、标准库地图等）；语言四科各 3~4 张「基础体系」章（文字分工规则、量词体系、人称代词、한글 全表、敬语三档、不规则变形、拼读总表、变位族总表、宾语代词、日期星期、字母表、指示物主全表、gustar 家族、礼貌用语分工）', '初学者模式的推荐路径同步更新为纯知识章节（如 Python：基础语法→控制流；日语：五十音→基础语法）'] },
     { v: '1.38.0', date: '2026-09', items: ['学习卡面新增「🆕 今日新学」标签：仅标记今天首次评分、新进入复习规划的卡片（复习中重学不会刷新标记），学习条同步显示「🆕 今日新学 N 张」', '技能与语言科基础内容扩容（共 +99 卡，全库 2427 卡）：语言四科各 +15 张高频单词（动物/物品/时间/情感/动作/评价）与 +3 张基础句型（指示词、并列助词、存在句、比较级、天气等）；技能科基础章各 +4~5 张（f-string 与格式化、关键字总览、常见内置函数、printf/scanf、短路求值与位运算、cin 与函数重载、static_cast、Scanner 与 String 方法、模板字符串与算术陷阱、console 调试、println 格式化、整数溢出、as 转换、一切皆表达式）——AI 基础已厚不再扩'] },
     { v: '1.37.0', date: '2026-09', items: ['初学者模式（设置页可调，章节自选）：开启后新卡只从勾选章节引入，默认勾选各科推荐的起步章节（可增减），关闭即解锁全部——11 科各配 BEGINNER 推荐路径', '每日上限后可「再来一批」：完成画面新增「➕ 再来一批」按钮，手动越过当日上限继续引入（批量 = 每日上限值，计入今日计数），学多少由自己决定', '新增 11 科「起步」章共 76 卡：技能科（Python/C/C++/Java/JS/Rust/AI）各 8 卡——语言定位、环境安装、第一个程序、怎么读报错、工具链、学习路径；语言科（日/韩/法/西）各 5 卡——文字总览、发音难点预览、第一周节奏、常见放弃点对策。全库 25 学科 2328 卡', '终端数据库编辑 CLI（阶段 A）：tools/athena-cli.mjs——init/list/pull/push/status 四组命令，把云端学习数据库拉成本地 JSON 用任意编辑器修改，推回前跑与加载同口径的校验（非法调度数据点名拒绝），改动经现有同步通道全端生效'] },
@@ -1239,9 +1240,9 @@
     return '下次复习：' + fmtDayMs(c.due) + '（间隔 ' + c.ivl + ' 天）';
   }
   // 掌握度趋势：实际掌握度历史点（每次评分后跳变）+ 100% 目标参考线
-  function svgMasteryTrend(id) {
-    const c = card(id);
-    const hist = (c.hist || []);
+  function svgMasteryTrend(id) { return svgTrendCore(card(id).hist || []); }
+  // 趋势图核心（hist 元素 {t, m}）——知识卡与错题卡共用
+  function svgTrendCore(hist) {
     const wrap = el('div', 'chart-wrap');
     wrap.appendChild(el('div', 'chart-label muted', '掌握度趋势（时间）· ● 每次评分后的掌握度 · ─ 目标(100%)'));
     if (hist.length < 2) { wrap.appendChild(el('p', 'muted', '📈 数据积累中——学习 2 次后显示趋势。')); return wrap; }
@@ -2486,7 +2487,19 @@
       app.appendChild(wrap);
       return;
     }
-    if (!wrongDeck.length) buildWrongSession();
+    if (!wrongDeck.length) {
+      buildWrongSession();
+    } else {
+      // 会话已在进行：吸收「队列外新到期」的错题（隔夜到期、其他端同步新增），不动当前进度
+      const now = Date.now();
+      const inDeck = {};
+      wrongDeck.forEach(function (id) { inDeck[id] = true; });
+      const freshDue = Object.keys(DB.wrongs || {}).some(function (id) {
+        const w = DB.wrongs[id];
+        return !inDeck[id] && w.state === 'review' && w.due <= now;
+      });
+      if (freshDue) buildWrongSession();
+    }
     if (wrongFrontier >= wrongDeck.length) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 错题本轮完成'));
@@ -2496,6 +2509,19 @@
       return;
     }
     renderWrongCard(wrongDeck[wrongFrontier]);
+  }
+
+  // 错题卡记忆模块（与知识卡 memoryBox 同构：FSRS 状态 + 掌握度趋势）
+  function wrongMemoryBox(wid) {
+    const w = DB.wrongs[wid];
+    const box = el('div', 'memory-box hidden');
+    box.appendChild(el('div', 'memory-badge', '🧠 记忆'));
+    box.appendChild(el('div', 'memory-sched muted', '🗓 ' + wrongNextText(w)));
+    const diff = (typeof w.diff === 'number') ? w.diff : 5;
+    const stab = (typeof w.stab === 'number') ? w.stab : 0;
+    box.appendChild(el('div', 'memory-fsrs muted', '📐 难度 ' + diff.toFixed(1) + ' · 稳定性 S=' + stab.toFixed(1) + ' 天 · 遗忘 ' + (w.lapses || 0) + ' 次' + (isWrongGraduated(w) ? ' · ✔已稳固' : '')));
+    box.appendChild(svgTrendCore(w.hist || []));
+    return box;
   }
 
   function renderWrongCard(wid) {
@@ -2551,6 +2577,8 @@
       });
       cardEl.appendChild(rb);
     }
+    // 记忆模块置于卡尾（显示解析后展开，与知识卡一致）
+    cardEl.appendChild(wrongMemoryBox(wid));
     wrap.appendChild(cardEl);
 
     const controls = el('div', 'controls');
@@ -2584,6 +2612,8 @@
     if (a2) a2.classList.remove('hidden');
     const src = app.querySelector('.wrong-src');
     if (src) src.classList.remove('hidden');
+    const mem = app.querySelector('.memory-box');
+    if (mem) mem.classList.remove('hidden');
     app.querySelector('.controls').classList.add('hidden');
     app.querySelector('.rating').classList.remove('hidden');
   }
@@ -2636,7 +2666,12 @@
     if (!confirm('确定删除这道错题吗？（不可恢复）')) return;
     delete DB.wrongs[wid];
     saveDB();
-    wrongDeck = [];
+    // 从当前会话中摘除该题并保持进度对齐，而非整队重建（重建会把 frontier 归零、队列从头再来）
+    const idx = wrongDeck.indexOf(wid);
+    if (idx !== -1) {
+      wrongDeck.splice(idx, 1);
+      if (idx < wrongFrontier) wrongFrontier--;
+    }
     renderApp();
     toast('已删除错题');
   }
@@ -2895,9 +2930,9 @@
     DB.wrongs[id] = w;
     saveDB();
     closeWrongInput();
-    wrongDeck = [];
+    // 不重置重做会话：新错题按设计「次日重现」，动队列只会打断当前进度（frontier 归零、已展示未评分的题重现）
     renderApp();
-    toast('已保存到错题本');
+    toast('已保存到错题本，明天进入重做队列');
   }
 
   function closeWrongInput() {
@@ -4570,6 +4605,13 @@
 
   function renderHome() {
     const app = document.getElementById('app');
+    // 主页计数读各科磁盘快照：先把当前科的待写内容落盘（100ms 防抖窗口内的评分不丢），
+    // 再挂 60 秒自刷新——停留主页期间学习步进到期/新到期复习也能及时反映
+    flushSave();
+    clearTimeout(renderHome._t);
+    renderHome._t = setTimeout(function () {
+      if (currentView === 'home') renderApp();
+    }, 60000);
     const wrap = el('div', 'home-wrap');
 
     // 问候 + 倒计时

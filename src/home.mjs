@@ -211,6 +211,13 @@
 
   function renderHome() {
     const app = document.getElementById('app');
+    // 主页计数读各科磁盘快照：先把当前科的待写内容落盘（100ms 防抖窗口内的评分不丢），
+    // 再挂 60 秒自刷新——停留主页期间学习步进到期/新到期复习也能及时反映
+    flushSave();
+    clearTimeout(renderHome._t);
+    renderHome._t = setTimeout(function () {
+      if (currentView === 'home') renderApp();
+    }, 60000);
     const wrap = el('div', 'home-wrap');
 
     // 问候 + 倒计时

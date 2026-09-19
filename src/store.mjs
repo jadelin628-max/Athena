@@ -166,7 +166,6 @@
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
       if (typeof c.notes !== 'string') c.notes = '';
-      // 调度自愈：数值字段只允许有限数（NaN/null/undefined 一律清除或重建），
       // 学习/重学步进只应是分钟级——due 被写远超 1 小时同样按「即刻到期」修复，
       // 杜绝「学习中」卡片因调度数据损坏而永久滞留队列之外。
       const badDue = !(typeof c.due === 'number' && isFinite(c.due));
@@ -179,6 +178,16 @@
         c.due = Date.now();
       }
     });
+    // 孤儿清理：静态数据中已不存在的卡片 id（学科重构/整科重置的残留）——
+    // 不清理会被主页与统计按 db.cards 键计数时当成幽灵卡（永远待复习）
+    if (DATA && DATA.length) {
+      const live = {};
+      DATA.forEach(function (f) { live[f.id] = true; });
+      Object.keys(DB.cards).forEach(function (id) { if (!live[id]) delete DB.cards[id]; });
+      if (DB.log && DB.log.newIntro && Array.isArray(DB.log.newIntro.ids)) {
+        DB.log.newIntro.ids = DB.log.newIntro.ids.filter(function (id) { return live[id]; });
+      }
+    }
     saveDB(true); // 加载时的规范化回写不是数据修改：保留原 updatedAt，否则「最后打开时间」会冒充数据版本、破坏云同步的新旧判断
   }
   function loadDBAsync() {
@@ -198,9 +207,9 @@
     if (!subj) return;
     const ov = (DB && DB.cardOverrides) || {};
 
-    // DATA：静态卡应用覆盖（含隐藏）→ 追加自建卡
+    // DATA：静态卡应用覆盖（含隐藏）→ 追加自建卡；archived 卡（重构归档）整体不参与展示与调度
     DATA = subj.DATA
-      .filter(function (f) { return !(ov[f.id] && ov[f.id].hidden); })
+      .filter(function (f) { return !f.archived && !(ov[f.id] && ov[f.id].hidden); })
       .map(function (f) {
         const o = ov[f.id] || {};
         return {

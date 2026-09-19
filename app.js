@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.40.0';
+  const VERSION = '1.41.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.41.0', date: '2026-09', items: ['技能科目教材化重构启动（Python 打样）：按《Python 编程：从入门到实践》章节骨架整科重写——变量与数据类型/列表与元组/条件判断/字典/输入与 while/函数/类与面向对象/文件与异常/测试九章 46 卡，每卡背面固定「定义 → 最小代码示例 → 要点陷阱」结构；旧考点卡随整科进度重置移除（学习进度从零开始）', '卡片新增代码块渲染：~~~ 围栏包裹的代码以等宽深色块原样展示（保留缩进与换行，不经数学/加粗处理）——此后编程科目卡片均可内嵌可运行风格的示例代码', '语言科目校正启动（日语打样）：基础语法章补 6 张课次句型卡（の 连接与所有、形容词过去式、比较句より/のほうが/いちばん、ましょう・ませんか 提议、たい 愿望、好き/上手 好恶句型），例句以示例块呈现', '加载时清理孤儿卡数据：学科重构/整科重置后残留的旧卡记录自动清除，避免主页与统计把幽灵卡计入待复习'] },
     { v: '1.40.0', date: '2026-09', items: ['修复：错题本新增错题后重做队列被整队重置——新错题按设计「次日重现」，不再清空当前重做会话（此前 frontier 归零、已展示未评分的错题全部重现，表现为「错误的进行复习」）；删除错题改为从队列中摘除单题并保持进度对齐；重做页现在会自动吸收队列外新到期的错题（隔夜到期/其他端同步新增）', '修复：主页待复习数量不及时——进入主页先把当前科待写内容落盘再读快照，并挂 60 秒自刷新（停留主页期间学习步进到期也能及时反映）', '修复：数三两张卡片把 2025 真题原题当作知识卡内容（变限积分极值拐点/抽象交错级数）——按知识范围重写为通用方法卡（变限积分求导与逐阶判别、定阶与莱布尼茨流程），真题原题与解析迁入对应卡片的真题模块', '错题卡新增记忆模块：与知识卡同构的「🧠 记忆」面板（下次复习时间、难度/稳定性/遗忘次数/已稳固标记、掌握度趋势图），显示解析后展开'] },
     { v: '1.39.0', date: '2026-09', items: ['学习内容与帮助内容分离（重要架构调整）：技能与语言科的 76 张「起步」类描述性/答疑性卡片（环境安装、学习方法、常见疑问等）全部移出学习队列，迁入二级导航新增的「帮助」栏目——按科目组织、支持搜索与展开阅读，仅供检索查阅，不参与 FSRS 调度与学习统计', '学习库补入 48 张纯知识卡（全库 2399 卡）：技能六科各 5 张 + AI 3 张「架构与规则」章（程序入口与执行模型、内存布局、未定义行为、翻译单元与 ODR、JVM 运行时数据区、类加载、访问修饰符四档、值传递、垃圾回收、Error 体系、宏系统、Copy/Move 语义、标准库地图等）；语言四科各 3~4 张「基础体系」章（文字分工规则、量词体系、人称代词、한글 全表、敬语三档、不规则变形、拼读总表、变位族总表、宾语代词、日期星期、字母表、指示物主全表、gustar 家族、礼貌用语分工）', '初学者模式的推荐路径同步更新为纯知识章节（如 Python：基础语法→控制流；日语：五十音→基础语法）'] },
     { v: '1.38.0', date: '2026-09', items: ['学习卡面新增「🆕 今日新学」标签：仅标记今天首次评分、新进入复习规划的卡片（复习中重学不会刷新标记），学习条同步显示「🆕 今日新学 N 张」', '技能与语言科基础内容扩容（共 +99 卡，全库 2427 卡）：语言四科各 +15 张高频单词（动物/物品/时间/情感/动作/评价）与 +3 张基础句型（指示词、并列助词、存在句、比较级、天气等）；技能科基础章各 +4~5 张（f-string 与格式化、关键字总览、常见内置函数、printf/scanf、短路求值与位运算、cin 与函数重载、static_cast、Scanner 与 String 方法、模板字符串与算术陷阱、console 调试、println 格式化、整数溢出、as 转换、一切皆表达式）——AI 基础已厚不再扩'] },
@@ -562,7 +563,6 @@
       if (!DB.cards[f.id]) DB.cards[f.id] = defaultCard();
       const c = DB.cards[f.id];
       if (typeof c.notes !== 'string') c.notes = '';
-      // 调度自愈：数值字段只允许有限数（NaN/null/undefined 一律清除或重建），
       // 学习/重学步进只应是分钟级——due 被写远超 1 小时同样按「即刻到期」修复，
       // 杜绝「学习中」卡片因调度数据损坏而永久滞留队列之外。
       const badDue = !(typeof c.due === 'number' && isFinite(c.due));
@@ -575,6 +575,16 @@
         c.due = Date.now();
       }
     });
+    // 孤儿清理：静态数据中已不存在的卡片 id（学科重构/整科重置的残留）——
+    // 不清理会被主页与统计按 db.cards 键计数时当成幽灵卡（永远待复习）
+    if (DATA && DATA.length) {
+      const live = {};
+      DATA.forEach(function (f) { live[f.id] = true; });
+      Object.keys(DB.cards).forEach(function (id) { if (!live[id]) delete DB.cards[id]; });
+      if (DB.log && DB.log.newIntro && Array.isArray(DB.log.newIntro.ids)) {
+        DB.log.newIntro.ids = DB.log.newIntro.ids.filter(function (id) { return live[id]; });
+      }
+    }
     saveDB(true); // 加载时的规范化回写不是数据修改：保留原 updatedAt，否则「最后打开时间」会冒充数据版本、破坏云同步的新旧判断
   }
   function loadDBAsync() {
@@ -594,9 +604,9 @@
     if (!subj) return;
     const ov = (DB && DB.cardOverrides) || {};
 
-    // DATA：静态卡应用覆盖（含隐藏）→ 追加自建卡
+    // DATA：静态卡应用覆盖（含隐藏）→ 追加自建卡；archived 卡（重构归档）整体不参与展示与调度
     DATA = subj.DATA
-      .filter(function (f) { return !(ov[f.id] && ov[f.id].hidden); })
+      .filter(function (f) { return !f.archived && !(ov[f.id] && ov[f.id].hidden); })
       .map(function (f) {
         const o = ov[f.id] || {};
         return {
@@ -898,6 +908,25 @@
   function renderTex(el, str) {
     el.setAttribute('data-tex', str);
     el.innerHTML = '';
+    const parts = String(str).split('~~~'); // 奇数段 = 代码块（~~~围栏），原样进 <pre>；偶数段走散文管线
+    parts.forEach(function (part, idx) {
+      if (idx % 2 === 1) {
+        const pre = document.createElement('pre');
+        pre.className = 'codeblock';
+        const code = document.createElement('code');
+        let body = part.replace(/^\r?\n/, '').replace(/\r?\n$/, '');
+        body = body.replace(/^[A-Za-z0-9+#-]*\r?\n/, ''); // 剥离首行语言标注（~~~python 的 python）
+        code.textContent = body;
+        pre.appendChild(code);
+        el.appendChild(pre);
+        return;
+      }
+      if (!part) return;
+      renderProse(el, part);
+    });
+  }
+  // 散文段渲染：KaTeX + ans-point 分点
+  function renderProse(el, str) {
     if (typeof window.katex !== 'undefined' && window.katex.render) {
       const pts = splitPoints(String(str));
       if (pts.length > 1) {
@@ -911,7 +940,7 @@
         renderInto(el, String(str));
       }
     } else {
-      el.textContent = String(str).replace(/\$/g, '');
+      el.appendChild(document.createTextNode(String(str).replace(/\$/g, '')));
     }
   }
   // 找到从 open 位置起、与第 0 层 `{` 配对的 `}`（支持嵌套花括号，如 $\chi^{2}$ 里的 {2}）；找不到返回 -1
@@ -1644,8 +1673,11 @@
     const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
     const begSet = {};
     if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
+    // 引入全部「未引入的新卡」（时间预算为软上限：超出仅提示，不封顶新卡引入）
+    // card(id) 判空防御：newIntro.ids 与 DB.cards 短暂不同步（如同步刚写入）时不致崩溃
     const pending = shuffle(all.filter(function (id) {
-      if (card(id).state !== 'new' || st.ids.indexOf(id) !== -1) return false;
+      const c = card(id);
+      if (!c || c.state !== 'new' || st.ids.indexOf(id) !== -1) return false;
       if (begOn) {
         const f = DATA.find(function (x) { return x.id === id; });
         if (!f || !begSet[f.cat]) return false;
@@ -1671,8 +1703,8 @@
     const dueOrdered = interleaveByImportance(due);
     // 学习阶段（时间步进到点）的卡：辨析交错（相关卡较近）
     const resumeLearning = interleaveByIds(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
-    // 已引入但仍未学的新卡：先乱序，再辨析交错（相关新卡较近出现）
-    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { return card(id).state === 'new'; })));
+    // 已引入但仍未学的新卡：先乱序，再辨析交错（相关新卡较近出现）；判空防御同上
+    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; })));
     // 队列 = 到期复习 + 续学 + 已引入新卡
     deck = dueOrdered.concat(resumeLearning, newToStudy);
     pos = 0;
@@ -5705,6 +5737,7 @@
       while ((n = walker.nextNode()) !== null) {
         const pEl = n.parentElement;
         if (pEl && pEl.closest && pEl.closest('.katex')) continue;
+        if (pEl && pEl.closest && pEl.closest('.codeblock')) continue; // 代码块内 **、\n 等是合法字面内容
         prose += n.textContent;
       }
       const litStar = /\*\*/.test(prose);

@@ -88,22 +88,25 @@ for (const [sid, { mod, data, ids }] of Object.entries(bySubject)) {
   auxCheck(mnem, 'MNEM');
 
   // 6) 内容不变量：title / front / back
+  // 代码块（~~~围栏）内容先剥离：**（幂/kwargs）、$、标识符（x1 等）在代码里都是合法字面
+  const stripCode = (s) => s.split('~~~').filter((_, i) => i % 2 === 0).join('');
   const cardCount = data.length;
   let idLeak = 0, starOdd = 0, dollarOdd = 0;
   for (const c of data) {
     for (const field of ['title', 'front', 'back']) {
       const s = c && c[field];
       if (typeof s !== 'string') continue;
+      const prose = stripCode(s);
       // 6a) 泄漏内部卡片编号
       let m; ID_TOKEN.lastIndex = 0;
-      while ((m = ID_TOKEN.exec(s)) !== null) {
+      while ((m = ID_TOKEN.exec(prose)) !== null) {
         if (allIds.has(m[0])) { report('ERR', title + ' 正文泄漏内部编号: ' + c.id + '.' + field + ' 含 (' + m[0] + ')'); idLeak++; }
       }
       // 6b) `**` 成对（奇偶）
-      const stars = (s.match(/\*\*/g) || []).length;
+      const stars = (prose.match(/\*\*/g) || []).length;
       if (stars % 2 === 1) { report('WARN', title + ' `**` 未成对: ' + c.id + '.' + field + ' (' + stars + ' 个)'); starOdd++; }
       // 6c) `$` 成对（奇偶）——排除被转义的 \$ 与 $$ 均按字符计，偶数为对
-      const dollars = (s.replace(/\\\$/g, '').match(/\$/g) || []).length;
+      const dollars = (prose.replace(/\\\$/g, '').match(/\$/g) || []).length;
       if (dollars % 2 === 1) { report('WARN', title + ' `$` 未成对: ' + c.id + '.' + field + ' (' + dollars + ' 个)'); dollarOdd++; }
     }
   }

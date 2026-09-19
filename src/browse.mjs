@@ -92,8 +92,11 @@
     const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
     const begSet = {};
     if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
+    // 引入全部「未引入的新卡」（时间预算为软上限：超出仅提示，不封顶新卡引入）
+    // card(id) 判空防御：newIntro.ids 与 DB.cards 短暂不同步（如同步刚写入）时不致崩溃
     const pending = shuffle(all.filter(function (id) {
-      if (card(id).state !== 'new' || st.ids.indexOf(id) !== -1) return false;
+      const c = card(id);
+      if (!c || c.state !== 'new' || st.ids.indexOf(id) !== -1) return false;
       if (begOn) {
         const f = DATA.find(function (x) { return x.id === id; });
         if (!f || !begSet[f.cat]) return false;
@@ -119,8 +122,8 @@
     const dueOrdered = interleaveByImportance(due);
     // 学习阶段（时间步进到点）的卡：辨析交错（相关卡较近）
     const resumeLearning = interleaveByIds(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
-    // 已引入但仍未学的新卡：先乱序，再辨析交错（相关新卡较近出现）
-    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { return card(id).state === 'new'; })));
+    // 已引入但仍未学的新卡：先乱序，再辨析交错（相关新卡较近出现）；判空防御同上
+    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; })));
     // 队列 = 到期复习 + 续学 + 已引入新卡
     deck = dueOrdered.concat(resumeLearning, newToStudy);
     pos = 0;

@@ -708,3 +708,13 @@ body.immersive #immersiveExit { display: block; }
   padding: 2px 16px 14px; font-size: 14px; line-height: 1.75; color: var(--text);
   border-top: 1px dashed var(--border); padding-top: 12px;
 }
+
+/* 代码块：教材化卡片的「最小代码示例」——深色底、等宽、保留缩进、横向滚动 */
+.codeblock {
+  background: #2B2A33; color: #E8E6F0; border-radius: 10px;
+  padding: 10px 14px; margin: 8px 0; overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Courier New', monospace;
+  font-size: 12.5px; line-height: 1.55; tab-size: 4;
+}
+.codeblock code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
+[data-theme="dark"] .codeblock { background: #1E1D26; border: 1px solid #33323E; }

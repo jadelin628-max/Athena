@@ -1,6 +1,25 @@
   function renderTex(el, str) {
     el.setAttribute('data-tex', str);
     el.innerHTML = '';
+    const parts = String(str).split('~~~'); // 奇数段 = 代码块（~~~围栏），原样进 <pre>；偶数段走散文管线
+    parts.forEach(function (part, idx) {
+      if (idx % 2 === 1) {
+        const pre = document.createElement('pre');
+        pre.className = 'codeblock';
+        const code = document.createElement('code');
+        let body = part.replace(/^\r?\n/, '').replace(/\r?\n$/, '');
+        body = body.replace(/^[A-Za-z0-9+#-]*\r?\n/, ''); // 剥离首行语言标注（~~~python 的 python）
+        code.textContent = body;
+        pre.appendChild(code);
+        el.appendChild(pre);
+        return;
+      }
+      if (!part) return;
+      renderProse(el, part);
+    });
+  }
+  // 散文段渲染：KaTeX + ans-point 分点
+  function renderProse(el, str) {
     if (typeof window.katex !== 'undefined' && window.katex.render) {
       const pts = splitPoints(String(str));
       if (pts.length > 1) {
@@ -14,7 +33,7 @@
         renderInto(el, String(str));
       }
     } else {
-      el.textContent = String(str).replace(/\$/g, '');
+      el.appendChild(document.createTextNode(String(str).replace(/\$/g, '')));
     }
   }
   // 找到从 open 位置起、与第 0 层 `{` 配对的 `}`（支持嵌套花括号，如 $\chi^{2}$ 里的 {2}）；找不到返回 -1

@@ -547,6 +547,7 @@
       while ((n = walker.nextNode()) !== null) {
         const pEl = n.parentElement;
         if (pEl && pEl.closest && pEl.closest('.katex')) continue;
+        if (pEl && pEl.closest && pEl.closest('.codeblock')) continue; // 代码块内 **、\n 等是合法字面内容
         prose += n.textContent;
       }
       const litStar = /\*\*/.test(prose);

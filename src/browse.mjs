@@ -73,7 +73,7 @@
     return DATA.filter(function (f) { const c = card(f.id); return (c.state === 'learning' || c.state === 'relearning') && (c.grad | 0) === 0; }).length;
   }
 
-  function buildSession() {
+  function buildSession(pendingBoost, skipPending) {
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
     const st = introState();
@@ -86,15 +86,17 @@
     if (!DB.log.counts[t]) DB.log.counts[t] = {};
     const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
     const introducedToday = DB.log.counts[t].intro || 0;
-    const room = Math.max(0, cap - introducedToday);
+    // 每日语义：队列中今天可学的新卡 ≤ cap − 今日已学新卡数（counts.n 只在新卡首评时累计）。
+    // 此前只限制「今日引入动作」，历史上累积引入、一直未学到的新卡会全部塞进队列——上限形同虚设。
+    const doneToday = DB.log.counts[t].n || 0;
+    const room = Math.max(0, cap - doneToday);
     // 初学者模式：开启时只在选定章节内引入新卡（章节可在设置页调整）
     const beg = (DB.settings && DB.settings.beginner) || null;
     const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
     const begSet = {};
     if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
-    // 引入全部「未引入的新卡」（时间预算为软上限：超出仅提示，不封顶新卡引入）
-    // card(id) 判空防御：newIntro.ids 与 DB.cards 短暂不同步（如同步刚写入）时不致崩溃
-    const pending = shuffle(all.filter(function (id) {
+    // 引入「未引入的新卡」（数量受 room 限制；skipPending=true 供「再来一批」直通——自行带量，不再自动引入）
+    const pending = skipPending ? [] : shuffle(all.filter(function (id) {
       const c = card(id);
       if (!c || c.state !== 'new' || st.ids.indexOf(id) !== -1) return false;
       if (begOn) {
@@ -122,8 +124,8 @@
     const dueOrdered = interleaveByImportance(due);
     // 学习阶段（时间步进到点）的卡：辨析交错（相关卡较近）
     const resumeLearning = interleaveByIds(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
-    // 已引入但仍未学的新卡：先乱序，再辨析交错（相关新卡较近出现）；判空防御同上
-    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; })));
+    // 已引入但仍未学的新卡：受每日上限约束（再来一批的 pendingBoost 额外放量），先乱序再辨析交错；判空防御同上
+    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; })).slice(0, room + (skipPending ? (pendingBoost || 0) : 0)));
     // 队列 = 到期复习 + 续学 + 已引入新卡
     deck = dueOrdered.concat(resumeLearning, newToStudy);
     pos = 0;
@@ -155,10 +157,18 @@
     st.ids = st.ids.concat(rest);
     DB.log.counts[t].intro = (DB.log.counts[t].intro || 0) + rest.length;
     saveDB();
-    buildSession();
+    buildSession(rest.length, true); // 直通模式：这批卡跳过 room 限制直接进队列
     currentView = 'learn';
     renderApp();
     toast('已引入 ' + rest.length + ' 张新卡，继续');
+  }
+
+  // 重排队列：设置变更（每日上限/初学者模式）或用户主动重排时调用——
+  // 重建会话（已引入记录 st.ids 保留，正在学习管线中的卡与到期复习会重新入队）
+  function rebuildQueue() {
+    buildSession();
+    renderApp();
+    toast('学习队列已按当前设置重排');
   }
 
   function surfaceDue() {
@@ -218,6 +228,11 @@
     const add = el('button', 'btn small', '➕ 录入知识点');
     add.addEventListener('click', openCardInput);
     tb.appendChild(add);
+    // 重排队列：按当前设置（每日上限/初学者模式）重新生成学习顺序
+    const requeue = el('button', 'btn small', '↻ 重排队列');
+    requeue.title = '按当前设置重新生成学习队列（已引入的卡与到期复习保留）';
+    requeue.addEventListener('click', rebuildQueue);
+    tb.appendChild(requeue);
     app.appendChild(tb);
     app.appendChild(statsBar());
 
@@ -749,6 +764,8 @@
     if (mem) mem.classList.remove('hidden');
     app.querySelector('.controls').classList.add('hidden');
     app.querySelector('.rating').classList.remove('hidden');
+    const lw = app.querySelector('.learn-wrap');
+    if (lw) lw.classList.add('rating-open'); // 吸附底栏占位：防止内容被固定评分栏遮住
   }
 
   function doRate(r) {

@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.41.0';
+  const VERSION = '1.42.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.42.0', date: '2026-09', items: ['修复（重要）：错题录入弹窗里打字时，数字键 1-4 会误触全局键盘评分——当前错题被悄悄评分并推进队列（「新加错题时学习页面的错题被错误标记为已学」的真正根因）；现在输入框聚焦时全局键盘刷卡完全失效', '修复：主页「全库待复习」把到期错题混入统计、与学习页口径不一致（数三等重用错题的科目数字虚高）——现拆分为「全库待复习」（仅知识卡）与「错题待重做」两个 KPI', '错题本完善：重做页新增统计条（待重做/今日已重做/平均掌握/总计）；错题本红角标（顶栏显示当前科到期错题数）；浏览页展开卡片新增记忆模块（与重做页同构）', '评分档位吸附底部：显示答案后四个记忆档位固定在视口底部（移动端自动抬高避开 Dock），长答案滚动时随时可评分', '每日新卡上限与初学者模式改为设置变更即时重排队列（此前需切科或重开才生效，表现为「不起作用」）；学习页新增「↻ 重排队列」按钮', 'Python 科扩至 60 卡（新增类型转换陷阱/常量惯例/enumerate/排序键/布尔真值/字典推导式/标志位/docstring/None 返回陷阱/属性默认值/类风格/输入校验循环/文本分析/TDD 流程），全部代码示例补教学注释', '日语科扩至 94 卡：新增 8 张课次句型卡（存在文/许可禁止/否定请求/ています 进行与状态/たことがあります 经历/ほしいです/と思います/から・ので），全部例句块逐句标注中文翻译'] },
     { v: '1.41.0', date: '2026-09', items: ['技能科目教材化重构启动（Python 打样）：按《Python 编程：从入门到实践》章节骨架整科重写——变量与数据类型/列表与元组/条件判断/字典/输入与 while/函数/类与面向对象/文件与异常/测试九章 46 卡，每卡背面固定「定义 → 最小代码示例 → 要点陷阱」结构；旧考点卡随整科进度重置移除（学习进度从零开始）', '卡片新增代码块渲染：~~~ 围栏包裹的代码以等宽深色块原样展示（保留缩进与换行，不经数学/加粗处理）——此后编程科目卡片均可内嵌可运行风格的示例代码', '语言科目校正启动（日语打样）：基础语法章补 6 张课次句型卡（の 连接与所有、形容词过去式、比较句より/のほうが/いちばん、ましょう・ませんか 提议、たい 愿望、好き/上手 好恶句型），例句以示例块呈现', '加载时清理孤儿卡数据：学科重构/整科重置后残留的旧卡记录自动清除，避免主页与统计把幽灵卡计入待复习'] },
     { v: '1.40.0', date: '2026-09', items: ['修复：错题本新增错题后重做队列被整队重置——新错题按设计「次日重现」，不再清空当前重做会话（此前 frontier 归零、已展示未评分的错题全部重现，表现为「错误的进行复习」）；删除错题改为从队列中摘除单题并保持进度对齐；重做页现在会自动吸收队列外新到期的错题（隔夜到期/其他端同步新增）', '修复：主页待复习数量不及时——进入主页先把当前科待写内容落盘再读快照，并挂 60 秒自刷新（停留主页期间学习步进到期也能及时反映）', '修复：数三两张卡片把 2025 真题原题当作知识卡内容（变限积分极值拐点/抽象交错级数）——按知识范围重写为通用方法卡（变限积分求导与逐阶判别、定阶与莱布尼茨流程），真题原题与解析迁入对应卡片的真题模块', '错题卡新增记忆模块：与知识卡同构的「🧠 记忆」面板（下次复习时间、难度/稳定性/遗忘次数/已稳固标记、掌握度趋势图），显示解析后展开'] },
     { v: '1.39.0', date: '2026-09', items: ['学习内容与帮助内容分离（重要架构调整）：技能与语言科的 76 张「起步」类描述性/答疑性卡片（环境安装、学习方法、常见疑问等）全部移出学习队列，迁入二级导航新增的「帮助」栏目——按科目组织、支持搜索与展开阅读，仅供检索查阅，不参与 FSRS 调度与学习统计', '学习库补入 48 张纯知识卡（全库 2399 卡）：技能六科各 5 张 + AI 3 张「架构与规则」章（程序入口与执行模型、内存布局、未定义行为、翻译单元与 ODR、JVM 运行时数据区、类加载、访问修饰符四档、值传递、垃圾回收、Error 体系、宏系统、Copy/Move 语义、标准库地图等）；语言四科各 3~4 张「基础体系」章（文字分工规则、量词体系、人称代词、한글 全表、敬语三档、不规则变形、拼读总表、变位族总表、宾语代词、日期星期、字母表、指示物主全表、gustar 家族、礼貌用语分工）', '初学者模式的推荐路径同步更新为纯知识章节（如 Python：基础语法→控制流；日语：五十音→基础语法）'] },
@@ -469,6 +470,20 @@
       if (due > 0) {
         if (!badge) { badge = el('span', 'nav-badge'); badge.textContent = String(due); btn.appendChild(badge); }
         else badge.textContent = String(due);
+      } else if (badge) { badge.remove(); }
+    });
+    // 错题本红角标：当前科到期错题数
+    const now = Date.now();
+    let wrongDue = 0;
+    Object.keys(DB.wrongs || {}).forEach(function (wid) {
+      const w = DB.wrongs[wid];
+      if (w.state === 'review' && w.due <= now) wrongDue++;
+    });
+    document.querySelectorAll('.nav-btn[data-arg="wrong"]').forEach(function (btn) {
+      let badge = btn.querySelector('.nav-badge');
+      if (wrongDue > 0) {
+        if (!badge) { badge = el('span', 'nav-badge'); badge.textContent = String(wrongDue); btn.appendChild(badge); }
+        else badge.textContent = String(wrongDue);
       } else if (badge) { badge.remove(); }
     });
   }
@@ -1654,7 +1669,7 @@
     return DATA.filter(function (f) { const c = card(f.id); return (c.state === 'learning' || c.state === 'relearning') && (c.grad | 0) === 0; }).length;
   }
 
-  function buildSession() {
+  function buildSession(pendingBoost, skipPending) {
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
     const st = introState();
@@ -1667,15 +1682,17 @@
     if (!DB.log.counts[t]) DB.log.counts[t] = {};
     const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
     const introducedToday = DB.log.counts[t].intro || 0;
-    const room = Math.max(0, cap - introducedToday);
+    // 每日语义：队列中今天可学的新卡 ≤ cap − 今日已学新卡数（counts.n 只在新卡首评时累计）。
+    // 此前只限制「今日引入动作」，历史上累积引入、一直未学到的新卡会全部塞进队列——上限形同虚设。
+    const doneToday = DB.log.counts[t].n || 0;
+    const room = Math.max(0, cap - doneToday);
     // 初学者模式：开启时只在选定章节内引入新卡（章节可在设置页调整）
     const beg = (DB.settings && DB.settings.beginner) || null;
     const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
     const begSet = {};
     if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
-    // 引入全部「未引入的新卡」（时间预算为软上限：超出仅提示，不封顶新卡引入）
-    // card(id) 判空防御：newIntro.ids 与 DB.cards 短暂不同步（如同步刚写入）时不致崩溃
-    const pending = shuffle(all.filter(function (id) {
+    // 引入「未引入的新卡」（数量受 room 限制；skipPending=true 供「再来一批」直通——自行带量，不再自动引入）
+    const pending = skipPending ? [] : shuffle(all.filter(function (id) {
       const c = card(id);
       if (!c || c.state !== 'new' || st.ids.indexOf(id) !== -1) return false;
       if (begOn) {
@@ -1703,8 +1720,8 @@
     const dueOrdered = interleaveByImportance(due);
     // 学习阶段（时间步进到点）的卡：辨析交错（相关卡较近）
     const resumeLearning = interleaveByIds(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
-    // 已引入但仍未学的新卡：先乱序，再辨析交错（相关新卡较近出现）；判空防御同上
-    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; })));
+    // 已引入但仍未学的新卡：受每日上限约束（再来一批的 pendingBoost 额外放量），先乱序再辨析交错；判空防御同上
+    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; })).slice(0, room + (skipPending ? (pendingBoost || 0) : 0)));
     // 队列 = 到期复习 + 续学 + 已引入新卡
     deck = dueOrdered.concat(resumeLearning, newToStudy);
     pos = 0;
@@ -1736,10 +1753,18 @@
     st.ids = st.ids.concat(rest);
     DB.log.counts[t].intro = (DB.log.counts[t].intro || 0) + rest.length;
     saveDB();
-    buildSession();
+    buildSession(rest.length, true); // 直通模式：这批卡跳过 room 限制直接进队列
     currentView = 'learn';
     renderApp();
     toast('已引入 ' + rest.length + ' 张新卡，继续');
+  }
+
+  // 重排队列：设置变更（每日上限/初学者模式）或用户主动重排时调用——
+  // 重建会话（已引入记录 st.ids 保留，正在学习管线中的卡与到期复习会重新入队）
+  function rebuildQueue() {
+    buildSession();
+    renderApp();
+    toast('学习队列已按当前设置重排');
   }
 
   function surfaceDue() {
@@ -1799,6 +1824,11 @@
     const add = el('button', 'btn small', '➕ 录入知识点');
     add.addEventListener('click', openCardInput);
     tb.appendChild(add);
+    // 重排队列：按当前设置（每日上限/初学者模式）重新生成学习顺序
+    const requeue = el('button', 'btn small', '↻ 重排队列');
+    requeue.title = '按当前设置重新生成学习队列（已引入的卡与到期复习保留）';
+    requeue.addEventListener('click', rebuildQueue);
+    tb.appendChild(requeue);
     app.appendChild(tb);
     app.appendChild(statsBar());
 
@@ -2330,6 +2360,8 @@
     if (mem) mem.classList.remove('hidden');
     app.querySelector('.controls').classList.add('hidden');
     app.querySelector('.rating').classList.remove('hidden');
+    const lw = app.querySelector('.learn-wrap');
+    if (lw) lw.classList.add('rating-open'); // 吸附底栏占位：防止内容被固定评分栏遮住
   }
 
   function doRate(r) {
@@ -2490,6 +2522,22 @@
   let wrongExpanded = {};
   let wrongJumpId = null;
 
+  // 错题重做页统计条：待重做 / 今日已重做 / 平均掌握
+  function wrongStatsBar() {
+    const now = Date.now();
+    const all = Object.keys(DB.wrongs || {});
+    const dueN = all.filter(function (wid) { const w = DB.wrongs[wid]; return w.state === 'review' && w.due <= now; }).length;
+    const t = todayStr();
+    const doneToday = (DB.log && DB.log.counts && DB.log.counts[t] && DB.log.counts[t].w) || 0;
+    const mSum = all.reduce(function (a, wid) { return a + wrongMastery(wid).pct; }, 0);
+    const bar = el('div', 'stats-bar');
+    bar.appendChild(el('span', 'stat', '待重做 ' + dueN + ' 张'));
+    bar.appendChild(el('span', 'stat', '🆕 今日已重做 ' + doneToday + ' 张'));
+    bar.appendChild(el('span', 'stat', '平均掌握 ' + (all.length ? Math.round(mSum / all.length) : 0) + '%'));
+    bar.appendChild(el('span', 'stat', '总计 ' + all.length));
+    return bar;
+  }
+
   function buildWrongSession() {
     const now = Date.now();
     const ids = Object.keys(DB.wrongs || {});
@@ -2512,6 +2560,8 @@
     add.addEventListener('click', openWrongInput);
     tb.appendChild(add);
     app.appendChild(tb);
+    // 统计行（与知识卡学习页 statsBar 同构）：待重做 / 今日已重做 / 掌握分布
+    if (total > 0) app.appendChild(wrongStatsBar());
     if (total === 0) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '📕 错题本'));
@@ -2648,6 +2698,8 @@
     if (mem) mem.classList.remove('hidden');
     app.querySelector('.controls').classList.add('hidden');
     app.querySelector('.rating').classList.remove('hidden');
+    const lw = app.querySelector('.learn-wrap');
+    if (lw) lw.classList.add('rating-open'); // 吸附底栏占位
   }
 
   function doWrongRate(r) {
@@ -2764,6 +2816,9 @@
           body.appendChild(a2b);
         }
         if (w.src) body.appendChild(el('p', 'muted', '📚 来源：' + w.src));
+        // 记忆模块（与重做页同构：FSRS 状态 + 掌握度趋势），浏览展开即可查
+        body.appendChild(wrongMemoryBox(wid));
+        body.lastChild.classList.remove('hidden');
         if (w.linked && w.linked.length) {
           const rb = el('div', 'rel-box');
           rb.appendChild(el('div', 'mini-label', '关联知识点'));
@@ -3395,8 +3450,9 @@
       DB.settings.dailyNew = v;
       saveDB();
       newInput.value = v;
-      toast(v === 0 ? '已暂停引入新卡（明日之前队列不再加入新内容）' : '每日新卡上限已设为 ' + v + ' 张，明日引入量按新上限计算');
-      renderApp();
+      // 立即重排队列：新上限对当前会话即刻生效（已引入未学完的卡保持在管线中）
+      rebuildQueue();
+      toast(v === 0 ? '已暂停引入新卡，队列已重排' : '每日新卡上限已设为 ' + v + ' 张，队列已重排');
     });
     sNew.appendChild(newInput);
     wrap.appendChild(sNew);
@@ -3431,6 +3487,7 @@
             DB.settings.beginner = { on: true, cats: cur };
             saveDB();
             renderBegCats();
+            rebuildQueue(); // 章节范围变化立即生效
           });
           begWrap.appendChild(chip);
         });
@@ -3448,6 +3505,7 @@
         }
         saveDB();
         renderBegCats();
+        rebuildQueue(); // 立即按新章节范围重排队列（未学完的已引入卡保留）
       });
       const begLabel = el('label', 'setting-check', '');
       begLabel.appendChild(begCb);
@@ -4434,16 +4492,17 @@
       const meta = subjectList()[sid];
       let db = null;
       try { db = JSON.parse(localStorage.getItem(sid + '_formula_srs_v1')); } catch (e) {}
-      let due = 0, learned = 0, min = 0, mastery = null, has = false;
+      let due = 0, learned = 0, min = 0, mastery = null, has = false, wrongDue = 0;
       if (db && db.cards) {
         has = true;
         Object.keys(db.cards).forEach(function (id) {
           const c = db.cards[id];
           if ((c.state === 'review' || c.state === 'learning' || c.state === 'relearning') && c.due && c.due <= now) due++;
         });
+        // 错题到期单独统计：与学习页「待复习」（仅知识卡）口径一致，主页分开展示
         Object.keys(db.wrongs || {}).forEach(function (wid) {
           const w = db.wrongs[wid];
-          if (w.state === 'review' && w.due && w.due <= now) due++;
+          if (w.state === 'review' && w.due && w.due <= now) wrongDue++;
         });
         learned = Object.keys((db.log && db.log.detail && db.log.detail[today]) || {}).length;
         min = Math.round(((db.log && db.log.studyTime && db.log.studyTime[today]) || 0) / 60000);
@@ -4456,7 +4515,7 @@
         });
         mastery = cnt ? Math.round(sum / cnt) : 0;
       }
-      rows.push({ sid: sid, name: meta.name, short: meta.short, icon: meta.icon, due: due, learned: learned, min: min, mastery: mastery, has: has, current: sid === currentSubjectId });
+      rows.push({ sid: sid, name: meta.name, short: meta.short, icon: meta.icon, due: due, wrongDue: wrongDue, learned: learned, min: min, mastery: mastery, has: has, current: sid === currentSubjectId });
     });
     return rows;
   }
@@ -4658,12 +4717,14 @@
     // 今日概览 KPI
     const rows = homeSubjectRows();
     const totalDue = rows.reduce(function (a, r) { return a + (r.due || 0); }, 0);
+    const totalWrong = rows.reduce(function (a, r) { return a + (r.wrongDue || 0); }, 0);
     const totalLearned = rows.reduce(function (a, r) { return a + (r.learned || 0); }, 0);
     const totalMin = rows.reduce(function (a, r) { return a + (r.min || 0); }, 0);
     const streak = homeStreak();
     const kpis = el('div', 'stat-overview home-kpis');
     const kpi = function (label, val, unit) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label + (unit || ''))); kpis.appendChild(c); };
     kpi('全库待复习', totalDue, '');
+    kpi('错题待重做', totalWrong, '');
     kpi('今日已学', totalLearned, '');
     kpi('专注', totalMin, ' 分钟');
     kpi('连续学习', streak, ' 天');
@@ -5438,6 +5499,9 @@
   document.addEventListener('keydown', function (e) {
     // 键盘刷卡：知识卡学习页与错题重做页共用（Space/Enter 显示答案，1-4 评分）
     if (currentView !== 'learn' && currentView !== 'wrong') return;
+    // 输入焦点守卫：在输入框/文本域里打字（如错题录入弹窗）绝不能触发刷卡评分
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
     const isLearn = currentView === 'learn';
     if (e.key === ' ' || e.key === 'Enter') {
       const reveal = document.querySelector('.controls');

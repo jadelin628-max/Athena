@@ -89,8 +89,9 @@
       DB.settings.dailyNew = v;
       saveDB();
       newInput.value = v;
-      toast(v === 0 ? '已暂停引入新卡（明日之前队列不再加入新内容）' : '每日新卡上限已设为 ' + v + ' 张，明日引入量按新上限计算');
-      renderApp();
+      // 立即重排队列：新上限对当前会话即刻生效（已引入未学完的卡保持在管线中）
+      rebuildQueue();
+      toast(v === 0 ? '已暂停引入新卡，队列已重排' : '每日新卡上限已设为 ' + v + ' 张，队列已重排');
     });
     sNew.appendChild(newInput);
     wrap.appendChild(sNew);
@@ -125,6 +126,7 @@
             DB.settings.beginner = { on: true, cats: cur };
             saveDB();
             renderBegCats();
+            rebuildQueue(); // 章节范围变化立即生效
           });
           begWrap.appendChild(chip);
         });
@@ -142,6 +144,7 @@
         }
         saveDB();
         renderBegCats();
+        rebuildQueue(); // 立即按新章节范围重排队列（未学完的已引入卡保留）
       });
       const begLabel = el('label', 'setting-check', '');
       begLabel.appendChild(begCb);

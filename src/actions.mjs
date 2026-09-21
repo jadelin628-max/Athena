@@ -248,6 +248,9 @@
   document.addEventListener('keydown', function (e) {
     // 键盘刷卡：知识卡学习页与错题重做页共用（Space/Enter 显示答案，1-4 评分）
     if (currentView !== 'learn' && currentView !== 'wrong') return;
+    // 输入焦点守卫：在输入框/文本域里打字（如错题录入弹窗）绝不能触发刷卡评分
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
     const isLearn = currentView === 'learn';
     if (e.key === ' ' || e.key === 'Enter') {
       const reveal = document.querySelector('.controls');

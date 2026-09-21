@@ -74,6 +74,20 @@
         else badge.textContent = String(due);
       } else if (badge) { badge.remove(); }
     });
+    // 错题本红角标：当前科到期错题数
+    const now = Date.now();
+    let wrongDue = 0;
+    Object.keys(DB.wrongs || {}).forEach(function (wid) {
+      const w = DB.wrongs[wid];
+      if (w.state === 'review' && w.due <= now) wrongDue++;
+    });
+    document.querySelectorAll('.nav-btn[data-arg="wrong"]').forEach(function (btn) {
+      let badge = btn.querySelector('.nav-badge');
+      if (wrongDue > 0) {
+        if (!badge) { badge = el('span', 'nav-badge'); badge.textContent = String(wrongDue); btn.appendChild(badge); }
+        else badge.textContent = String(wrongDue);
+      } else if (badge) { badge.remove(); }
+    });
   }
 
   // ---------------- KaTeX 加载（多 CDN 自动回退） ----------------

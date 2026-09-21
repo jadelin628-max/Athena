@@ -93,6 +93,22 @@
   let wrongExpanded = {};
   let wrongJumpId = null;
 
+  // 错题重做页统计条：待重做 / 今日已重做 / 平均掌握
+  function wrongStatsBar() {
+    const now = Date.now();
+    const all = Object.keys(DB.wrongs || {});
+    const dueN = all.filter(function (wid) { const w = DB.wrongs[wid]; return w.state === 'review' && w.due <= now; }).length;
+    const t = todayStr();
+    const doneToday = (DB.log && DB.log.counts && DB.log.counts[t] && DB.log.counts[t].w) || 0;
+    const mSum = all.reduce(function (a, wid) { return a + wrongMastery(wid).pct; }, 0);
+    const bar = el('div', 'stats-bar');
+    bar.appendChild(el('span', 'stat', '待重做 ' + dueN + ' 张'));
+    bar.appendChild(el('span', 'stat', '🆕 今日已重做 ' + doneToday + ' 张'));
+    bar.appendChild(el('span', 'stat', '平均掌握 ' + (all.length ? Math.round(mSum / all.length) : 0) + '%'));
+    bar.appendChild(el('span', 'stat', '总计 ' + all.length));
+    return bar;
+  }
+
   function buildWrongSession() {
     const now = Date.now();
     const ids = Object.keys(DB.wrongs || {});
@@ -115,6 +131,8 @@
     add.addEventListener('click', openWrongInput);
     tb.appendChild(add);
     app.appendChild(tb);
+    // 统计行（与知识卡学习页 statsBar 同构）：待重做 / 今日已重做 / 掌握分布
+    if (total > 0) app.appendChild(wrongStatsBar());
     if (total === 0) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '📕 错题本'));
@@ -251,6 +269,8 @@
     if (mem) mem.classList.remove('hidden');
     app.querySelector('.controls').classList.add('hidden');
     app.querySelector('.rating').classList.remove('hidden');
+    const lw = app.querySelector('.learn-wrap');
+    if (lw) lw.classList.add('rating-open'); // 吸附底栏占位
   }
 
   function doWrongRate(r) {
@@ -367,6 +387,9 @@
           body.appendChild(a2b);
         }
         if (w.src) body.appendChild(el('p', 'muted', '📚 来源：' + w.src));
+        // 记忆模块（与重做页同构：FSRS 状态 + 掌握度趋势），浏览展开即可查
+        body.appendChild(wrongMemoryBox(wid));
+        body.lastChild.classList.remove('hidden');
         if (w.linked && w.linked.length) {
           const rb = el('div', 'rel-box');
           rb.appendChild(el('div', 'mini-label', '关联知识点'));

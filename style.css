@@ -263,6 +263,20 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .controls { text-align: center; margin-top: 10px; }
 .rating { display: flex; gap: 9px; margin-top: 10px; }
 .rating .btn { flex: 1; }
+/* 吸附底部的评分栏：显示答案后固定在视口底部，随时可选档（移动端抬高避开 Dock） */
+.rating:not(.hidden) {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  margin-top: 0; padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  background: var(--card); border-top: 1px solid var(--border);
+  box-shadow: 0 -6px 18px rgba(60, 40, 55, 0.10);
+  animation: ratingUp .18s ease;
+}
+@keyframes ratingUp { from { transform: translateY(100%); } to { transform: none; } }
+.learn-wrap.rating-open { padding-bottom: 104px; }
+@media (max-width: 720px) {
+  .rating:not(.hidden) { bottom: calc(58px + env(safe-area-inset-bottom)); }
+  .learn-wrap.rating-open { padding-bottom: 150px; }
+}
 .btn.rate { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .rate-prev { font-size: 11px; opacity: .82; font-weight: 600; }
 .rate { font-weight: 600; border-width: 1.5px; }

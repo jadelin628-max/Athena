@@ -8,16 +8,17 @@
       const meta = subjectList()[sid];
       let db = null;
       try { db = JSON.parse(localStorage.getItem(sid + '_formula_srs_v1')); } catch (e) {}
-      let due = 0, learned = 0, min = 0, mastery = null, has = false;
+      let due = 0, learned = 0, min = 0, mastery = null, has = false, wrongDue = 0;
       if (db && db.cards) {
         has = true;
         Object.keys(db.cards).forEach(function (id) {
           const c = db.cards[id];
           if ((c.state === 'review' || c.state === 'learning' || c.state === 'relearning') && c.due && c.due <= now) due++;
         });
+        // 错题到期单独统计：与学习页「待复习」（仅知识卡）口径一致，主页分开展示
         Object.keys(db.wrongs || {}).forEach(function (wid) {
           const w = db.wrongs[wid];
-          if (w.state === 'review' && w.due && w.due <= now) due++;
+          if (w.state === 'review' && w.due && w.due <= now) wrongDue++;
         });
         learned = Object.keys((db.log && db.log.detail && db.log.detail[today]) || {}).length;
         min = Math.round(((db.log && db.log.studyTime && db.log.studyTime[today]) || 0) / 60000);
@@ -30,7 +31,7 @@
         });
         mastery = cnt ? Math.round(sum / cnt) : 0;
       }
-      rows.push({ sid: sid, name: meta.name, short: meta.short, icon: meta.icon, due: due, learned: learned, min: min, mastery: mastery, has: has, current: sid === currentSubjectId });
+      rows.push({ sid: sid, name: meta.name, short: meta.short, icon: meta.icon, due: due, wrongDue: wrongDue, learned: learned, min: min, mastery: mastery, has: has, current: sid === currentSubjectId });
     });
     return rows;
   }
@@ -232,12 +233,14 @@
     // 今日概览 KPI
     const rows = homeSubjectRows();
     const totalDue = rows.reduce(function (a, r) { return a + (r.due || 0); }, 0);
+    const totalWrong = rows.reduce(function (a, r) { return a + (r.wrongDue || 0); }, 0);
     const totalLearned = rows.reduce(function (a, r) { return a + (r.learned || 0); }, 0);
     const totalMin = rows.reduce(function (a, r) { return a + (r.min || 0); }, 0);
     const streak = homeStreak();
     const kpis = el('div', 'stat-overview home-kpis');
     const kpi = function (label, val, unit) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label + (unit || ''))); kpis.appendChild(c); };
     kpi('全库待复习', totalDue, '');
+    kpi('错题待重做', totalWrong, '');
     kpi('今日已学', totalLearned, '');
     kpi('专注', totalMin, ' 分钟');
     kpi('连续学习', streak, ' 天');

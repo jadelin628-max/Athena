@@ -31,8 +31,9 @@ window.SUBJECTS.py = (function () {
       R`想把一段消息存起来稍后使用——Python 怎么定义变量？命名有什么规矩？`,
       R`变量是**贴在值上的名字**：赋值即创建，无需声明类型（动态类型）。
 ~~~python
-message = "Hello, Python!"
-print(message)
+
+message = "Hello, Python!"   # 赋值即创建变量，无需声明类型
+print(message)               # 引用变量打印值
 ~~~
 命名规则：只用字母、数字、下划线，不能以数字开头，不能与关键字重名；惯例**小写加下划线**（user_name）。
 陷阱：变量名拼错不会报"未定义变量名"以外的提示——NameError 十有八九是拼写错或大小写错。`),
@@ -40,8 +41,9 @@ print(message)
       R`一段文字怎么存？单引号双引号有区别吗？`,
       R`字符串用单引号或双引号包住——**两者等价**，嵌套时换用可避免转义（"She said 'hi'"）。
 ~~~python
-name = "Ada"
-greeting = 'Hello'
+
+name = "Ada"        # 双引号
+greeting = 'Hello'  # 单引号：两者等价
 ~~~
 空格也是字符：带空格的串与不带的不同。字符串**不可变**——所有"修改"操作都返回新串，原串永远不变。`),
     F('pp03', 'var', '字符串常用方法',
@@ -58,10 +60,11 @@ print(s.strip())      # hi
       R`想把变量的值嵌进一句话输出——怎么写最顺手？`,
       R`**f-string**：字符串前加 f，花括号里放变量或表达式，运行时求值替换——Python 3.6 起的标准写法。
 ~~~python
+
 first = "ada"
 last = "lovelace"
-full = f"{first} {last}"
-print(f"Hello, {full.title()}!")
+full = f"{first} {last}"          # 花括号里直接放变量
+print(f"Hello, {full.title()}!")  # 花括号里也能调方法
 ~~~
 花括号里可以直接调用方法甚至做运算（{2 + 3}）。旧的加号拼接与 format() 能看懂即可，新代码一律 f-string。`),
     F('pp05', 'var', '数字与运算符',
@@ -86,9 +89,10 @@ print(name.title())
       R`一组有序的东西怎么存？怎么取第一个、最后一个？`,
       R`列表是**有序、可变**的集合，方括号包住、逗号分隔；**索引从 0 开始**，负索引从尾部数（负一即最后一个）。
 ~~~python
+
 bikes = ['trek', 'cannondale', 'redline']
-print(bikes[0])    # trek
-print(bikes[-1])   # redline
+print(bikes[0])    # trek（索引从 0 起）
+print(bikes[-1])   # redline（负索引 = 从尾数）
 ~~~
 越界访问报 IndexError——拿不准长度先用 len()。空列表写成一对空方括号。`),
     F('pp08', 'list', '增删改元素',
@@ -115,9 +119,10 @@ sort/sorted 默认按字母序——列表里混有数字和字符串会报 Type
       R`对列表里每个元素做同样的事——怎么写循环？`,
       R`**for 循环**：for 变量 in 列表加冒号，缩进块对每个元素执行一次。
 ~~~python
+
 magicians = ['alice', 'david', 'carolina']
-for m in magicians:
-    print(m)
+for m in magicians:   # m 依次取每个元素
+    print(m)          # 缩进行 = 循环体
 ~~~
 缩进是语法本体：缩进的行在循环内，**第一条不缩进的行就是循环结束**。命名惯例：列表复数、循环变量单数（for cat in cats）。循环后想做总结就写在缩进块外。`),
     F('pp11', 'list', 'range 与列表推导式',
@@ -195,18 +200,21 @@ else:
       R`键值对映射（名字对应电话）怎么存？键不存在怎么办？`,
       R`**字典**是一系列键值对，花括号包住；方括号加键访问（键不存在报 KeyError）；**get(键, 默认值)** 安全访问——不存在返回默认值而不是崩溃。
 ~~~python
+
 alien = {'color': 'green', 'points': 5}
-print(alien.get('speed', 0))   # 0
+print(alien['color'])          # green（键必须存在）
+print(alien.get('speed', 0))   # 0（键不存在给默认值）
 ~~~
 键通常是字符串或数字；值可以是任何类型。需要"查不到就当默认"的逻辑一律 get，而不是先判再取。`),
     F('pp19', 'dict', '增删改键值对',
       R`字典怎么加新键、改值、删键值对？`,
       R`赋值即写入：键存在则改、不存在则增；del 按键删除整对。
 ~~~python
+
 alien = {'color': 'green'}
-alien['points'] = 5          # 增
-alien['color'] = 'yellow'    # 改
-del alien['points']          # 删
+alien['points'] = 5          # 键不存在 → 新增
+alien['color'] = 'yellow'    # 键已存在 → 修改
+del alien['points']          # 按键删除整对
 ~~~
 **空字典起步、逐步填充**是常见模式（逐个收集用户输入）。陷阱：想"取值顺便默认"用 get；想"没有就创建"用 setdefault 或 get 加回写。`),
     F('pp20', 'dict', '遍历字典',
@@ -240,8 +248,9 @@ if age >= 18:
       R`不知道要循环几次、用户说退出才停——用什么循环？`,
       R`**while 条件:** 在条件为真期间反复执行——适合"次数不确定"；for 适合"遍历已知集合"。
 ~~~python
+
 msg = ''
-while msg != 'quit':
+while msg != 'quit':      # 条件为真就反复执行
     msg = input("> ")
     print(msg)
 ~~~
@@ -273,20 +282,22 @@ while pets:
       R`一段代码要反复使用——怎么封装成函数？`,
       R`**def 函数名(形参):** 定义；调用时传**实参**，按位置对应传给形参。
 ~~~python
-def greet(username):
+
+def greet(username):          # username 是形参
     print("Hello, " + username.title() + "!")
 
-greet('ada')
+greet('ada')                  # 'ada' 是实参
 ~~~
 函数名小写加下划线、见名知义（动词开头）。定义不等于执行——函数体只在被调用时运行。函数是"复用"的起点：写第二遍相似代码时就该抽成函数。`),
     F('pp27', 'func', '关键字实参与默认值',
       R`参数多记不住顺序？想给参数一个默认值？`,
       R`**位置实参**按顺序对位；**关键字实参**点名传递、顺序随意；**默认值**让参数可省略。
 ~~~python
-def describe(pet, animal='dog'):
+
+def describe(pet, animal='dog'):   # animal 带默认值
     print(animal, pet)
 
-describe(animal='cat', pet='tom')
+describe(animal='cat', pet='tom')  # 关键字实参：顺序随意
 ~~~
 规则：默认值形参必须排在无默认值形参**之后**。**可变默认值是知名陷阱**（默认列表/字典会被多次调用共享）——默认写 None，函数体内再新建。`),
     F('pp28', 'func', '返回值',
@@ -340,12 +351,13 @@ mp(16, 'cheese')
       R`一类对象（狗）有共同属性和行为——怎么用类建模？`,
       R`**类**是创建实例的蓝图；**__init__** 方法在创建实例时自动运行；**self** 指向实例本身、必须排第一个参数；self.属性 = 值 创建属性。
 ~~~python
+
 class Dog:
-    def __init__(self, name, age):
-        self.name = name
+    def __init__(self, name, age):  # 创建实例时自动运行
+        self.name = name            # self.属性 = 挂到实例上
         self.age = age
 
-    def sit(self):
+    def sit(self):                  # 方法的第一个参数永远是 self
         print(self.name, 'sat down.')
 ~~~
 类名用**大驼峰**（Dog、ElectricCar）；方法第一个参数永远是 self（调用时不用传）。`),
@@ -353,9 +365,10 @@ class Dog:
       R`类定义好了，怎么造出具体对象并使用它？`,
       R`类名加括号即创建**实例**——实参传给 __init__（self 自动传入）；点号访问属性、调用方法。
 ~~~python
-my_dog = Dog('Willie', 6)
-print(my_dog.name)
-my_dog.sit()
+
+my_dog = Dog('Willie', 6)   # 类名加括号 = 创建实例
+print(my_dog.name)          # 点号访问属性
+my_dog.sit()                # 点号调用方法
 ~~~
 每个实例的属性**各自独立**——再造一只狗不影响 my_dog。给属性设默认值（self.age = 0）可让部分实参可选。`),
     F('pp34', 'cls', '通过方法修改属性',
@@ -371,10 +384,11 @@ def increment(self, miles):
       R`电车是汽车的特例——不想复制粘贴父类代码怎么办？`,
       R`**class 子类(父类)**——子类自动获得父类全部属性与方法；**super().__init__()** 让父类处理公共部分，子类只写增量。
 ~~~python
-class ElectricCar(Car):
+
+class ElectricCar(Car):          # 括号里是父类：自动继承其属性方法
     def __init__(self, make):
-        super().__init__(make)
-        self.battery = 75
+        super().__init__(make)   # 公共部分交给父类初始化
+        self.battery = 75        # 子类新增属性
 ~~~
 子类定义与父类**同名方法**即重写（覆盖）。继承表达 **is-a** 关系——"电车是一种汽车"成立才继承，别为省几行代码强行继承。`),
     F('pp36', 'cls', '组合：实例作属性',
@@ -397,9 +411,10 @@ my_car = ElectricCar('tesla')
       R`想读一个文本文件的全部内容——最稳妥的写法是什么？`,
       R`**with open(路径) as 变量:**——块结束时**自动关闭**文件，不写 close 也不会泄漏句柄；read() 一次读全部。
 ~~~python
-with open('pi.txt') as f:
-    contents = f.read()
-print(contents.rstrip())
+
+with open('pi.txt') as f:   # with 块结束自动关闭文件
+    contents = f.read()     # 一次读入全部内容
+print(contents.rstrip())    # 去掉末尾多余空行
 ~~~
 相对路径相对**运行目录**；文件不存在报 FileNotFoundError。rstrip() 去掉读入文本末尾的多余空行。`),
     F('pp39', 'file', '逐行读取',
@@ -426,11 +441,12 @@ write() **不自动换行**——换行符自己写。'w' 打开已有文件会*
       R`用户输的不是数字、文件不存在——程序不想崩溃怎么办？`,
       R`**try 包可能出错的代码；except 捕获指定异常**——出错走 except 而非崩溃；**else** 在无异常时执行。
 ~~~python
+
 try:
-    answer = int(input("数字? "))
-except ValueError:
+    answer = int(input("数字? "))   # 可能出错的一句
+except ValueError:                  # 捕获指定类型
     print("这不是数字")
-else:
+else:                               # 无异常才执行
     print("平方是", answer ** 2)
 ~~~
 常见类型：ValueError、ZeroDivisionError、FileNotFoundError。**裸 except（不写类型）会吞掉一切**——至少写明异常类型。`),
@@ -448,9 +464,10 @@ except FileNotFoundError:
       R`记住用户名、下次打开还在——怎么把数据存进文件？`,
       R`**json.dump(数据, 文件对象)** 写入、**json.load(文件对象)** 读出——JSON 是跨语言通用格式，列表/字典原样往返。
 ~~~python
-import json
+
+import json                              # 标准库，无需安装
 with open('num.json', 'w') as f:
-    json.dump([3, 1, 4], f)
+    json.dump([3, 1, 4], f)              # 把对象写成 JSON 文件
 ~~~
 配合 try/except FileNotFoundError 实现"首次使用"分支（没有记录文件就是新用户）——记住偏好的标准套路。`),
     F('pp44', 'test', '为什么要自动化测试',
@@ -488,6 +505,161 @@ class TestSurvey(unittest.TestCase):
         self.assertIn('Python', self.survey.answers)
 ~~~
 setUp 保证每个测试从**干净状态**开始、互不影响。测试代码与产品代码一起维护——改功能先改测试。`),
+    F('pp47', 'var', 'str() 类型转换与拼接陷阱',
+      R`"年龄是" + 18 会发生什么？怎么正确拼接数字？`,
+      R`字符串只能和字符串拼接——直接加数字抛 **TypeError: can only concatenate str**。用 str() 把数字转成字符串再拼，或直接用 f-string。
+~~~python
+age = 18
+# print("年龄是" + age)      # TypeError！
+print("年龄是 " + str(age))  # 显式转换
+print(f"年龄是 {age}")       # f-string 自动转换（推荐）
+~~~
+注释：第一行是新手最常见报错；str()/int()/float() 是三种最常用的显式转换。`),
+    F('pp48', 'var', '常量惯例：全大写命名',
+      R`Python 没有真正的常量——怎么告诉别人"这个值别改"？`,
+      R`惯例：**全大写加下划线**（MAX_CONNECTIONS）——语法上仍可修改，但全大写是"请勿修改"的强约定。
+~~~python
+MAX_RETRIES = 3          # 约定：运行期间不要改
+SLOWDOWN_LIMIT = 0.5     # 与普通变量区分开
+~~~
+注释：写在文件顶部（import 之后），函数外的模块级名字。Python 之禅的"命名即文档"。`),
+    F('pp49', 'list', 'enumerate：同时拿索引和值',
+      R`遍历列表时还想拿到"这是第几个"——怎么办？`,
+      R`**enumerate(列表)** 每次产出 (索引, 元素)——比手动维护计数器干净。
+~~~python
+for index, name in enumerate(players):
+    print(index, name)          # 0 alice …
+
+for i, m in enumerate(magicians, start=1):
+    print(i, m)                 # 从 1 开始计数
+~~~
+注释：start=1 指定起始编号；解包到两个变量是标准写法。`),
+    F('pp50', 'list', '排序键：key=str.lower',
+      R`大小写混排的列表，sort 结果不符合预期怎么办？`,
+      R`sort/sorted 支持 **key 参数**——按函数返回值排序。大小写敏感时大写字母排前面，key=str.lower 忽略大小写。
+~~~python
+cars = ['bmw', 'Audi', 'toyota']
+print(sorted(cars))                  # ['Audi', 'bmw', 'toyota']（码点序）
+print(sorted(cars, key=str.lower))   # ['Audi', 'bmw', 'toyota'] 按小写比
+~~~
+注释：key 接一个函数，对每个元素求值后按返回值排序；还可以 key=len 按长度排。`),
+    F('pp51', 'cond', '布尔值与 bool()',
+      R`什么值算"假"？怎么把任意值转成 True/False？`,
+      R`**bool()** 把任何值转布尔。假值只有一小撮：False、None、0、空串、空列表、空字典——其余全是 True。
+~~~python
+print(bool(0), bool(''), bool([]))   # False False False
+print(bool(42), bool('hi'))          # True True
+count = 0
+active = bool(count)                 # 显式转换，语义清晰
+~~~
+注释：这就是 if 列表 判空的原理；自定义"是否有效"时用 bool() 表达意图。`),
+    F('pp52', 'dict', '字典推导式',
+      R`想一行从一个字典造出另一个字典？`,
+      R`**字典推导式**：花括号里"键表达式: 值表达式 + for 子句"。
+~~~python
+words = ['a', 'bb', 'ccc']
+lengths = {w: len(w) for w in words}
+# {'a': 1, 'bb': 2, 'ccc': 3}
+
+squares = {n: n ** 2 for n in range(1, 5)}
+~~~
+注释：与列表推导式同族——花括号加冒号即字典版本；复杂数据变换先写普通 for 循环，跑通再压缩。`),
+    F('pp53', 'loop', '标志位：多重退出条件',
+      R`循环有多个退出条件（用户输入 quit 或数据用完）——怎么不写成面条？`,
+      R`用一个**标志变量**统一控制 while，各分支只负责改标志。
+~~~python
+active = True
+while active:
+    cmd = input("> ")
+    if cmd == 'quit':
+        active = False          # 唯一的出口开关
+    elif cmd == '':
+        continue                # 空输入跳过
+    else:
+        print(cmd.title())
+~~~
+注释：退出逻辑集中在一处，比在多个位置写 break 清晰；这就是「while 加标志位」的完整模式。`),
+    F('pp54', 'func', '文档字符串 docstring',
+      R`函数的说明书写在哪里才"正规"？`,
+      R`函数体第一行放**三引号字符串**（docstring）——help() 与各类工具自动读取。
+~~~python
+def get_full(first, last):
+    """返回"名 姓"格式完整姓名，首字母大写。"""
+    return (first + ' ' + last).title()
+
+help(get_full)   # 打印 docstring
+~~~
+注释：docstring 写"做什么/参数含义/返回什么"一句话即可；这与 # 注释不同——# 给读代码的人，docstring 给调用函数的人。`),
+    F('pp55', 'func', '没有 return 与 None 返回值',
+      R`忘记写 return 的函数返回什么？会埋下什么坑？`,
+      R`没有 return（或裸 return）的函数返回 **None**——把结果接住再用时，None 悄悄传出去。
+~~~python
+def fix_name(name):
+    name.title()          # 忘了 return！
+
+r = fix_name('ada')
+print(r)                  # None
+print(r.title())          # AttributeError！
+~~~
+注释：报错常在"使用返回值"的地方爆发，但病灶在函数定义——排查时先确认函数有没有 return。`),
+    F('pp56', 'cls', '属性默认值与可选信息',
+      R`有些属性创建时还不知道（里程从 0 起步）——怎么设默认值？`,
+      R`__init__ 里直接给属性赋**默认值**，不必要求调用方传入。
+~~~python
+class Car:
+    def __init__(self, make):
+        self.make = make
+        self.odometer = 0     # 默认值：新车里程为 0
+
+my_car = Car('audi')          # 不传里程
+print(my_car.odometer)        # 0
+~~~
+注释：默认值适合"客观从某值开始"的属性；"每个实例不同"的属性仍作形参传入。`),
+    F('pp57', 'cls', '类风格约定',
+      R`类的命名与组织有什么社区惯例？`,
+      R`类名**大驼峰**（ElectricCar）；模块名小写（electric_car.py）；类内方法紧跟一个空行分组；docstring 描述类的用途。
+~~~python
+class ElectricCar(Car):
+    """电车：在汽车基础上增加电池属性。"""
+
+    def describe_battery(self):
+        print("Battery: " + str(self.battery))
+~~~
+注释：一个文件一个主类（或一组强相关类）是惯例——与「导入类」一卡的导入组织配套。`),
+    F('pp58', 'file', '循环追问直到输入合法',
+      R`用户输错不崩溃、也不放弃——一直问到合法为止？`,
+      R`while True 加 try/except：转换失败就 continue 重问，成功就 break。
+~~~python
+while True:
+    try:
+        age = int(input("年龄? "))
+        break              # 转换成功：跳出
+    except ValueError:
+        print("请输入纯数字")
+print("年龄是", age)
+~~~
+注释：这是"输入校验"的标准骨架——try 包转换、except 接 ValueError、break 只在成功路径。`),
+    F('pp59', 'file', '文本分析：split 与计数',
+      R`一篇英文文章想统计每个单词出现次数？`,
+      R`**split()** 把字符串按空格切成列表，配字典计数——文本分析的起手式。
+~~~python
+line = "the quick the lazy the dog"
+counts = {}
+for word in line.split():
+    counts[word] = counts.get(word, 0) + 1
+print(counts)   # {'the': 3, ...}
+~~~
+注释：get(word, 0) 取旧计数（无则 0）再加一——"查表累加"惯用法；counts.get 与 setdefault 都值得掌握。`),
+    F('pp60', 'test', '先写测试再改代码',
+      R`要给函数加新功能——怎么保证不弄坏已有行为？`,
+      R`流程：**先为期望行为补一条测试 → 运行确认失败 → 改函数 → 全绿收工**。
+~~~python
+def test_middle(self):
+    r = get_full('wolfgang', 'mozart')
+    self.assertEqual(r, 'Wolfgang Mozart')
+# 先跑：这条测试红着；改完函数：全绿
+~~~
+注释：这就是 TDD 的最小闭环（红→绿）；旧测试全部保留——它们是"没弄坏别处"的证据。`),
   ];
 
   const META = {
@@ -501,6 +673,7 @@ setUp 保证每个测试从**干净状态**开始、互不影响。测试代码�
     pp32: [5, '概念·类'], pp33: [5, '语法·实例'], pp34: [4, '概念·属性修改'], pp35: [5, '概念·继承'], pp36: [3, '概念·组合'], pp37: [3, '语法·导入类'],
     pp38: [4, '语法·读文件'], pp39: [3, '语法·逐行'], pp40: [4, '陷阱·写文件'], pp41: [5, '概念·异常'], pp42: [3, '规则·静默失败'], pp43: [4, '语法·json'],
     pp44: [2, '概念·测试'], pp45: [3, '语法·unittest'], pp46: [3, '语法·setUp'],
+    pp47: [3, '陷阱·类型转换'], pp48: [2, '规则·常量'], pp49: [3, '语法·enumerate'], pp50: [3, '语法·排序键'], pp51: [3, '概念·布尔'], pp52: [3, '语法·字典推导'], pp53: [3, '概念·标志位'], pp54: [3, '规则·docstring'], pp55: [4, '陷阱·None 返回'], pp56: [3, '概念·属性默认值'], pp57: [2, '规则·类风格'], pp58: [4, '概念·输入校验'], pp59: [3, '语法·文本分析'], pp60: [3, '概念·TDD'],
   };
 
   const PITFALL = {

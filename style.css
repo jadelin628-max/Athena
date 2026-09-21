@@ -737,3 +737,11 @@ body.immersive #immersiveExit { display: block; }
 }
 .codeblock code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
 [data-theme="dark"] .codeblock { background: #1E1D26; border: 1px solid #33323E; }
+
+/* KaTeX 防御：katex.min.css 缺失/延迟加载时，MathML 辅助层（内含原始 TeX，如 	o）
+   会整段裸显——用户会看到 "oto" 之类的字面命令。自有样式兜底强制隐藏。 */
+.katex-mathml {
+  position: absolute !important; width: 1px !important; height: 1px !important;
+  padding: 0 !important; border: 0 !important; margin: 0 !important;
+  overflow: hidden !important; clip: rect(1px, 1px, 1px, 1px) !important;
+}

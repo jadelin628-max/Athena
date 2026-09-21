@@ -33,8 +33,24 @@
         renderInto(el, String(str));
       }
     } else {
-      el.appendChild(document.createTextNode(String(str).replace(/\$/g, '')));
+      el.textContent = plainFallback(String(str));
     }
+  }
+  // KaTeX 不可用时的兜底：剥 $ 并把常见命令换成可读字符，避免 "\to" 之类裸 TeX 满屏
+  const FALLBACK_MAP = { to: '→', rightarrow: '→', longrightarrow: '⟶', Rightarrow: '⇒', leftrightarrow: '↔', Leftrightarrow: '⇔', leftarrow: '←', infty: '∞', pi: 'π', alpha: 'α', beta: 'β', lambda: 'λ', mu: 'μ', sigma: 'σ', Omega: 'Ω', Delta: 'Δ', times: '×', pm: '±', le: '≤', leq: '≤', ge: '≥', geq: '≥', ne: '≠', neq: '≠', approx: '≈', in: '∈', subset: '⊂', cup: '∪', cap: '∩', varnothing: '∅', emptyset: '∅', sum: 'Σ', int: '∫', sqrt: '√' };
+  function plainFallback(str) {
+    let s = str.replace(/\$/g, '');
+    // 无参数命令
+    s = s.replace(/\\([a-zA-Z]+)/g, function (m, name) {
+      return FALLBACK_MAP[name] != null ? FALLBACK_MAP[name] : m;
+    });
+    // \textbf{x}/\underline{x}/\text{x} 等保留内容去掉命令头
+    s = s.replace(/\\(textbf|underline|textit|textrm|textsf|mathbf|mathrm|text)\{([^{}]*)\}/g, '$2');
+    // \frac{A}{B} → A/B、\sqrt{X} → √X（一层括号）
+    s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '$1/$2');
+    s = s.replace(/\\sqrt\{([^{}]*)\}/g, '√($1)');
+    s = s.replace(/\\\\/g, '；');
+    return s;
   }
   // 找到从 open 位置起、与第 0 层 `{` 配对的 `}`（支持嵌套花括号，如 $\chi^{2}$ 里的 {2}）；找不到返回 -1
   function matchBrace(str, open) {

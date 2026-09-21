@@ -270,12 +270,17 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
   background: var(--card); border-top: 1px solid var(--border);
   box-shadow: 0 -6px 18px rgba(60, 40, 55, 0.10);
   animation: ratingUp .18s ease;
+  /* 吸附底栏统一横排四档（覆盖 PC 竖排旧规则），隐藏键盘提示省高度 */
+  flex-direction: row; flex-wrap: nowrap;
 }
+.rating:not(.hidden) .btn { flex: 1; width: auto; }
+.rating:not(.hidden) .keyboard-hint { display: none; }
 @keyframes ratingUp { from { transform: translateY(100%); } to { transform: none; } }
 .learn-wrap.rating-open { padding-bottom: 104px; }
 @media (max-width: 720px) {
-  .rating:not(.hidden) { bottom: calc(58px + env(safe-area-inset-bottom)); }
-  .learn-wrap.rating-open { padding-bottom: 150px; }
+  /* 四档底栏紧贴 Dock 顶：--dock-h 由 renderDock 实测写入，无 guessing、无缝隙 */
+  .rating:not(.hidden) { bottom: var(--dock-h, 58px); padding-bottom: 10px; border-top: none; border-bottom: 1px solid var(--border); box-shadow: none; }
+  .learn-wrap.rating-open { padding-bottom: calc(var(--dock-h, 58px) + 84px); }
 }
 .btn.rate { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .rate-prev { font-size: 11px; opacity: .82; font-weight: 600; }

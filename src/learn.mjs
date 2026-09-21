@@ -518,6 +518,10 @@
       b.setAttribute('data-arg', m[0]);
       dock.appendChild(b);
     });
+    // 实测 Dock 高度写入 CSS 变量：吸附评分栏贴着 Dock 顶对齐（无缝、不留缝、不遮挡）
+    requestAnimationFrame(function () {
+      document.documentElement.style.setProperty('--dock-h', dock.offsetHeight + 'px');
+    });
   }
 
   function renderApp() {

@@ -64,13 +64,11 @@ test('short-term stability update matches the official formula', () => {
   for (const [S, G] of cases) approx(fsrsShortTermStability(S, G), shortStab(S, G), `Sst(${S},${G})`);
 });
 
-test('lapse stability is capped by S/e^(w17·w18)', () => {
-  const capFor = (S) => Math.max(FSRS_S_MIN, S) / Math.exp(FW[17] * FW[18]);
+test('lapse stability matches the official FSRS-6 formula exactly', () => {
   const sForget = (D, S, R) => clamp(FW[11] * Math.pow(Math.max(1, D), -FW[12]) * (Math.pow(Math.max(FSRS_S_MIN, S) + 1, FW[13]) - 1) * Math.exp(FW[14] * (1 - R)), FSRS_S_MIN, FSRS_S_MAX);
-  const cases = [[5, 20, 0.9], [9, 2, 0.2], [7, 100, 0.6]];
+  const cases = [[5, 20, 0.9], [9, 2, 0.2], [7, 100, 0.6], [1, 0.5, 0.1], [10, 3650, 0.05]];
   for (const [D, S, R] of cases) {
-    const expected = Math.min(sForget(D, S, R), capFor(S));
-    approx(fsrsLapseStability(D, S, R), expected, `lapse(${D},${S},${R})`);
+    approx(fsrsLapseStability(D, S, R), sForget(D, S, R), `lapse(${D},${S},${R})`);
   }
 });
 

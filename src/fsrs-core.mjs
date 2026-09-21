@@ -43,11 +43,10 @@
     const growth = Math.exp(FW[8]) * (11 - D) * Math.pow(Math.max(FSRS_S_MIN, S), -FW[9]) * (Math.exp(FW[10] * (1 - R)) - 1) * hardPenalty * easyBound;
     return fsrsClamp(Math.max(FSRS_S_MIN, S) * (1 + growth), FSRS_S_MIN, FSRS_S_MAX);
   }
-  // 遗忘的稳定性更新：sForget 与「短时记忆封顶 s/e^{w17·w18}」取小（稳定性不高于遗忘前）
+  // 遗忘的稳定性更新（FSRS-6 官方公式）：sForget = w11·D^−w12·((S+1)^w13 − 1)·e^(w14·(1−R))
+  // 注：该式对 S 亚线性（w13<1），默认权重下 sForget/S ≤ ~0.51，遗忘后稳定性数学上恒低于遗忘前——无需额外封顶
   function fsrsLapseStability(D, S, R) {
-    const sForget = fsrsClamp(FW[11] * Math.pow(Math.max(1, D), -FW[12]) * (Math.pow(Math.max(FSRS_S_MIN, S) + 1, FW[13]) - 1) * Math.exp(FW[14] * (1 - R)), FSRS_S_MIN, FSRS_S_MAX);
-    const newSMin = Math.max(FSRS_S_MIN, S) / Math.exp(FW[17] * FW[18]);
-    return fsrsClamp(newSMin, FSRS_S_MIN, sForget);
+    return fsrsClamp(FW[11] * Math.pow(Math.max(1, D), -FW[12]) * (Math.pow(Math.max(FSRS_S_MIN, S) + 1, FW[13]) - 1) * Math.exp(FW[14] * (1 - R)), FSRS_S_MIN, FSRS_S_MAX);
   }
   // 短时记忆稳定度（同日学习步进，t≈0）：Again 可降、Hard/Good/Easy 不低于原值
   function fsrsShortTermStability(S, G) {

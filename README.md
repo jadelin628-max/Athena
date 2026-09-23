@@ -5,7 +5,7 @@
 ## 使用
 
 - **网页 / PWA**：双击 `index.html`，或用 `serve.ps1` 起本地服务器；部署到 HTTPS 静态托管后可「添加到主屏幕」离线使用。
-- **桌面版**：用 Tauri 打包为 Windows / macOS / Linux 原生应用，见 `TAURI.md`。
+- **桌面版**：用 Tauri 打包为 Windows / macOS / Linux 原生应用，见 [`docs/DESKTOP.md`](docs/DESKTOP.md)。
 - **多端同步**：设置页配置 GitHub 私仓 Token 后，手机 / 电脑学习数据自动保持一致（本地优先，断网可用；覆盖前自动归档，不丢数据）。
 
 ## 技术栈
@@ -17,11 +17,13 @@
 
 ## 开发与校验
 
+> AI 协作入口见 [`AGENTS.md`](AGENTS.md)（命令速查、禁区、文档地图）；架构 / 数据结构 / 工作流见 [`docs/`](docs/)。
+
 `app.js` 由 `src/` 拼接生成（需 Node ≥ 18，零 npm 依赖）。推荐用 npm 脚本（`package.json` 仅作任务入口，无需 `npm install`）：
 
 ```bash
 npm run build         # 重新生成 app.js 并同步桌面版 dist/（等价 node tools/build.mjs + build-tauri）
-npm test              # 单元测试（FSRS 对拍 / 交错 / 调度状态机 / 错题调度）
+npm test              # 单元测试（FSRS 对拍 / 交错 / 调度状态机 / 错题调度 / 云同步 / 负载预测）
 npm run check         # 数据完整性 + 版本一致性（含 tauri/dist）+ CHANGELOG/app.js 同步校验
 npm run check:render  # 渲染不变量（需 Chrome/Edge）
 ```

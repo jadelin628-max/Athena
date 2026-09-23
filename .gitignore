@@ -26,7 +26,7 @@ src-tauri/target/
 src-tauri/gen/
 src-tauri/icons/
 
-# 开发标准（AI 助手续接文档，本地私有）
+# 本地私有草稿与历史审查（已并入 AGENTS/docs；归档在 backup/docs-archive/）
 开发标准.md
 PROGRESS.md
 数据审查报告.md

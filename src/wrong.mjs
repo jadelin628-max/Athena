@@ -174,6 +174,7 @@
     const stab = (typeof w.stab === 'number') ? w.stab : 0;
     box.appendChild(el('div', 'memory-fsrs muted', '📐 难度 ' + diff.toFixed(1) + ' · 稳定性 S=' + stab.toFixed(1) + ' 天 · 遗忘 ' + (w.lapses || 0) + ' 次' + (isWrongGraduated(w) ? ' · ✔已稳固' : '')));
     box.appendChild(svgTrendCore(w.hist || []));
+    box.appendChild(revlogList(wid));
     return box;
   }
 

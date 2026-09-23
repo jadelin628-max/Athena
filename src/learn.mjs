@@ -255,6 +255,37 @@
       box.appendChild(el('div', 'memory-fsrs muted', '📐 难度 ' + (c.diff || 5).toFixed(1) + ' · 稳定性 S=' + (c.stab || 0).toFixed(1) + ' 天 · ' + targetText + (isGraduated(c) ? ' · ✔已毕业' : '')));
     }
     box.appendChild(svgMasteryTrend(id));
+    box.appendChild(revlogList(id));
+    return box;
+  }
+
+  // 评分记录时间线（读 DB.log.revlogs 中本卡的条目，倒序显示最近 10 条）
+  function revlogList(cid) {
+    const all = ((DB.log && Array.isArray(DB.log.revlogs)) ? DB.log.revlogs : []).filter(function (e) { return e.cid === cid; });
+    const box = el('div', 'revlog-box');
+    if (!all.length) {
+      box.appendChild(el('div', 'revlog-empty muted', '📋 评分记录：暂无（v1.44.0 起记录）'));
+      return box;
+    }
+    const ordered = all.slice().sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+    const RATING_LABELS = ['再来一次', '困难', '良好', '简单'];
+    const WRONG_LABELS = ['不会', '思路错', '算错', '会做对'];
+    const STATE_LABELS = { 0: '新学', 1: '学习中', 2: '复习', 3: '重学' };
+    box.appendChild(el('div', 'revlog-title muted', '📋 评分记录（共 ' + all.length + ' 次）'));
+    ordered.slice(0, 10).forEach(function (e) {
+      const row = el('div', 'revlog-row');
+      const d = new Date(e.t || 0);
+      row.appendChild(el('span', 'revlog-date', fmtDate(d).slice(5) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')));
+      const rIdx = (e.r >= 1 && e.r <= 4) ? e.r - 1 : 2;
+      const label = (e.k === 'w' ? WRONG_LABELS : RATING_LABELS)[rIdx];
+      row.appendChild(el('span', 'revlog-rating r' + rIdx, label));
+      const notes = [];
+      if (e.st != null && STATE_LABELS[e.st]) notes.push(STATE_LABELS[e.st]);
+      if (typeof e.ivl === 'number' && e.ivl > 0) notes.push('间隔 ' + e.ivl + ' 天');
+      row.appendChild(el('span', 'revlog-note muted', notes.join(' · ')));
+      box.appendChild(row);
+    });
+    if (ordered.length > 10) box.appendChild(el('div', 'revlog-more muted', '…以及更早 ' + (ordered.length - 10) + ' 条'));
     return box;
   }
 

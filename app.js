@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.43.1';
+  const VERSION = '1.44.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.44.0', date: '2026-09', items: ['评分日志（FSRS 训练数据地基）：每次评分（知识卡与错题重做）记录一条完整复习日志——时间戳、卡片、四档评分（1-4）、评分前状态、本次调度间隔、类型，格式对齐 FSRS 优化器的复习日志；只增不删（上限 4 万条自动裁最旧）', '评分日志纳入云同步：多端合并按「时间+卡片+评分」去重并集、按时间序排列，任何一端的评分记录都不会丢失；数据导入导出全量保留（顺带修复导入丢失学习时长的既有问题）', '用途规划：数据积累至约千条后，可通过 GitHub Actions 跑官方 fsrs-optimizer 训练个人化参数（本次仅铺数据地基，训练功能与开关待数据量达标后另版实施）'] },
     { v: '1.43.1', date: '2026-09', items: ['修复：卡片文本出现「oto」「o」等未渲染字面文本——根因是 KaTeX 的 MathML 辅助层（.katex-mathml，内含原始 TeX 如 \to）在 katex.min.css 缺失/未生效的设备上整段裸显，视觉上即「\to」被读作「oto」、箭头 SVG 无尺寸不可见；自有样式追加强制隐藏规则，不再依赖 katex.min.css 的加载状态', 'KaTeX 加载失败时的兜底渲染升级：从「剥 $ 纯文本」改为最小命令清理——常见箭头/符号命令转 unicode（→⇒∞πΣ 等）、textbf/underline 保留内容、frac 转 A/B，保证极端情况下内容仍可读'] },
     { v: '1.43.0', date: '2026-09', items: ['数学科目对照《高等数学》资料 16 章逐点补全（+64 卡，全库 2480 卡）：函数极限与连续（反函数/奇偶推论族/有界判定/保号性脱帽戴帽/无穷小性质/名义复合求 f/连续运算法则/取整函数/双曲函数）、数列极限（子列与收敛/海涅定理/抓大头公式/压缩映射/递推单调判定/等差等比公式）、微分学（左右导数/f 与绝对值可导关系/切线与无穷导数/高阶导存在性/可微四步法/反函数二阶导/对数求导/微分形式不变性/常用 n 阶导公式表）、应用（极值边界情形/n 阶充分条件/多项式极值拐点计数公式/费马与导数零点定理/罗尔原话/辅助函数构造口诀/连续复利/经济函数族/作图步骤）', '积分学补充：原函数存在定理/可积性条件/变限积分与间断点/反常积分奇偶性/含 ln 的 p 积分/有理函数部分分式/三角有理式万能代换/反对幂指三与表格法/区间再现公式/Γ 函数/积分不等式五法/推广积分中值定理/绕任意直线旋转；多元与级数：偏导连续判别/二元拉格朗日定理/垂线原理/二重积分性质与换元雅可比/坐标选择原则/混合偏导次序无关/方程概念族/换元可分离/n 阶特解规则/欧拉方程/积分判别法/衍生收敛结论/子级数结论/幂级数运算与柯西乘积/下标平移三规则/和函数端点定理/函数项级数概念', '新增卡全部配 REL 关联标签（64 组）；从真题库匹配配例题 17 道（2025 反函数渐近线、2018 拐点切线与可微定义、2016 极值拐点计数、2023 双曲余弦和函数与极坐标、2003 抓大头、2000 罗尔辅助函数等）并复用既有真题 10 道'] },
     { v: '1.42.1', date: '2026-09', items: ['FSRS 调度对齐官方：移除遗忘后稳定性的自定义封顶（数学核查证明其默认权重下从不生效——官方公式对 S 亚线性，遗忘后稳定性恒低于遗忘前约一半），fsrsLapseStability 现与 FSRS-6 官方公式逐字一致；算法层已无任何与官方的出入（学习步进属于 Anki 式调度策略，FSRS-6 短时记忆公式本身仍精确应用）', '移动端四档评分栏与底部 Dock 完全贴合：Dock 高度实测写入 CSS 变量，评分栏底边精确对齐 Dock 顶边（此前按固定 58px 估算会留缝或重叠）；吸附模式下四档统一横排、隐藏键盘提示，底栏高度 321px 收敛至 103px，不再遮挡卡面'] },
@@ -564,6 +565,7 @@
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
     if (!DB.log.counts) DB.log.counts = {}; // 每日完成量分类计数（n 新学 / r 复习 / w 错题重做）
+    if (!Array.isArray(DB.log.revlogs)) DB.log.revlogs = []; // 评分日志（FSRS 训练数据地基，v1.44.0 起）
     if (!DB.wrongs) DB.wrongs = {};
     if (!DB.custom) DB.custom = {};
     if (!DB.cardOverrides) DB.cardOverrides = {};
@@ -855,6 +857,23 @@
           });
         }
       });
+      // 评分日志：全量数组拷贝（条目净化：数值字段须有限、cid/k 须字符串）
+      if (Array.isArray(payload.log.revlogs)) {
+        fresh.log.revlogs = payload.log.revlogs.filter(function (e) {
+          return e && typeof e === 'object' && typeof e.cid === 'string' && e.cid &&
+            typeof e.t === 'number' && isFinite(e.t) &&
+            typeof e.r === 'number' && e.r >= 1 && e.r <= 4;
+        }).map(function (e) {
+          return { t: e.t, cid: e.cid, r: e.r, st: (typeof e.st === 'number') ? e.st : 2, ivl: (typeof e.ivl === 'number' && isFinite(e.ivl)) ? e.ivl : 0, k: (e.k === 'w') ? 'w' : 'k' };
+        });
+      }
+      // 学习时长（此前导入会丢失 studyTime——顺手补上）
+      if (payload.log.studyTime && typeof payload.log.studyTime === 'object') {
+        fresh.log.studyTime = {};
+        Object.keys(payload.log.studyTime).forEach(function (dk) {
+          if (typeof payload.log.studyTime[dk] === 'number' && isFinite(payload.log.studyTime[dk])) fresh.log.studyTime[dk] = payload.log.studyTime[dk];
+        });
+      }
     }
     if (payload.wrongs && typeof payload.wrongs === 'object') {
       Object.keys(payload.wrongs).forEach(function (wid) {
@@ -1484,6 +1503,24 @@
   function applyRatingToCard(c, rating) { applySchedRating(c, rating, LEARN_SCHED); }
 
   function applyRating(id, rating) { applyRatingToCard(card(id), rating); }
+
+  // ---------------- 评分日志（FSRS 训练数据地基） ----------------
+  // 每次评分记一条 {t, cid, r(1-4), st(评分前状态), ivl(本次调度间隔), k(类型)}——
+  // 对齐 FSRS 优化器的复习日志格式：将来数据量足够时可用复习历史训练个人化参数。
+  // 只增不删（上限 4 万条防 localStorage 溢出，超限裁最旧）；同步合并按去重并集。
+  function pushRevlog(cid, ratingIdx, stateBefore, ivlAfter, kind) {
+    if (!DB || !DB.log) return;
+    if (!Array.isArray(DB.log.revlogs)) DB.log.revlogs = [];
+    DB.log.revlogs.push({
+      t: Date.now(),
+      cid: cid,
+      r: ratingIdx + 1, // FSRS 四档：1=Again … 4=Easy
+      st: stateBefore === 'new' ? 0 : (stateBefore === 'learning' ? 1 : (stateBefore === 'relearning' ? 3 : 2)),
+      ivl: (typeof ivlAfter === 'number' && isFinite(ivlAfter)) ? Math.round(ivlAfter) : 0,
+      k: kind || 'k'
+    });
+    if (DB.log.revlogs.length > 40000) DB.log.revlogs.splice(0, DB.log.revlogs.length - 40000);
+  }
 
   // 预览：选择某个评分档后，距下次复习/重现的时长（用克隆卡跑一遍正版逻辑，不动真实数据）
   function previewNextTime(id, rating) {
@@ -2390,6 +2427,7 @@
     if (frontier >= deck.length) return;
     const id = deck[frontier];
     const wasNew = card(id).state === 'new'; // 评分前状态：新卡首学 vs 复习
+    const stateBefore = card(id).state;      // 评分前状态（评分日志用）
     const beforeM = mastery(id).pct; // 评分前掌握度（存储强度到目标比例）
     // 撤销快照：卡片状态 + 今日统计计数，供评分后单步回退
     lastRatingUndo = {
@@ -2399,6 +2437,7 @@
       detailBefore: (DB.log && DB.log.detail && DB.log.detail[todayStr()] && DB.log.detail[todayStr()][id]) || 0
     };
     applyRating(id, r);
+    pushRevlog(id, r, stateBefore, card(id).ivl, 'k'); // 评分日志（FSRS 训练数据地基）
     if (wasNew) card(id).firstLearn = todayStr(); // 标记「新进入复习规划」的日期——今日新学标签依据（复习中重学不会刷新此标记）
     const afterM = mastery(id).pct;
     lastMasteryDelta = afterM - beforeM;
@@ -2728,7 +2767,9 @@
     if (!wrongDeck.length || wrongFrontier >= wrongDeck.length) return;
     const wid = wrongDeck[wrongFrontier];
     const w = DB.wrongs[wid];
+    const stateBefore = w.state; // 评分前状态（评分日志用）
     applyRatingToWrongCard(w, r);
+    pushRevlog(wid, r, stateBefore, w.ivl, 'w'); // 评分日志：错题重做同样计入（FSRS 训练数据地基）
     if (r <= 1) demoteLinked(w.linked); // 不会/思路错 → 关联知识卡降级
     w.lastSolveMs = Date.now();
     if (!Array.isArray(w.hist)) w.hist = [];
@@ -5021,6 +5062,30 @@
       const extra = bi.filter(function (id) { return ai.indexOf(id) === -1; });
       if (extra.length) changed = true;
       lg.newIntro = { ids: ai.concat(extra) };
+    })();
+    (function () { // revlogs：评分日志去重并集（键 t|cid|r——同端同一次评分不重复产生）
+      const ar = (local.log && local.log.revlogs) || [];
+      const br = (rlog && rlog.revlogs) || [];
+      if (!Array.isArray(ar) && !Array.isArray(br)) return;
+      const seen = {};
+      const merged = [];
+      ar.concat(br).forEach(function (e) {
+        if (!e || typeof e !== 'object' || typeof e.cid !== 'string' || !e.cid) return;
+        const k = (e.t || 0) + '|' + e.cid + '|' + (e.r || 0);
+        if (seen[k]) return;
+        seen[k] = 1;
+        merged.push(e);
+      });
+      merged.sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
+      if (merged.length > 40000) merged.splice(0, merged.length - 40000); // 与应用端上限一致
+      let remoteNew = 0;
+      br.forEach(function (e) {
+        if (!e || typeof e !== 'object' || typeof e.cid !== 'string' || !e.cid) return;
+        const k = (e.t || 0) + '|' + e.cid + '|' + (e.r || 0);
+        if (!ar.some(function (a) { return (a.t || 0) + '|' + a.cid + '|' + (a.r || 0) === k; })) remoteNew++;
+      });
+      if (remoteNew) changed = true;
+      lg.revlogs = merged;
     })();
     out.log = lg;
     // 供同步层判断是否需要写回本地；enumerable=false 使 JSON 序列化自动跳过

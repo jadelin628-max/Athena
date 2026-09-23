@@ -125,3 +125,18 @@ test('手动同步门槛 = 已配置（Token+仓库）；自动同步门槛 = �
   assert.equal(syncConfigured(), false);          // 仓库路径格式非法
   assert.equal(syncReady(), false);
 });
+
+test('mergeDb：评分日志 revlogs 去重并集 + 时间序', () => {
+  const local = { updatedAt: 1, schemaVersion: 1, cards: {}, wrongs: {}, log: { revlogs: [
+    { t: 100, cid: 'c1', r: 3, st: 0, ivl: 2, k: 'k' },
+    { t: 300, cid: 'c2', r: 1, st: 2, ivl: 1, k: 'w' }
+  ] } };
+  const remote = { updatedAt: 2, schemaVersion: 1, cards: {}, wrongs: {}, log: { revlogs: [
+    { t: 300, cid: 'c2', r: 1, st: 2, ivl: 1, k: 'w' },  // 重复：去重
+    { t: 200, cid: 'c1', r: 2, st: 1, ivl: 0, k: 'k' }   // 独有：并入且触发 changed
+  ] } };
+  const m = mergeDb(local, remote);
+  assert.equal(m.log.revlogs.length, 3);
+  assert.deepEqual(m.log.revlogs.map((e) => e.t), [100, 200, 300]); // 按时间排序
+  assert.equal(m.__changedFromRemote, true); // 云端独有条目 → 写回本地
+});

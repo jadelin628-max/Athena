@@ -772,6 +772,7 @@
     if (frontier >= deck.length) return;
     const id = deck[frontier];
     const wasNew = card(id).state === 'new'; // 评分前状态：新卡首学 vs 复习
+    const stateBefore = card(id).state;      // 评分前状态（评分日志用）
     const beforeM = mastery(id).pct; // 评分前掌握度（存储强度到目标比例）
     // 撤销快照：卡片状态 + 今日统计计数，供评分后单步回退
     lastRatingUndo = {
@@ -781,6 +782,7 @@
       detailBefore: (DB.log && DB.log.detail && DB.log.detail[todayStr()] && DB.log.detail[todayStr()][id]) || 0
     };
     applyRating(id, r);
+    pushRevlog(id, r, stateBefore, card(id).ivl, 'k'); // 评分日志（FSRS 训练数据地基）
     if (wasNew) card(id).firstLearn = todayStr(); // 标记「新进入复习规划」的日期——今日新学标签依据（复习中重学不会刷新此标记）
     const afterM = mastery(id).pct;
     lastMasteryDelta = afterM - beforeM;

@@ -395,6 +395,24 @@
 
   function applyRating(id, rating) { applyRatingToCard(card(id), rating); }
 
+  // ---------------- 评分日志（FSRS 训练数据地基） ----------------
+  // 每次评分记一条 {t, cid, r(1-4), st(评分前状态), ivl(本次调度间隔), k(类型)}——
+  // 对齐 FSRS 优化器的复习日志格式：将来数据量足够时可用复习历史训练个人化参数。
+  // 只增不删（上限 4 万条防 localStorage 溢出，超限裁最旧）；同步合并按去重并集。
+  function pushRevlog(cid, ratingIdx, stateBefore, ivlAfter, kind) {
+    if (!DB || !DB.log) return;
+    if (!Array.isArray(DB.log.revlogs)) DB.log.revlogs = [];
+    DB.log.revlogs.push({
+      t: Date.now(),
+      cid: cid,
+      r: ratingIdx + 1, // FSRS 四档：1=Again … 4=Easy
+      st: stateBefore === 'new' ? 0 : (stateBefore === 'learning' ? 1 : (stateBefore === 'relearning' ? 3 : 2)),
+      ivl: (typeof ivlAfter === 'number' && isFinite(ivlAfter)) ? Math.round(ivlAfter) : 0,
+      k: kind || 'k'
+    });
+    if (DB.log.revlogs.length > 40000) DB.log.revlogs.splice(0, DB.log.revlogs.length - 40000);
+  }
+
   // 预览：选择某个评分档后，距下次复习/重现的时长（用克隆卡跑一遍正版逻辑，不动真实数据）
   function previewNextTime(id, rating) {
     const clone = Object.assign({}, card(id));

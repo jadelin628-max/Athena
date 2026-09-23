@@ -136,6 +136,30 @@
       if (extra.length) changed = true;
       lg.newIntro = { ids: ai.concat(extra) };
     })();
+    (function () { // revlogs：评分日志去重并集（键 t|cid|r——同端同一次评分不重复产生）
+      const ar = (local.log && local.log.revlogs) || [];
+      const br = (rlog && rlog.revlogs) || [];
+      if (!Array.isArray(ar) && !Array.isArray(br)) return;
+      const seen = {};
+      const merged = [];
+      ar.concat(br).forEach(function (e) {
+        if (!e || typeof e !== 'object' || typeof e.cid !== 'string' || !e.cid) return;
+        const k = (e.t || 0) + '|' + e.cid + '|' + (e.r || 0);
+        if (seen[k]) return;
+        seen[k] = 1;
+        merged.push(e);
+      });
+      merged.sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
+      if (merged.length > 40000) merged.splice(0, merged.length - 40000); // 与应用端上限一致
+      let remoteNew = 0;
+      br.forEach(function (e) {
+        if (!e || typeof e !== 'object' || typeof e.cid !== 'string' || !e.cid) return;
+        const k = (e.t || 0) + '|' + e.cid + '|' + (e.r || 0);
+        if (!ar.some(function (a) { return (a.t || 0) + '|' + a.cid + '|' + (a.r || 0) === k; })) remoteNew++;
+      });
+      if (remoteNew) changed = true;
+      lg.revlogs = merged;
+    })();
     out.log = lg;
     // 供同步层判断是否需要写回本地；enumerable=false 使 JSON 序列化自动跳过
     Object.defineProperty(out, '__changedFromRemote', { value: changed, enumerable: false });

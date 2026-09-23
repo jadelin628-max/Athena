@@ -277,7 +277,9 @@
     if (!wrongDeck.length || wrongFrontier >= wrongDeck.length) return;
     const wid = wrongDeck[wrongFrontier];
     const w = DB.wrongs[wid];
+    const stateBefore = w.state; // 评分前状态（评分日志用）
     applyRatingToWrongCard(w, r);
+    pushRevlog(wid, r, stateBefore, w.ivl, 'w'); // 评分日志：错题重做同样计入（FSRS 训练数据地基）
     if (r <= 1) demoteLinked(w.linked); // 不会/思路错 → 关联知识卡降级
     w.lastSolveMs = Date.now();
     if (!Array.isArray(w.hist)) w.hist = [];

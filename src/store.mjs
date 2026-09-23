@@ -164,6 +164,7 @@
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.log) DB.log = {};
     if (!DB.log.counts) DB.log.counts = {}; // 每日完成量分类计数（n 新学 / r 复习 / w 错题重做）
+    if (!Array.isArray(DB.log.revlogs)) DB.log.revlogs = []; // 评分日志（FSRS 训练数据地基，v1.44.0 起）
     if (!DB.wrongs) DB.wrongs = {};
     if (!DB.custom) DB.custom = {};
     if (!DB.cardOverrides) DB.cardOverrides = {};
@@ -455,6 +456,23 @@
           });
         }
       });
+      // 评分日志：全量数组拷贝（条目净化：数值字段须有限、cid/k 须字符串）
+      if (Array.isArray(payload.log.revlogs)) {
+        fresh.log.revlogs = payload.log.revlogs.filter(function (e) {
+          return e && typeof e === 'object' && typeof e.cid === 'string' && e.cid &&
+            typeof e.t === 'number' && isFinite(e.t) &&
+            typeof e.r === 'number' && e.r >= 1 && e.r <= 4;
+        }).map(function (e) {
+          return { t: e.t, cid: e.cid, r: e.r, st: (typeof e.st === 'number') ? e.st : 2, ivl: (typeof e.ivl === 'number' && isFinite(e.ivl)) ? e.ivl : 0, k: (e.k === 'w') ? 'w' : 'k' };
+        });
+      }
+      // 学习时长（此前导入会丢失 studyTime——顺手补上）
+      if (payload.log.studyTime && typeof payload.log.studyTime === 'object') {
+        fresh.log.studyTime = {};
+        Object.keys(payload.log.studyTime).forEach(function (dk) {
+          if (typeof payload.log.studyTime[dk] === 'number' && isFinite(payload.log.studyTime[dk])) fresh.log.studyTime[dk] = payload.log.studyTime[dk];
+        });
+      }
     }
     if (payload.wrongs && typeof payload.wrongs === 'object') {
       Object.keys(payload.wrongs).forEach(function (wid) {

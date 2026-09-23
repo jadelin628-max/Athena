@@ -735,7 +735,7 @@
       mk('困难', '有印象但吃力', 1);
       mk('良好', '能想起，正常间隔', 2);
       mk('简单', '很轻松，拉长间隔', 3);
-      const kbd = el('div', 'keyboard-hint muted', '1 再来一次 · 2 困难 · 3 良好 · 4 简单 · Space/Enter 显示答案');
+      const kbd = el('div', 'keyboard-hint muted', '1 再来一次 · 2 困难 · 3 良好 · 4 简单 · Space/Enter 显示答案 · ←→ 切卡');
       rating.appendChild(kbd);
       wrap.appendChild(rating);
     }

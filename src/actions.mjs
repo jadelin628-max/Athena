@@ -76,6 +76,13 @@
         saveSession();
         renderApp();
         break;
+      case 'wgoback':
+        if (wrongPos > 0) { wrongPos--; renderApp(); }
+        break;
+      case 'wgofront':
+        wrongPos = wrongFrontier;
+        renderApp();
+        break;
       case 'jump':
         jumpToCard(arg);
         break;
@@ -246,12 +253,21 @@
   });
 
   document.addEventListener('keydown', function (e) {
-    // 键盘刷卡：知识卡学习页与错题重做页共用（Space/Enter 显示答案，1-4 评分）
+    // 键盘刷卡：知识卡学习页与错题重做页共用（Space/Enter 显示答案，1-4 评分，←/→ 切卡）
     if (currentView !== 'learn' && currentView !== 'wrong') return;
     // 输入焦点守卫：在输入框/文本域里打字（如错题录入弹窗）绝不能触发刷卡评分
     const t = e.target;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
     const isLearn = currentView === 'learn';
+    // ←/→ 切卡（上一张/下一张·回到当前）。与 1-4 评分、Space/Enter 显示答案互不占用；
+    // 带 Ctrl/Meta/Alt 时放行，不劫持浏览器/系统快捷键。
+    if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      const back = isLearn ? 'goback' : 'wgoback';
+      const front = isLearn ? 'gofront' : 'wgofront';
+      handleAction(e.key === 'ArrowLeft' ? back : front);
+      return;
+    }
     if (e.key === ' ' || e.key === 'Enter') {
       const reveal = document.querySelector('.controls');
       if (reveal && !reveal.classList.contains('hidden')) {

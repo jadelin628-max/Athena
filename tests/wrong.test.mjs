@@ -18,9 +18,10 @@ const { initWrongAsLapsed, applyRatingToWrongCard } = await import('../src/wrong
 
 const DAY = 86400000;
 function newWrong(extra) { return Object.assign({ state: 'new', step: 0, reps: 0, ivl: 0, lapses: 0, grad: 0, diff: 5, stab: 0, fsrsInit: 0, due: 0, lastR: 0 }, extra || {}); }
-// 浮点容差断言：期望值与实际值用不同时刻的 Date.now() 采样，毫秒跳变会让浮点差在最后几位
+// 浮点容差断言：期望值与实际值用不同时刻的 Date.now() 采样，毫秒跳变会让 daysSince 略偏，
+// 进而让 R 与稳定度在 1e-8 相对量级上抖动——容差取 1e-6 只吸收计时噪声，仍能拦住真实公式回归。
 function approx(actual, expected, msg) {
-  assert.ok(Math.abs(actual - expected) <= 1e-9 * Math.max(1, Math.abs(expected)), (msg || '浮点不一致') + ': ' + actual + ' vs ' + expected);
+  assert.ok(Math.abs(actual - expected) <= 1e-6 * Math.max(1, Math.abs(expected)), (msg || '浮点不一致') + ': ' + actual + ' vs ' + expected);
 }
 // 自然日对齐断言：容忍测试执行恰好跨过午夜零点（due 会多一天）
 function assertTomorrow(actual) {

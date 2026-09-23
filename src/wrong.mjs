@@ -88,8 +88,10 @@
   }
 
   // —— 错题视图状态 ——
+  // wrongFrontier：已重做数量 / 当前待做题游标；wrongPos：浏览位置（< frontier 时回看已重做题）
   let wrongDeck = [];
   let wrongFrontier = 0;
+  let wrongPos = 0;
   let wrongExpanded = {};
   let wrongJumpId = null;
 
@@ -120,6 +122,7 @@
     const fresh = shuffle(ids.filter(function (wid) { return DB.wrongs[wid].state === 'new'; }));
     wrongDeck = due.concat(fresh);
     wrongFrontier = 0;
+    wrongPos = 0;
   }
 
   function renderWrongLearn() {
@@ -153,7 +156,11 @@
       });
       if (freshDue) buildWrongSession();
     }
-    if (wrongFrontier >= wrongDeck.length) {
+    if (wrongPos < 0) wrongPos = 0;
+    if (wrongPos > wrongFrontier) wrongPos = wrongFrontier;
+    // 完成语义与知识卡一致：队列做完且浏览位置也越过队尾，才显示完成页
+    //（浏览位置停在已重做题上时仍可回看，← 可从完成页退回最后一题）
+    if (wrongFrontier >= wrongDeck.length && wrongPos >= wrongFrontier) {
       const wrap = el('div', 'center-card');
       wrap.appendChild(el('h2', null, '🎉 错题本轮完成'));
       wrap.appendChild(illus('wrong-done'));
@@ -161,13 +168,13 @@
       app.appendChild(wrap);
       return;
     }
-    renderWrongCard(wrongDeck[wrongFrontier]);
+    renderWrongCard(wrongDeck[wrongPos]);
   }
 
   // 错题卡记忆模块（与知识卡 memoryBox 同构：FSRS 状态 + 掌握度趋势）
-  function wrongMemoryBox(wid) {
+  function wrongMemoryBox(wid, hiddenClass) {
     const w = DB.wrongs[wid];
-    const box = el('div', 'memory-box hidden');
+    const box = el('div', 'memory-box' + (hiddenClass || ''));
     box.appendChild(el('div', 'memory-badge', '🧠 记忆'));
     box.appendChild(el('div', 'memory-sched muted', '🗓 ' + wrongNextText(w)));
     const diff = (typeof w.diff === 'number') ? w.diff : 5;
@@ -181,6 +188,7 @@
   function renderWrongCard(wid) {
     const app = document.getElementById('app');
     const w = DB.wrongs[wid];
+    const reviewed = wrongPos < wrongFrontier;
     const wrap = el('div', 'learn-wrap');
 
     const top = el('div', 'learn-top');
@@ -203,12 +211,12 @@
     renderTex(qBox, w.q);
     cardEl.appendChild(qBox);
 
-    const aBox = el('div', 'back hidden');
+    const aBox = el('div', 'back' + (reviewed ? '' : ' hidden'));
     renderTex(aBox, w.a);
     cardEl.appendChild(aBox);
 
     if (w.a2) {
-      const a2b = el('div', 'wrong-a2 hidden');
+      const a2b = el('div', 'wrong-a2' + (reviewed ? '' : ' hidden'));
       a2b.appendChild(el('div', 'mini-label', '💡 巧解'));
       const a2c = el('div', 'example-a');
       renderTex(a2c, w.a2);
@@ -216,7 +224,7 @@
       cardEl.appendChild(a2b);
     }
     if (w.src) {
-      cardEl.appendChild(el('div', 'wrong-src hidden', '📚 来源：' + w.src));
+      cardEl.appendChild(el('div', 'wrong-src' + (reviewed ? '' : ' hidden'), '📚 来源：' + w.src));
     }
     if (w.linked && w.linked.length) {
       const rb = el('div', 'rel-box');
@@ -232,29 +240,45 @@
       cardEl.appendChild(rb);
     }
     // 记忆模块置于卡尾（显示解析后展开，与知识卡一致）
-    cardEl.appendChild(wrongMemoryBox(wid));
+    cardEl.appendChild(wrongMemoryBox(wid, reviewed ? '' : ' hidden'));
     wrap.appendChild(cardEl);
 
-    const controls = el('div', 'controls');
-    const reveal = el('button', 'btn primary', '显示解析');
-    reveal.setAttribute('data-action', 'wreveal');
-    controls.appendChild(reveal);
-    wrap.appendChild(controls);
+    // 切卡导航：与知识卡同构（← 上一张 / → 回到当前）
+    const nav = el('div', 'learn-nav');
+    if (wrongPos > 0) {
+      const back = el('button', 'btn small', '← 上一张');
+      back.setAttribute('data-action', 'wgoback');
+      nav.appendChild(back);
+    }
+    if (reviewed) {
+      const go = el('button', 'btn small primary', '回到当前 →');
+      go.setAttribute('data-action', 'wgofront');
+      nav.appendChild(go);
+    }
+    wrap.appendChild(nav);
 
-    const rating = el('div', 'rating hidden');
-    const mk = function (label, r) {
-      const b = el('button', 'btn rate r' + r, label);
-      b.setAttribute('data-action', 'wrate');
-      b.setAttribute('data-arg', String(r));
-      rating.appendChild(b);
-    };
-    mk('不会', 0);
-    mk('思路错', 1);
-    mk('算错', 2);
-    mk('会做对', 3);
-    const kbd = el('div', 'keyboard-hint muted', '1 不会 · 2 思路错 · 3 算错 · 4 会做对 · Space/Enter 显示解析');
-    rating.appendChild(kbd);
-    wrap.appendChild(rating);
+    if (!reviewed) {
+      const controls = el('div', 'controls');
+      const reveal = el('button', 'btn primary', '显示解析');
+      reveal.setAttribute('data-action', 'wreveal');
+      controls.appendChild(reveal);
+      wrap.appendChild(controls);
+
+      const rating = el('div', 'rating hidden');
+      const mk = function (label, r) {
+        const b = el('button', 'btn rate r' + r, label);
+        b.setAttribute('data-action', 'wrate');
+        b.setAttribute('data-arg', String(r));
+        rating.appendChild(b);
+      };
+      mk('不会', 0);
+      mk('思路错', 1);
+      mk('算错', 2);
+      mk('会做对', 3);
+      const kbd = el('div', 'keyboard-hint muted', '1 不会 · 2 思路错 · 3 算错 · 4 会做对 · Space/Enter 显示解析 · ←→ 切题');
+      rating.appendChild(kbd);
+      wrap.appendChild(rating);
+    }
 
     app.appendChild(wrap);
   }
@@ -290,6 +314,7 @@
     w.ivlR = w.ivl || 0;
     bumpCount('w');
     wrongFrontier++;
+    wrongPos = wrongFrontier; // 与现行交互一致：评完自动进下一张/完成页；← 可回看已重做题
     saveDB();
     renderApp();
   }
@@ -329,6 +354,8 @@
     if (idx !== -1) {
       wrongDeck.splice(idx, 1);
       if (idx < wrongFrontier) wrongFrontier--;
+      if (idx < wrongPos) wrongPos--;
+      if (wrongPos > wrongFrontier) wrongPos = wrongFrontier;
     }
     renderApp();
     toast('已删除错题');

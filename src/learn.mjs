@@ -486,7 +486,7 @@
     lastMasteryDelta = null; lastRatingUndo = null; seenAgain = {}; quiz = null;
     mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; mapDragMoved = false; heatSel = null;
     browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
-    wrongDeck = []; wrongFrontier = 0; wrongExpanded = {}; wrongJumpId = null;
+    wrongDeck = []; wrongFrontier = 0; wrongPos = 0; wrongExpanded = {}; wrongJumpId = null;
   }
 
   // ---------------- 通用 DOM ----------------

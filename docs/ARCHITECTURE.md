@@ -51,7 +51,7 @@ flowchart LR
 | 14 | `map.mjs` | 原理页 + 知识图谱 |
 | 15 | `home.mjs` | 主页 KPI、学科网格、每日一句 |
 | 16 | `sync.mjs` | GitHub 云同步合并 `mergeDb`/`runSync`（export） |
-| 17 | `actions.mjs` | 事件总线 `handleAction`、主题/抽屉/学科下拉、导入导出、`initApp` |
+| 17 | `actions.mjs` | 事件总线 `handleAction`、主题/抽屉/学科下拉、导入导出、`initApp`；键盘刷卡：Space/Enter 显示答案、1-4 评分、←/→ 切卡（learn→goback/gofront，wrong→wgoback/wgofront，输入框焦点不触发） |
 
 **文件名 ≠ 职责**（历史命名）：改知识卡学习 UI 去 `browse.mjs`；改掌握度/评分入口/应用壳层去 `learn.mjs`；改浏览列表或帮助或自测去 `quiz.mjs`。找错文件是本仓最常见的浪费。
 

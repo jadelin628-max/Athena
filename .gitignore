@@ -30,6 +30,8 @@ src-tauri/icons/
 开发标准.md
 PROGRESS.md
 数据审查报告.md
+# 仅忽略根目录临时 BOARD；协作信箱是 docs/BOARD.md（必须入库）
+/BOARD.md
 
 # 注意：tools/ 为工程校验脚本，需要纳入版本控制，故不忽略。
 

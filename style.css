@@ -378,10 +378,29 @@ nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .kx-block { display: block; margin: 8px 0; overflow-x: auto; }
 .kx-inline { white-space: normal; }
 .katex { font-size: 1.14em; }
-/* 长答案按分点分段：每段一个块，左侧细竖线 + 间距，可视化更清晰 */
-.ans-point { margin: 7px 0; padding: 2px 0 2px 10px; border-left: 2px solid color-mix(in srgb, var(--accent) 38%, var(--border)); line-height: 1.6; }
-.ans-point:first-child { margin-top: 0; }
-.ans-point:last-child { margin-bottom: 0; }
+/* 长答案分段：分点 / 段落 / 结构标签（pre-line 让散文单换行可见；块边缘已 trim，不双倍换行） */
+.ans-point, .ans-para, .ans-section {
+  margin: 7px 0; line-height: 1.65;
+  white-space: pre-line; overflow-wrap: anywhere; word-break: break-word;
+}
+.ans-point {
+  padding: 2px 0 2px 10px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+}
+.ans-para { padding: 0; }
+.ans-section {
+  padding: 6px 11px;
+  border-left: 2px solid color-mix(in srgb, var(--ok) 48%, var(--border));
+  background: color-mix(in srgb, var(--ok) 8%, var(--card));
+  border-radius: 0 8px 8px 0;
+}
+.ans-point:first-child, .ans-para:first-child, .ans-section:first-child { margin-top: 0; }
+.ans-point:last-child, .ans-para:last-child, .ans-section:last-child { margin-bottom: 0; }
+/* 卡面散文容器：单块直出时也显示换行（<pre>/.kx-inline 自带 white-space，不受影响） */
+.front, .back, .example-q, .example-a, .browse-q, .browse-a,
+.use-box, .mnem-box, .pitfall-box, .rel-box, .notes-box, .map-front, .map-back {
+  white-space: pre-line;
+}
 /* 承载数学公式的内容容器：宽公式在内部滚动，不撑破页面（移动端防整页缩放） */
 .card, .example-box, .example-q, .example-a, .browse-q, .browse-a, .use-box, .mnem-box, .pitfall-box, .rel-box, .notes-box, .map-front, .map-back { max-width: 100%; overflow-x: auto; }
 
@@ -747,6 +766,7 @@ body.immersive #immersiveExit { display: block; }
   padding: 10px 14px; margin: 8px 0; overflow-x: auto;
   font-family: ui-monospace, SFMono-Regular, Consolas, 'Courier New', monospace;
   font-size: 12.5px; line-height: 1.55; tab-size: 4;
+  white-space: pre;
 }
 .codeblock code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
 [data-theme="dark"] .codeblock { background: #1E1D26; border: 1px solid #33323E; }

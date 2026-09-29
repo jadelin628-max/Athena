@@ -18,17 +18,28 @@
       renderProse(el, part);
     });
   }
-  // 散文段渲染：KaTeX + ans-point 分点
+  // 散文段渲染：KaTeX + 分段可视化（①分点 / 结构标签 / 空行段落）
+  function makeAnsBlock(b) {
+    const d = document.createElement('div');
+    if (b.type === 'point') {
+      d.className = 'ans-point';
+    } else if (b.type === 'label') {
+      d.className = 'ans-section';
+      if (b.label) d.setAttribute('data-label', b.label);
+    } else {
+      d.className = 'ans-para';
+    }
+    renderInto(d, b.content);
+    return d;
+  }
   function renderProse(el, str) {
     if (typeof window.katex !== 'undefined' && window.katex.render) {
-      const pts = splitPoints(String(str));
-      if (pts.length > 1) {
-        pts.forEach(function (pt) {
-          const d = document.createElement('div');
-          d.className = 'ans-point';
-          renderInto(d, pt);
-          el.appendChild(d);
-        });
+      const blocks = splitAnswerBlocks(String(str));
+      if (blocks.length > 1) {
+        blocks.forEach(function (b) { el.appendChild(makeAnsBlock(b)); });
+      } else if (blocks.length === 1 && blocks[0].type === 'label') {
+        // 单标签块（如 ~~~ 隔开的 **规则**：/ **活用限制**：）也保留视觉块
+        el.appendChild(makeAnsBlock(blocks[0]));
       } else {
         renderInto(el, String(str));
       }

@@ -5,10 +5,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.49.0';
+  const VERSION = '1.50.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.50.0', date: '2026-09', items: ['卡面长答案展示分段增强（只改渲染、不改数据）：在既有 ①②③/（n）分点基础上，空行成段落块、「要点/陷阱/规则/活用限制/例句」等结构标签成独立视觉块（浅底左线）、单换行可见；超长散文在避开公式/命令/代码的句末保守再分一刀——长答案阅读更清晰，移动端与暗色主题可辨'] },
     { v: '1.49.0', date: '2026-09', items: ['数三一卡一知识点拆分：多轮扩充造成的多知识点卡拆开（29 张重灾区），328→397 卡（原 id 保留承接核心点，新增 kn01–kn72 共 69 张）；解题套路卡（zt02/zt05/wr03/tp06/gx38/ln04 等）只留步骤流程，知识点另立并 REL 关联；全库 2769 卡', '修复初学者模式无效：beginner.cats 与当前科 CATS 错配导致全挡/全放/切科错乱、导入丢配置——新增 resolveBeginner 自愈（过期键丢弃、空则回退推荐章、跨科 sid 丢弃），导入保留并对齐；回归测试 8 条', '学习日历热力图色阶更清晰：按近 16 周最高日等比四分档，新增张数区间图例，四级色拉开并适配暗色主题', '云同步新增「完全上传 / 完全下载」：单向全覆盖（跳过合并），二次确认 + 覆盖前归档；与「立即同步」合并式并存', '学科选择器列表为有待复习知识卡的科目显示数量角标（口径与主页一致，0 不显示）'] },
     { v: '1.48.0', date: '2026-09', items: ['韩语教材化重构：对照《延世韩国语》1–2 章序整科重写 85 卡（文字发音/基础语法/对话场景/词汇表达/文化），语言卡三段式「规则→例句原文+中文→活用限制」；学习进度整科重置', '法语教材化重构：对照《简明法语教程》章序整科重写 88 卡（语音→名词与冠词→动词变位→句型场景→高频词汇→文化），三段式 + SENTENCES 15；学习进度整科重置', '西班牙语教材化重构：对照《现代西班牙语》章序整科重写 82 卡（语音→名词与冠词→动词变位→句型场景→高频词汇→文化），三段式 + SENTENCES 15；学习进度整科重置', 'Rust 教材化重构：对照《The Rust Programming Language》（The Book）入门主干整科重写 71 卡（入门起步→通用概念→所有权→结构体→枚举与模式匹配→模块→集合→错误处理→泛型与生命周期→测试→智能指针→并发入门），技能卡三段式含 ~~~rust；学习进度整科重置；全库 2700 卡'] },
     { v: '1.47.0', date: '2026-09', items: ['C++ 教材化重构：对照《C++ Primer》入门主干整科重写 76 卡（入门起步→变量与基本类型→字符串向量数组→表达式语句函数→类→动态内存拷贝控制→泛型与 STL 入门→现代 C++ 必备），技能卡三段式「定义→~~~cpp 最小可运行示例→要点陷阱」，HELP 8 篇不进队列；学习进度整科重置', 'Java 教材化重构：对照《Head First Java》章序整科重写 68 卡（基本概念→语法与类型→面向对象→集合与泛型→异常与常用库→线程与实用进阶），三段式含 ~~~java 教学注释示例；学习进度整科重置', '日语标日深化（只扩不改骨架）：对照《标准日本语》初级扩写 42 卡（下册句型 16 / 场景表达 5 / 高频词 14 / 文化 5 / 基础补强 2），94→136 卡；语言卡三段式「规则→例句原文+中文→活用限制」，SENTENCES 6→15、HELP +2、PITFALL +6；旧 id 与学习进度全部保留；全库 2650 卡'] },
@@ -163,21 +164,186 @@
     setTimeout(fail, 12000);
   }
 
-  // 将长答案按「分点」分段（①②③…、全角（1）（2）…），拆成可视化段落；
-  // 跳过数学下标/命令内的标记（如 X_{(1)}、\textbf{①…）以免破坏结构
-  function splitPoints(str) {
-    const segs = [];
+  // 卡面长答案分段（展示层）：见 splitAnswerBlocks（①/（n）分点、空行段落、
+  // 结构标签块、超长散文句末保守再分）；渲染入口在 render.mjs 的 renderProse。
+
+  // ===== 卡面答案分段增强（只影响展示，不改数据） =====
+  // 块类型：point=①/（n）分点 · label=结构标签起块 · para=空行段落 · text=其余散文
+  // 优先级：①分点 ≻ 结构标签 ≻ 空行分段 ≻（可选）超长散文句末再分；~~~ 代码块在 renderTex 层已整块 <pre>。
+
+  // 结构标签（长名在前）：行首或句末后「要点：/陷阱：/规则：/活用限制：/例句…」等
+  const ANS_LABELS = ['活用限制', '例句拆解', '常见错误', '要点', '陷阱', '规则', '例句', '注意', '提示', '说明', '总结', '口诀', '步骤', '定义', '用法', '活用', '词义'];
+  const ANS_LABEL_RE = new RegExp('^(?:\\*\\*|\\\\textbf\\{)?(' + ANS_LABELS.join('|') + ')(?:\\*\\*|\\})?[ \\t]*[：:]');
+
+  function ansTrimEdge(s) {
+    return String(s).replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, '');
+  }
+
+  // 保护区间：$..$、$$..$$、\cmd{...}、**…**——分段不得切在中间（防拆坏公式/加粗）
+  function ansProtectedRanges(str) {
+    const ranges = [];
+    const n = str.length;
+    let i = 0;
+    function push(a, b) { ranges.push([a, b]); i = b; }
+    while (i < n) {
+      if (str[i] === '$' && str[i + 1] === '$') {
+        const end = str.indexOf('$$', i + 2);
+        if (end === -1) { push(i, n); break; }
+        push(i, end + 2);
+        continue;
+      }
+      if (str[i] === '$') {
+        const end = str.indexOf('$', i + 1);
+        if (end === -1) { push(i, n); break; }
+        push(i, end + 1);
+        continue;
+      }
+      if (str[i] === '*' && str[i + 1] === '*') {
+        const end = str.indexOf('**', i + 2);
+        if (end === -1) { push(i, n); break; }
+        push(i, end + 2);
+        continue;
+      }
+      if (str[i] === '\\') {
+        const cm = /^\\(?:textbf|underline|textit|textrm|textsf|mathbf|mathrm|text)\{/.exec(str.slice(i, i + 64));
+        if (cm) {
+          const openBrace = i + cm[0].length - 1;
+          let depth = 0, close = -1;
+          for (let j = openBrace; j < n; j++) {
+            if (str[j] === '{') depth++;
+            else if (str[j] === '}') { depth--; if (depth === 0) { close = j; break; } }
+          }
+          if (close === -1) { push(i, n); break; }
+          push(i, close + 1);
+          continue;
+        }
+      }
+      i++;
+    }
+    return ranges;
+  }
+
+  function ansIsProtected(ranges, idx) {
+    for (let k = 0; k < ranges.length; k++) {
+      if (idx >= ranges[k][0] && idx < ranges[k][1]) return true;
+    }
+    return false;
+  }
+
+  // 标签合法边界：行首（可有缩进），或句末标点之后；拒绝「命名规则」这类粘着词
+  function ansLabelBoundary(str, start) {
+    let j = start - 1;
+    while (j >= 0 && (str[j] === ' ' || str[j] === '\t')) j--;
+    if (j < 0) return true;
+    const p = str[j];
+    if (p === '\n' || p === '\r') return true;
+    return p === '。' || p === '！' || p === '？' || p === '!' || p === '?' || p === '；' || p === ';';
+  }
+
+  // 在 pos 处尝试匹配结构标签（含 ** / \textbf{} 包装）；命中返回 { length, name }
+  function ansMatchLabelAt(str, pos) {
+    const m = ANS_LABEL_RE.exec(str.slice(pos, pos + 48));
+    if (!m || m.index !== 0) return null;
+    if (!ansLabelBoundary(str, pos)) return null;
+    return { length: m[0].length, name: m[1] };
+  }
+
+  // 空行（\n\n / \r\n\r\n / 中间可有空白行）分隔符长度；非空行返回 0
+  function ansBlankLineLen(str, pos) {
+    const m = /^(?:\r?\n)[ \t]*(?:\r?\n)/.exec(str.slice(pos, pos + 8));
+    return m ? m[0].length : 0;
+  }
+
+  // 超长散文（无标签/分点）在句末标点处保守再分：仅切一刀、靠近中点、两侧均够长
+  function splitLongProse(content) {
+    if (content.length < 200) return [content];
+    const ranges = ansProtectedRanges(content);
+    const mid = content.length / 2;
+    let best = -1, bestDist = Infinity;
+    for (let i = 0; i < content.length; i++) {
+      const c = content[i];
+      if (c !== '。' && c !== '！' && c !== '？' && c !== '!' && c !== '?') continue;
+      if (ansIsProtected(ranges, i)) continue;
+      const cut = i + 1;
+      if (cut < 50 || content.length - cut < 50) continue;
+      const d = Math.abs(cut - mid);
+      if (d < bestDist) { bestDist = d; best = cut; }
+    }
+    if (best === -1) return [content];
+    return [ansTrimEdge(content.slice(0, best)), ansTrimEdge(content.slice(best))].filter(Boolean);
+  }
+
+  // 非分点散文：按结构标签 / 空行切块
+  function refineProse(text) {
+    const ranges = ansProtectedRanges(text);
+    const blocks = [];
+    let blockStart = 0, blockType = 'para', blockLabel = null, pos = 0;
+    function flush(end) {
+      const content = ansTrimEdge(text.slice(blockStart, end));
+      if (content) blocks.push({ type: blockType, content: content, label: blockLabel });
+    }
+    while (pos < text.length) {
+      const lab = ansMatchLabelAt(text, pos);
+      if (lab) {
+        flush(pos);
+        blockStart = pos;
+        blockType = 'label';
+        blockLabel = lab.name;
+        pos += lab.length;
+        continue;
+      }
+      const bl = ansBlankLineLen(text, pos);
+      if (bl > 0 && !ansIsProtected(ranges, pos)) {
+        flush(pos);
+        pos += bl;
+        blockStart = pos;
+        blockType = 'para';
+        blockLabel = null;
+        continue;
+      }
+      pos++;
+    }
+    flush(text.length);
+    const out = [];
+    for (let i = 0; i < blocks.length; i++) {
+      const b = blocks[i];
+      if (b.type !== 'para' && b.type !== 'text') { out.push(b); continue; }
+      const pieces = splitLongProse(b.content);
+      if (pieces.length === 1) { out.push(b); continue; }
+      for (let k = 0; k < pieces.length; k++) out.push({ type: 'para', content: pieces[k] });
+    }
+    return out;
+  }
+
+  // 答案分段总入口：①/（n）分点优先，其余按标签/空行/长句再分
+  function splitAnswerBlocks(str) {
+    str = String(str);
+    if (!str.trim()) return [];
+    const ranges = ansProtectedRanges(str);
+    const pointCuts = [];
     const marker = /([①-⑩]|（\d+）)/g;
-    let last = 0, m;
+    let m;
     while ((m = marker.exec(str)) !== null) {
       const idx = m.index;
       const prev = idx > 0 ? str[idx - 1] : '';
       if (prev === '{' || prev === '\\' || prev === '（' || prev === '(' || prev === '_' || prev === '^' || prev === '*' || prev === '`') continue;
-      segs.push(str.slice(last, idx));
-      last = idx;
+      if (ansIsProtected(ranges, idx)) continue;
+      pointCuts.push(idx);
     }
-    segs.push(str.slice(last));
-    return segs.map(function (s) { return s.trim(); }).filter(Boolean);
+    const out = [];
+    if (pointCuts.length === 0) {
+      return refineProse(str);
+    }
+    if (pointCuts[0] > 0) {
+      const lead = refineProse(str.slice(0, pointCuts[0]));
+      for (let i = 0; i < lead.length; i++) out.push(lead[i]);
+    }
+    for (let i = 0; i < pointCuts.length; i++) {
+      const end = i + 1 < pointCuts.length ? pointCuts[i + 1] : str.length;
+      const content = ansTrimEdge(str.slice(pointCuts[i], end));
+      if (content) out.push({ type: 'point', content: content });
+    }
+    return out;
   }
 
   // ---------------- 数学渲染（KaTeX 可用则渲染，否则降级为纯文本） ----------------

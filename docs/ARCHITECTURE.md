@@ -36,7 +36,7 @@ flowchart LR
 | # | 模块 | 职责 |
 |---|---|---|
 | 1 | `config.mjs` | 全局常量：`GOAL_DEFAULT` / `TARGET_S_DEFAULT` / `DAY` / `dayStart`（须最先） |
-| 2 | `app.mjs` | IIFE 开头、`VERSION`、`CHANGELOG` 数组、`bootKatex` / `splitPoints` |
+| 2 | `app.mjs` | IIFE 开头、`VERSION`、`CHANGELOG` 数组、`bootKatex` / `splitAnswerBlocks`（卡面分段） |
 | 3 | `fsrs-core.mjs` | FSRS-6 公式层：权重 `FW`、R(t,S)、间隔、D/S 更新（export 供对拍） |
 | 4 | `sched.mjs` | 学习/重学/复习步进状态机 `applySchedRating`（知识卡；export） |
 | 5 | `interleave.mjs` | 交错/辨析聚类 `interleaveRelated`（export） |

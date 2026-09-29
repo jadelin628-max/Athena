@@ -405,6 +405,42 @@
   }
 
   // ---------------- 学科切换与选择器 ----------------
+  // 下拉角标 due 口径与 stats().due 一致：仅知识卡 review 且到期；不含错题/学习中
+  function subjectDueCount(sid, now) {
+    const t = now || Date.now();
+    let db = null;
+    try { db = JSON.parse(localStorage.getItem(sid + '_formula_srs_v1')); } catch (e) {}
+    if (!db || !db.cards) return 0;
+    let due = 0;
+    Object.keys(db.cards).forEach(function (id) {
+      const c = db.cards[id];
+      if (c && c.state === 'review' && typeof c.due === 'number' && c.due <= t) due++;
+    });
+    return due;
+  }
+  // 刷新学科下拉各科待复习角标（0 不显示）；复用 .nav-badge
+  // 数据源：各科 localStorage 快照（与主页同源）。不在此 flushSave——setSubject 会先改
+  // currentSubjectId 再调 renderSubjectDropdown，此时 dbKey() 已指向新科，flush 会写串库。
+  function updateSubjectDdBadges() {
+    const menu = document.getElementById('subjectMenu');
+    if (!menu) return;
+    const now = Date.now();
+    const items = menu.querySelectorAll('.subject-dd-item');
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const sid = item.getAttribute('data-sid');
+      if (!sid) continue;
+      const due = subjectDueCount(sid, now);
+      let badge = item.querySelector('.nav-badge');
+      if (due > 0) {
+        if (!badge) {
+          badge = el('span', 'nav-badge');
+          badge.textContent = String(due);
+          item.appendChild(badge);
+        } else badge.textContent = String(due);
+      } else if (badge) badge.remove();
+    }
+  }
   function switchSubject(id) {
     if (id === currentSubjectId || !setSubject(id)) return;
     const target = id;
@@ -435,6 +471,7 @@
         const s = list[id];
         const item = el('button', 'subject-dd-item' + (id === currentSubjectId ? ' active' : ''), '');
         item.type = 'button';
+        item.setAttribute('data-sid', id);
         const img = document.createElement('img');
         img.src = subjectIconUrl(id) || '';
         img.className = 'subject-icon';
@@ -448,6 +485,7 @@
         menu.appendChild(item);
       });
     });
+    updateSubjectDdBadges();
     const cs = list[currentSubjectId];
     if (cs) {
       const cimg = document.createElement('img');
@@ -471,6 +509,8 @@
       e.stopPropagation();
       const willShow = menu.classList.contains('hidden');
       if (willShow) {
+        // 打开前先落盘：保证随后读到的各科 due 含刚评过的卡（与主页同源）
+        if (typeof flushSave === 'function') flushSave();
         // 菜单挂在 body 根节点：fixed 定位到按钮下方（视口坐标），
         // 不受 sticky/backdrop-filter 祖先的包含块与命中测试影响（移动端 WebKit 曾因此无法选中其他学科）
         const r = cur.getBoundingClientRect();
@@ -491,6 +531,7 @@
           menu.style.maxHeight = Math.min(cap, above) + 'px';
         }
         menu.classList.remove('hidden');
+        updateSubjectDdBadges(); // 展开后再刷角标（收起时该函数会短路，避免全科扫描）
         // 屏幕右缘溢出兜底：窄屏上按钮靠右时把菜单收回屏内
         const mr = menu.getBoundingClientRect();
         if (mr.right > window.innerWidth - 8) {
@@ -519,6 +560,17 @@
     const cur = document.getElementById('subjectCurrent');
     if (cur) cur.setAttribute('aria-expanded', 'false');
   }
+
+  // 重绘后刷新学科下拉角标：挂到 updateBrand（renderApp 出口与 updateNavBadge 同拍）。
+  // 仅菜单展开时扫描——收起状态下的角标在下次打开时会重刷，避免每帧解析全科 localStorage。
+  (function hookSubjectDdBadgesOnRender() {
+    const prevUpdateBrand = updateBrand;
+    updateBrand = function () {
+      prevUpdateBrand.apply(this, arguments);
+      const menu = document.getElementById('subjectMenu');
+      if (menu && !menu.classList.contains('hidden')) updateSubjectDdBadges();
+    };
+  })();
 
   // ---------------- 启动 ----------------
   function initApp() {

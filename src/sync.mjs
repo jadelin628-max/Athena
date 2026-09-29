@@ -340,17 +340,20 @@
   }
 
   // 同步全部学科（合并式）。summary：cloud=云端被更新，local=本地被更新，both=双向合并。
-  // 串行排队：启动同步/防抖推送/前台回归/手动按钮可能重叠，同一设备同一时刻只跑一轮，
+  // 串行排队：启动同步/防抖推送/前台回归/手动按钮/完全上传下载可能重叠，同一设备同一时刻只跑一轮，
   // 否则两轮并发对同一文件 GET 相同 sha 后先后 PUT，后到的一方必收 409。
   let syncChain = Promise.resolve();
-  function runSync() {
+  function runExclusive(fn) {
     if (typeof fetch === 'undefined') return Promise.reject(new Error('当前环境不支持网络请求'));
     const p = syncChain.then(function () {
       if (!syncConfigured()) throw new Error('云同步未配置完整：请先在设置中填写 Token 与仓库名');
-      return doRunSync();
+      return fn();
     });
     syncChain = p.catch(function () {});
     return p;
+  }
+  function runSync() {
+    return runExclusive(function () { return doRunSync(); });
   }
 
   async function doRunSync() {
@@ -386,6 +389,110 @@
     return summary;
   }
 
+  // —— 单向全覆盖（危险操作，跳过 mergeDb；与合并式「立即同步」并存）——
+  // 完全上传：本机整库快照覆盖云端对应文件；完全下载：云端整库快照覆盖本机。
+  // 覆盖前把被覆盖侧归档到 archive/（与合并同步同一策略）；单科失败只记 summary.failed，不弄脏本地。
+  // 本机无数据 / 云端无数据的科目跳过（不删除对侧多余文件——避免误删另一端独有进度）。
+
+  function settleLocalSave() {
+    // 落盘未决写先冲掉，避免稍后 flush 把旧内存 DB 盖回刚下载的云端快照
+    try { if (typeof flushSave === 'function') flushSave(); } catch (e) {}
+  }
+
+  async function forceUploadSubject(sid) {
+    const local = syncLocalDb(sid);
+    if (!local) return { action: 'skip' };
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
+        if (remote && remote.data) {
+          // 覆盖前归档云端旧版（archive 新路径，不带 sha）
+          await ghPutJson(syncArchivePath(sid), remote.data);
+        }
+        await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local, remote ? remote.sha : undefined);
+        syncSetLastUp(sid, (typeof local.updatedAt === 'number') ? local.updatedAt : Date.now());
+        return { action: 'upload' };
+      } catch (err) {
+        if (isShaConflict(err)) { lastErr = err; continue; } // 云端刚被别的设备更新：重拉归档后再覆盖
+        throw err;
+      }
+    }
+    throw new Error('云端正在被其他设备更新，重试 3 次未成功——稍后再试（' + (lastErr && lastErr.message ? lastErr.message : '') + '）');
+  }
+
+  async function forceDownloadSubject(sid) {
+    const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
+    if (!remote || !remote.data) return { action: 'skip' };
+    const local = syncLocalDb(sid);
+    if (local) {
+      // 覆盖前归档本机旧版到云端 archive/；归档失败则中止该科——绝不未归档就丢本地
+      await ghPutJson(syncArchivePath(sid), local);
+    }
+    if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
+    syncSetLastUp(sid, (remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0);
+    return { action: 'download' };
+  }
+
+  function recordForceSummary(kind, summary) {
+    const cfg = syncCfg();
+    cfg.lastSyncAt = Date.now();
+    cfg.lastSyncSummary = { force: kind, ok: summary.ok.length, skipped: summary.skipped.length, failed: summary.failed.length };
+    cfg.lastError = summary.failed.length ? summary.failed.join('；') : '';
+    saveSyncCfg(cfg);
+  }
+
+  // 完全上传：本机 → 云端（单向覆盖）。返回 { ok, skipped, failed }
+  async function doForceUploadAll() {
+    settleLocalSave();
+    const summary = { ok: [], skipped: [], failed: [] };
+    const sids = Object.keys(subjectList());
+    for (const sid of sids) {
+      try {
+        const res = await forceUploadSubject(sid);
+        if (res.action === 'upload') summary.ok.push(sid);
+        else summary.skipped.push(sid);
+      } catch (err) {
+        summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
+      }
+    }
+    recordForceSummary('upload', summary);
+    for (const sid of sids) { await pruneArchives(sid); }
+    return summary;
+  }
+
+  // 完全下载：云端 → 本机（单向覆盖）。返回 { ok, skipped, failed }
+  async function doForceDownloadAll() {
+    settleLocalSave();
+    const summary = { ok: [], skipped: [], failed: [] };
+    const sids = Object.keys(subjectList());
+    for (const sid of sids) {
+      try {
+        const res = await forceDownloadSubject(sid);
+        if (res.action === 'download') summary.ok.push(sid);
+        else summary.skipped.push(sid);
+      } catch (err) {
+        summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
+      }
+    }
+    recordForceSummary('download', summary);
+    // 当前学科被云端覆盖：重载内存 DB、重建学习队列并刷新界面（与 doRunSync 一致）
+    if (summary.ok.indexOf(currentSubjectId) !== -1) {
+      await loadDBAsync();
+      buildSession(0);
+      renderApp();
+    }
+    for (const sid of sids) { await pruneArchives(sid); }
+    return summary;
+  }
+
+  function forceUploadAll() {
+    return runExclusive(function () { return doForceUploadAll(); });
+  }
+  function forceDownloadAll() {
+    return runExclusive(function () { return doForceDownloadAll(); });
+  }
+
   // —— 自动同步调度 ——
   let syncPushTimer = null;
   function scheduleSyncPush() {
@@ -408,4 +515,4 @@
     }).catch(function () {});
   }
 
-export { b64encodeUtf8, b64decodeUtf8, mergeDb, runSync, syncReady, syncConfigured, syncCfg, saveSyncCfg, syncValidate, autoSyncOnLaunch };
+export { b64encodeUtf8, b64decodeUtf8, mergeDb, runSync, forceUploadAll, forceDownloadAll, syncReady, syncConfigured, syncCfg, saveSyncCfg, syncValidate, autoSyncOnLaunch };

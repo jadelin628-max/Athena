@@ -90,9 +90,10 @@
     // 此前只限制「今日引入动作」，历史上累积引入、一直未学到的新卡会全部塞进队列——上限形同虚设。
     const doneToday = DB.log.counts[t].n || 0;
     const room = Math.max(0, cap - doneToday);
-    // 初学者模式：开启时只在选定章节内引入新卡（章节可在设置页调整）
-    const beg = (DB.settings && DB.settings.beginner) || null;
-    const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
+    // 初学者模式：开启时只在选定章节内引入新卡（章节可在设置页调整）。
+    // resolveBeginner 先把 cats 对齐当前科 CATS（跨科/旧 catKey 自愈），避免全挡/全放。
+    const beg = resolveBeginner(DB.settings && DB.settings.beginner, BASE_SUBJ, currentSubjectId);
+    const begOn = !!(beg.on && Array.isArray(beg.cats) && beg.cats.length);
     const begSet = {};
     if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
     // 引入「未引入的新卡」（数量受 room 限制；skipPending=true 供「再来一批」直通——自行带量，不再自动引入）
@@ -144,8 +145,8 @@
     if (!DB.log.counts) DB.log.counts = {};
     const t = todayStr();
     if (!DB.log.counts[t]) DB.log.counts[t] = {};
-    const beg = (DB.settings && DB.settings.beginner) || null;
-    const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
+    const beg = resolveBeginner(DB.settings && DB.settings.beginner, BASE_SUBJ, currentSubjectId);
+    const begOn = !!(beg.on && Array.isArray(beg.cats) && beg.cats.length);
     const begSet = {};
     if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
     const rest = shuffle(DATA.filter(function (f) {

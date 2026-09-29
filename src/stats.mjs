@@ -229,6 +229,20 @@
     return box;
   }
 
+  // 学习日历热力图：按当期（近 16 周）最大日学习量等比四分档，保证最高日始终最深色
+  function heatLevel(cnt, maxCnt) {
+    if (cnt <= 0 || maxCnt <= 0) return 0;
+    return Math.min(4, Math.max(1, Math.ceil(cnt * 4 / maxCnt)));
+  }
+  // 反解档位对应的张数区间（图例用）；该档在 1..maxCnt 内无取值时返回 null
+  function heatRangeText(level, maxCnt) {
+    if (level <= 0 || maxCnt <= 0) return level === 0 ? '0' : null;
+    const lo = Math.floor((level - 1) * maxCnt / 4) + 1;
+    const hi = Math.floor(level * maxCnt / 4);
+    if (lo > maxCnt || hi < lo) return null;
+    return lo === hi ? String(lo) : lo + '–' + hi;
+  }
+
   function renderStatistics() {
     const app = document.getElementById('app');
     const wrap = el('div', 'principles-wrap');
@@ -262,24 +276,47 @@
     const detailLog = (DB.log && DB.log.detail) || {};
     const weeks = 16, total = weeks * 7;
     const start = new Date(); start.setDate(start.getDate() - (total - 1));
-    const grid = el('div', 'heatmap-grid');
-    grid.style.gridTemplateColumns = 'repeat(' + weeks + ', 12px)';
+    const heatDays = [];
+    let heatMax = 0;
     for (let d = 0; d < total; d++) {
       const date = new Date(start); date.setDate(start.getDate() + d);
       const key = fmtDate(date), cnt = daily[key] || 0;
+      heatDays.push({ key: key, cnt: cnt });
+      if (cnt > heatMax) heatMax = cnt;
+    }
+    const grid = el('div', 'heatmap-grid');
+    grid.style.gridTemplateColumns = 'repeat(' + weeks + ', 12px)';
+    heatDays.forEach(function (item) {
       const cell = el('div', 'heat-cell');
-      cell.title = key + '：' + cnt + ' 张' + (cnt > 0 ? '（点击查看当日明细）' : '');
-      cell.className += cnt >= 8 ? ' l4' : cnt >= 5 ? ' l3' : cnt >= 2 ? ' l2' : cnt > 0 ? ' l1' : ' l0';
-      if (cnt > 0) {
+      cell.title = item.key + '：' + item.cnt + ' 张' + (item.cnt > 0 ? '（点击查看当日明细）' : '');
+      cell.classList.add('l' + heatLevel(item.cnt, heatMax));
+      if (item.cnt > 0) {
         cell.classList.add('clickable');
         cell.setAttribute('data-action', 'heatdate');
-        cell.setAttribute('data-arg', key);
+        cell.setAttribute('data-arg', item.key);
       }
-      if (heatSel === key) cell.classList.add('sel');
+      if (heatSel === item.key) cell.classList.add('sel');
       grid.appendChild(cell);
-    }
+    });
     const hb = el('div', 'stat-card'); hb.appendChild(grid);
-    hb.appendChild(el('p', 'muted', '颜色越深，当天学习张数越多；点击有记录的格子可查看当日明细。'));
+    const legend = el('div', 'heat-legend');
+    legend.appendChild(el('span', 'heat-legend-label', '图例 · 张/日'));
+    if (heatMax <= 0) {
+      legend.appendChild(el('span', 'heat-legend-item', '□ 0'));
+    } else {
+      legend.appendChild(el('span', 'heat-legend-end', '少'));
+      for (let lv = 0; lv <= 4; lv++) {
+        const txt = lv === 0 ? '0' : heatRangeText(lv, heatMax);
+        if (txt == null) continue;
+        const item = el('span', 'heat-legend-item');
+        item.appendChild(el('span', 'heat-cell heat-swatch l' + lv));
+        item.appendChild(el('span', null, txt));
+        legend.appendChild(item);
+      }
+      legend.appendChild(el('span', 'heat-legend-end', '多'));
+    }
+    hb.appendChild(legend);
+    hb.appendChild(el('p', 'muted', '颜色深浅表示当天学习张数（按本窗口最高日等比划分）；点击有记录的格子可查看当日明细。'));
     wrap.appendChild(hb);
 
     if (heatSel) {

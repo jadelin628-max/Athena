@@ -57,6 +57,45 @@
   function dbKey() { return currentSubjectId + '_formula_srs_v1'; }
   function sessionKey() { return currentSubjectId + '_formula_session_v2'; }
 
+  // ===== BEGIN TESTABLE beginner helpers =====
+  // 初学者模式纯函数：把 beginner 配置解析成「当前科可用」的章节集合。
+  // 不依赖 DOM / DB / 全局，可被 tests/beginner.test.mjs 抽取求值。
+  function beginnerCatKeys(subj) {
+    if (!subj) return [];
+    return (Array.isArray(subj.ORDER) && subj.ORDER.length) ? subj.ORDER.slice() : Object.keys(subj.CATS || {});
+  }
+  // 推荐起步章：BEGINNER 中仍合法的键；否则 ORDER 前两章
+  function beginnerRecCats(subj) {
+    const all = beginnerCatKeys(subj);
+    const valid = {};
+    all.forEach(function (k) { valid[k] = true; });
+    let rec = (subj && Array.isArray(subj.BEGINNER)) ? subj.BEGINNER.filter(function (k) { return valid[k]; }) : [];
+    if (!rec.length) rec = all.slice(0, 2);
+    return rec;
+  }
+  // 解析 beginner 配置 → { on, cats }：
+  // - 跨科残留（sid 与当前科不一致）或非法/过期 catKey 一律丢弃
+  // - 剩余为空时自愈到 BEGINNER 或 ORDER 前两章（避免「全挡」）
+  // - on 只看 beg.on；cats 恒为当前科合法非空集合（除非该科无章节）
+  function resolveBeginner(beg, subj, subjId) {
+    const all = beginnerCatKeys(subj);
+    const valid = {};
+    all.forEach(function (k) { valid[k] = true; });
+    const rec = beginnerRecCats(subj);
+    const on = !!(beg && beg.on);
+    let cats = [];
+    const sidMismatch = !!(beg && beg.sid && subjId && beg.sid !== subjId);
+    if (!sidMismatch && beg && Array.isArray(beg.cats)) {
+      const seen = {};
+      beg.cats.forEach(function (k) {
+        if (valid[k] && !seen[k]) { seen[k] = true; cats.push(k); }
+      });
+    }
+    if (!cats.length) cats = rec.slice();
+    return { on: on, cats: cats };
+  }
+  // ===== END TESTABLE beginner helpers =====
+
   // 把总体掌握度写进左上角学科选择器内的百分比徽标（每轮渲染随统计刷新）
   function updateBrand() {
     const pct = document.getElementById('subjectPct');
@@ -162,6 +201,14 @@
     if (DB.settings.fdr == null) DB.settings.fdr = 0.9; // 期望保留率（FSRS 间隔目标，设置可调 0.80–0.98）
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
+    // 初学者模式自愈：cats 必须与当前科 CATS 对齐——
+    // 教材化整科重置改过 catKey、或 cats 混入他科/旧键时，过滤集合会全挡或全放。
+    // 解析时丢弃非法键并回退推荐起步章；写回 sid 供下次切科识别跨科残留。
+    {
+      const b = (DB.settings.beginner && typeof DB.settings.beginner === 'object') ? DB.settings.beginner : null;
+      const r = resolveBeginner(b, BASE_SUBJ, currentSubjectId);
+      DB.settings.beginner = { on: !!(b && b.on), cats: r.cats, sid: currentSubjectId };
+    }
     if (!DB.log) DB.log = {};
     if (!DB.log.counts) DB.log.counts = {}; // 每日完成量分类计数（n 新学 / r 复习 / w 错题重做）
     if (!Array.isArray(DB.log.revlogs)) DB.log.revlogs = []; // 评分日志（FSRS 训练数据地基，v1.44.0 起）
@@ -437,6 +484,12 @@
     }
     if (payload.settings && typeof payload.settings.bareRecall === 'boolean') {
       fresh.settings.bareRecall = payload.settings.bareRecall;
+    }
+    // 初学者模式：此前导入整段丢弃 beginner，表现为导入后「全放」；现保留并对齐当前科 CATS
+    {
+      const b = (payload.settings && payload.settings.beginner && typeof payload.settings.beginner === 'object') ? payload.settings.beginner : null;
+      const r = resolveBeginner(b, BASE_SUBJ, currentSubjectId);
+      fresh.settings.beginner = { on: !!(b && b.on), cats: r.cats, sid: currentSubjectId };
     }
     if (payload.log && payload.log.checkins && typeof payload.log.checkins === 'object') {
       fresh.log.checkins = {};

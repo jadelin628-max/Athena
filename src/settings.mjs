@@ -98,32 +98,34 @@
     note('每天最多把多少张新卡引入学习队列（每科独立生效，已引入但未学完的卡不受限）。到量后队列只剩到期复习与巩固中的卡；明天自动继续引入。设 0 可临时冻结新内容、专心清复习积压。到期复习永远不受限——那是 FSRS 的排期承诺。到量后也可在完成画面点「再来一批」手动越过上限。');
 
     // 初学者模式：只从选定章节引入新卡（章节可自选，默认取学科的 BEGINNER 推荐路径）
+    // 配置经 resolveBeginner 与当前科 CATS 对齐——旧 catKey / 他科残留自愈到推荐起步章
     const subj = subjectList()[currentSubjectId];
     if (subj) {
-      const begCfg = (DB.settings && DB.settings.beginner) || { on: false, cats: null };
-      const allCats = subj.ORDER || Object.keys(subj.CATS || {});
-      const recCats = (subj.BEGINNER && subj.BEGINNER.length) ? subj.BEGINNER : allCats.slice(0, 2);
+      const resolved = resolveBeginner(DB.settings && DB.settings.beginner, subj, currentSubjectId);
+      const begCfg = { on: resolved.on, cats: resolved.cats.slice() };
+      const allCats = beginnerCatKeys(subj);
+      const recCats = beginnerRecCats(subj);
       const sBeg = el('div', 'setting-row');
       sBeg.appendChild(el('span', null, '初学者模式'));
       const begCb = el('input', 'chk');
       begCb.type = 'checkbox';
-      begCb.checked = !!(begCfg && begCfg.on);
+      begCb.checked = !!begCfg.on;
       begCb.title = '开启后，新卡只从下方勾选的章节引入';
       const begWrap = el('div', 'beg-cats');
       function renderBegCats() {
         begWrap.innerHTML = '';
         if (!begCb.checked) return;
-        const cats = (begCfg && Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats : recCats;
+        const cats = (Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats : recCats;
         allCats.forEach(function (k) {
           const chip = el('button', 'chip' + (cats.indexOf(k) !== -1 ? ' active' : ''), (subj.CATS && subj.CATS[k]) || k);
           chip.type = 'button';
           chip.addEventListener('click', function () {
-            const cur = (begCfg && Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats.slice() : cats.slice();
+            const cur = (Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats.slice() : cats.slice();
             const i = cur.indexOf(k);
             if (i !== -1) { if (cur.length > 1) cur.splice(i, 1); else return; }
             else cur.push(k);
             begCfg.cats = cur;
-            DB.settings.beginner = { on: true, cats: cur };
+            DB.settings.beginner = { on: true, cats: cur, sid: currentSubjectId };
             saveDB();
             renderBegCats();
             rebuildQueue(); // 章节范围变化立即生效
@@ -136,10 +138,10 @@
         if (begCb.checked) {
           begCfg.on = true;
           if (!Array.isArray(begCfg.cats) || !begCfg.cats.length) begCfg.cats = recCats.slice();
-          DB.settings.beginner = { on: true, cats: begCfg.cats };
+          DB.settings.beginner = { on: true, cats: begCfg.cats, sid: currentSubjectId };
           toast('初学者模式已开启：新卡只从「' + begCfg.cats.map(function (k) { return (subj.CATS && subj.CATS[k]) || k; }).join('、') + '」引入，可随时调整或关闭');
         } else {
-          DB.settings.beginner = { on: false, cats: (begCfg && begCfg.cats) || null };
+          DB.settings.beginner = { on: false, cats: (Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats.slice() : recCats.slice(), sid: currentSubjectId };
           toast('初学者模式已关闭：全部章节的新卡恢复引入');
         }
         saveDB();
@@ -293,9 +295,14 @@
 
     const sSyncBtns = el('div', 'setting-row');
     const syncBtn = el('button', 'btn primary', '立即同步');
+    function setSyncBusy(busy) {
+      syncBtn.disabled = busy;
+      upBtn.disabled = busy;
+      downBtn.disabled = busy;
+    }
     syncBtn.addEventListener('click', function () {
       if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
-      syncBtn.disabled = true;
+      setSyncBusy(true);
       toast('同步中…');
       runSync().then(function (summary) {
         let msg = '同步完成：云端更新 ' + summary.cloud.length + ' 科，本地更新 ' + summary.local.length + ' 科，双向合并 ' + summary.both.length + ' 科';
@@ -304,12 +311,54 @@
         renderApp();
       }).catch(function (err) {
         toast('同步失败：' + (err.message || err));
-      }).finally(function () { syncBtn.disabled = false; });
+      }).finally(function () { setSyncBusy(false); });
     });
     sSyncBtns.appendChild(syncBtn);
+
+    // 单向全覆盖（危险）：跳过合并，与「立即同步」并存；门槛同为 Token+仓库已配置
+    const upBtn = el('button', 'btn danger', '完全上传');
+    upBtn.title = '本机整库快照覆盖云端（不做合并）';
+    upBtn.addEventListener('click', function () {
+      if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
+      if (!confirm('确定要「完全上传」吗？（危险操作）\n\n将把本机全部学科的整库快照【覆盖】到云端，跳过合并。\n云端被覆盖的版本会先归档到 athena-sync/archive/，但云端上本机没有的进度仍可能被覆盖丢失。\n\n本机数据不会被改动。')) return;
+      setSyncBusy(true);
+      toast('完全上传中…');
+      forceUploadAll().then(function (summary) {
+        let msg = '完全上传完成：已覆盖 ' + summary.ok.length + ' 科';
+        if (summary.skipped.length) msg += '，跳过 ' + summary.skipped.length + ' 科（本机无数据）';
+        if (summary.failed.length) msg += '，失败：' + summary.failed[0];
+        toast(msg);
+        renderApp();
+      }).catch(function (err) {
+        toast('完全上传失败：' + (err.message || err));
+      }).finally(function () { setSyncBusy(false); });
+    });
+    sSyncBtns.appendChild(upBtn);
+
+    const downBtn = el('button', 'btn danger', '完全下载');
+    downBtn.title = '云端整库快照覆盖本机（不做合并）';
+    downBtn.addEventListener('click', function () {
+      if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
+      if (!confirm('确定要「完全下载」吗？（危险操作）\n\n将把云端全部学科的整库快照【覆盖】到本机，跳过合并。\n本机被覆盖的版本会先归档到 athena-sync/archive/，但本机上云端没有的进度将被覆盖丢失。\n\n覆盖后当前学习会话会重建。')) return;
+      setSyncBusy(true);
+      toast('完全下载中…');
+      forceDownloadAll().then(function (summary) {
+        let msg = '完全下载完成：已覆盖 ' + summary.ok.length + ' 科';
+        if (summary.skipped.length) msg += '，跳过 ' + summary.skipped.length + ' 科（云端无数据）';
+        if (summary.failed.length) msg += '，失败：' + summary.failed[0];
+        toast(msg);
+        renderApp();
+      }).catch(function (err) {
+        toast('完全下载失败：' + (err.message || err));
+      }).finally(function () { setSyncBusy(false); });
+    });
+    sSyncBtns.appendChild(downBtn);
     wrap.appendChild(sSyncBtns);
+    wrap.appendChild(el('p', 'muted', '「完全上传 / 完全下载」为单向全覆盖（跳过合并）：上传以本机为准覆盖云端，下载以云端为准覆盖本机。覆盖前被覆盖侧会自动归档到 athena-sync/archive/（每科约保留 10 份），但对侧独有的新进度仍会被覆盖。日常多端请用「立即同步」（合并式）。'));
     const last = scfg.lastSyncAt
-      ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + '（云端更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.cloud : 0) + ' / 本地更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.local : 0) + ' / 双向合并 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.both : 0) + ' 科）' + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
+      ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + (scfg.lastSyncSummary && scfg.lastSyncSummary.force
+          ? ('（' + (scfg.lastSyncSummary.force === 'upload' ? '完全上传' : '完全下载') + '：覆盖 ' + (scfg.lastSyncSummary.ok || 0) + ' 科，失败 ' + (scfg.lastSyncSummary.failed || 0) + ' 科）')
+          : ('（云端更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.cloud : 0) + ' / 本地更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.local : 0) + ' / 双向合并 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.both : 0) + ' 科）')) + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
       : '尚未同步过。';
     note(last);
     note('准备步骤：① 在 GitHub 新建一个【私有】仓库；② 创建 Fine-grained Token，仅勾选该仓库、权限 Contents: Read and write；③ 填入上方并「保存并验证」。同步把四科整库快照存入仓库 athena-sync/ 目录；合并式同步按卡片逐张取较新记录，多端同时打开不会互相覆盖。仅在检测到另一设备有本机未见的变化时才归档旧版，归档每科只保留最近 10 份，仓库不会无限膨胀。数据为明文 JSON，请确保仓库为私有。');

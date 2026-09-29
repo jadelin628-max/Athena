@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.48.0';
+  const VERSION = '1.49.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '1.49.0', date: '2026-09', items: ['数三一卡一知识点拆分：多轮扩充造成的多知识点卡拆开（29 张重灾区），328→397 卡（原 id 保留承接核心点，新增 kn01–kn72 共 69 张）；解题套路卡（zt02/zt05/wr03/tp06/gx38/ln04 等）只留步骤流程，知识点另立并 REL 关联；全库 2769 卡', '修复初学者模式无效：beginner.cats 与当前科 CATS 错配导致全挡/全放/切科错乱、导入丢配置——新增 resolveBeginner 自愈（过期键丢弃、空则回退推荐章、跨科 sid 丢弃），导入保留并对齐；回归测试 8 条', '学习日历热力图色阶更清晰：按近 16 周最高日等比四分档，新增张数区间图例，四级色拉开并适配暗色主题', '云同步新增「完全上传 / 完全下载」：单向全覆盖（跳过合并），二次确认 + 覆盖前归档；与「立即同步」合并式并存', '学科选择器列表为有待复习知识卡的科目显示数量角标（口径与主页一致，0 不显示）'] },
     { v: '1.48.0', date: '2026-09', items: ['韩语教材化重构：对照《延世韩国语》1–2 章序整科重写 85 卡（文字发音/基础语法/对话场景/词汇表达/文化），语言卡三段式「规则→例句原文+中文→活用限制」；学习进度整科重置', '法语教材化重构：对照《简明法语教程》章序整科重写 88 卡（语音→名词与冠词→动词变位→句型场景→高频词汇→文化），三段式 + SENTENCES 15；学习进度整科重置', '西班牙语教材化重构：对照《现代西班牙语》章序整科重写 82 卡（语音→名词与冠词→动词变位→句型场景→高频词汇→文化），三段式 + SENTENCES 15；学习进度整科重置', 'Rust 教材化重构：对照《The Rust Programming Language》（The Book）入门主干整科重写 71 卡（入门起步→通用概念→所有权→结构体→枚举与模式匹配→模块→集合→错误处理→泛型与生命周期→测试→智能指针→并发入门），技能卡三段式含 ~~~rust；学习进度整科重置；全库 2700 卡'] },
     { v: '1.47.0', date: '2026-09', items: ['C++ 教材化重构：对照《C++ Primer》入门主干整科重写 76 卡（入门起步→变量与基本类型→字符串向量数组→表达式语句函数→类→动态内存拷贝控制→泛型与 STL 入门→现代 C++ 必备），技能卡三段式「定义→~~~cpp 最小可运行示例→要点陷阱」，HELP 8 篇不进队列；学习进度整科重置', 'Java 教材化重构：对照《Head First Java》章序整科重写 68 卡（基本概念→语法与类型→面向对象→集合与泛型→异常与常用库→线程与实用进阶），三段式含 ~~~java 教学注释示例；学习进度整科重置', '日语标日深化（只扩不改骨架）：对照《标准日本语》初级扩写 42 卡（下册句型 16 / 场景表达 5 / 高频词 14 / 文化 5 / 基础补强 2），94→136 卡；语言卡三段式「规则→例句原文+中文→活用限制」，SENTENCES 6→15、HELP +2、PITFALL +6；旧 id 与学习进度全部保留；全库 2650 卡'] },
     { v: '1.46.0', date: '2026-09', items: ['JavaScript 教材化重构：对照《JavaScript 高级程序设计》（红宝书）入门主干整科重写 77 卡（语言基础→变量作用域与内存→引用类型→函数→对象与原型→DOM→事件→错误调试→异步网络→模块存储），背面三段式「定义→最小示例→要点陷阱」，HELP 8 篇不进队列；学习进度整科重置', 'C 语言教材化重构：对照 K&R《C 程序设计语言》章序整科重写 74 卡（导言→类型与运算符→控制流→函数与程序结构→指针与数组→结构→输入与输出→UNIX 系统接口），三段式 + 经典陷阱；学习进度整科重置', '线性代数对照六章笔记补充拓展（行列式/矩阵/向量组/线性方程组/特征值与特征向量/二次型）：扩写既有 23 卡背面（进度保留），新增 ln01–ln11 共 11 卡（几何意义/逆序数定义/余子式/特殊行列式/矩阵方程/特殊矩阵/内积正交/相关判别七大定理/特征向量继承/二次型矩阵表示/配方法），配 REL 与 PITFALL；例题仅真实真题原则下未新增 EXAMPLE；数三扩至 328 卡、全库 2554 卡'] },
@@ -463,6 +464,45 @@
   function dbKey() { return currentSubjectId + '_formula_srs_v1'; }
   function sessionKey() { return currentSubjectId + '_formula_session_v2'; }
 
+  // ===== BEGIN TESTABLE beginner helpers =====
+  // 初学者模式纯函数：把 beginner 配置解析成「当前科可用」的章节集合。
+  // 不依赖 DOM / DB / 全局，可被 tests/beginner.test.mjs 抽取求值。
+  function beginnerCatKeys(subj) {
+    if (!subj) return [];
+    return (Array.isArray(subj.ORDER) && subj.ORDER.length) ? subj.ORDER.slice() : Object.keys(subj.CATS || {});
+  }
+  // 推荐起步章：BEGINNER 中仍合法的键；否则 ORDER 前两章
+  function beginnerRecCats(subj) {
+    const all = beginnerCatKeys(subj);
+    const valid = {};
+    all.forEach(function (k) { valid[k] = true; });
+    let rec = (subj && Array.isArray(subj.BEGINNER)) ? subj.BEGINNER.filter(function (k) { return valid[k]; }) : [];
+    if (!rec.length) rec = all.slice(0, 2);
+    return rec;
+  }
+  // 解析 beginner 配置 → { on, cats }：
+  // - 跨科残留（sid 与当前科不一致）或非法/过期 catKey 一律丢弃
+  // - 剩余为空时自愈到 BEGINNER 或 ORDER 前两章（避免「全挡」）
+  // - on 只看 beg.on；cats 恒为当前科合法非空集合（除非该科无章节）
+  function resolveBeginner(beg, subj, subjId) {
+    const all = beginnerCatKeys(subj);
+    const valid = {};
+    all.forEach(function (k) { valid[k] = true; });
+    const rec = beginnerRecCats(subj);
+    const on = !!(beg && beg.on);
+    let cats = [];
+    const sidMismatch = !!(beg && beg.sid && subjId && beg.sid !== subjId);
+    if (!sidMismatch && beg && Array.isArray(beg.cats)) {
+      const seen = {};
+      beg.cats.forEach(function (k) {
+        if (valid[k] && !seen[k]) { seen[k] = true; cats.push(k); }
+      });
+    }
+    if (!cats.length) cats = rec.slice();
+    return { on: on, cats: cats };
+  }
+  // ===== END TESTABLE beginner helpers =====
+
   // 把总体掌握度写进左上角学科选择器内的百分比徽标（每轮渲染随统计刷新）
   function updateBrand() {
     const pct = document.getElementById('subjectPct');
@@ -568,6 +608,14 @@
     if (DB.settings.fdr == null) DB.settings.fdr = 0.9; // 期望保留率（FSRS 间隔目标，设置可调 0.80–0.98）
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
+    // 初学者模式自愈：cats 必须与当前科 CATS 对齐——
+    // 教材化整科重置改过 catKey、或 cats 混入他科/旧键时，过滤集合会全挡或全放。
+    // 解析时丢弃非法键并回退推荐起步章；写回 sid 供下次切科识别跨科残留。
+    {
+      const b = (DB.settings.beginner && typeof DB.settings.beginner === 'object') ? DB.settings.beginner : null;
+      const r = resolveBeginner(b, BASE_SUBJ, currentSubjectId);
+      DB.settings.beginner = { on: !!(b && b.on), cats: r.cats, sid: currentSubjectId };
+    }
     if (!DB.log) DB.log = {};
     if (!DB.log.counts) DB.log.counts = {}; // 每日完成量分类计数（n 新学 / r 复习 / w 错题重做）
     if (!Array.isArray(DB.log.revlogs)) DB.log.revlogs = []; // 评分日志（FSRS 训练数据地基，v1.44.0 起）
@@ -843,6 +891,12 @@
     }
     if (payload.settings && typeof payload.settings.bareRecall === 'boolean') {
       fresh.settings.bareRecall = payload.settings.bareRecall;
+    }
+    // 初学者模式：此前导入整段丢弃 beginner，表现为导入后「全放」；现保留并对齐当前科 CATS
+    {
+      const b = (payload.settings && payload.settings.beginner && typeof payload.settings.beginner === 'object') ? payload.settings.beginner : null;
+      const r = resolveBeginner(b, BASE_SUBJ, currentSubjectId);
+      fresh.settings.beginner = { on: !!(b && b.on), cats: r.cats, sid: currentSubjectId };
     }
     if (payload.log && payload.log.checkins && typeof payload.log.checkins === 'object') {
       fresh.log.checkins = {};
@@ -1781,9 +1835,10 @@
     // 此前只限制「今日引入动作」，历史上累积引入、一直未学到的新卡会全部塞进队列——上限形同虚设。
     const doneToday = DB.log.counts[t].n || 0;
     const room = Math.max(0, cap - doneToday);
-    // 初学者模式：开启时只在选定章节内引入新卡（章节可在设置页调整）
-    const beg = (DB.settings && DB.settings.beginner) || null;
-    const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
+    // 初学者模式：开启时只在选定章节内引入新卡（章节可在设置页调整）。
+    // resolveBeginner 先把 cats 对齐当前科 CATS（跨科/旧 catKey 自愈），避免全挡/全放。
+    const beg = resolveBeginner(DB.settings && DB.settings.beginner, BASE_SUBJ, currentSubjectId);
+    const begOn = !!(beg.on && Array.isArray(beg.cats) && beg.cats.length);
     const begSet = {};
     if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
     // 引入「未引入的新卡」（数量受 room 限制；skipPending=true 供「再来一批」直通——自行带量，不再自动引入）
@@ -1835,8 +1890,8 @@
     if (!DB.log.counts) DB.log.counts = {};
     const t = todayStr();
     if (!DB.log.counts[t]) DB.log.counts[t] = {};
-    const beg = (DB.settings && DB.settings.beginner) || null;
-    const begOn = !!(beg && beg.on && Array.isArray(beg.cats) && beg.cats.length);
+    const beg = resolveBeginner(DB.settings && DB.settings.beginner, BASE_SUBJ, currentSubjectId);
+    const begOn = !!(beg.on && Array.isArray(beg.cats) && beg.cats.length);
     const begSet = {};
     if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
     const rest = shuffle(DATA.filter(function (f) {
@@ -3586,32 +3641,34 @@
     note('每天最多把多少张新卡引入学习队列（每科独立生效，已引入但未学完的卡不受限）。到量后队列只剩到期复习与巩固中的卡；明天自动继续引入。设 0 可临时冻结新内容、专心清复习积压。到期复习永远不受限——那是 FSRS 的排期承诺。到量后也可在完成画面点「再来一批」手动越过上限。');
 
     // 初学者模式：只从选定章节引入新卡（章节可自选，默认取学科的 BEGINNER 推荐路径）
+    // 配置经 resolveBeginner 与当前科 CATS 对齐——旧 catKey / 他科残留自愈到推荐起步章
     const subj = subjectList()[currentSubjectId];
     if (subj) {
-      const begCfg = (DB.settings && DB.settings.beginner) || { on: false, cats: null };
-      const allCats = subj.ORDER || Object.keys(subj.CATS || {});
-      const recCats = (subj.BEGINNER && subj.BEGINNER.length) ? subj.BEGINNER : allCats.slice(0, 2);
+      const resolved = resolveBeginner(DB.settings && DB.settings.beginner, subj, currentSubjectId);
+      const begCfg = { on: resolved.on, cats: resolved.cats.slice() };
+      const allCats = beginnerCatKeys(subj);
+      const recCats = beginnerRecCats(subj);
       const sBeg = el('div', 'setting-row');
       sBeg.appendChild(el('span', null, '初学者模式'));
       const begCb = el('input', 'chk');
       begCb.type = 'checkbox';
-      begCb.checked = !!(begCfg && begCfg.on);
+      begCb.checked = !!begCfg.on;
       begCb.title = '开启后，新卡只从下方勾选的章节引入';
       const begWrap = el('div', 'beg-cats');
       function renderBegCats() {
         begWrap.innerHTML = '';
         if (!begCb.checked) return;
-        const cats = (begCfg && Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats : recCats;
+        const cats = (Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats : recCats;
         allCats.forEach(function (k) {
           const chip = el('button', 'chip' + (cats.indexOf(k) !== -1 ? ' active' : ''), (subj.CATS && subj.CATS[k]) || k);
           chip.type = 'button';
           chip.addEventListener('click', function () {
-            const cur = (begCfg && Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats.slice() : cats.slice();
+            const cur = (Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats.slice() : cats.slice();
             const i = cur.indexOf(k);
             if (i !== -1) { if (cur.length > 1) cur.splice(i, 1); else return; }
             else cur.push(k);
             begCfg.cats = cur;
-            DB.settings.beginner = { on: true, cats: cur };
+            DB.settings.beginner = { on: true, cats: cur, sid: currentSubjectId };
             saveDB();
             renderBegCats();
             rebuildQueue(); // 章节范围变化立即生效
@@ -3624,10 +3681,10 @@
         if (begCb.checked) {
           begCfg.on = true;
           if (!Array.isArray(begCfg.cats) || !begCfg.cats.length) begCfg.cats = recCats.slice();
-          DB.settings.beginner = { on: true, cats: begCfg.cats };
+          DB.settings.beginner = { on: true, cats: begCfg.cats, sid: currentSubjectId };
           toast('初学者模式已开启：新卡只从「' + begCfg.cats.map(function (k) { return (subj.CATS && subj.CATS[k]) || k; }).join('、') + '」引入，可随时调整或关闭');
         } else {
-          DB.settings.beginner = { on: false, cats: (begCfg && begCfg.cats) || null };
+          DB.settings.beginner = { on: false, cats: (Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats.slice() : recCats.slice(), sid: currentSubjectId };
           toast('初学者模式已关闭：全部章节的新卡恢复引入');
         }
         saveDB();
@@ -3781,9 +3838,14 @@
 
     const sSyncBtns = el('div', 'setting-row');
     const syncBtn = el('button', 'btn primary', '立即同步');
+    function setSyncBusy(busy) {
+      syncBtn.disabled = busy;
+      upBtn.disabled = busy;
+      downBtn.disabled = busy;
+    }
     syncBtn.addEventListener('click', function () {
       if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
-      syncBtn.disabled = true;
+      setSyncBusy(true);
       toast('同步中…');
       runSync().then(function (summary) {
         let msg = '同步完成：云端更新 ' + summary.cloud.length + ' 科，本地更新 ' + summary.local.length + ' 科，双向合并 ' + summary.both.length + ' 科';
@@ -3792,12 +3854,54 @@
         renderApp();
       }).catch(function (err) {
         toast('同步失败：' + (err.message || err));
-      }).finally(function () { syncBtn.disabled = false; });
+      }).finally(function () { setSyncBusy(false); });
     });
     sSyncBtns.appendChild(syncBtn);
+
+    // 单向全覆盖（危险）：跳过合并，与「立即同步」并存；门槛同为 Token+仓库已配置
+    const upBtn = el('button', 'btn danger', '完全上传');
+    upBtn.title = '本机整库快照覆盖云端（不做合并）';
+    upBtn.addEventListener('click', function () {
+      if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
+      if (!confirm('确定要「完全上传」吗？（危险操作）\n\n将把本机全部学科的整库快照【覆盖】到云端，跳过合并。\n云端被覆盖的版本会先归档到 athena-sync/archive/，但云端上本机没有的进度仍可能被覆盖丢失。\n\n本机数据不会被改动。')) return;
+      setSyncBusy(true);
+      toast('完全上传中…');
+      forceUploadAll().then(function (summary) {
+        let msg = '完全上传完成：已覆盖 ' + summary.ok.length + ' 科';
+        if (summary.skipped.length) msg += '，跳过 ' + summary.skipped.length + ' 科（本机无数据）';
+        if (summary.failed.length) msg += '，失败：' + summary.failed[0];
+        toast(msg);
+        renderApp();
+      }).catch(function (err) {
+        toast('完全上传失败：' + (err.message || err));
+      }).finally(function () { setSyncBusy(false); });
+    });
+    sSyncBtns.appendChild(upBtn);
+
+    const downBtn = el('button', 'btn danger', '完全下载');
+    downBtn.title = '云端整库快照覆盖本机（不做合并）';
+    downBtn.addEventListener('click', function () {
+      if (!syncConfigured()) { toast('云同步未配置完整：请先填写 Token 与仓库名并验证'); return; }
+      if (!confirm('确定要「完全下载」吗？（危险操作）\n\n将把云端全部学科的整库快照【覆盖】到本机，跳过合并。\n本机被覆盖的版本会先归档到 athena-sync/archive/，但本机上云端没有的进度将被覆盖丢失。\n\n覆盖后当前学习会话会重建。')) return;
+      setSyncBusy(true);
+      toast('完全下载中…');
+      forceDownloadAll().then(function (summary) {
+        let msg = '完全下载完成：已覆盖 ' + summary.ok.length + ' 科';
+        if (summary.skipped.length) msg += '，跳过 ' + summary.skipped.length + ' 科（云端无数据）';
+        if (summary.failed.length) msg += '，失败：' + summary.failed[0];
+        toast(msg);
+        renderApp();
+      }).catch(function (err) {
+        toast('完全下载失败：' + (err.message || err));
+      }).finally(function () { setSyncBusy(false); });
+    });
+    sSyncBtns.appendChild(downBtn);
     wrap.appendChild(sSyncBtns);
+    wrap.appendChild(el('p', 'muted', '「完全上传 / 完全下载」为单向全覆盖（跳过合并）：上传以本机为准覆盖云端，下载以云端为准覆盖本机。覆盖前被覆盖侧会自动归档到 athena-sync/archive/（每科约保留 10 份），但对侧独有的新进度仍会被覆盖。日常多端请用「立即同步」（合并式）。'));
     const last = scfg.lastSyncAt
-      ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + '（云端更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.cloud : 0) + ' / 本地更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.local : 0) + ' / 双向合并 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.both : 0) + ' 科）' + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
+      ? ('上次同步：' + new Date(scfg.lastSyncAt).toLocaleString() + (scfg.lastSyncSummary && scfg.lastSyncSummary.force
+          ? ('（' + (scfg.lastSyncSummary.force === 'upload' ? '完全上传' : '完全下载') + '：覆盖 ' + (scfg.lastSyncSummary.ok || 0) + ' 科，失败 ' + (scfg.lastSyncSummary.failed || 0) + ' 科）')
+          : ('（云端更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.cloud : 0) + ' / 本地更新 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.local : 0) + ' / 双向合并 ' + (scfg.lastSyncSummary ? scfg.lastSyncSummary.both : 0) + ' 科）')) + (scfg.lastError ? '——上次错误：' + scfg.lastError : ''))
       : '尚未同步过。';
     note(last);
     note('准备步骤：① 在 GitHub 新建一个【私有】仓库；② 创建 Fine-grained Token，仅勾选该仓库、权限 Contents: Read and write；③ 填入上方并「保存并验证」。同步把四科整库快照存入仓库 athena-sync/ 目录；合并式同步按卡片逐张取较新记录，多端同时打开不会互相覆盖。仅在检测到另一设备有本机未见的变化时才归档旧版，归档每科只保留最近 10 份，仓库不会无限膨胀。数据为明文 JSON，请确保仓库为私有。');
@@ -4082,6 +4186,20 @@
     return box;
   }
 
+  // 学习日历热力图：按当期（近 16 周）最大日学习量等比四分档，保证最高日始终最深色
+  function heatLevel(cnt, maxCnt) {
+    if (cnt <= 0 || maxCnt <= 0) return 0;
+    return Math.min(4, Math.max(1, Math.ceil(cnt * 4 / maxCnt)));
+  }
+  // 反解档位对应的张数区间（图例用）；该档在 1..maxCnt 内无取值时返回 null
+  function heatRangeText(level, maxCnt) {
+    if (level <= 0 || maxCnt <= 0) return level === 0 ? '0' : null;
+    const lo = Math.floor((level - 1) * maxCnt / 4) + 1;
+    const hi = Math.floor(level * maxCnt / 4);
+    if (lo > maxCnt || hi < lo) return null;
+    return lo === hi ? String(lo) : lo + '–' + hi;
+  }
+
   function renderStatistics() {
     const app = document.getElementById('app');
     const wrap = el('div', 'principles-wrap');
@@ -4115,24 +4233,47 @@
     const detailLog = (DB.log && DB.log.detail) || {};
     const weeks = 16, total = weeks * 7;
     const start = new Date(); start.setDate(start.getDate() - (total - 1));
-    const grid = el('div', 'heatmap-grid');
-    grid.style.gridTemplateColumns = 'repeat(' + weeks + ', 12px)';
+    const heatDays = [];
+    let heatMax = 0;
     for (let d = 0; d < total; d++) {
       const date = new Date(start); date.setDate(start.getDate() + d);
       const key = fmtDate(date), cnt = daily[key] || 0;
+      heatDays.push({ key: key, cnt: cnt });
+      if (cnt > heatMax) heatMax = cnt;
+    }
+    const grid = el('div', 'heatmap-grid');
+    grid.style.gridTemplateColumns = 'repeat(' + weeks + ', 12px)';
+    heatDays.forEach(function (item) {
       const cell = el('div', 'heat-cell');
-      cell.title = key + '：' + cnt + ' 张' + (cnt > 0 ? '（点击查看当日明细）' : '');
-      cell.className += cnt >= 8 ? ' l4' : cnt >= 5 ? ' l3' : cnt >= 2 ? ' l2' : cnt > 0 ? ' l1' : ' l0';
-      if (cnt > 0) {
+      cell.title = item.key + '：' + item.cnt + ' 张' + (item.cnt > 0 ? '（点击查看当日明细）' : '');
+      cell.classList.add('l' + heatLevel(item.cnt, heatMax));
+      if (item.cnt > 0) {
         cell.classList.add('clickable');
         cell.setAttribute('data-action', 'heatdate');
-        cell.setAttribute('data-arg', key);
+        cell.setAttribute('data-arg', item.key);
       }
-      if (heatSel === key) cell.classList.add('sel');
+      if (heatSel === item.key) cell.classList.add('sel');
       grid.appendChild(cell);
-    }
+    });
     const hb = el('div', 'stat-card'); hb.appendChild(grid);
-    hb.appendChild(el('p', 'muted', '颜色越深，当天学习张数越多；点击有记录的格子可查看当日明细。'));
+    const legend = el('div', 'heat-legend');
+    legend.appendChild(el('span', 'heat-legend-label', '图例 · 张/日'));
+    if (heatMax <= 0) {
+      legend.appendChild(el('span', 'heat-legend-item', '□ 0'));
+    } else {
+      legend.appendChild(el('span', 'heat-legend-end', '少'));
+      for (let lv = 0; lv <= 4; lv++) {
+        const txt = lv === 0 ? '0' : heatRangeText(lv, heatMax);
+        if (txt == null) continue;
+        const item = el('span', 'heat-legend-item');
+        item.appendChild(el('span', 'heat-cell heat-swatch l' + lv));
+        item.appendChild(el('span', null, txt));
+        legend.appendChild(item);
+      }
+      legend.appendChild(el('span', 'heat-legend-end', '多'));
+    }
+    hb.appendChild(legend);
+    hb.appendChild(el('p', 'muted', '颜色深浅表示当天学习张数（按本窗口最高日等比划分）；点击有记录的格子可查看当日明细。'));
     wrap.appendChild(hb);
 
     if (heatSel) {
@@ -5331,17 +5472,20 @@
   }
 
   // 同步全部学科（合并式）。summary：cloud=云端被更新，local=本地被更新，both=双向合并。
-  // 串行排队：启动同步/防抖推送/前台回归/手动按钮可能重叠，同一设备同一时刻只跑一轮，
+  // 串行排队：启动同步/防抖推送/前台回归/手动按钮/完全上传下载可能重叠，同一设备同一时刻只跑一轮，
   // 否则两轮并发对同一文件 GET 相同 sha 后先后 PUT，后到的一方必收 409。
   let syncChain = Promise.resolve();
-  function runSync() {
+  function runExclusive(fn) {
     if (typeof fetch === 'undefined') return Promise.reject(new Error('当前环境不支持网络请求'));
     const p = syncChain.then(function () {
       if (!syncConfigured()) throw new Error('云同步未配置完整：请先在设置中填写 Token 与仓库名');
-      return doRunSync();
+      return fn();
     });
     syncChain = p.catch(function () {});
     return p;
+  }
+  function runSync() {
+    return runExclusive(function () { return doRunSync(); });
   }
 
   async function doRunSync() {
@@ -5375,6 +5519,110 @@
     // 归档修剪：每科仅保留最近 ARCHIVE_KEEP 份（修剪失败不影响同步）
     for (const sid of sids) { await pruneArchives(sid); }
     return summary;
+  }
+
+  // —— 单向全覆盖（危险操作，跳过 mergeDb；与合并式「立即同步」并存）——
+  // 完全上传：本机整库快照覆盖云端对应文件；完全下载：云端整库快照覆盖本机。
+  // 覆盖前把被覆盖侧归档到 archive/（与合并同步同一策略）；单科失败只记 summary.failed，不弄脏本地。
+  // 本机无数据 / 云端无数据的科目跳过（不删除对侧多余文件——避免误删另一端独有进度）。
+
+  function settleLocalSave() {
+    // 落盘未决写先冲掉，避免稍后 flush 把旧内存 DB 盖回刚下载的云端快照
+    try { if (typeof flushSave === 'function') flushSave(); } catch (e) {}
+  }
+
+  async function forceUploadSubject(sid) {
+    const local = syncLocalDb(sid);
+    if (!local) return { action: 'skip' };
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
+        if (remote && remote.data) {
+          // 覆盖前归档云端旧版（archive 新路径，不带 sha）
+          await ghPutJson(syncArchivePath(sid), remote.data);
+        }
+        await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local, remote ? remote.sha : undefined);
+        syncSetLastUp(sid, (typeof local.updatedAt === 'number') ? local.updatedAt : Date.now());
+        return { action: 'upload' };
+      } catch (err) {
+        if (isShaConflict(err)) { lastErr = err; continue; } // 云端刚被别的设备更新：重拉归档后再覆盖
+        throw err;
+      }
+    }
+    throw new Error('云端正在被其他设备更新，重试 3 次未成功——稍后再试（' + (lastErr && lastErr.message ? lastErr.message : '') + '）');
+  }
+
+  async function forceDownloadSubject(sid) {
+    const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
+    if (!remote || !remote.data) return { action: 'skip' };
+    const local = syncLocalDb(sid);
+    if (local) {
+      // 覆盖前归档本机旧版到云端 archive/；归档失败则中止该科——绝不未归档就丢本地
+      await ghPutJson(syncArchivePath(sid), local);
+    }
+    if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
+    syncSetLastUp(sid, (remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0);
+    return { action: 'download' };
+  }
+
+  function recordForceSummary(kind, summary) {
+    const cfg = syncCfg();
+    cfg.lastSyncAt = Date.now();
+    cfg.lastSyncSummary = { force: kind, ok: summary.ok.length, skipped: summary.skipped.length, failed: summary.failed.length };
+    cfg.lastError = summary.failed.length ? summary.failed.join('；') : '';
+    saveSyncCfg(cfg);
+  }
+
+  // 完全上传：本机 → 云端（单向覆盖）。返回 { ok, skipped, failed }
+  async function doForceUploadAll() {
+    settleLocalSave();
+    const summary = { ok: [], skipped: [], failed: [] };
+    const sids = Object.keys(subjectList());
+    for (const sid of sids) {
+      try {
+        const res = await forceUploadSubject(sid);
+        if (res.action === 'upload') summary.ok.push(sid);
+        else summary.skipped.push(sid);
+      } catch (err) {
+        summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
+      }
+    }
+    recordForceSummary('upload', summary);
+    for (const sid of sids) { await pruneArchives(sid); }
+    return summary;
+  }
+
+  // 完全下载：云端 → 本机（单向覆盖）。返回 { ok, skipped, failed }
+  async function doForceDownloadAll() {
+    settleLocalSave();
+    const summary = { ok: [], skipped: [], failed: [] };
+    const sids = Object.keys(subjectList());
+    for (const sid of sids) {
+      try {
+        const res = await forceDownloadSubject(sid);
+        if (res.action === 'download') summary.ok.push(sid);
+        else summary.skipped.push(sid);
+      } catch (err) {
+        summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
+      }
+    }
+    recordForceSummary('download', summary);
+    // 当前学科被云端覆盖：重载内存 DB、重建学习队列并刷新界面（与 doRunSync 一致）
+    if (summary.ok.indexOf(currentSubjectId) !== -1) {
+      await loadDBAsync();
+      buildSession(0);
+      renderApp();
+    }
+    for (const sid of sids) { await pruneArchives(sid); }
+    return summary;
+  }
+
+  function forceUploadAll() {
+    return runExclusive(function () { return doForceUploadAll(); });
+  }
+  function forceDownloadAll() {
+    return runExclusive(function () { return doForceDownloadAll(); });
   }
 
   // —— 自动同步调度 ——
@@ -5807,6 +6055,42 @@
   }
 
   // ---------------- 学科切换与选择器 ----------------
+  // 下拉角标 due 口径与 stats().due 一致：仅知识卡 review 且到期；不含错题/学习中
+  function subjectDueCount(sid, now) {
+    const t = now || Date.now();
+    let db = null;
+    try { db = JSON.parse(localStorage.getItem(sid + '_formula_srs_v1')); } catch (e) {}
+    if (!db || !db.cards) return 0;
+    let due = 0;
+    Object.keys(db.cards).forEach(function (id) {
+      const c = db.cards[id];
+      if (c && c.state === 'review' && typeof c.due === 'number' && c.due <= t) due++;
+    });
+    return due;
+  }
+  // 刷新学科下拉各科待复习角标（0 不显示）；复用 .nav-badge
+  // 数据源：各科 localStorage 快照（与主页同源）。不在此 flushSave——setSubject 会先改
+  // currentSubjectId 再调 renderSubjectDropdown，此时 dbKey() 已指向新科，flush 会写串库。
+  function updateSubjectDdBadges() {
+    const menu = document.getElementById('subjectMenu');
+    if (!menu) return;
+    const now = Date.now();
+    const items = menu.querySelectorAll('.subject-dd-item');
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const sid = item.getAttribute('data-sid');
+      if (!sid) continue;
+      const due = subjectDueCount(sid, now);
+      let badge = item.querySelector('.nav-badge');
+      if (due > 0) {
+        if (!badge) {
+          badge = el('span', 'nav-badge');
+          badge.textContent = String(due);
+          item.appendChild(badge);
+        } else badge.textContent = String(due);
+      } else if (badge) badge.remove();
+    }
+  }
   function switchSubject(id) {
     if (id === currentSubjectId || !setSubject(id)) return;
     const target = id;
@@ -5837,6 +6121,7 @@
         const s = list[id];
         const item = el('button', 'subject-dd-item' + (id === currentSubjectId ? ' active' : ''), '');
         item.type = 'button';
+        item.setAttribute('data-sid', id);
         const img = document.createElement('img');
         img.src = subjectIconUrl(id) || '';
         img.className = 'subject-icon';
@@ -5850,6 +6135,7 @@
         menu.appendChild(item);
       });
     });
+    updateSubjectDdBadges();
     const cs = list[currentSubjectId];
     if (cs) {
       const cimg = document.createElement('img');
@@ -5873,6 +6159,8 @@
       e.stopPropagation();
       const willShow = menu.classList.contains('hidden');
       if (willShow) {
+        // 打开前先落盘：保证随后读到的各科 due 含刚评过的卡（与主页同源）
+        if (typeof flushSave === 'function') flushSave();
         // 菜单挂在 body 根节点：fixed 定位到按钮下方（视口坐标），
         // 不受 sticky/backdrop-filter 祖先的包含块与命中测试影响（移动端 WebKit 曾因此无法选中其他学科）
         const r = cur.getBoundingClientRect();
@@ -5893,6 +6181,7 @@
           menu.style.maxHeight = Math.min(cap, above) + 'px';
         }
         menu.classList.remove('hidden');
+        updateSubjectDdBadges(); // 展开后再刷角标（收起时该函数会短路，避免全科扫描）
         // 屏幕右缘溢出兜底：窄屏上按钮靠右时把菜单收回屏内
         const mr = menu.getBoundingClientRect();
         if (mr.right > window.innerWidth - 8) {
@@ -5921,6 +6210,17 @@
     const cur = document.getElementById('subjectCurrent');
     if (cur) cur.setAttribute('aria-expanded', 'false');
   }
+
+  // 重绘后刷新学科下拉角标：挂到 updateBrand（renderApp 出口与 updateNavBadge 同拍）。
+  // 仅菜单展开时扫描——收起状态下的角标在下次打开时会重刷，避免每帧解析全科 localStorage。
+  (function hookSubjectDdBadgesOnRender() {
+    const prevUpdateBrand = updateBrand;
+    updateBrand = function () {
+      prevUpdateBrand.apply(this, arguments);
+      const menu = document.getElementById('subjectMenu');
+      if (menu && !menu.classList.contains('hidden')) updateSubjectDdBadges();
+    };
+  })();
 
   // ---------------- 启动 ----------------
   function initApp() {

@@ -119,7 +119,7 @@
 | `fdr` | 0.9 | 期望保留率（0.80–0.98） |
 | `goalTitle` | `'考研'` | 倒计时目标名 |
 | `bareRecall` | false | 裸回忆（隐藏分类徽标） |
-| `beginner` | — | `{ on: boolean, cats: catKey[] }` 初学者模式与勾选章节 |
+| `beginner` | — | `{ on: boolean, cats: catKey[], sid?: string }` 初学者模式与勾选章节；`sid` 为配置归属学科，切科/导入时用 `resolveBeginner` 对齐当前科 CATS（过期键自愈，跨科残留丢弃） |
 
 `targetH` 已迁移为 `targetS`（勿再写入）。
 

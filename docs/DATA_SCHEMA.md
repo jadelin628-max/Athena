@@ -203,3 +203,17 @@
 | 加粗 `\textbf{}` 与 `**…**` 勿混用 | 风格约定（`AGENTS.md`） | 无工具强制 |
 
 新增/修改字段时：更新本文 + `normalizeDB`/`sanitize*` + 同步合并 + 导入导出，并补 `tests/` 若行为可测。
+
+
+## 行动侧其它键（与学习库隔离）
+
+| 键 | 内容 |
+|---|---|
+| thena_habit_groups_v1 | 习惯组 minK 等 |
+| thena_habit_state_v1 | 每日检查/结算状态 |
+| thena_focus_v1 | 专注链 · 单元 · 判例 · 编制 |
+| thena_mile_v1 | 里程碑 Def + Hit |
+| thena_act_cfg_v1 | 行动设置 |
+| thena_global_prefs_v1 | 全局偏好（可重叠项） |
+
+详见 ACT.md。

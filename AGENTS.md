@@ -2,7 +2,7 @@
 
 > 新会话冷启动只读本文件即可开工；细节按需点开深文档。**不要整仓通读**。
 
-Athena：考研/技能/语言卡片记忆应用 → **综合自我提升平台**（记忆内核 + 行动模块）。FSRS-6 调度 + 交错练习 + 错题本 + GitHub 云同步；行动层含如果-那么 / WOOP / 环境审计 / 习惯树。纯静态前端（零 npm 依赖），可选 Tauri 桌面版。
+Athena：考研/技能/语言卡片记忆应用 → **综合自我提升平台**（记忆内核 + 行动模块）。FSRS-6 调度 + 交错练习 + 错题本 + GitHub 云同步；行动层含 WOOP 计划 / 习惯树(RSIP) / 专注链(CTDP) / 里程碑。纯静态前端（零 npm 依赖），可选 Tauri 桌面版。
 
 ## 必读地图
 
@@ -12,8 +12,8 @@ Athena：考研/技能/语言卡片记忆应用 → **综合自我提升平台**
 | 派单 / 收口 / 看活任务 | `docs/BOARD.md` | `docs/WORKFLOW.md` §7 |
 | 改模块 / 排查逻辑 | `docs/ARCHITECTURE.md` | 对应 `src/*.mjs` |
 | 改卡片 / 学科数据 | `docs/DATA_SCHEMA.md` | 同科 `data/<id>.js` 抽样 |
-| **行动模块 / 习惯树** | **`docs/ACT.md`** | 对应 `src/act*.mjs` / `habit*.mjs` |
-| **2.0 总体方案** | **`docs/V2_PLAN.md`** | UI Tokens / 习惯树 RSIP / 专注链 CTDP / 知识库 |
+| **行动 / 习惯树 / 专注链 / 里程碑** | **`docs/ACT.md`** | `src/act.mjs` `habit.mjs` `focus.mjs` `mile.mjs` |
+| **UI Tokens / 布局** | **`docs/ARCHITECTURE.md` §设计** | `style.css` `index.html` |
 | 改工具 / 校验失败 | `tools/README.md` | 对应 `tools/*.mjs` |
 | 打包桌面版 | `docs/DESKTOP.md` | — |
 | 用户向说明 | `README.md` | — |

@@ -34,6 +34,16 @@ flowchart LR
 - **生成物**：`app.js`、`CHANGELOG.md`、`dist/` 不可手改。
 - **行动模块规格**：`docs/ACT.md`（WOOP 主干计划 / 习惯树 / 专注链 / 过程反馈红线）。
 
+## 设计系统（2.0 · 自 V2_PLAN 内化）
+
+| Token | 亮色 | 用途 |
+|---|---|---|
+| `--bg` / `--bg-elevated` / `--bg-sunken` | `#F7F8FA` / `#FFF` / `#EEF0F3` | 层级 |
+| `--accent` / `--accent-2` | `#3B82F6` 蓝 / `#D4537E` 粉 | 学习 / 行动·里程碑 |
+| 字体 | 系统栈 + PingFang SC（`fonts/inter-*.woff2` 拉丁） | UI 13–14 / 正文 15 |
+
+布局：桌面左侧栏；iOS 底栏 + safe-area；Today 双栏；`Ctrl/⌘+K` 命令面板。空态插画 `assets/empty-*.webp`。
+
 ## `src/` 拼接顺序（`tools/build.mjs` `ORDER`）
 
 | # | 模块 | 职责 |

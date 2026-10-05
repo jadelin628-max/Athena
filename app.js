@@ -5177,6 +5177,7 @@
 
     app.appendChild(wrap);
   }
+
   // ---------------- 知识库 · 原理与依据（V2-F：左目录 + 搜索 + 条目详情） ----------------
   const KB_CATS = [
     { id: 'learn', icon: '📚', title: '学习科学' },
@@ -8130,6 +8131,7 @@
     });
     return box;
   }
+
   // ---------------- 行动·习惯树（RSIP · V2-B + H1 今日结算） ----------------
   // 规格：docs/V2_PLAN.md §2.1/§10.1 + docs/ACT.md §5/§11。产品名「习惯树」。
   // 数据键 athena_act_v1.habits，与学习库隔离；组 athena_habit_groups_v1；设置 athena_act_cfg_v1（H4 同 schema）。

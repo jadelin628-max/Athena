@@ -34,8 +34,14 @@ const ORDER = [
   'actions.mjs'
 ];
 
+// 统一 LF：Windows 工作区可能是 CRLF/混合行尾；stripExports 的 ^/$ 在 CRLF 下
+// 会从 \r 后截断，导致本地构建结果与 CI（纯 LF 检出）不一致。
+function normalizeEol(text) {
+  return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
 function read(rel) {
-  return fs.readFileSync(path.join(SRC, rel), 'utf8');
+  return normalizeEol(fs.readFileSync(path.join(SRC, rel), 'utf8'));
 }
 
 function stripExports(text) {
@@ -58,7 +64,8 @@ const out = banner + body + '\n';
 
 // --check：只对比不写盘（CI 里拦截「改了 src/ 忘跑构建」）
 if (process.argv.includes('--check')) {
-  const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : '';
+  // 对比前统一 LF，避免 autocrlf 检出的 CRLF 造成假阴性/假阳性
+  const current = fs.existsSync(OUT) ? normalizeEol(fs.readFileSync(OUT, 'utf8')) : '';
   if (current !== out) {
     console.error('app.js 与 src/ 不同步——请运行 node tools/build.mjs 重新生成');
     process.exit(1);

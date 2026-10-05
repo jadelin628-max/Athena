@@ -5,10 +5,13 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.50.0';
+  const VERSION = '2.0.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '2.0.0', date: '2026-10', items: ['产品升格为综合自我提升平台：记忆内核（FSRS）+ 行动系统（习惯树 RSIP · 专注链 CTDP）+ 知识库式原理。亮色默认蓝粉双色 UI，桌面侧栏 / iOS 底栏与安全区适配', '习惯树（RSIP）：今日结算（无 miss、全员检完确认、零点自动）、每日最多 1 个新节点入树、失败级联回习惯库且内化进度不丢、SVG 思维导图、组容错名额 minK 可编辑、强化可自动或手动（每日 1 次）', '专注链（CTDP）：任务单元（计时结束才算完成、内容/达成/完成度）、神圣座位 #N、下必为例判例、预约 15 分钟、侦查转正、精锐崩溃继位；编制竖列树番号 # ● ▲ ◆ 与计划模式（未填满整链清空）', '原理页知识库化：五分类可检索，条目含研究者/年份/出处与 🟢/🟡/⚠️；CTDP/RSIP 标社区方法论。计划模块以 WOOP 为主干（P 步=如果-那么，外部提示并入障碍）；设置·行动可调并支持重置/云同步；Today 双栏 + ⌘K 命令面板'] },
+    { v: '1.52.0', date: '2026-10', items: ['修复习惯树「新建习惯无效」：编辑弹窗表单变量作用域导致保存回调 ReferenceError，现已可正常新建/落盘；树内支持＋子项/编辑/改父级/删除/今日完成、行内改名与容忍天数', '行动模块「帮助」升为与计划/习惯树并列的二层入口；界面去掉科普长注释；计划卡可删除；主页计划三栏（如果-那么/WOOP/环境审计）可折叠展示 + 习惯树独立入口（待检/今日/活跃）', '移除应用顶部 AIGC「AI生成」水印'] },
+    { v: '1.51.0', date: '2026-10', items: ['新增「行动」模块（自我提升平台）：如果-那么（执行意图，软校验外部情境+具体动作）、WOOP 四步（障碍→自动生成如果-那么）、环境审计向导（提示→移除/改造）；数据 athena_act_v1 与学习库隔离；一级导航 + 主页次级入口', '习惯树：层级增删/改父级（删除级联子孙）、每日检查、可编辑容忍天数、同标签组「有维持成员则本检不移除、全部超标才整组移除」；evaluateHabitDay 纯函数 + 单测；过程反馈仅次数/点阵，无连击惩罚（对齐 Lally 66 天、Graybiel 替换非消灭）', '原理页增补认知科学八章（多巴胺 RPE/想要vs喜欢、习惯回路、SDT 与过度辩护、情绪重评、Posner 注意、学习机制、执行意图 WOOP、证伪清单），证据分级 🟢/🟡/⚠️；文档新增 docs/ACT.md 规格'] },
     { v: '1.50.0', date: '2026-09', items: ['卡面长答案展示分段增强（只改渲染、不改数据）：在既有 ①②③/（n）分点基础上，空行成段落块、「要点/陷阱/规则/活用限制/例句」等结构标签成独立视觉块（浅底左线）、单换行可见；超长散文在避开公式/命令/代码的句末保守再分一刀——长答案阅读更清晰，移动端与暗色主题可辨'] },
     { v: '1.49.0', date: '2026-09', items: ['数三一卡一知识点拆分：多轮扩充造成的多知识点卡拆开（29 张重灾区），328→397 卡（原 id 保留承接核心点，新增 kn01–kn72 共 69 张）；解题套路卡（zt02/zt05/wr03/tp06/gx38/ln04 等）只留步骤流程，知识点另立并 REL 关联；全库 2769 卡', '修复初学者模式无效：beginner.cats 与当前科 CATS 错配导致全挡/全放/切科错乱、导入丢配置——新增 resolveBeginner 自愈（过期键丢弃、空则回退推荐章、跨科 sid 丢弃），导入保留并对齐；回归测试 8 条', '学习日历热力图色阶更清晰：按近 16 周最高日等比四分档，新增张数区间图例，四级色拉开并适配暗色主题', '云同步新增「完全上传 / 完全下载」：单向全覆盖（跳过合并），二次确认 + 覆盖前归档；与「立即同步」合并式并存', '学科选择器列表为有待复习知识卡的科目显示数量角标（口径与主页一致，0 不显示）'] },
     { v: '1.48.0', date: '2026-09', items: ['韩语教材化重构：对照《延世韩国语》1–2 章序整科重写 85 卡（文字发音/基础语法/对话场景/词汇表达/文化），语言卡三段式「规则→例句原文+中文→活用限制」；学习进度整科重置', '法语教材化重构：对照《简明法语教程》章序整科重写 88 卡（语音→名词与冠词→动词变位→句型场景→高频词汇→文化），三段式 + SENTENCES 15；学习进度整科重置', '西班牙语教材化重构：对照《现代西班牙语》章序整科重写 82 卡（语音→名词与冠词→动词变位→句型场景→高频词汇→文化），三段式 + SENTENCES 15；学习进度整科重置', 'Rust 教材化重构：对照《The Rust Programming Language》（The Book）入门主干整科重写 71 卡（入门起步→通用概念→所有权→结构体→枚举与模式匹配→模块→集合→错误处理→泛型与生命周期→测试→智能指针→并发入门），技能卡三段式含 ~~~rust；学习进度整科重置；全库 2700 卡'] },
@@ -165,11 +168,11 @@
   }
 
   // 卡面长答案分段（展示层）：见 splitAnswerBlocks（①/（n）分点、空行段落、
-  // 结构标签块、超长散文句末保守再分）；渲染入口在 render.mjs 的 renderProse。
+  // 结构标签块、大段散文句末多句细切）；渲染入口在 render.mjs 的 renderProse。
 
   // ===== 卡面答案分段增强（只影响展示，不改数据） =====
-  // 块类型：point=①/（n）分点 · label=结构标签起块 · para=空行段落 · text=其余散文
-  // 优先级：①分点 ≻ 结构标签 ≻ 空行分段 ≻（可选）超长散文句末再分；~~~ 代码块在 renderTex 层已整块 <pre>。
+  // 块类型：point=①/（n）分点 · label=结构标签起块 · para=空行段落/句段 · text=其余散文
+  // 优先级：①分点 ≻ 结构标签 ≻ 空行分段 ≻ 大段散文句末多句细切；~~~ 代码块在 renderTex 层已整块 <pre>。
 
   // 结构标签（长名在前）：行首或句末后「要点：/陷阱：/规则：/活用限制：/例句…」等
   const ANS_LABELS = ['活用限制', '例句拆解', '常见错误', '要点', '陷阱', '规则', '例句', '注意', '提示', '说明', '总结', '口诀', '步骤', '定义', '用法', '活用', '词义'];
@@ -254,23 +257,48 @@
     return m ? m[0].length : 0;
   }
 
-  // 超长散文（无标签/分点）在句末标点处保守再分：仅切一刀、靠近中点、两侧均够长
+  // 大段散文句末多句细切：句末标点后拆段；保护区间内不切；过短句与前块合并
+  // 切分点：。！？；（全角/半角）；句末可吸收连续标点与收尾引号/括号（」』）等）
+  const PROSE_SPLIT_MIN = 100; // 整段不足则不必拆
+  const PROSE_SENT_MIN = 18;   // 句段过短则与前块合并，防碎裂
+  const ANS_SENT_END = /[。！？；!?;]/;
+  const ANS_SENT_TAIL = /[。！？；!?;」』）】》〉”’]/;
+
   function splitLongProse(content) {
-    if (content.length < 200) return [content];
+    if (content.length < PROSE_SPLIT_MIN) return [content];
     const ranges = ansProtectedRanges(content);
-    const mid = content.length / 2;
-    let best = -1, bestDist = Infinity;
+    const cuts = [];
     for (let i = 0; i < content.length; i++) {
-      const c = content[i];
-      if (c !== '。' && c !== '！' && c !== '？' && c !== '!' && c !== '?') continue;
+      if (!ANS_SENT_END.test(content[i])) continue;
       if (ansIsProtected(ranges, i)) continue;
-      const cut = i + 1;
-      if (cut < 50 || content.length - cut < 50) continue;
-      const d = Math.abs(cut - mid);
-      if (d < bestDist) { bestDist = d; best = cut; }
+      let cut = i + 1;
+      while (cut < content.length && ANS_SENT_TAIL.test(content[cut]) && !ansIsProtected(ranges, cut)) cut++;
+      cuts.push(cut);
+      i = cut - 1;
     }
-    if (best === -1) return [content];
-    return [ansTrimEdge(content.slice(0, best)), ansTrimEdge(content.slice(best))].filter(Boolean);
+    if (cuts.length === 0) return [content];
+    // 贪心打包：当前块 < PROSE_SENT_MIN 则吞下一句；尾段过短并入前块
+    const pieces = [];
+    let start = 0;
+    for (let k = 0; k < cuts.length; k++) {
+      const end = cuts[k];
+      if (end - start < PROSE_SENT_MIN) continue;
+      const piece = ansTrimEdge(content.slice(start, end));
+      if (piece) pieces.push(piece);
+      start = end;
+    }
+    if (start < content.length) {
+      const tail = ansTrimEdge(content.slice(start));
+      if (tail) {
+        if (tail.length < PROSE_SENT_MIN && pieces.length > 0) {
+          pieces[pieces.length - 1] = ansTrimEdge(pieces[pieces.length - 1] + tail);
+        } else {
+          pieces.push(tail);
+        }
+      }
+    }
+    if (pieces.length <= 1) return [ansTrimEdge(content)];
+    return pieces;
   }
 
   // 非分点散文：按结构标签 / 空行切块

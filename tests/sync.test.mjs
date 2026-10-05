@@ -9,7 +9,7 @@ globalThis.localStorage = {
   setItem: (k, v) => { store[k] = String(v); },
   removeItem: (k) => { delete store[k]; }
 };
-const { b64encodeUtf8, b64decodeUtf8, mergeDb, syncConfigured, syncReady, saveSyncCfg } = await import('../src/sync.mjs');
+const { b64encodeUtf8, b64decodeUtf8, mergeDb, mergeActModule, mergeNodesByIdUpdatedAt, syncConfigured, syncReady, saveSyncCfg } = await import('../src/sync.mjs');
 
 test('b64 UTF-8 往返：中文 / LaTeX 公式 / emoji / 多行', () => {
   const cases = [
@@ -139,4 +139,137 @@ test('mergeDb：评分日志 revlogs 去重并集 + 时间序', () => {
   assert.equal(m.log.revlogs.length, 3);
   assert.deepEqual(m.log.revlogs.map((e) => e.t), [100, 200, 300]); // 按时间排序
   assert.equal(m.__changedFromRemote, true); // 云端独有条目 → 写回本地
+});
+
+// —— T33 行动模块合并 ——
+
+test('mergeNodesByIdUpdatedAt：同 id 取 updatedAt 较新一方', () => {
+  const a = [{ id: 'n1', updatedAt: 100, v: 'old' }, { id: 'n2', updatedAt: 50, v: 'local-only' }];
+  const b = [{ id: 'n1', updatedAt: 200, v: 'new' }, { id: 'n3', updatedAt: 10, v: 'remote-only' }];
+  const m = mergeNodesByIdUpdatedAt(a, b);
+  assert.equal(m.length, 3);
+  const n1 = m.find((x) => x.id === 'n1');
+  assert.equal(n1.v, 'new');
+  assert.ok(m.find((x) => x.id === 'n2'));
+  assert.ok(m.find((x) => x.id === 'n3'));
+});
+
+test('mergeActModule：习惯节点 id+updatedAt 取新，doneDates 日志并集', () => {
+  const local = {
+    updatedAt: 1000,
+    act: {
+      woops: [],
+      habits: [
+        { id: 'h1', updatedAt: 100, title: '本地', doneDates: ['2026-10-01', '2026-10-02'] },
+        { id: 'h2', updatedAt: 50, title: '仅本地' }
+      ]
+    },
+    habitGroups: [], focus: { chains: [], precedents: [], activeId: null }
+  };
+  const remote = {
+    updatedAt: 2000,
+    act: {
+      woops: [],
+      habits: [
+        { id: 'h1', updatedAt: 300, title: '云端', doneDates: ['2026-10-02', '2026-10-03'] },
+        { id: 'h3', updatedAt: 10, title: '仅云端' }
+      ]
+    },
+    habitGroups: [], focus: { chains: [], precedents: [], activeId: null }
+  };
+  const m = mergeActModule(local, remote);
+  const h1 = m.act.habits.find((x) => x.id === 'h1');
+  assert.equal(h1.title, '云端'); // updatedAt 取新
+  assert.deepEqual(h1.doneDates, ['2026-10-01', '2026-10-02', '2026-10-03']); // 日志并集
+  assert.ok(m.act.habits.find((x) => x.id === 'h2'));
+  assert.ok(m.act.habits.find((x) => x.id === 'h3'));
+  assert.equal(m.__changedFromRemote, true);
+});
+
+test('mergeActModule：WOOP 节点取新；旧 ifThen/envAudit 不进入合并结果', () => {
+  const local = {
+    updatedAt: 10,
+    act: {
+      ifThen: [{ id: 'i1', updatedAt: 10, then: 'A' }],
+      woops: [{ id: 'w1', updatedAt: 5, wish: 'L' }],
+      envAudit: { updatedAt: 10, habit: 'local' },
+      habits: []
+    },
+    habitGroups: [{ id: 'g1', name: '本地组', minK: 2 }],
+    focus: {
+      chains: [{ id: 'c1', updatedAt: 10 }, { id: 'c2', updatedAt: 5 }],
+      precedents: [{ id: 'p1', behavior: '本地判例' }],
+      activeId: 'c2'
+    }
+  };
+  const remote = {
+    updatedAt: 20,
+    act: {
+      ifThen: [{ id: 'i1', updatedAt: 20, then: 'B' }],
+      woops: [{ id: 'w1', updatedAt: 15, wish: 'R' }, { id: 'w2', updatedAt: 1 }],
+      envAudit: { updatedAt: 30, habit: 'remote' },
+      habits: []
+    },
+    habitGroups: [{ id: 'g1', name: '云端组', minK: 9 }, { id: 'g2', name: '新组', minK: 1 }],
+    focus: {
+      chains: [{ id: 'c1', updatedAt: 99 }, { id: 'c3', updatedAt: 1 }],
+      precedents: [{ id: 'p1', behavior: '旧判例' }, { id: 'p2', behavior: '云端判例' }],
+      activeId: 'c3'
+    }
+  };
+  const m = mergeActModule(local, remote);
+  assert.equal(m.act.ifThen, undefined);
+  assert.equal(m.act.envAudit, undefined);
+  assert.deepEqual(Object.keys(m.act).sort(), ['habits', 'woops']);
+  assert.equal(m.act.woops.find((x) => x.id === 'w1').wish, 'R'); // updatedAt 取新
+  assert.equal(m.act.woops.length, 2);
+  // 组：并集，同 id 本地优先
+  assert.equal(m.habitGroups.length, 2);
+  assert.equal(m.habitGroups.find((x) => x.id === 'g1').name, '本地组');
+  // 链：id+updatedAt 取新
+  assert.equal(m.focus.chains.find((x) => x.id === 'c1').updatedAt, 99);
+  assert.ok(m.focus.chains.find((x) => x.id === 'c2'));
+  assert.ok(m.focus.chains.find((x) => x.id === 'c3'));
+  // 判例并集
+  assert.equal(m.focus.precedents.length, 2);
+  // activeId 本地优先（c2 仍在合并结果中）
+  assert.equal(m.focus.activeId, 'c2');
+  assert.equal(m.updatedAt, 20);
+});
+
+test('mergeActModule：updatedAt 取两端 max，不注入 now', () => {
+  const a = { updatedAt: 10, act: { woops: [], habits: [] }, habitGroups: [], focus: { chains: [], precedents: [], activeId: null } };
+  const b = { updatedAt: 20, act: { woops: [], habits: [] }, habitGroups: [], focus: { chains: [], precedents: [], activeId: null } };
+  assert.equal(mergeActModule(a, b).updatedAt, 20);
+  assert.equal(mergeActModule(b, a).updatedAt, 20);
+});
+
+test('mergeActModule：云端无新内容时不标记变化', () => {
+  const base = {
+    updatedAt: 100,
+    act: { woops: [{ id: 'w1', updatedAt: 10 }], habits: [] },
+    habitGroups: [],
+    focus: { chains: [], precedents: [{ id: 'p1' }], activeId: null },
+    settings: { dailyAddLimit: 1 }
+  };
+  const m = mergeActModule(JSON.parse(JSON.stringify(base)), JSON.parse(JSON.stringify(base)));
+  assert.equal(m.__changedFromRemote, false);
+  assert.deepEqual(m.settings, { dailyAddLimit: 1 }); // 设置本地优先
+});
+
+test('mergeActModule：本地 activeId 失效时回退到云端 activeId', () => {
+  const local = {
+    updatedAt: 1,
+    act: { woops: [], habits: [] },
+    habitGroups: [],
+    focus: { chains: [{ id: 'c1', updatedAt: 1 }], precedents: [], activeId: 'ghost' }
+  };
+  const remote = {
+    updatedAt: 2,
+    act: { woops: [], habits: [] },
+    habitGroups: [],
+    focus: { chains: [{ id: 'c1', updatedAt: 1 }, { id: 'c9', updatedAt: 5 }], precedents: [], activeId: 'c9' }
+  };
+  const m = mergeActModule(local, remote);
+  assert.equal(m.focus.activeId, 'c9');
 });

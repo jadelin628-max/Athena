@@ -21,10 +21,13 @@
  */
 (function () {
   'use strict';
-  const VERSION = '1.50.0';
+  const VERSION = '2.0.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '2.0.0', date: '2026-10', items: ['产品升格为综合自我提升平台：记忆内核（FSRS）+ 行动系统（习惯树 RSIP · 专注链 CTDP）+ 知识库式原理。亮色默认蓝粉双色 UI，桌面侧栏 / iOS 底栏与安全区适配', '习惯树（RSIP）：今日结算（无 miss、全员检完确认、零点自动）、每日最多 1 个新节点入树、失败级联回习惯库且内化进度不丢、SVG 思维导图、组容错名额 minK 可编辑、强化可自动或手动（每日 1 次）', '专注链（CTDP）：任务单元（计时结束才算完成、内容/达成/完成度）、神圣座位 #N、下必为例判例、预约 15 分钟、侦查转正、精锐崩溃继位；编制竖列树番号 # ● ▲ ◆ 与计划模式（未填满整链清空）', '原理页知识库化：五分类可检索，条目含研究者/年份/出处与 🟢/🟡/⚠️；CTDP/RSIP 标社区方法论。计划模块以 WOOP 为主干（P 步=如果-那么，外部提示并入障碍）；设置·行动可调并支持重置/云同步；Today 双栏 + ⌘K 命令面板'] },
+    { v: '1.52.0', date: '2026-10', items: ['修复习惯树「新建习惯无效」：编辑弹窗表单变量作用域导致保存回调 ReferenceError，现已可正常新建/落盘；树内支持＋子项/编辑/改父级/删除/今日完成、行内改名与容忍天数', '行动模块「帮助」升为与计划/习惯树并列的二层入口；界面去掉科普长注释；计划卡可删除；主页计划三栏（如果-那么/WOOP/环境审计）可折叠展示 + 习惯树独立入口（待检/今日/活跃）', '移除应用顶部 AIGC「AI生成」水印'] },
+    { v: '1.51.0', date: '2026-10', items: ['新增「行动」模块（自我提升平台）：如果-那么（执行意图，软校验外部情境+具体动作）、WOOP 四步（障碍→自动生成如果-那么）、环境审计向导（提示→移除/改造）；数据 athena_act_v1 与学习库隔离；一级导航 + 主页次级入口', '习惯树：层级增删/改父级（删除级联子孙）、每日检查、可编辑容忍天数、同标签组「有维持成员则本检不移除、全部超标才整组移除」；evaluateHabitDay 纯函数 + 单测；过程反馈仅次数/点阵，无连击惩罚（对齐 Lally 66 天、Graybiel 替换非消灭）', '原理页增补认知科学八章（多巴胺 RPE/想要vs喜欢、习惯回路、SDT 与过度辩护、情绪重评、Posner 注意、学习机制、执行意图 WOOP、证伪清单），证据分级 🟢/🟡/⚠️；文档新增 docs/ACT.md 规格'] },
     { v: '1.50.0', date: '2026-09', items: ['卡面长答案展示分段增强（只改渲染、不改数据）：在既有 ①②③/（n）分点基础上，空行成段落块、「要点/陷阱/规则/活用限制/例句」等结构标签成独立视觉块（浅底左线）、单换行可见；超长散文在避开公式/命令/代码的句末保守再分一刀——长答案阅读更清晰，移动端与暗色主题可辨'] },
     { v: '1.49.0', date: '2026-09', items: ['数三一卡一知识点拆分：多轮扩充造成的多知识点卡拆开（29 张重灾区），328→397 卡（原 id 保留承接核心点，新增 kn01–kn72 共 69 张）；解题套路卡（zt02/zt05/wr03/tp06/gx38/ln04 等）只留步骤流程，知识点另立并 REL 关联；全库 2769 卡', '修复初学者模式无效：beginner.cats 与当前科 CATS 错配导致全挡/全放/切科错乱、导入丢配置——新增 resolveBeginner 自愈（过期键丢弃、空则回退推荐章、跨科 sid 丢弃），导入保留并对齐；回归测试 8 条', '学习日历热力图色阶更清晰：按近 16 周最高日等比四分档，新增张数区间图例，四级色拉开并适配暗色主题', '云同步新增「完全上传 / 完全下载」：单向全覆盖（跳过合并），二次确认 + 覆盖前归档；与「立即同步」合并式并存', '学科选择器列表为有待复习知识卡的科目显示数量角标（口径与主页一致，0 不显示）'] },
     { v: '1.48.0', date: '2026-09', items: ['韩语教材化重构：对照《延世韩国语》1–2 章序整科重写 85 卡（文字发音/基础语法/对话场景/词汇表达/文化），语言卡三段式「规则→例句原文+中文→活用限制」；学习进度整科重置', '法语教材化重构：对照《简明法语教程》章序整科重写 88 卡（语音→名词与冠词→动词变位→句型场景→高频词汇→文化），三段式 + SENTENCES 15；学习进度整科重置', '西班牙语教材化重构：对照《现代西班牙语》章序整科重写 82 卡（语音→名词与冠词→动词变位→句型场景→高频词汇→文化），三段式 + SENTENCES 15；学习进度整科重置', 'Rust 教材化重构：对照《The Rust Programming Language》（The Book）入门主干整科重写 71 卡（入门起步→通用概念→所有权→结构体→枚举与模式匹配→模块→集合→错误处理→泛型与生命周期→测试→智能指针→并发入门），技能卡三段式含 ~~~rust；学习进度整科重置；全库 2700 卡'] },
@@ -181,11 +184,11 @@
   }
 
   // 卡面长答案分段（展示层）：见 splitAnswerBlocks（①/（n）分点、空行段落、
-  // 结构标签块、超长散文句末保守再分）；渲染入口在 render.mjs 的 renderProse。
+  // 结构标签块、大段散文句末多句细切）；渲染入口在 render.mjs 的 renderProse。
 
   // ===== 卡面答案分段增强（只影响展示，不改数据） =====
-  // 块类型：point=①/（n）分点 · label=结构标签起块 · para=空行段落 · text=其余散文
-  // 优先级：①分点 ≻ 结构标签 ≻ 空行分段 ≻（可选）超长散文句末再分；~~~ 代码块在 renderTex 层已整块 <pre>。
+  // 块类型：point=①/（n）分点 · label=结构标签起块 · para=空行段落/句段 · text=其余散文
+  // 优先级：①分点 ≻ 结构标签 ≻ 空行分段 ≻ 大段散文句末多句细切；~~~ 代码块在 renderTex 层已整块 <pre>。
 
   // 结构标签（长名在前）：行首或句末后「要点：/陷阱：/规则：/活用限制：/例句…」等
   const ANS_LABELS = ['活用限制', '例句拆解', '常见错误', '要点', '陷阱', '规则', '例句', '注意', '提示', '说明', '总结', '口诀', '步骤', '定义', '用法', '活用', '词义'];
@@ -270,23 +273,48 @@
     return m ? m[0].length : 0;
   }
 
-  // 超长散文（无标签/分点）在句末标点处保守再分：仅切一刀、靠近中点、两侧均够长
+  // 大段散文句末多句细切：句末标点后拆段；保护区间内不切；过短句与前块合并
+  // 切分点：。！？；（全角/半角）；句末可吸收连续标点与收尾引号/括号（」』）等）
+  const PROSE_SPLIT_MIN = 100; // 整段不足则不必拆
+  const PROSE_SENT_MIN = 18;   // 句段过短则与前块合并，防碎裂
+  const ANS_SENT_END = /[。！？；!?;]/;
+  const ANS_SENT_TAIL = /[。！？；!?;」』）】》〉”’]/;
+
   function splitLongProse(content) {
-    if (content.length < 200) return [content];
+    if (content.length < PROSE_SPLIT_MIN) return [content];
     const ranges = ansProtectedRanges(content);
-    const mid = content.length / 2;
-    let best = -1, bestDist = Infinity;
+    const cuts = [];
     for (let i = 0; i < content.length; i++) {
-      const c = content[i];
-      if (c !== '。' && c !== '！' && c !== '？' && c !== '!' && c !== '?') continue;
+      if (!ANS_SENT_END.test(content[i])) continue;
       if (ansIsProtected(ranges, i)) continue;
-      const cut = i + 1;
-      if (cut < 50 || content.length - cut < 50) continue;
-      const d = Math.abs(cut - mid);
-      if (d < bestDist) { bestDist = d; best = cut; }
+      let cut = i + 1;
+      while (cut < content.length && ANS_SENT_TAIL.test(content[cut]) && !ansIsProtected(ranges, cut)) cut++;
+      cuts.push(cut);
+      i = cut - 1;
     }
-    if (best === -1) return [content];
-    return [ansTrimEdge(content.slice(0, best)), ansTrimEdge(content.slice(best))].filter(Boolean);
+    if (cuts.length === 0) return [content];
+    // 贪心打包：当前块 < PROSE_SENT_MIN 则吞下一句；尾段过短并入前块
+    const pieces = [];
+    let start = 0;
+    for (let k = 0; k < cuts.length; k++) {
+      const end = cuts[k];
+      if (end - start < PROSE_SENT_MIN) continue;
+      const piece = ansTrimEdge(content.slice(start, end));
+      if (piece) pieces.push(piece);
+      start = end;
+    }
+    if (start < content.length) {
+      const tail = ansTrimEdge(content.slice(start));
+      if (tail) {
+        if (tail.length < PROSE_SENT_MIN && pieces.length > 0) {
+          pieces[pieces.length - 1] = ansTrimEdge(pieces[pieces.length - 1] + tail);
+        } else {
+          pieces.push(tail);
+        }
+      }
+    }
+    if (pieces.length <= 1) return [ansTrimEdge(content)];
+    return pieces;
   }
 
   // 非分点散文：按结构标签 / 空行切块
@@ -425,7 +453,6 @@
   // h 反映「记忆强度」（仅作展示参考，不作毕业/掌握度分母——因 K≈90 放大导致目标数值失真）
   function fsrsHalflife(S) { return Math.max(FSRS_S_MIN, S) * FSRS_HALFLIFE_K; }
 
-
   // ---------------- FSRS 步进调度状态机（知识卡学习调度专用） ----------------
   // 把「学习/重学时间步进 + 复习阶段 FSRS 更新」的状态迁移收敛到一处，
   // 变体只通过 opts 注入差异（错题卡不走此机器：v1.16.0 起为纯复习态，见 wrong.mjs）：
@@ -494,7 +521,6 @@
     c.ivl = opts.reviewIvl(c, G);
     c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
   }
-
 
   // ---------------- 交错练习 · 辨析聚类 ----------------
   // 原理：把「相关需辨析」的卡（REL 中 tag=同类/对比/类比）聚成簇、簇内相邻出现，
@@ -569,7 +595,6 @@
     }
     return out;
   }
-
 
   function subjectList() { return window.SUBJECTS || {}; }
   // 学科图标（assets/subject_icon/，无对应图则回退 emoji）
@@ -759,8 +784,104 @@
     }).catch(function () {});
   }
 
+  // ===== BEGIN TESTABLE pref scope helpers =====
+  // 学习偏好作用域：可重叠项支持「本课 | 全局」二选一。
+  // 全局值存 athena_global_prefs_v1（跨科共享）；本课值存各科 DB.settings。
+  // 作用域标记存 DB.settings.prefScope（每科独立选择跟全局还是用本课值）。
+  const GLOBAL_PREFS_KEY = 'athena_global_prefs_v1';
+  const PREF_OVERLAP_KEYS = ['goalTitle', 'examDate', 'dailyNew', 'fdr', 'bareRecall', 'targetS', 'targetLinkExam'];
+
+  function prefDefaults() {
+    return {
+      goalTitle: GOAL_DEFAULT,
+      examDate: '',
+      dailyNew: 10,
+      fdr: 0.9,
+      bareRecall: false,
+      targetS: TARGET_S_DEFAULT,
+      targetLinkExam: true
+    };
+  }
+
+  function prefSanitizeGlobal(raw) {
+    const d = prefDefaults();
+    const r = (raw && typeof raw === 'object') ? raw : {};
+    return {
+      goalTitle: (typeof r.goalTitle === 'string' && r.goalTitle.trim()) ? r.goalTitle.trim().slice(0, 10) : d.goalTitle,
+      examDate: (typeof r.examDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.examDate)) ? r.examDate : '',
+      dailyNew: (typeof r.dailyNew === 'number' && isFinite(r.dailyNew)) ? Math.max(0, Math.min(99, Math.round(r.dailyNew))) : d.dailyNew,
+      fdr: (typeof r.fdr === 'number' && r.fdr >= 0.8 && r.fdr <= 0.98) ? r.fdr : d.fdr,
+      bareRecall: r.bareRecall == null ? d.bareRecall : !!r.bareRecall,
+      targetS: (typeof r.targetS === 'number' && isFinite(r.targetS)) ? Math.max(7, Math.min(730, Math.round(r.targetS))) : d.targetS,
+      targetLinkExam: r.targetLinkExam == null ? d.targetLinkExam : !!r.targetLinkExam
+    };
+  }
+
+  // 作用域：global = 用全局值；subject/缺省 = 用本课值
+  function prefResolveScope(scopeMap, key) {
+    return (scopeMap && scopeMap[key] === 'global') ? 'global' : 'subject';
+  }
+
+  // 有效值：global 取全局；subject 取本课（本课缺失时回退全局再回退默认，便于新科继承）
+  function prefResolveValue(key, subjectVal, globalVal, scopeMap) {
+    const d = prefDefaults();
+    const scope = prefResolveScope(scopeMap, key);
+    const g = (globalVal == null) ? d[key] : globalVal;
+    if (scope === 'global') return g;
+    if (subjectVal == null) return g;
+    return subjectVal;
+  }
+  // ===== END TESTABLE pref scope helpers =====
+
+  function loadGlobalPrefs() {
+    if (typeof window !== 'undefined' && window.__globalPrefs) {
+      return prefSanitizeGlobal(window.__globalPrefs);
+    }
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(GLOBAL_PREFS_KEY)); } catch (e) {}
+    const p = prefSanitizeGlobal(raw);
+    if (typeof window !== 'undefined') window.__globalPrefs = p;
+    return p;
+  }
+
+  function saveGlobalPrefs(patch) {
+    const next = prefSanitizeGlobal(Object.assign({}, loadGlobalPrefs(), patch || {}));
+    if (typeof window !== 'undefined') window.__globalPrefs = next;
+    try { localStorage.setItem(GLOBAL_PREFS_KEY, JSON.stringify(next)); } catch (e) {}
+    return next;
+  }
+
+  function prefScope(key) {
+    return prefResolveScope(DB && DB.settings && DB.settings.prefScope, key);
+  }
+
+  function prefGet(key) {
+    const g = loadGlobalPrefs();
+    const s = DB && DB.settings ? DB.settings[key] : null;
+    return prefResolveValue(key, s, g[key], DB && DB.settings && DB.settings.prefScope);
+  }
+
+  // scope: 'global' | 'subject'；写入对应位置并更新本课作用域标记
+  function prefSet(key, value, scope) {
+    if (PREF_OVERLAP_KEYS.indexOf(key) < 0) return null;
+    const sc = scope === 'global' ? 'global' : 'subject';
+    if (!DB || !DB.settings) return null;
+    if (!DB.settings.prefScope || typeof DB.settings.prefScope !== 'object') DB.settings.prefScope = {};
+    DB.settings.prefScope[key] = sc;
+    if (sc === 'global') {
+      saveGlobalPrefs((function () { const o = {}; o[key] = value; return o; })());
+    } else {
+      DB.settings[key] = value;
+    }
+    return prefGet(key);
+  }
+
   function normalizeDB(raw) {
     DB = (raw && typeof raw === 'object') ? raw : { cards: {}, settings: {}, log: {} };
+    // 防污染：行动/专注/组配置/行动设置键绝不进学习库（见 ARCHITECTURE 存储表；组/专注/设置键独立）
+    ['habits', 'ifThen', 'woops', 'envAudit', 'habitGroups', 'groups', 'chains', 'precedents', 'focusState', 'act', 'focus', 'actSettings'].forEach(function (k) {
+      if (DB[k] != null) delete DB[k];
+    });
     // 整体 schema 版本号：为将来大迁移留钩子（旧数据无此字段，一律补为当前版本 1）
     if (DB.schemaVersion == null) DB.schemaVersion = 1;
     if (!DB.cards) DB.cards = {};
@@ -774,6 +895,7 @@
     if (DB.settings.fdr == null) DB.settings.fdr = 0.9; // 期望保留率（FSRS 间隔目标，设置可调 0.80–0.98）
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
+    if (!DB.settings.prefScope || typeof DB.settings.prefScope !== 'object') DB.settings.prefScope = {};
     // 初学者模式自愈：cats 必须与当前科 CATS 对齐——
     // 教材化整科重置改过 catKey、或 cats 混入他科/旧键时，过滤集合会全挡或全放。
     // 解析时丢弃非法键并回退推荐起步章；写回 sid 供下次切科识别跨科残留。
@@ -1435,9 +1557,13 @@
   }
 
   // ---------------- 目标倒计时（原「考研倒计时」，目标名可编辑文本，便于考研后复用） ----------------
-  function goalTitle() { return (DB && DB.settings && typeof DB.settings.goalTitle === 'string' && DB.settings.goalTitle.trim()) ? DB.settings.goalTitle.trim() : GOAL_DEFAULT; }
+  // 经 prefGet：支持「本课 | 全局」作用域（可重叠项用户自选）
+  function goalTitle() {
+    const v = prefGet('goalTitle');
+    return (typeof v === 'string' && v.trim()) ? v.trim() : GOAL_DEFAULT;
+  }
   function examDateObj() {
-    const s = (DB && DB.settings && DB.settings.examDate) || '';
+    const s = prefGet('examDate') || '';
     if (s) {
       const d = new Date(s + 'T00:00:00');
       if (!isNaN(d.getTime())) return d;
@@ -1556,34 +1682,70 @@
     }
     return '下次复习：' + fmtDayMs(c.due) + '（间隔 ' + c.ivl + ' 天）';
   }
-  // 掌握度趋势：实际掌握度历史点（每次评分后跳变）+ 100% 目标参考线
+  // 掌握度趋势：面积+折线+网格+当前值（V2 设计 token，知识卡/错题共用）
   function svgMasteryTrend(id) { return svgTrendCore(card(id).hist || []); }
-  // 趋势图核心（hist 元素 {t, m}）——知识卡与错题卡共用
   function svgTrendCore(hist) {
-    const wrap = el('div', 'chart-wrap');
-    wrap.appendChild(el('div', 'chart-label muted', '掌握度趋势（时间）· ● 每次评分后的掌握度 · ─ 目标(100%)'));
-    if (hist.length < 2) { wrap.appendChild(el('p', 'muted', '📈 数据积累中——学习 2 次后显示趋势。')); return wrap; }
-    let minT = hist[0].t;
-    let maxT = hist[hist.length - 1].t;
+    const wrap = el('div', 'chart-wrap chart-card');
+    const head = el('div', 'chart-head');
+    head.appendChild(el('span', 'chart-title', '掌握度趋势'));
+    if (hist.length >= 2) {
+      const last = hist[hist.length - 1];
+      head.appendChild(el('span', 'chart-pill', last.m + '%'));
+    }
+    wrap.appendChild(head);
+    wrap.appendChild(el('div', 'chart-label muted', '每次评分后的掌握度 · 虚线为目标 100%'));
+    if (hist.length < 2) {
+      wrap.appendChild(el('p', 'muted chart-empty', '📈 数据积累中——学习 2 次后显示趋势。'));
+      return wrap;
+    }
+    const minT = hist[0].t;
+    const maxT = hist[hist.length - 1].t;
     const spanT = Math.max(1, (maxT - minT) || 1);
-    const W = 300, H = 118, padL = 28, padR = 8, padT = 12, padB = 18;
+    const W = 320, H = 132, padL = 32, padR = 12, padT = 14, padB = 22;
     const X = function (t) { return padL + (t - minT) / spanT * (W - padL - padR); };
     const Y = function (m) { return padT + (1 - m / 100) * (H - padT - padB); };
-    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%' });
-    [0, 50, 100].forEach(function (m) { const y = Y(m); svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: y, y2: y, stroke: '#E7E4DD', 'stroke-width': '1' })); svg.appendChild(svgText('text', padL - 4, y + 3, String(m), { 'text-anchor': 'end' })); });
-    // 目标参考线（100% = 毕业/稳固）
-    svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: Y(100), y2: Y(100), stroke: '#A9C9E8', 'stroke-width': '1', 'stroke-dasharray': '4 3' }));
-    // 实际掌握度曲线 + 点
-    const pts = hist.map(function (p) { return X(p.t) + ',' + Y(p.m); }).join(' ');
-    svg.appendChild(svgEl('polyline', { points: pts, fill: 'none', stroke: '#D4537E', 'stroke-width': '2' }));
-    hist.forEach(function (p) {
-      const cEl = svgEl('circle', { cx: X(p.t), cy: Y(p.m), r: '3', fill: '#378ADD' });
-      const tt = svgEl('title', {}); tt.textContent = fmtDayMs(p.t) + ' 掌握度 ' + p.m + '%';
-      cEl.appendChild(tt); svg.appendChild(cEl);
+    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%', class: 'chart-svg' });
+
+    // 水平网格 + 刻度
+    [0, 25, 50, 75, 100].forEach(function (m) {
+      const y = Y(m);
+      svg.appendChild(svgEl('line', {
+        x1: padL, x2: W - padR, y1: y, y2: y,
+        class: m === 100 ? 'chart-goal' : 'chart-grid'
+      }));
+      svg.appendChild(svgText('text', padL - 6, y + 3, String(m), {
+        'text-anchor': 'end', class: 'chart-axis'
+      }));
     });
-    // 日期横坐标
-    svg.appendChild(svgText('text', padL, H - 5, fmtDayMs(minT)));
-    svg.appendChild(svgText('text', W - padR, H - 5, fmtDayMs(maxT), { 'text-anchor': 'end' }));
+
+    // 面积填充
+    const areaD = 'M ' + X(hist[0].t) + ' ' + Y(0) +
+      ' L ' + hist.map(function (p) { return X(p.t) + ' ' + Y(p.m); }).join(' L ') +
+      ' L ' + X(maxT) + ' ' + Y(0) + ' Z';
+    svg.appendChild(svgEl('path', { d: areaD, class: 'chart-area' }));
+
+    // 折线
+    const pts = hist.map(function (p) { return X(p.t) + ',' + Y(p.m); }).join(' ');
+    svg.appendChild(svgEl('polyline', { points: pts, class: 'chart-line' }));
+
+    // 数据点
+    hist.forEach(function (p, i) {
+      const isLast = i === hist.length - 1;
+      const cEl = svgEl('circle', {
+        cx: X(p.t), cy: Y(p.m), r: isLast ? 4 : 3,
+        class: isLast ? 'chart-dot chart-dot-last' : 'chart-dot'
+      });
+      const tt = svgEl('title', {});
+      tt.textContent = fmtDayMs(p.t) + ' · 掌握度 ' + p.m + '%';
+      cEl.appendChild(tt);
+      svg.appendChild(cEl);
+    });
+
+    // 横轴日期
+    svg.appendChild(svgText('text', padL, H - 6, fmtDayMs(minT), { class: 'chart-axis' }));
+    svg.appendChild(svgText('text', W - padR, H - 6, fmtDayMs(maxT), {
+      'text-anchor': 'end', class: 'chart-axis'
+    }));
     wrap.appendChild(svg);
     return wrap;
   }
@@ -1672,21 +1834,22 @@
   //   因 R(S,S)=0.9，S 目标数值即「距目标天数」，直观合理（不再用半衰期 h=90·S，避免 120 天目标被显示成 1 万多天）。
   // 关「挂钩」：回退到用户手动填的固定目标稳定度（默认 90 天）。
   function targetS() {
-    const manual = (DB && DB.settings && typeof DB.settings.targetS === 'number') ? DB.settings.targetS : TARGET_S_DEFAULT;
-    if (!targetLinked()) return manual;
+    const manual = prefGet('targetS');
+    const m = (typeof manual === 'number' && isFinite(manual)) ? manual : TARGET_S_DEFAULT;
+    if (!targetLinked()) return m;
     const days = countdownDays();
-    if (days == null) return manual;
+    if (days == null) return m;
     return Math.max(TARGET_MIN_DAYS, days);
   }
   // 是否与目标倒计时挂钩（用于记忆框/设置页文案）
-  function targetLinked() { return !(DB && DB.settings && DB.settings.targetLinkExam === false) && countdownDays() != null; }
+  function targetLinked() { return prefGet('targetLinkExam') !== false && countdownDays() != null; }
   // 期望保留率（FSRS 安排间隔的目标保留率）：设置可调 0.80–0.98，默认 0.90（官方默认工作点）。
   // 只影响间隔计算（下次复习排多远），不影响毕业判据与掌握度。
   function desiredRetention() {
-    const v = DB && DB.settings && DB.settings.fdr;
+    const v = prefGet('fdr');
     return (typeof v === 'number' && v >= 0.8 && v <= 0.98) ? v : 0.9;
   }
-  function bareRecallOn() { return !!(DB && DB.settings && DB.settings.bareRecall); }
+  function bareRecallOn() { return !!prefGet('bareRecall'); }
   function isGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
 
   // 学习计时：应用前台可见期间按天累计时长（DB.log.studyTime['yyyy-mm-dd'] = 毫秒）。
@@ -1808,7 +1971,7 @@
 
   // ---------------- 视图状态 ----------------
   let currentView = 'learn';
-  let currentModule = 'cards'; // 一级界面：cards(知识卡) | wrong(错题本)
+  let currentModule = 'cards'; // 一级界面：cards(知识卡) | wrong(错题本) | act(行动)
   let deck = [];
   let pos = 0;
   let frontier = 0;
@@ -1867,18 +2030,61 @@
     t._timer = setTimeout(function () { t.classList.remove('show'); }, 1800);
   }
 
+  // ---------------- 应用壳（V2_PLAN §1.3）----------------
+  // 一级模块：主页/学习/错题/行动/统计/原理/设置。桌面左侧栏 + 移动 Dock。
+  const SHELL_NAV = [
+    { id: 'home', label: '主页', icon: 'home', action: 'nav', arg: 'home' },
+    { id: 'cards', label: '学习', icon: 'deck', action: 'module', arg: 'cards' },
+    { id: 'wrong', label: '错题', icon: 'wrong', action: 'module', arg: 'wrong' },
+    { id: 'act', label: '行动', icon: 'act', action: 'module', arg: 'act', accent: '2' },
+    { id: 'mile', label: '里程碑', icon: 'mile', action: 'nav', arg: 'mile', accent: '2' },
+    { id: 'stats', label: '统计', icon: 'chart', action: 'nav', arg: 'statistics' },
+    { id: 'principle', label: '原理', icon: 'cap', action: 'nav', arg: 'principle' },
+    { id: 'settings', label: '设置', icon: 'sliders', action: 'nav', arg: 'settings' }
+  ];
+
+  // 由 currentView/currentModule 推导壳层高亮项（统计/设置/原理/主页用 view 判定）
+  function shellModuleId() {
+    if (currentView === 'home') return 'home';
+    if (currentView === 'settings') return 'settings';
+    if (currentView === 'statistics') return 'stats';
+    if (currentView === 'principle') return 'principle';
+    if (currentView === 'mile') return 'mile';
+    if (currentModule === 'wrong') return 'wrong';
+    if (currentModule === 'act') return 'act';
+    return 'cards';
+  }
+
+  function highlightShell() {
+    const id = shellModuleId();
+    document.querySelectorAll('[data-shell]').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-shell') === id);
+    });
+  }
+
   // 渲染二级导航（随一级界面切换）；吸顶定位紧贴 sticky header 下方，
   // 并把「header+subnav」总高写入 CSS 变量 --chrome-h（原理页目录等使用）
   function renderSubnav() {
     const sub = document.getElementById('subnav');
     if (!sub) return;
     sub.innerHTML = '';
+    // 主页/设置/原理/里程碑无二级导航（里程碑筛选在页内）
+    if (currentView === 'home' || currentView === 'settings' || currentView === 'principle' || currentView === 'mile') {
+      sub.style.top = '0px';
+      document.documentElement.style.setProperty('--chrome-h', '0px');
+      highlightShell();
+      return;
+    }
     const items = currentModule === 'wrong'
       ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
-      : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计'], ['help', '帮助']];
+      : currentModule === 'act'
+        ? [['actPlan', '计划'], ['actHabit', '习惯树'], ['actFocus', '专注链'], ['actHelp', '帮助']]
+        : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计'], ['help', '帮助']];
     const icons = currentModule === 'wrong'
       ? { wrong: 'wrong', wrongBrowse: 'search', wrongStats: 'chart' }
-      : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart', help: 'help' };
+      : currentModule === 'act'
+        ? { actPlan: 'act', actHabit: 'habit', actFocus: 'act', actHelp: 'help' }
+        : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart', help: 'help' };
     items.forEach(function (it) {
       const b = el('button', 'nav-btn sub-btn' + (currentView === it[0] ? ' active' : ''));
       b.appendChild(icon(icons[it[0]]));
@@ -1891,31 +2097,29 @@
     const headerH = header ? header.offsetHeight : 0;
     sub.style.top = headerH + 'px';
     document.documentElement.style.setProperty('--chrome-h', (headerH + sub.offsetHeight) + 'px');
+    highlightShell();
   }
 
-  // 移动端底部 Dock：主页 + 两个一级模块；二级导航（学习/浏览等）在顶栏下方 subnav 横滑条
+  // 移动端底部 Dock：V2_PLAN 四项（主页/学习/错题/行动）；统计与设置在抽屉
   function renderDock() {
     const dock = document.getElementById('dock');
     if (!dock) return;
     dock.innerHTML = '';
-    const home = el('button', 'dock-btn' + (currentView === 'home' ? ' active' : ''));
-    home.appendChild(icon('home'));
-    home.appendChild(document.createTextNode('主页'));
-    home.setAttribute('data-action', 'nav');
-    home.setAttribute('data-arg', 'home');
-    dock.appendChild(home);
-    [['cards', 'deck', '知识卡'], ['wrong', 'wrong', '错题本']].forEach(function (m) {
-      const b = el('button', 'dock-btn' + (currentView !== 'home' && currentModule === m[0] ? ' active' : ''));
-      b.appendChild(icon(m[1]));
-      b.appendChild(document.createTextNode(m[2]));
-      b.setAttribute('data-action', 'module');
-      b.setAttribute('data-arg', m[0]);
+    const shellId = shellModuleId();
+    [SHELL_NAV[0], SHELL_NAV[1], SHELL_NAV[2], SHELL_NAV[3]].forEach(function (m) {
+      const b = el('button', 'dock-btn' + (shellId === m.id ? ' active' : ''));
+      b.appendChild(icon(m.icon));
+      b.appendChild(document.createTextNode(m.label));
+      b.setAttribute('data-action', m.action);
+      b.setAttribute('data-arg', m.arg);
+      if (m.accent) b.setAttribute('data-accent', m.accent);
       dock.appendChild(b);
     });
     // 实测 Dock 高度写入 CSS 变量：吸附评分栏贴着 Dock 顶对齐（无缝、不留缝、不遮挡）
     requestAnimationFrame(function () {
       document.documentElement.style.setProperty('--dock-h', dock.offsetHeight + 'px');
     });
+    highlightShell();
   }
 
   function renderApp() {
@@ -1933,6 +2137,8 @@
     else if (currentView === 'wrongStats') renderWrongStats();
     else if (currentView === 'principle') renderPrinciples();
     else if (currentView === 'settings') renderSettings();
+    else if (currentView === 'mile') renderMile();
+    else if (currentView === 'actPlan' || currentView === 'actHabit' || currentView === 'actFocus' || currentView === 'actHelp') renderAct();
     // 高亮一级 tab + 渲染二级导航
     document.querySelectorAll('.module-tab').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-arg') === currentModule);
@@ -2006,7 +2212,7 @@
     if (!DB.log.counts) DB.log.counts = {};
     const t = todayStr();
     if (!DB.log.counts[t]) DB.log.counts[t] = {};
-    const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
+    const cap = (function () { const v = prefGet('dailyNew'); return (typeof v === 'number' && v >= 0) ? v : 10; })();
     const introducedToday = DB.log.counts[t].intro || 0;
     // 每日语义：队列中今天可学的新卡 ≤ cap − 今日已学新卡数（counts.n 只在新卡首评时累计）。
     // 此前只限制「今日引入动作」，历史上累积引入、一直未学到的新卡会全部塞进队列——上限形同虚设。
@@ -2061,7 +2267,7 @@
   // 「再来一批」：每日上限达到后，用户手动越过上限再引入一批新卡（批量 = 每日上限设置值）。
   // 手动引入同样计入今日 intro 计数（后续自动引入保持关闭），队列重建后新卡续上。
   function introMore() {
-    const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
+    const cap = (function () { const v = prefGet('dailyNew'); return (typeof v === 'number' && v >= 0) ? v : 10; })();
     const st = introState();
     if (!DB.log) DB.log = {};
     if (!DB.log.counts) DB.log.counts = {};
@@ -2174,7 +2380,7 @@
         stepDues.sort(function (a, b) { return a - b; });
         const waitMs = stepDues[0] - Date.now();
         wrap.appendChild(el('h2', null, '⏳ 巩固步进中'));
-        wrap.appendChild(illus('learn-done'));
+        wrap.appendChild(illus('empty-learn'));
         wrap.appendChild(el('p', 'muted', stepDues.length + ' 张卡在短间隔巩固中——最早约 ' + fmtPreview(waitMs) + '后自动回到队列，本页到点会自动刷新。'));
         const back = el('button', 'btn', '🏠 回主页');
         back.setAttribute('data-action', 'nav');
@@ -2196,7 +2402,7 @@
           ? '今日的队列已清空——另有 ' + waiting + ' 张新卡将按「每日新卡上限」在之后的日期逐步引入；到期复习卡会按排期自动进入队列。'
           : '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
         if (waiting > 0) {
-          const more = el('button', 'btn primary', '➕ 再来一批（' + Math.min(waiting, (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10) + ' 张）');
+          const more = el('button', 'btn primary', '➕ 再来一批（' + Math.min(waiting, (function () { const v = prefGet('dailyNew'); return (typeof v === 'number' && v >= 0) ? v : 10; })()) + ' 张）');
           more.addEventListener('click', introMore);
           wrap.appendChild(more);
         }
@@ -2825,6 +3031,16 @@
     return '下次 ' + fmtDayMs(w.due) + '（间隔 ' + w.ivl + ' 天）' + (isWrongGraduated(w) ? ' · ✔已稳固' : '');
   }
 
+  // 预览：错题选某档后距下次重做的时长（克隆卡跑一遍，不动真实数据）
+  function previewWrongNextTime(wid, rating) {
+    const src = wrongCard(wid);
+    if (!src) return 0;
+    const clone = Object.assign({}, src);
+    applyRatingToWrongCard(clone, rating);
+    if (clone.state === 'review' && clone.ivl >= 1) return clone.ivl * DAY;
+    return Math.max(0, clone.due - Date.now());
+  }
+
   // 错题失败（不会/思路错）→ 关联知识卡降级，提前重现补漏。
   // 降级是一次真实的调度事件：必须更新 lastR——否则跨端合并（按 lastR 选边）时，
   // 另一端仍持较旧但 lastR 相同的复习态副本，降级会被静默丢弃、行为在两端间反复。
@@ -3023,16 +3239,21 @@
       wrap.appendChild(controls);
 
       const rating = el('div', 'rating hidden');
-      const mk = function (label, r) {
-        const b = el('button', 'btn rate r' + r, label);
+      const mk = function (label, sub, r) {
+        const prev = fmtPreview(previewWrongNextTime(wid, r));
+        const b = el('button', 'btn rate r' + r, '');
         b.setAttribute('data-action', 'wrate');
         b.setAttribute('data-arg', String(r));
+        b.setAttribute('title', sub + ' · 下次约 ' + prev);
+        b.setAttribute('aria-label', label + '：' + sub + '，下次约 ' + prev);
+        b.appendChild(el('span', null, label));
+        b.appendChild(el('small', 'rate-prev', prev));
         rating.appendChild(b);
       };
-      mk('不会', 0);
-      mk('思路错', 1);
-      mk('算错', 2);
-      mk('会做对', 3);
+      mk('不会', '完全没做出来', 0);
+      mk('思路错', '方向偏了', 1);
+      mk('算错', '会做但算错', 2);
+      mk('会做对', '完整做对', 3);
       const kbd = el('div', 'keyboard-hint muted', '1 不会 · 2 思路错 · 3 算错 · 4 会做对 · Space/Enter 显示解析 · ←→ 切题');
       rating.appendChild(kbd);
       wrap.appendChild(rating);
@@ -3387,7 +3608,6 @@
     wrongInput = null;
   }
 
-
   // ---------------- 帮助栏目：本科目的指导与答疑文章（检索用，不参与学习调度） ----------------
   let helpState = { open: {} };
 
@@ -3718,15 +3938,196 @@
 
   // ---------------- 设置视图 ----------------
 
+  // ---------------- 行动设置（H4 · 与学习库隔离） ----------------
+  // 与 H1–H3 同 schema 同键：
+  //   习惯 → athena_act_cfg_v1（habitNormalizeCfg / habitLoadCfg）
+  //   专注/结构/风味/名称 → athena_focus_v1.settings（focusSanitizeSettings）
+  // 纯函数块可被 tests 抽取求值；绝不写入 *_formula_srs_v1。
+  // ===== BEGIN TESTABLE act settings helpers =====
+  // 键名与 habit.mjs 的 ACT_CFG_KEY 同值；此处不重复声明（构建拼接同作用域）
+  const ACT_SETTINGS_CFG_KEY = 'athena_act_cfg_v1';
+
+  function actDefaultHabitCfg() {
+    return {
+      dailyAddLimit: 1,
+      manualLevelPerDay: 1,
+      manualLevelKeepRatio: 0.5,
+      failInternalizePenalty: 15,
+      autoSettle: true
+    };
+  }
+
+  function actDefaultFocusSettings() {
+    return {
+      unitMinutes: 25,
+      unitDurations: [25, 50, 60],
+      reserveWindowMin: 15,
+      scoutMinutes: 5,
+      planDueRemindDays: 3,
+      structure: 'free', // 'free' | 'triad'
+      flavor: false,
+      typeNames: { focus: '专注', assault: '突击', life: '生活', plan: '计划', scout: '侦查' },
+      levelNames: { unit: '任务单元', group: '任务组', corps: '任务群', army: '任务集团' }
+    };
+  }
+
+  function actClampNum(v, min, max, dflt) {
+    const n = Number(v);
+    if (!isFinite(n)) return dflt;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function actSanitizeHabitCfg(raw) {
+    const d = actDefaultHabitCfg();
+    if (!raw || typeof raw !== 'object') return d;
+    return {
+      dailyAddLimit: Math.round(actClampNum(raw.dailyAddLimit, 1, 99, d.dailyAddLimit)),
+      manualLevelPerDay: Math.round(actClampNum(raw.manualLevelPerDay, 0, 9, d.manualLevelPerDay)),
+      manualLevelKeepRatio: actClampNum(raw.manualLevelKeepRatio, 0, 1, d.manualLevelKeepRatio),
+      failInternalizePenalty: Math.round(actClampNum(raw.failInternalizePenalty, 0, 100, d.failInternalizePenalty)),
+      autoSettle: raw.autoSettle == null ? d.autoSettle : !!raw.autoSettle
+    };
+  }
+
+  function actSanitizeFocusSettings(raw) {
+    const d = actDefaultFocusSettings();
+    if (!raw || typeof raw !== 'object') return d;
+    const out = {
+      unitMinutes: Math.round(actClampNum(raw.unitMinutes, 1, 240, d.unitMinutes)),
+      unitDurations: d.unitDurations.slice(),
+      reserveWindowMin: Math.round(actClampNum(raw.reserveWindowMin, 1, 180, d.reserveWindowMin)),
+      scoutMinutes: Math.round(actClampNum(raw.scoutMinutes, 1, 60, d.scoutMinutes)),
+      planDueRemindDays: Math.round(actClampNum(raw.planDueRemindDays, 0, 30, d.planDueRemindDays)),
+      structure: raw.structure === 'triad' ? 'triad' : 'free',
+      flavor: raw.flavor == null ? d.flavor : !!raw.flavor,
+      typeNames: Object.assign({}, d.typeNames),
+      levelNames: Object.assign({}, d.levelNames)
+    };
+    if (Array.isArray(raw.unitDurations)) {
+      const seen = {};
+      const list = [];
+      raw.unitDurations.forEach(function (x) {
+        const v = Math.round(actClampNum(x, 1, 240, 0));
+        if (v > 0 && !seen[v]) { seen[v] = 1; list.push(v); }
+      });
+      if (list.length) out.unitDurations = list.slice(0, 6);
+    }
+    ['typeNames', 'levelNames'].forEach(function (key) {
+      const src = raw[key];
+      if (!src || typeof src !== 'object') return;
+      Object.keys(out[key]).forEach(function (k) {
+        const v = src[k];
+        if (typeof v === 'string' && v.trim()) out[key][k] = v.trim().slice(0, 12);
+      });
+    });
+    return out;
+  }
+
+  // 合并视图（设置页用）：habit + focus 两段
+  function actSanitizeSettings(raw) {
+    const r = (raw && typeof raw === 'object') ? raw : {};
+    return {
+      habit: actSanitizeHabitCfg(r.habit),
+      focus: actSanitizeFocusSettings(r.focus)
+    };
+  }
+  // ===== END TESTABLE act settings helpers =====
+
+  // 读：习惯走 athena_act_cfg_v1，专注走 athena_focus_v1.settings（与 H1–H3 同键）
+  function loadActSettings() {
+    let habitRaw = null;
+    try { habitRaw = JSON.parse(localStorage.getItem(ACT_SETTINGS_CFG_KEY)); } catch (e) {}
+    let focusRaw = null;
+    try {
+      const f = JSON.parse(localStorage.getItem('athena_focus_v1'));
+      focusRaw = f && f.settings;
+    } catch (e) {}
+    // 若 habit.mjs / focus.mjs 已加载，优先用它们的 sanitize（同一 schema）
+    let habit, focus;
+    if (typeof habitNormalizeCfg === 'function') habit = habitNormalizeCfg(habitRaw);
+    else habit = actSanitizeHabitCfg(habitRaw);
+    if (typeof focusSanitizeSettings === 'function') focus = focusSanitizeSettings(focusRaw);
+    else focus = actSanitizeFocusSettings(focusRaw);
+    // unitDurations 是设置页展示用（focus 侧只存 unitMinutes）；补默认三档
+    if (!Array.isArray(focus.unitDurations)) focus.unitDurations = [25, 50, 60];
+    return { habit: habit, focus: focus };
+  }
+
+  function saveActSettings(patch) {
+    const p = patch || {};
+    const cur = loadActSettings();
+    if (p.habit) {
+      const next = actSanitizeHabitCfg(Object.assign({}, cur.habit, p.habit));
+      try { localStorage.setItem(ACT_SETTINGS_CFG_KEY, JSON.stringify(next)); } catch (e) {}
+      if (typeof window !== 'undefined') window.__habitCfg = next;
+    }
+    if (p.focus) {
+      const nextF = actSanitizeFocusSettings(Object.assign({}, cur.focus, p.focus));
+      // 写回 athena_focus_v1.settings（保留链/判例/编制等）
+      let f = null;
+      try { f = JSON.parse(localStorage.getItem('athena_focus_v1')); } catch (e) {}
+      if (!f || typeof f !== 'object') f = {};
+      // 只改 settings 段；不碰 chains/precedents/units/orgs/plans/seq
+      f.settings = {
+        unitMinutes: nextF.unitMinutes,
+        reserveWindowMin: nextF.reserveWindowMin,
+        scoutMinutes: nextF.scoutMinutes,
+        scoutExtendMin: (cur.focus && cur.focus.scoutExtendMin) || 5,
+        structure: nextF.structure,
+        flavor: nextF.flavor,
+        planDueRemindDays: nextF.planDueRemindDays,
+        triadChildCount: (cur.focus && cur.focus.triadChildCount) || 3,
+        typeNames: nextF.typeNames,
+        levelNames: nextF.levelNames
+      };
+      try { localStorage.setItem('athena_focus_v1', JSON.stringify(f)); } catch (e) {}
+      if (typeof window !== 'undefined') window.__focusData = null;
+      if (typeof window !== 'undefined') delete window.__focusData;
+    }
+    return loadActSettings();
+  }
+
+  // 重置行动模块：确认后备份下载并清空三键；绝不动学习库 *_formula_srs_v1
+  function resetActModule() {
+    const keys = ['athena_act_v1', 'athena_habit_groups_v1', 'athena_focus_v1', 'athena_habit_state_v1'];
+    const backup = { format: 'athena-act-backup', version: 1, exportedAt: Date.now() };
+    keys.forEach(function (k) {
+      let raw = null;
+      try { raw = JSON.parse(localStorage.getItem(k)); } catch (e) {}
+      backup[k] = raw;
+    });
+    backup.athena_act_cfg_v1 = loadActSettings().habit;
+    try {
+      if (typeof downloadJson === 'function') {
+        const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        downloadJson(backup, 'Athena-行动模块备份-' + stamp + '.json');
+      }
+    } catch (e) {}
+    keys.forEach(function (k) {
+      try { localStorage.removeItem(k); } catch (e) {}
+    });
+    try { localStorage.setItem('athena_act_backup_v1', JSON.stringify(backup)); } catch (e) {}
+    if (typeof window !== 'undefined') {
+      delete window.__actData;
+      delete window.__habitGroups;
+      delete window.__focusData;
+      delete window.__habitState;
+    }
+    return true;
+  }
+
   function renderSettings() {
     const app = document.getElementById('app');
     const wrap = el('div', 'settings-wrap');
     wrap.appendChild(el('h2', null, '⚙️ 设置'));
+    const brand = illus('brand-settings');
+    brand.classList.add('settings-brand-illus');
+    wrap.appendChild(brand);
 
-    // 分栏（会话内切换）：学习偏好 / 数据与同步 / 关于
+    // 分栏（会话内切换）：学习偏好 / 行动 / 数据与同步 / 关于
     let settingsTab = renderSettings._tab || 'study';
     const tabs = el('div', 'chips');
-    [['study', '🎛 学习偏好'], ['data', '💾 数据与同步'], ['about', 'ℹ️ 关于']].forEach(function (t) {
+    [['study', '🎛 学习偏好'], ['act', '🎯 行动'], ['data', '💾 数据与同步'], ['about', 'ℹ️ 关于']].forEach(function (t) {
       const b = el('button', 'chip' + (settingsTab === t[0] ? ' active' : ''), t[1]);
       b.addEventListener('click', function () { renderSettings._tab = t[0]; renderApp(); });
       tabs.appendChild(b);
@@ -3738,87 +4139,37 @@
 
     if (settingsTab === 'study') {
 
-    const s4 = row('目标名称');
-    const goalInput = el('input', 'num');
-    goalInput.type = 'text';
-    goalInput.maxLength = 10;
-    goalInput.style.width = '120px';
-    goalInput.value = (DB.settings && typeof DB.settings.goalTitle === 'string') ? DB.settings.goalTitle : GOAL_DEFAULT;
-    goalInput.title = '倒计时指向的目标名称（可编辑，如考研 / 四六级 / 教资）';
-    goalInput.addEventListener('change', function () {
-      const v = goalInput.value.trim() || GOAL_DEFAULT;
-      DB.settings.goalTitle = v;
-      saveDB();
-      goalInput.value = v;
-      toast('目标名称已设为「' + v + '」');
-      renderApp();
-    });
-    s4.appendChild(goalInput);
-    wrap.appendChild(s4);
+    // —— 作用域工具：可重叠项「本课 | 全局」二选一 ——
+    const scopeChips = function (key, onChange) {
+      const box = el('div', 'chips');
+      const cur = prefScope(key);
+      [['subject', '本课'], ['global', '全局']].forEach(function (t) {
+        const b = el('button', 'chip' + (cur === t[0] ? ' active' : ''), t[1]);
+        b.type = 'button';
+        b.title = t[0] === 'global' ? '对所有科目生效（写入全局偏好）' : '仅对当前科目生效';
+        b.addEventListener('click', function () {
+          const v = prefGet(key);
+          prefSet(key, v, t[0]);
+          saveDB();
+          toast(t[0] === 'global'
+            ? '已改为全局生效（所有选「全局」的科目共用此值）'
+            : '已改为本课生效（仅当前科目）');
+          if (onChange) onChange();
+          renderApp();
+        });
+        box.appendChild(b);
+      });
+      return box;
+    };
+    const secTitle = function (text, sub) {
+      wrap.appendChild(el('h3', null, text));
+      if (sub) wrap.appendChild(el('p', 'muted', sub));
+    };
 
-    const s4b = el('div', 'setting-row');
-    s4b.appendChild(el('span', null, '目标日期'));
-    const examInput = el('input', 'num');
-    examInput.type = 'date';
-    examInput.style.width = '158px';
-    examInput.value = (DB.settings && DB.settings.examDate) || '';
-    examInput.title = '留空则不显示倒计时与每日弹窗';
-    examInput.addEventListener('change', function () {
-      DB.settings.examDate = examInput.value || '';
-      saveDB();
-      toast(examInput.value ? '目标日期已设为 ' + examInput.value : '已清除目标日期（倒计时关闭）');
-    });
-    s4b.appendChild(examInput);
-    wrap.appendChild(s4b);
-    wrap.appendChild(el('p', 'muted', '设置目标日期后，每次打开应用会弹出倒计时提醒；毕业目标可自动随倒计时变化。留空则全部关闭。'));
+    // ═══ 本课设置（仅当前科目）═══
+    secTitle('本课设置 · 仅「' + ((subjectList()[currentSubjectId] && subjectList()[currentSubjectId].name) || currentSubjectId) + '」', '只影响当前科目的学习队列与卡面；切换科目后各科各自独立。');
 
-    // 期望保留率（FSRS 间隔目标）
-    const sFdr = row('期望保留率');
-    const fdrInput = el('input', 'num');
-    fdrInput.type = 'number';
-    fdrInput.min = '0.8'; fdrInput.max = '0.98'; fdrInput.step = '0.01';
-    fdrInput.style.width = '96px';
-    fdrInput.value = desiredRetention();
-    fdrInput.title = 'FSRS 按此保留率计算下次复习间隔（0.80–0.98，默认 0.90）';
-    fdrInput.addEventListener('change', function () {
-      let v = parseFloat(fdrInput.value);
-      if (isNaN(v)) v = 0.9;
-      v = Math.max(0.8, Math.min(0.98, v));
-      DB.settings.fdr = v;
-      saveDB();
-      fdrInput.value = v;
-      toast('期望保留率已设为 ' + v + '：调高则间隔更短、复习更密（考前适用），调低更省时');
-      renderApp();
-    });
-    sFdr.appendChild(fdrInput);
-    wrap.appendChild(sFdr);
-    note('FSRS 按期望保留率计算下次复习间隔：0.90 为默认工作点；调高（如考前 0.95）间隔约缩短一半、复习更密，调低更省时。只影响之后评分计算的新间隔，不改动已排期卡片。与毕业目标「考试日 ≥90% 记得」的判据相互独立。');
-
-    // 每日新卡上限（软上限：限制「新引入」量，已引入未学完的卡不受限）
-    const sNew = row('每日新卡上限');
-    const newInput = el('input', 'num');
-    newInput.type = 'number';
-    newInput.min = '0'; newInput.max = '99'; newInput.step = '1';
-    newInput.style.width = '72px';
-    newInput.value = (DB.settings && typeof DB.settings.dailyNew === 'number') ? DB.settings.dailyNew : 10;
-    newInput.title = '每天最多引入多少张新卡进入队列（0 = 暂停引入新卡）';
-    newInput.addEventListener('change', function () {
-      let v = parseInt(newInput.value, 10);
-      if (isNaN(v)) v = 10;
-      v = Math.max(0, Math.min(99, v));
-      DB.settings.dailyNew = v;
-      saveDB();
-      newInput.value = v;
-      // 立即重排队列：新上限对当前会话即刻生效（已引入未学完的卡保持在管线中）
-      rebuildQueue();
-      toast(v === 0 ? '已暂停引入新卡，队列已重排' : '每日新卡上限已设为 ' + v + ' 张，队列已重排');
-    });
-    sNew.appendChild(newInput);
-    wrap.appendChild(sNew);
-    note('每天最多把多少张新卡引入学习队列（每科独立生效，已引入但未学完的卡不受限）。到量后队列只剩到期复习与巩固中的卡；明天自动继续引入。设 0 可临时冻结新内容、专心清复习积压。到期复习永远不受限——那是 FSRS 的排期承诺。到量后也可在完成画面点「再来一批」手动越过上限。');
-
-    // 初学者模式：只从选定章节引入新卡（章节可自选，默认取学科的 BEGINNER 推荐路径）
-    // 配置经 resolveBeginner 与当前科 CATS 对齐——旧 catKey / 他科残留自愈到推荐起步章
+    // 初学者模式：章节选择因科而异，天然单科
     const subj = subjectList()[currentSubjectId];
     if (subj) {
       const resolved = resolveBeginner(DB.settings && DB.settings.beginner, subj, currentSubjectId);
@@ -3830,7 +4181,7 @@
       const begCb = el('input', 'chk');
       begCb.type = 'checkbox';
       begCb.checked = !!begCfg.on;
-      begCb.title = '开启后，新卡只从下方勾选的章节引入';
+      begCb.title = '开启后，新卡只从下方勾选的章节引入（章节因科而异，仅本课）';
       const begWrap = el('div', 'beg-cats');
       function renderBegCats() {
         begWrap.innerHTML = '';
@@ -3848,7 +4199,7 @@
             DB.settings.beginner = { on: true, cats: cur, sid: currentSubjectId };
             saveDB();
             renderBegCats();
-            rebuildQueue(); // 章节范围变化立即生效
+            rebuildQueue();
           });
           begWrap.appendChild(chip);
         });
@@ -3859,83 +4210,346 @@
           begCfg.on = true;
           if (!Array.isArray(begCfg.cats) || !begCfg.cats.length) begCfg.cats = recCats.slice();
           DB.settings.beginner = { on: true, cats: begCfg.cats, sid: currentSubjectId };
-          toast('初学者模式已开启：新卡只从「' + begCfg.cats.map(function (k) { return (subj.CATS && subj.CATS[k]) || k; }).join('、') + '」引入，可随时调整或关闭');
+          toast('初学者模式已开启：新卡只从「' + begCfg.cats.map(function (k) { return (subj.CATS && subj.CATS[k]) || k; }).join('、') + '」引入');
         } else {
           DB.settings.beginner = { on: false, cats: (Array.isArray(begCfg.cats) && begCfg.cats.length) ? begCfg.cats.slice() : recCats.slice(), sid: currentSubjectId };
           toast('初学者模式已关闭：全部章节的新卡恢复引入');
         }
         saveDB();
         renderBegCats();
-        rebuildQueue(); // 立即按新章节范围重排队列（未学完的已引入卡保留）
+        rebuildQueue();
       });
       const begLabel = el('label', 'setting-check', '');
       begLabel.appendChild(begCb);
-      begLabel.appendChild(el('span', null, '新卡只从选定章节引入（其余章节之后解锁）'));
+      begLabel.appendChild(el('span', null, '新卡只从选定章节引入（仅本课；其余章节之后解锁）'));
       sBeg.appendChild(begLabel);
       wrap.appendChild(sBeg);
       renderBegCats();
       wrap.appendChild(begWrap);
-      note('初学者模式按「章节」控制新卡引入：勾选的章节照常进入每日队列，未勾选的章节暂不引入（不影响已引入的卡与到期复习）。默认勾选本学科推荐的起步章节，点击章节名可增减；关闭开关即解锁全部章节。');
+      wrap.appendChild(el('p', 'muted', '初学者模式按「章节」控制新卡引入，章节清单因科而异——因此固定为本课设置，不提供全局。'));
     }
 
-    const sBare = el('div', 'setting-row');
-    sBare.appendChild(el('span', null, '裸回忆'));
-    const bareCb = el('input', 'chk');
-    bareCb.type = 'checkbox';
-    bareCb.checked = bareRecallOn();
-    bareCb.title = '开启后，学习时先隐藏分类徽标，逼你先判断「这是哪一类」再回忆，更贴合交错练习的辨别';
-    bareCb.addEventListener('change', function () {
-      DB.settings.bareRecall = bareCb.checked;
-      saveDB();
-      toast(bareCb.checked ? '裸回忆已开启（学习时隐藏分类提示）' : '裸回忆已关闭');
-      renderApp();
-    });
-    const bareLabel = el('label', 'setting-check', '');
-    bareLabel.appendChild(bareCb);
-    bareLabel.appendChild(el('span', null, '学习时隐藏分类提示（先判断类别再回忆）'));
-    sBare.appendChild(bareLabel);
-    wrap.appendChild(sBare);
-    wrap.appendChild(el('p', 'muted', '交错练习的关键是「辨别」：先判断这道题属于哪一章、该用哪个方法，再回忆内容。开启后，卡片正面不再显示分类徽标，点开答案后才出现。'));
+    // —— 可重叠项：按当前作用域分入本课 / 全局模块 ——
+    const overlapItems = [
+      {
+        key: 'dailyNew', label: '每日新卡上限', type: 'number', min: 0, max: 99, step: 1, width: '72px',
+        title: '每天最多引入多少张新卡（0 = 暂停）',
+        note: '每天最多把多少张新卡引入学习队列（已引入未学完的卡不受限）。到量后可在完成画面点「再来一批」。',
+        commit: function (v) {
+          rebuildQueue();
+          toast(v === 0 ? '已暂停引入新卡，队列已重排' : '每日新卡上限已设为 ' + v + ' 张，队列已重排');
+        }
+      },
+      {
+        key: 'fdr', label: '期望保留率', type: 'number', min: 0.8, max: 0.98, step: 0.01, width: '96px',
+        title: 'FSRS 按此保留率计算下次复习间隔（0.80–0.98，默认 0.90）',
+        note: 'FSRS 按期望保留率计算下次复习间隔：调高（如考前 0.95）间隔更短、复习更密，调低更省时。',
+        commit: function (v) { toast('期望保留率已设为 ' + v); }
+      },
+      {
+        key: 'bareRecall', label: '裸回忆', type: 'check',
+        checkText: '学习时隐藏分类提示（先判断类别再回忆）',
+        note: '交错练习的关键是「辨别」：开启后卡片正面不显示分类徽标，点开答案后才出现。',
+        commit: function (v) { toast(v ? '裸回忆已开启' : '裸回忆已关闭'); }
+      },
+      {
+        key: 'goalTitle', label: '目标名称', type: 'text', maxLength: 10, width: '120px',
+        title: '倒计时指向的目标名称（如考研 / 四六级 / 教资）',
+        note: '倒计时与毕业目标文案中的目标名。若多科共用一场考试，可切到「全局」统一维护。',
+        commit: function (v) { toast('目标名称已设为「' + v + '」'); }
+      },
+      {
+        key: 'examDate', label: '目标日期', type: 'date', width: '158px',
+        title: '留空则不显示倒计时与每日弹窗',
+        note: '设置目标日期后，每次打开应用会弹出倒计时提醒。留空则全部关闭。',
+        commit: function (v) { toast(v ? '目标日期已设为 ' + v : '已清除目标日期（倒计时关闭）'); }
+      },
+      {
+        key: 'targetLinkExam', label: '毕业目标挂钩', type: 'check',
+        checkText: '毕业目标随目标倒计时自动变化（需先设置目标日期）',
+        note: '开启后：毕业目标 = 距目标日天数（要求目标日 ≥90% 记得）；关闭则用下方固定稳定度。',
+        commit: function (v) { toast(v ? '毕业目标已与目标倒计时挂钩' : '毕业目标改用固定值'); }
+      },
+      {
+        key: 'targetS', label: '毕业目标稳定度', type: 'number', min: 7, max: 730, step: 1, width: '96px',
+        title: '关闭「挂钩」时使用的固定目标稳定度（天）',
+        note: '稳定度 S 达到该值即「毕业/稳固」——停止复习后仍能 ≥90% 记得的天数。',
+        commit: function (v) { toast('固定毕业目标稳定度 ' + v + ' 天'); }
+      }
+    ];
 
-    const s7 = el('div', 'setting-row');
-    s7.appendChild(el('span', null, '毕业目标稳定度'));
-    const linkedCb = el('input', 'chk');
-    linkedCb.type = 'checkbox';
-    linkedCb.checked = targetLinked();
-    linkedCb.disabled = (countdownDays() == null);
-    if (linkedCb.disabled) linkedCb.checked = false;
-    linkedCb.title = '开启后：毕业目标随目标倒计时自动变化（要求目标日可提取性 ≥ 90%）；需先设置目标日期';
-    linkedCb.addEventListener('change', function () {
-      DB.settings.targetLinkExam = linkedCb.checked;
-      saveDB();
-      toast(linkedCb.checked ? '毕业目标已与目标倒计时挂钩（目标日保证 ≥90%）' : '毕业目标改用固定值');
+    function renderOverlapRow(item) {
+      const sc = prefScope(item.key);
+      const r = el('div', 'setting-row');
+      r.appendChild(el('span', null, item.label));
+      r.appendChild(scopeChips(item.key));
+      const val = prefGet(item.key);
+      if (item.type === 'check') {
+        const cb = el('input', 'chk');
+        cb.type = 'checkbox';
+        cb.checked = !!val;
+        if (item.key === 'targetLinkExam') cb.disabled = (countdownDays() == null);
+        if (cb.disabled) cb.checked = false;
+        const lab = el('label', 'setting-check', '');
+        lab.appendChild(cb);
+        lab.appendChild(el('span', null, item.checkText || ''));
+        cb.addEventListener('change', function () {
+          prefSet(item.key, cb.checked, sc);
+          saveDB();
+          if (item.commit) item.commit(cb.checked);
+          renderApp();
+        });
+        r.appendChild(lab);
+      } else {
+        const input = el('input', 'num');
+        input.type = item.type === 'date' ? 'date' : (item.type === 'text' ? 'text' : 'number');
+        if (item.min != null) input.min = String(item.min);
+        if (item.max != null) input.max = String(item.max);
+        if (item.step != null) input.step = String(item.step);
+        if (item.maxLength) input.maxLength = item.maxLength;
+        if (item.width) input.style.width = item.width;
+        if (item.title) input.title = item.title;
+        input.value = (val == null) ? '' : String(val);
+        input.addEventListener('change', function () {
+          let v;
+          if (item.type === 'text') {
+            v = input.value.trim() || GOAL_DEFAULT;
+          } else if (item.type === 'date') {
+            v = input.value || '';
+          } else {
+            v = parseFloat(input.value);
+            if (isNaN(v)) v = prefDefaults()[item.key];
+            if (item.min != null) v = Math.max(item.min, v);
+            if (item.max != null) v = Math.min(item.max, v);
+            if (item.step >= 1) v = Math.round(v);
+          }
+          prefSet(item.key, v, sc);
+          saveDB();
+          input.value = (v == null) ? '' : String(v);
+          if (item.commit) item.commit(v);
+        });
+        r.appendChild(input);
+      }
+      wrap.appendChild(r);
+      if (item.note) wrap.appendChild(el('p', 'muted', item.note));
+    }
+
+    const subjItems = overlapItems.filter(function (it) { return prefScope(it.key) === 'subject'; });
+    subjItems.forEach(renderOverlapRow);
+    if (!subjItems.length) {
+      wrap.appendChild(el('p', 'muted', '（当前没有仅本课生效的可调项——可把下方全局项切回「本课」）'));
+    }
+
+    // ═══ 全局设置（所有科目共享）═══
+    secTitle('全局设置 · 所有科目共享', '选「全局」的项对每个科目共用同一份值；各科仍可单独切回「本课」覆盖。');
+    const globItems = overlapItems.filter(function (it) { return prefScope(it.key) === 'global'; });
+    globItems.forEach(renderOverlapRow);
+    if (!globItems.length) {
+      wrap.appendChild(el('p', 'muted', '（当前没有全局生效的可调项——点上方任一项旁的「全局」即可移入本区）'));
+    }
+    wrap.appendChild(el('p', 'muted', '「行动」模块设置见「🎯 行动」栏；云同步见「💾 数据与同步」栏——它们本身就是全局配置。'));
+
+    }
+
+    if (settingsTab === 'act') {
+
+    const actS = loadActSettings();
+    const habitCfg = actS.habit;
+    const focusCfg = actS.focus;
+    const actRow = function (label) { const r = el('div', 'setting-row'); r.appendChild(el('span', null, label)); return r; };
+    const actNum = function (value, min, max, step, title, onCommit) {
+      const input = el('input', 'num');
+      input.type = 'number';
+      input.min = String(min); input.max = String(max); input.step = String(step);
+      input.style.width = '72px';
+      input.value = String(value);
+      if (title) input.title = title;
+      input.addEventListener('change', function () {
+        let v = parseFloat(input.value);
+        if (isNaN(v)) v = value;
+        v = Math.max(min, Math.min(max, v));
+        if (step >= 1) v = Math.round(v);
+        onCommit(v);
+        input.value = String(v);
+      });
+      return input;
+    };
+
+    wrap.appendChild(el('h3', null, '习惯 · RSIP'));
+    const rAdd = actRow('每日入树上限');
+    rAdd.appendChild(actNum(habitCfg.dailyAddLimit, 1, 99, 1, '每天最多几个新习惯上树', function (v) {
+      saveActSettings({ habit: { dailyAddLimit: v } });
+      toast('每日入树上限已设为 ' + v);
+    }));
+    wrap.appendChild(rAdd);
+
+    const rManual = actRow('手动强化次数/日');
+    rManual.appendChild(actNum(habitCfg.manualLevelPerDay, 0, 9, 1, '每天最多手动强化几次（0 = 关闭手动强化）', function (v) {
+      saveActSettings({ habit: { manualLevelPerDay: v } });
+      toast('手动强化每日上限已设为 ' + v + ' 次');
+    }));
+    wrap.appendChild(rManual);
+
+    const rKeep = actRow('手动强化内化保留');
+    rKeep.appendChild(actNum(habitCfg.manualLevelKeepRatio, 0, 1, 0.05, '手动强化后内化进度保留比例（0.5 = 保留一半）', function (v) {
+      saveActSettings({ habit: { manualLevelKeepRatio: v } });
+      toast('手动强化后内化保留 ' + Math.round(v * 100) + '%');
+    }));
+    wrap.appendChild(rKeep);
+    wrap.appendChild(el('p', 'muted', '手动强化每日仅 1 次、1 个习惯，且内化按比例保留（默认 50%）——比自动强化代价更高，表述更严。'));
+
+    const rFail = actRow('失败内化惩罚');
+    rFail.appendChild(actNum(habitCfg.failInternalizePenalty, 0, 100, 1, '习惯失败时内化扣减点数（0 = 不扣，进度不丢）', function (v) {
+      saveActSettings({ habit: { failInternalizePenalty: v } });
+      toast(v === 0 ? '失败不再扣内化' : '失败内化惩罚已设为 −' + v);
+    }));
+    wrap.appendChild(rFail);
+    wrap.appendChild(el('p', 'muted', '失败回库时内化进度不会清零；此项是额外扣减（默认 15）。设 0 则完全保留。'));
+
+    const rAuto = el('div', 'setting-row');
+    rAuto.appendChild(el('span', null, '零点自动结算'));
+    const autoCb = el('input', 'chk');
+    autoCb.type = 'checkbox';
+    autoCb.checked = !!habitCfg.autoSettle;
+    const autoLab = el('label', 'setting-check', '');
+    autoLab.appendChild(autoCb);
+    autoLab.appendChild(el('span', null, '午夜自动结算前一日（全员检完才可手动结算）'));
+    autoCb.addEventListener('change', function () {
+      saveActSettings({ habit: { autoSettle: autoCb.checked } });
+      toast(autoCb.checked ? '零点自动结算已开启' : '零点自动结算已关闭');
+    });
+    rAuto.appendChild(autoLab);
+    wrap.appendChild(rAuto);
+
+    wrap.appendChild(el('h3', null, '专注 · CTDP'));
+    const rDur = actRow('单元时长（分）');
+    [25, 50, 60].forEach(function (d) {
+      const b = el('button', 'chip' + (focusCfg.unitMinutes === d ? ' active' : ''), d + ' 分');
+      b.type = 'button';
+      b.addEventListener('click', function () {
+        saveActSettings({ focus: { unitMinutes: d } });
+        toast('默认单元时长已设为 ' + d + ' 分');
+        renderApp();
+      });
+      rDur.appendChild(b);
+    });
+    rDur.appendChild(actNum(focusCfg.unitMinutes, 1, 240, 1, '自定义默认单元时长', function (v) {
+      saveActSettings({ focus: { unitMinutes: v } });
+      toast('默认单元时长已设为 ' + v + ' 分');
+    }));
+    wrap.appendChild(rDur);
+
+    const rRes = actRow('预约窗（分）');
+    rRes.appendChild(actNum(focusCfg.reserveWindowMin, 1, 180, 1, '离开座位后预约保留时长', function (v) {
+      saveActSettings({ focus: { reserveWindowMin: v } });
+      toast('预约窗已设为 ' + v + ' 分钟');
+    }));
+    wrap.appendChild(rRes);
+
+    const rScout = actRow('侦查时长（分）');
+    rScout.appendChild(actNum(focusCfg.scoutMinutes, 1, 60, 1, '侦查任务默认时长', function (v) {
+      saveActSettings({ focus: { scoutMinutes: v } });
+      toast('侦查时长已设为 ' + v + ' 分钟');
+    }));
+    wrap.appendChild(rScout);
+
+    const rRemind = actRow('计划到期提醒');
+    rRemind.appendChild(actNum(focusCfg.planDueRemindDays, 0, 30, 1, '截止日前多少天开始提醒（0 = 不提醒）', function (v) {
+      saveActSettings({ focus: { planDueRemindDays: v } });
+      toast(v === 0 ? '计划到期提醒已关闭' : '计划到期前 ' + v + ' 天提醒');
+    }));
+    wrap.appendChild(rRemind);
+
+    wrap.appendChild(el('h3', null, '结构与风味'));
+    const rStruct = actRow('编制结构');
+    const structChips = el('div', 'chips');
+    [['free', '自由 N 叉'], ['triad', '三三制模板']].forEach(function (t) {
+      const b = el('button', 'chip' + (focusCfg.structure === t[0] ? ' active' : ''), t[1]);
+      b.type = 'button';
+      b.addEventListener('click', function () {
+        saveActSettings({ focus: { structure: t[0] } });
+        toast(t[0] === 'triad' ? '创建向导默认三三制模板（每组建议 3 子，不强制）' : '默认自由 N 叉结构');
+        renderApp();
+      });
+      structChips.appendChild(b);
+    });
+    rStruct.appendChild(structChips);
+    wrap.appendChild(rStruct);
+
+    const rFlavor = el('div', 'setting-row');
+    rFlavor.appendChild(el('span', null, '风味显示'));
+    const flavorCb = el('input', 'chk');
+    flavorCb.type = 'checkbox';
+    flavorCb.checked = !!focusCfg.flavor;
+    const flavorLab = el('label', 'setting-check', '');
+    flavorLab.appendChild(flavorCb);
+    flavorLab.appendChild(el('span', null, '显示类型名与层次名（番号 # 始终显示）'));
+    flavorCb.addEventListener('change', function () {
+      saveActSettings({ focus: { flavor: flavorCb.checked } });
+      toast(flavorCb.checked ? '风味显示已开启' : '风味显示已关闭（仅番号）');
+    });
+    rFlavor.appendChild(flavorLab);
+    wrap.appendChild(rFlavor);
+
+    const LEVEL_ORDER = ['unit', 'group', 'corps', 'army'];
+    const rLevels = actRow('层次名');
+    const levelWrap = el('div', 'beg-cats');
+    LEVEL_ORDER.forEach(function (key) {
+      const input = el('input', 'num');
+      input.type = 'text';
+      input.maxLength = 8;
+      input.style.width = '88px';
+      input.value = focusCfg.levelNames[key] || key;
+      input.title = '编制层次名称';
+      input.addEventListener('change', function () {
+        const patch = {};
+        patch[key] = input.value.trim() || actDefaultFocusSettings().levelNames[key];
+        saveActSettings({ focus: { levelNames: Object.assign({}, loadActSettings().focus.levelNames, patch) } });
+        input.value = patch[key];
+        toast('层次名已更新');
+      });
+      levelWrap.appendChild(input);
+    });
+    rLevels.appendChild(levelWrap);
+    wrap.appendChild(rLevels);
+
+    const TYPE_ORDER = ['focus', 'assault', 'life', 'plan', 'scout'];
+    const rTypes = actRow('类型名');
+    const typeWrap = el('div', 'beg-cats');
+    TYPE_ORDER.forEach(function (key) {
+      const input = el('input', 'num');
+      input.type = 'text';
+      input.maxLength = 8;
+      input.style.width = '88px';
+      input.value = focusCfg.typeNames[key] || key;
+      input.title = '专注单元类型名';
+      input.addEventListener('change', function () {
+        const patch = {};
+        patch[key] = input.value.trim() || actDefaultFocusSettings().typeNames[key];
+        saveActSettings({ focus: { typeNames: Object.assign({}, loadActSettings().focus.typeNames, patch) } });
+        input.value = patch[key];
+        toast('类型名已更新');
+      });
+      typeWrap.appendChild(input);
+    });
+    rTypes.appendChild(typeWrap);
+    wrap.appendChild(rTypes);
+    wrap.appendChild(el('p', 'muted', '层次：任务单元 → 组 → 群 → 集团（番号 # ● ▲ ◆）；类型：专注 / 突击 / 生活 / 计划 / 侦查。名称可改，番号不变。三三制为创建向导建议模板（每组 3 子），不强制。'));
+
+    wrap.appendChild(el('h3', null, '重置'));
+    const rReset = el('div', 'setting-row danger-row');
+    rReset.appendChild(el('span', null, '重置行动模块'));
+    const actReset = el('button', 'btn danger', '备份并清空');
+    actReset.title = '清空习惯树 / 计划 / 专注链；不动学习库';
+    actReset.addEventListener('click', function () {
+      if (!confirm('确定要重置行动模块吗？\n\n将备份并清空：\n· 习惯树与 WOOP 计划\n· 习惯组配置与检查状态\n· 专注链、判例与编制\n\n学习库（知识卡/错题/统计）不会被改动。\n备份 JSON 会下载到本机，并保留最近一份在本地。')) return;
+      resetActModule();
+      toast('行动模块已重置（备份已下载）');
       renderApp();
     });
-    const cbLabel = el('label', 'setting-check', '');
-    cbLabel.appendChild(linkedCb);
-    cbLabel.appendChild(el('span', null, '与目标倒计时挂钩'));
-    s7.appendChild(cbLabel);
-    const tInput = el('input', 'num');
-    tInput.type = 'number';
-    tInput.min = '7'; tInput.max = '730'; tInput.step = '1';
-    tInput.style.width = '96px';
-    tInput.value = (DB.settings && typeof DB.settings.targetS === 'number') ? DB.settings.targetS : TARGET_S_DEFAULT;
-    tInput.title = '关闭「与倒计时挂钩」时使用的固定目标稳定度（天）';
-    tInput.addEventListener('change', function () {
-      let v = parseInt(tInput.value, 10);
-      if (isNaN(v)) v = TARGET_S_DEFAULT;
-      v = Math.max(7, Math.min(730, v));
-      DB.settings.targetS = v;
-      saveDB();
-      tInput.value = v;
-      toast('固定毕业目标稳定度 ' + v + ' 天');
-      renderApp();
-    });
-    s7.appendChild(tInput);
-    wrap.appendChild(s7);
-    wrap.appendChild(el('p', 'muted', targetLinked()
-      ? '毕业目标自动随目标倒计时变化：要求「' + goalTitle() + '日仍能 ≥90% 记得」（等价稳定度 S ≥ 剩余天数）。距' + goalTitle() + ' ' + countdownDays() + ' 天 → 目标 S_N ≈ ' + Math.round(targetS()) + ' 天。'
-      : '稳定度 S 达到该值即「毕业/稳固」——表示「停止复习后仍能 ≥90% 记得」的天数（固定值 ' + Math.round(targetS()) + ' 天）。勾选上方的「与目标倒计时挂钩」可改为随倒计时动态变化。'));
+    rReset.appendChild(actReset);
+    wrap.appendChild(rReset);
+    wrap.appendChild(el('p', 'muted', '重置只影响行动数据（athena_act / habit_groups / focus / habit_state），不碰任何学科的学习库。若已开启云同步，下次同步会把云端行动数据合并回来——彻底清空云端请先重置再「完全上传」。'));
 
     }
 
@@ -4155,32 +4769,50 @@
 
   // 统计页折线图（从每日 metrics 快照画一条趋势线，含图例/最新值）
   function sparkTrend(title, items, color, unit, fixedMax) {
-    const box = el('div', 'stat-card');
-    const head = el('div', 'trend-head');
-    head.appendChild(el('strong', null, title));
-    if (items.length) head.appendChild(el('span', 'trend-latest muted', '最新 ' + items[items.length - 1].value + (unit || '')));
+    const box = el('div', 'stat-card chart-card');
+    const head = el('div', 'chart-head');
+    head.appendChild(el('span', 'chart-title', title));
+    if (items.length) head.appendChild(el('span', 'chart-pill', items[items.length - 1].value + (unit || '')));
     box.appendChild(head);
-    if (items.length < 2) { box.appendChild(illus('stats-growing')); box.appendChild(el('p', 'muted', '数据积累中——每天打开应用记录一次，几天后显示趋势。')); return box; }
+    if (items.length < 2) { box.appendChild(illus('empty-stats')); box.appendChild(el('p', 'muted', '数据积累中——每天打开应用记录一次，几天后显示趋势。')); return box; }
     const W = 680, H = 150, pad = 30;
     const vals = items.map(function (i) { return i.value; });
     let mn = (fixedMax != null) ? 0 : Math.min.apply(null, vals);
     let mx = (fixedMax != null) ? fixedMax : Math.max.apply(null, vals);
     if (mx - mn < 1e-6) { mn -= 1; mx += 1; }
-    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%' });
+    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%', class: 'chart-svg' });
     [mn, (mn + mx) / 2, mx].forEach(function (v) {
       const y = H - pad - (v - mn) / (mx - mn) * (H - 2 * pad);
-      svg.appendChild(svgEl('line', { x1: pad, x2: W - pad, y1: y, y2: y, stroke: '#E7E4DD', 'stroke-width': '1' }));
-      svg.appendChild(svgText('text', pad - 4, y + 3, String(Math.round(v)), { 'text-anchor': 'end' }));
+      svg.appendChild(svgEl('line', { x1: pad, x2: W - pad, y1: y, y2: y, class: 'chart-grid' }));
+      svg.appendChild(svgText('text', pad - 4, y + 3, String(Math.round(v)), { 'text-anchor': 'end', class: 'chart-axis' }));
     });
     const pts = items.map(function (i, idx) {
       return [pad + idx * (W - 2 * pad) / (items.length - 1), H - pad - (i.value - mn) / (mx - mn) * (H - 2 * pad)];
     });
-    svg.appendChild(svgEl('path', { d: 'M ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L '), fill: 'none', stroke: color, 'stroke-width': '2' }));
-    pts.forEach(function (p) { svg.appendChild(svgEl('circle', { cx: p[0], cy: p[1], r: '2.5', fill: color })); });
+    // 面积 + 折线
+    const areaD = 'M ' + pts[0][0] + ' ' + (H - pad) + ' L ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L ') + ' L ' + pts[pts.length - 1][0] + ' ' + (H - pad) + ' Z';
+    svg.appendChild(svgEl('path', {
+      d: areaD, class: 'chart-area',
+      style: 'fill: color-mix(in srgb, ' + (color === '#D4537E' ? 'var(--accent-2)' : 'var(--accent)') + ' 12%, transparent)'
+    }));
+    svg.appendChild(svgEl('path', {
+      d: 'M ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L '),
+      fill: 'none', class: 'chart-line',
+      style: 'stroke: ' + (color === '#D4537E' ? 'var(--accent-2)' : 'var(--accent)')
+    }));
+    pts.forEach(function (p) {
+      svg.appendChild(svgEl('circle', {
+        cx: p[0], cy: p[1], r: '2.5', class: 'chart-dot',
+        style: 'stroke: ' + (color === '#D4537E' ? 'var(--accent-2)' : 'var(--accent)')
+      }));
+    });
     const li = [0, Math.floor((items.length - 1) / 2), items.length - 1];
     li.forEach(function (idx, j) {
       const x = pts[idx][0];
-      svg.appendChild(svgText('text', x, H - 4, items[idx].label, j === li.length - 1 ? { 'text-anchor': 'end' } : (j === 0 ? {} : { 'text-anchor': 'middle' })));
+      svg.appendChild(svgText('text', x, H - 4, items[idx].label, Object.assign(
+        { class: 'chart-axis' },
+        j === li.length - 1 ? { 'text-anchor': 'end' } : (j === 0 ? {} : { 'text-anchor': 'middle' })
+      )));
     });
     box.appendChild(svg);
     return box;
@@ -4188,6 +4820,7 @@
 
   // ---------------- 学习报告（日/周/月/年聚合） ----------------
   let reportPeriod = 'day'; // 会话内状态，不持久化
+  let heatWeeksExpanded = false; // 学习日历：紧凑 8 周 ↔ 展开 26 周
   const REPORT_PERIODS = [['day', '日报'], ['week', '周报'], ['month', '月报'], ['year', '年报']];
   const REPORT_DAYS = { day: 1, week: 7, month: 30, year: 365 };
 
@@ -4404,21 +5037,35 @@
     wrap.appendChild(tg);
     wrap.appendChild(el('p', 'muted', '每天打开应用自动记录一次指标（掌握度按存储强度），积累几天后即可看趋势。'));
 
-    // —— 学习日历（近 16 周热力图，点击查看当日明细）——
-    wrap.appendChild(el('h3', null, '🔥 学习日历（近 16 周）'));
+    // —— 学习日历热力图（紧凑 8 周 · 可展开 26 周 + 汇总）——
+    wrap.appendChild(el('h3', null, '🔥 学习日历'));
     const daily = (DB.log && DB.log.daily) || {};
     const detailLog = (DB.log && DB.log.detail) || {};
-    const weeks = 16, total = weeks * 7;
+    const weeks = heatWeeksExpanded ? 26 : 8;
+    const total = weeks * 7;
     const start = new Date(); start.setDate(start.getDate() - (total - 1));
     const heatDays = [];
-    let heatMax = 0;
+    let heatMax = 0, activeDays = 0, totalCards = 0, peak = 0;
     for (let d = 0; d < total; d++) {
       const date = new Date(start); date.setDate(start.getDate() + d);
       const key = fmtDate(date), cnt = daily[key] || 0;
       heatDays.push({ key: key, cnt: cnt });
       if (cnt > heatMax) heatMax = cnt;
+      if (cnt > 0) { activeDays++; totalCards += cnt; if (cnt > peak) peak = cnt; }
     }
-    const grid = el('div', 'heatmap-grid');
+    const expandRow = el('div', 'heat-expand-row');
+    expandRow.appendChild(el('span', 'muted', heatWeeksExpanded
+      ? '完整视图 · 近 ' + weeks + ' 周'
+      : '预览 · 近 ' + weeks + ' 周（可展开更完整）'));
+    const expandBtn = el('button', 'btn small heat-expand-btn', heatWeeksExpanded ? '收起' : '展开完整日历');
+    expandBtn.addEventListener('click', function () {
+      heatWeeksExpanded = !heatWeeksExpanded;
+      renderApp();
+    });
+    expandRow.appendChild(expandBtn);
+    wrap.appendChild(expandRow);
+
+    const grid = el('div', 'heatmap-grid' + (heatWeeksExpanded ? ' expanded' : ' compact'));
     grid.style.gridTemplateColumns = 'repeat(' + weeks + ', 12px)';
     heatDays.forEach(function (item) {
       const cell = el('div', 'heat-cell');
@@ -4450,6 +5097,18 @@
       legend.appendChild(el('span', 'heat-legend-end', '多'));
     }
     hb.appendChild(legend);
+    if (heatWeeksExpanded) {
+      const sum = el('div', 'heat-summary');
+      sum.appendChild(el('span', null, '有记录'));
+      sum.appendChild(el('b', null, activeDays + ' 天'));
+      sum.appendChild(el('span', null, '· 窗口内合计'));
+      sum.appendChild(el('b', null, totalCards + ' 张'));
+      sum.appendChild(el('span', null, '· 日均有记录日'));
+      sum.appendChild(el('b', null, activeDays ? Math.round(totalCards / activeDays) + ' 张' : '—'));
+      sum.appendChild(el('span', null, '· 峰值日'));
+      sum.appendChild(el('b', null, peak + ' 张'));
+      hb.appendChild(sum);
+    }
     hb.appendChild(el('p', 'muted', '颜色深浅表示当天学习张数（按本窗口最高日等比划分）；点击有记录的格子可查看当日明细。'));
     wrap.appendChild(hb);
 
@@ -4518,186 +5177,662 @@
 
     app.appendChild(wrap);
   }
+  // ---------------- 知识库 · 原理与依据（V2-F：左目录 + 搜索 + 条目详情） ----------------
+  const KB_CATS = [
+    { id: 'learn', icon: '📚', title: '学习科学' },
+    { id: 'cog', icon: '🧠', title: '认知与行为' },
+    { id: 'act', icon: '🚀', title: '行动方法' },
+    { id: 'myth', icon: '🚫', title: '证伪与误区' },
+    { id: 'appx', icon: '📎', title: '方法论附录' }
+  ];
 
+  // 条目约定：summary 一句话；points 短要点（少长科普）；
+  // evidence 必含 研究者+年份+期刊或来源 与 🟢/🟡/⚠️；features 链到功能名。
+  const KB_ENTRIES = [
+    // ---- 学习科学 ----
+    {
+      id: 'retrieval', cat: 'learn', icon: '🔍', title: '检索练习',
+      summary: '合上书主动回忆，远比反复阅读更牢固。',
+      points: [
+        '回忆本身强化记忆通路；重读只是被动接触。',
+        '应用闭环：先回想 → 核对答案 → 按真实质量评分。',
+        '「顺滑感」多为流畅性错觉，不代表学会。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Roediger & Karpicke 2006 · Psychological Science' },
+        { g: '🟢', ref: 'Dunlosky et al. 2013 · Psychological Science in the Public Interest（效用 A 级）' }
+      ],
+      features: [{ label: '自测', nav: 'quiz' }, { label: '错题本', nav: 'wrongBrowse' }]
+    },
+    {
+      id: 'spacing', cat: 'learn', icon: '📅', title: '间隔重复',
+      summary: '同样总时长，分散到多天远优于考前突击。',
+      points: [
+        '间隔约为目标保留期的 10–20% 较稳。',
+        'FSRS 把下次复习放在遗忘临界点，而非固定日历。',
+        '突击可应付明天，撑不过下周。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Cepeda et al. 2006 · Psychological Bulletin（254 项研究荟萃）' },
+        { g: '🟢', ref: 'Dunlosky et al. 2013（效用 A 级）' }
+      ],
+      features: [{ label: '知识卡', nav: 'learn' }, { label: '统计', nav: 'statistics' }]
+    },
+    {
+      id: 'interleave', cat: 'learn', icon: '🔀', title: '交错练习',
+      summary: '不同章节/题型混着练，迁移更好——练习时更「难受」是正常的。',
+      points: [
+        '集中刷同类题的顺滑感会高估掌握。',
+        '本应用：关联卡片辨析聚类、相邻出现；「裸回忆」隐藏分类徽标。',
+        '交错属合意困难：只挑战提取与辨别，不是添乱。'
+      ],
+      evidence: [
+        { g: '🟡', ref: 'Rohrer & Taylor 2007 · Applied Cognitive Psychology' },
+        { g: '🟡', ref: 'Dunlosky et al. 2013（效用 B 级）' }
+      ],
+      features: [{ label: '自测', nav: 'quiz' }]
+    },
+    {
+      id: 'elaboration', cat: 'learn', icon: '❓', title: '自我解释与精细提问',
+      summary: '对材料追问「为什么成立、和什么有关、用在什么题型」。',
+      points: [
+        '每记一个公式做三问，建立条件化网络。',
+        '示例学习：先照例题仿写，尽快脱离例题独立做。'
+      ],
+      evidence: [
+        { g: '🟡', ref: 'Dunlosky et al. 2013（效用 B 级）' },
+        { g: '🟡', ref: 'Chi et al. 1989 · Cognitive Science（自我解释）' }
+      ],
+      features: [{ label: '知识卡', nav: 'browse' }]
+    },
+    {
+      id: 'generation', cat: 'learn', icon: '💬', title: '生成效应 · 费曼',
+      summary: '自己生成的答案记得更牢；能讲清楚才算真理解。',
+      points: [
+        '费曼：合上卡片讲一遍，卡壳处即盲区。',
+        '自测的「给内容选名称」就是生成 + 辨认。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Slamecka & Graf 1978 · Journal of Experimental Psychology: Human Learning and Memory' },
+        { g: '🟡', ref: 'Feynman 学习法（社区方法；生成效应为其认知基础）' }
+      ],
+      features: [{ label: '自测', nav: 'quiz' }]
+    },
+    {
+      id: 'sleep', cat: 'learn', icon: '🌙', title: '睡眠与巩固',
+      summary: '学之前睡好（编码效率），学之后睡够（巩固发生在深睡）。',
+      points: [
+        '深睡重放与纺锤波把海马痕迹移交皮层。',
+        '熬夜复习净收益通常为负——优先保睡眠再谈时长。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Rasch & Born 2013 · Physiological Reviews' }
+      ],
+      features: []
+    },
+    {
+      id: 'body', cat: 'learn', icon: '🏃', title: '身体条件：休息·运动·专注卫生',
+      summary: '大脑是身体的一部分——睡眠、运动、刺激环境都算学习变量。',
+      points: [
+        '安静休息 10–20 分钟给海马重放留时间（不刷手机）。',
+        '中等强度运动后 1–2 小时是编码窗。',
+        '手机静音扣桌也会偷走工作记忆——物理隔离。',
+        '咖啡因半衰期约 5 小时，睡前 8–10 小时停用。'
+      ],
+      evidence: [
+        { g: '🟡', ref: '运动与认知：Hillman et al. 2008 · Nature Reviews Neuroscience' },
+        { g: '🟢', ref: '任务切换成本：Monsell 2003 · Trends in Cognitive Sciences' },
+        { g: '🟡', ref: '一般健康信息，不构成医疗建议' }
+      ],
+      features: []
+    },
+    {
+      id: 'fsrs', cat: 'learn', icon: '📐', title: 'FSRS-6 调度内核',
+      summary: '用难度 D / 稳定度 S / 可提取性 R 建模遗忘，对齐官方四档权重。',
+      points: [
+        'R(t,S)：此刻能想起的概率；评分更新 D/S，按目标保留率反推间隔。',
+        '知识卡：学习步进 1→10 分钟，毕业进长期复习；错题卡添加即视为当日遗忘。',
+        '调度是纯函数，与官方 ts-fsrs / fsrs-rs v6.x（21 权重）对拍。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'ts-fsrs / fsrs-rs 官方实现 v6.x（开源调度器，21 权重；本应用对拍，不自创）' },
+        { g: '🟢', ref: '遗忘曲线传统：Ebbinghaus 1885 起；FSRS 规格见 open-spaced-repetition / ts-fsrs 文档' }
+      ],
+      features: [{ label: '知识卡', nav: 'learn' }, { label: '统计', nav: 'statistics' }]
+    },
+    {
+      id: 'mastery', cat: 'learn', icon: '📊', title: '掌握度与毕业目标',
+      summary: '掌握度 = 稳定度 S 到毕业目标的对数压缩（⚠️ 自设计指标）。',
+      points: [
+        '分级：未学→初学→生疏→巩固中→已掌握→熟练→稳固→毕业。',
+        '另显示当前可提取性 R（此刻想起的概率）。',
+        '毕业目标可随倒计时收紧：目标日仍能 ≥90% 记得。'
+      ],
+      evidence: [
+        { g: '⚠️', ref: '自设计：存储强度/稳定度概念 + 对数压缩（非官方 FSRS 字段）' },
+        { g: '🟢', ref: '存储强度概念：Bjork 新失用理论（1992 起）' }
+      ],
+      features: [{ label: '统计', nav: 'statistics' }],
+      liveMastery: true
+    },
+    {
+      id: 'desirable', cat: 'learn', icon: '⚠️', title: '合意困难',
+      summary: '困难若专门挑战提取与重建，就有效；否则只是干扰。',
+      points: [
+        '有效：检索、间隔、交错、变换例题。',
+        '无效干扰：噪音、指令含混、无关复杂性。',
+        '判断标准：是否逼你重建记忆。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Bjork 1994 · Metacognition（Metacognition: Knowing about Knowing）' },
+        { g: '🟢', ref: 'Dunlosky et al. 2013' }
+      ],
+      features: []
+    },
 
+    // ---- 认知与行为 ----
+    {
+      id: 'rpe', cat: 'cog', icon: '⚡', title: '多巴胺：奖励预测误差',
+      summary: '多巴胺编码「实际奖励 − 预期」，不是快乐分子。',
+      points: [
+        '超预期爆发、符合预期沉默、落空被抑制。',
+        '教学信号会前移到预测线索——习惯渴望的神经基础。',
+        '行动：小里程碑 + 即时反馈，把预期挪到过程中。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Schultz, Dayan & Montague 1997 · Science' }
+      ],
+      features: [{ label: '统计', nav: 'statistics' }]
+    },
+    {
+      id: 'wanting', cat: 'cog', icon: '🎯', title: '想要 vs 喜欢',
+      summary: '多巴胺驱动「想要」（wanting），不等于「喜欢」（liking）。',
+      points: [
+        '清空多巴胺仍有喜欢表情，却不再主动觅食。',
+        '刷手机的冲动多半是想要，未必是喜欢。',
+        '冲动时先问一句：喜欢，还是只是想要？'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Berridge & Robinson · wanting-liking 系列（Trends in Cognitive Sciences 等）' }
+      ],
+      features: []
+    },
+    {
+      id: 'habit-loop', cat: 'cog', icon: '🔁', title: '习惯回路',
+      summary: '提示 → 惯常行为 → 奖赏；基底核把序列压成「块」。',
+      points: [
+        '习惯形成后提示一出现整段自动跑，几乎不过前额叶。',
+        '旧回路永不消失，只是被抑制——压力/情境会复活。',
+        '替换而非消灭：保提示与奖赏，换中间行为。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Graybiel 2008 · Annual Review of Neuroscience' },
+        { g: '🟢', ref: 'Wood & Neal 2007 · Psychological Review（习惯-目标接口）' }
+      ],
+      features: [{ label: '环境审计', nav: 'actPlan' }, { label: '习惯树', nav: 'actHabit' }]
+    },
+    {
+      id: 'habit-66', cat: 'cog', icon: '📆', title: '习惯形成：66 天',
+      summary: '自动化中位数约 66 天（范围 18–254）；关键是情境一致的重复。',
+      points: [
+        '「21 天」是讹传，见证伪清单。',
+        '漏一天用容忍天数，不搞连击惩罚。',
+        '给自己两个月以上练习窗口，接受波动。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Lally et al. 2010 · European Journal of Social Psychology' }
+      ],
+      features: [{ label: '习惯树', nav: 'actHabit' }]
+    },
+    {
+      id: 'sdt', cat: 'cog', icon: '🌱', title: 'SDT 三需要',
+      summary: '动机质量重于数量：自主、胜任、关联。',
+      points: [
+        '自主：把「我必须」重述为「我选择，因为……」。',
+        '胜任：看得到的进步（趋势、掌握度）。',
+        '关联：搭子、把学的讲给别人听。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Deci & Ryan · 自我决定理论（含 PISA 等大样本验证）' }
+      ],
+      features: [{ label: '统计', nav: 'statistics' }]
+    },
+    {
+      id: 'overjust', cat: 'cog', icon: '🚫', title: '过度辩护',
+      summary: '对本来有兴趣的事给有形奖励，内在兴趣反而下降。',
+      points: [
+        '归因从「我喜欢」变成「我为了奖励」。',
+        '口头肯定可增强；完成即给的物质奖励多削弱。',
+        '本应用不做积分/兑换/连击惩罚的依据。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Deci, Koestner & Ryan 1999 · Psychological Bulletin（元分析）' }
+      ],
+      features: [{ label: '计划', nav: 'actPlan' }]
+    },
+    {
+      id: 'emotion', cat: 'cog', icon: '🌊', title: '情绪双通路与重评',
+      summary: '低路快而糙、高路慢而细；认知重评优于表达抑制。',
+      points: [
+        '硬讲道理往往压不住恐惧——先冷却再沟通。',
+        '重评：把「他在否定我」重读为「帮我找盲点」。',
+        '压抑升高生理唤醒、损害记忆与人际。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'LeDoux · 杏仁核双通路（Current Biology 等系列）' },
+        { g: '🟢', ref: 'Gross & John 2003 · Journal of Personality and Social Psychology' }
+      ],
+      features: []
+    },
+    {
+      id: 'attention', cat: 'cog', icon: '👁️', title: '注意三网络',
+      summary: '警觉、定向、执行控制——不是一块肌肉。',
+      points: [
+        '警觉：维持准备；定向：被什么吸走；执行：顶住干扰、刹住冲动。',
+        '先分辨瓶颈再选练习，比盲目「练专注」有效。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Posner & Petersen 1990 · Annual Review of Neuroscience' }
+      ],
+      features: [{ label: '专注链', nav: 'actPlan' }]
+    },
+    {
+      id: 'mindfulness', cat: 'cog', icon: '🧘', title: '正念：小而真实',
+      summary: '训练「注意—漂移—带回」；效应小到中等但真实，不是大脑升级。',
+      points: [
+        '主要改善执行注意、工作记忆与持续注意。',
+        '最稳收益在高压防衰退，不在平常状态锦上添花。',
+        '每天哪怕 10 分钟，预期调成「小但真」。'
+      ],
+      evidence: [
+        { g: '🟡', ref: 'Zainal & Newman 2021 · 元分析（111 项 RCT，n≈9538）' },
+        { g: '🟡', ref: 'Jha et al. 2007 · Emotion（高压力下工作记忆）' }
+      ],
+      features: []
+    },
 
-  // ---------------- 原理 · 学习科学（结构化文档：目录跳转 + 关键词搜索） ----------------
-  const PRINCIPLE_SECTIONS = [
+    // ---- 行动方法 ----
     {
-      id: 'core', icon: '✍️', title: '核心方法：主动回忆 + 间隔重复',
-      blocks: [
-        { p: '学习科学里证据最强的两项技术（Dunlosky 2013 系统评估，证据等级 A）：检索练习——合上书主动回忆，远比反复阅读更牢固（Roediger & Karpicke 2006）；间隔重复——同样的总时长，分散到多天远优于考前突击（Cepeda 2006，254 项研究荟萃）。' },
-        { p: '本应用的学习闭环就是这两项的组合：卡片默认只显示提示 → 先自行回想（必要时写下来）→ 点「显示答案」核对 → 按真实回忆质量评分，FSRS-6 算法把下一次复习自动安排在遗忘临界点。' },
-        { muted: '重读、划线、抄写感觉「顺滑」，恰恰是低效的证据——这叫流畅性错觉。学得「难受」（合意困难）往往才是有效信号；反之，被动输入时大脑的三个可塑性信号（肾上腺素、乙酰胆碱、多巴胺）都不释放，等于白学。' }
-      ]
+      id: 'if-then', cat: 'act', icon: '🔗', title: '执行意图（如果-那么）',
+      summary: '「如果 [外部情境]，那么我将 [具体动作]」——把决策委托给线索。',
+      points: [
+        '「如果」必须是时间/地点/前序行为，禁纯内心状态。',
+        '「那么」必须是无需再决策的动作。',
+        '写下来，不要只在脑中构思。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Gollwitzer & Sheeran 2006 · 元分析（94 项研究，d=0.65）' }
+      ],
+      features: [{ label: '计划', nav: 'actPlan' }]
     },
     {
-      id: 'interleave', icon: '🔀', title: '交错与辨别',
-      blocks: [
-        { p: '交错练习（B 级）：把不同章节、不同题型混着练，远期成绩与迁移能力显著更好——练习时更「难受」，又是合意困难。集中刷同一类题的「顺滑感」是错觉。' },
-        { p: '本应用的实现：带「同类/对比/类比」关联的卡片聚成簇、相邻出现（辨析聚类）；「裸回忆」开关进一步隐藏分类徽标，逼你先判断「这是哪一类、该用哪个方法」再回忆。' },
-        { rows: [['自测', '随机抽卡「给内容选名称」，检验是否真正认得（生成效应：自己生成的答案记得更牢）。'], ['错题本', '真题做错后收进错题本，重做并评分，按 FSRS 排期重现；「不会/思路错」会把关联知识点一并降级、次日补漏。'], ['费曼技巧', '能用自己的话讲清楚才是真理解：合上卡片讲一遍，卡壳处即盲区（B 级）。'], ['自我解释', '每记一个公式追问：为什么成立？和什么已知有关？用在什么题型？（B 级）']] }
-      ]
+      id: 'woop', cat: 'act', icon: '🌈', title: 'WOOP',
+      summary: '愿 → 果 → 障 → 计；多数人跳过障碍步，那一步才起效。',
+      points: [
+        '障碍必须是内心障碍「因为我……」，不是外部困难。',
+        'P 生成一条如果-那么，写入计划列表。',
+        '比单纯积极幻想更可迁移。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Oettingen · WOOP / 心理对照（含 RCT 与手册）' }
+      ],
+      features: [{ label: '计划', nav: 'actPlan' }]
     },
     {
-      id: 'fsrs', icon: '📐', title: '调度内核：FSRS-6',
-      blocks: [
-        { p: '每张卡由难度 D 与稳定度 S 建模；可提取性 R(t,S) = (1 + F·t/S)^decay 表示「此刻能想起的概率」。四档评分（再来一次/困难/良好/简单）对应 FSRS 官方四档，按官方 21 参数默认权重更新 D/S，并按期望保留率 90% 反推下次间隔。' },
-        { p: '知识卡：学习阶段按时间步进（1 分钟 → 10 分钟），Good 越过最后一步毕业进入长期复习，遗忘后进入 10 分钟重学。错题卡为纯复习态：添加即视为「当天已忘记」，次日重现，之后与知识卡走同一套 FSRS 复习逻辑。' },
-        { muted: '调度内核是纯函数（src/fsrs-core.mjs、sched.mjs），与官方权重做对拍测试；毕业目标可与考试倒计时挂钩（要求目标日仍能 ≥90% 记得）。' }
-      ]
+      id: 'env', cat: 'act', icon: '🧹', title: '环境审计',
+      summary: '移除提示 ≫ 在提示面前硬抗。',
+      points: [
+        '数字：删 App、关通知、手机离卧室。',
+        '物理：零食不进家、运动服放床边。',
+        '路线：绕开触发点。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Wood & Neal 2007 · Psychological Review' },
+        { g: '🟢', ref: 'Graybiel 2008' }
+      ],
+      features: [{ label: '环境审计', nav: 'actPlan' }]
     },
     {
-      id: 'mastery', icon: '📊', title: '掌握度与毕业目标',
-      blocks: [
-        { p: '掌握度 = 记忆「存储强度」到毕业目标的比例（⚠️自设计，依据论文「存储强度」概念 + 对数压缩）：达到毕业目标即 100%。分级：未学 → 初学 → 生疏 → 巩固中 → 已掌握 → 熟练 → 稳固 → 毕业。另单独显示「当前可提取性 R」表示此刻想起的概率。' },
-        { p: '毕业目标默认与目标倒计时挂钩：要求目标日仍能 ≥90% 记得（等价于稳定度 S ≥ 剩余天数），随倒计时自动收紧；可在设置中改为固定目标值。' },
-        { legend: true }
-      ]
+      id: 'rsip', cat: 'act', icon: '🌳', title: '习惯树 · RSIP（递归稳态迭代）',
+      summary: '非打卡习惯：入树门槛 + 失败级联 + 内化保留 + 组容错。',
+      points: [
+        '入树：当日成功后可加入，每日最多 1 个新节点。',
+        '失败：级联熄灭子孙，回习惯库，内化进度不丢。',
+        '组容错：同组点亮数 ≥ minK 可不因本次失败移除（可编辑）。',
+        '强化可 +n；失败可降级不连坐。',
+        '过程反馈（勾选/次数/点阵）可以，连击惩罚不行。'
+      ],
+      evidence: [
+        { g: '⚠️', ref: '社区技术文《递归稳态迭代》（RSIP）原文思想——非同行评议，方法论参考' },
+        { g: '🟢', ref: 'Lally et al. 2010 · European Journal of Social Psychology（66 天）' },
+        { g: '🟢', ref: 'Graybiel 2008（回路/替换）' }
+      ],
+      features: [{ label: '习惯树', nav: 'actHabit' }, { label: '帮助', nav: 'actHelp' }]
     },
     {
-      id: 'science', icon: '📚', title: '学习科学清单：怎么学最有效',
-      blocks: [
-        { h: '高效（A 级，跨学科稳定）' },
-        { rows: [['检索练习', '合上书先回忆：做题、默写、闪卡、给假想学生讲——本应用的核心闭环。'], ['间隔重复', '同内容隔天/隔周回顾——FSRS 自动排期；间隔约为目标保留期的 10–20%。']] },
-        { h: '中效（B 级，用对场景有效）' },
-        { rows: [['交错练习', '不同题型混着练（已内置辨析聚类）。'], ['精细提问 / 自我解释', '对材料追问「为什么成立、和什么有关」。'], ['示例学习', '先照例题仿写，尽快脱离例题独立做。']] },
-        { h: '低效（D 级，大量时间换微量收益）' },
-        { rows: [['重读 / 划线 / 被动摘要', '感觉顺滑恰恰是流畅性错觉——把这部分时间换成检索练习。']] },
-        { p: '两个常见辟谣：「学习风格」（视觉型/听觉型）没有证据支持，请按材料本身的最佳表征学习（Pashler 2008，A 级负面证据）；「手写一定优于打字」证据混合，手写的真正价值在于强迫概括与加工。' }
-      ]
+      id: 'ctdp', cat: 'act', icon: '⛓️', title: '专注链 · CTDP（链式时延协议）',
+      summary: '工作量证明式专注：神圣座位 + #N 记录 + 下必为例判例。',
+      points: [
+        '神圣座位：触发说明 +「就座」启动，成功记 #N。',
+        '下必为例：可疑行为 → 清链重来 | 永久允许此例外。',
+        '预约链：信号后 15 分钟内启动；侦查任务 5 分钟低门槛。',
+        '精锐/普通链 + 继位：精锐崩溃由最强普通链继承。'
+      ],
+      evidence: [
+        { g: '⚠️', ref: '社区技术文《链式时延协议》（CTDP）原文思想——非同行评议，方法论参考' }
+      ],
+      features: [{ label: '专注链', nav: 'actPlan' }, { label: '计划', nav: 'actPlan' }]
     },
     {
-      id: 'body', icon: '🌙', title: '身体是学习系统的一部分',
-      blocks: [
-        { rows: [['睡眠（A 级）', '「学之前睡好」（睡眠决定编码效率），「学之后睡够」（巩固发生在深睡与安静休息）。熬夜学习的净收益通常为负。'], ['安静休息（B 级）', '学完 10–20 分钟不看手机、闭眼或散步，给海马「重放」留时间。'], ['运动（A/B 级）', '规律运动改善情绪、动机与睡眠；中等强度运动后 1–2 小时是编码黄金窗——把最难的材料放在运动后学。'], ['专注（A 级常识）', '任务切换有真实成本；手机哪怕静音扣在桌上也会偷走工作记忆——学习时段物理隔离。'], ['咖啡因（A 级）', '提升警觉，但半衰期约 5 小时：睡前 8–10 小时停止摄入；每日总量 ≤400mg。']] },
-        { muted: '本节为一般健康信息，不构成医疗建议；个体差异请以自身实验与医生意见为准。' }
-      ]
+      id: 'process-fb', cat: 'act', icon: '✅', title: '过程反馈（非奖励）',
+      summary: '勾选、次数、进度可以；物质/娱乐兑换、连击惩罚不行。',
+      points: [
+        '允许：完成勾选、累计次数、近 7 日点阵、轻量肯定。',
+        '禁止：「做完才能玩」交易、变率奖励、羞辱文案。',
+        '依据：过度辩护 + 变率强化劫持动机。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Deci, Koestner & Ryan 1999 · Psychological Bulletin' },
+        { g: '⚠️', ref: '产品红线（V2_PLAN）：不做物质兑换/连击惩罚' }
+      ],
+      features: [{ label: '习惯树', nav: 'actHabit' }]
+    },
+
+    // ---- 证伪与误区 ----
+    {
+      id: 'myth-styles', cat: 'myth', icon: '🚫', title: '学习风格（视觉型/听觉型）',
+      summary: '没有证据支持「按偏好匹配教学更有效」。',
+      points: [
+        '要成立需证明匹配优于不匹配——几乎没有合格实验。',
+        '按材料本身的最佳表征学；多模态对所有人更有效。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Pashler et al. 2008 · Psychological Science in the Public Interest（证伪）' }
+      ],
+      features: []
     },
     {
-      id: 'motivation', icon: '🎯', title: '动机与坚持',
-      blocks: [
-        { p: '最强的日常动机来源是「可见的微小进步」（Progress Principle，对 1.2 万个工作日的研究）——统计页的学习报告与趋势图就是为此设计：把注意力放在过程反馈，而非遥远的终点。' },
-        { p: '对拖延：它本质是用短期情绪修复替代长期目标。对策有三——自我原谅比自责更能减少下一次拖延（B 级）；启动只承诺两分钟（启动后继续的概率远大于放弃）；把任务拆到「下一个具体物理动作」。' },
-        { p: '习惯自动化的中位数约 66 天（「21 天养成」是讹传）；把新行为写成「当 X 时我就做 Y」的执行意图，是动机科学里效应量最大的廉价工具。环境设计大于意志力。' },
-        { muted: '本应用刻意不做积分、抽卡、连击惩罚等设计：变率奖励是劫持动机的赌场工具，而有形奖励会侵蚀你本来就有的学习兴趣（过度合理化效应，A 级）。' }
-      ]
+      id: 'myth-21', cat: 'myth', icon: '🚫', title: '21 天养成习惯',
+      summary: '来自 1960 年代整形医生观察笔记，不是实证研究。',
+      points: [
+        '实测中位数 66 天，范围 18–254。',
+        '用容忍天数吸收波动，比卡「21 天」更科学。'
+      ],
+      evidence: [
+        { g: '⚠️', ref: '流行神话（Maxwell Maltz 1960 观察笔记，非研究）' },
+        { g: '🟢', ref: 'Lally et al. 2010（实测替代）' }
+      ],
+      features: [{ label: '习惯树', nav: 'actHabit' }]
     },
     {
-      id: 'troubleshoot', icon: '🛠️', title: '学不进去排查表',
-      blocks: [
-        { rows: [['完全不想启动', '先查睡眠够不够、刺激密度是否过高（短视频依赖）。对策：补觉优先；两分钟启动法。'], ['三分钟热度', '查自主/胜任/关联缺了哪个。对策：把「要学」转成「我选择学」；看学习报告里的微进步；找个搭子。'], ['学完就忘', '是不是只重读不检索？间隔为零？对策：用自测与错题本；相信算法排期，到期就复习。'], ['越学越麻木', '是否形成刺激依赖（不听音乐学不了）？对策：给辅助刺激做减法与随机化；用真休息替代刷手机。'], ['burnout 前兆', '恢复是否长期不足？对策：减载 + 睡眠 + 每周一个无目标日；持续两周以上请就医。']] },
-        { muted: '持续两周以上的情绪低落、兴趣丧失、睡眠食欲明显改变——请直接寻求专业帮助，这不是「调优」能解决的问题。' }
-      ]
+      id: 'myth-ego', cat: 'myth', icon: '🚫', title: '自我损耗 / 意志力电池',
+      summary: '「意志力会被耗干」在预注册多实验室复制中效应几乎为零。',
+      points: [
+        '23 实验室 2141 人，d=0.04，置信区间跨零。',
+        '疲劳更可能是动机/注意转移，不是资源耗尽。'
+      ],
+      evidence: [
+        { g: '⚠️', ref: 'Hagger et al. 2016 · Perspectives on Psychological Science（RRR）' },
+        { g: '🟡', ref: '把疲劳当动机信号的替代解释（仍在积累）' }
+      ],
+      features: []
+    },
+    {
+      id: 'myth-10k', cat: 'myth', icon: '🚫', title: '一万小时定律',
+      summary: '刻意练习重要，但远不能解释「成专家」的全部。',
+      points: [
+        '元分析仅解释约 12% 表现变异。',
+        '质量（专注 + 反馈 + 渐进挑战）重于堆时间。'
+      ],
+      evidence: [
+        { g: '🟡', ref: 'Macnamara, Hambrick & Oswald 2014 · Psychological Science' },
+        { g: '⚠️', ref: '流行简化「一万小时」远大于实证效应' }
+      ],
+      features: []
+    },
+    {
+      id: 'myth-fluency', cat: 'myth', icon: '🚫', title: '重读 / 划线 = 学会',
+      summary: '流畅性错觉：感觉顺滑恰恰是低效信号。',
+      points: [
+        '把重读时间换成检索练习。',
+        '被动输入几乎不释放可塑性信号。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Dunlosky et al. 2013（重读/划线效用低）' },
+        { g: '🟡', ref: 'Bjork「流畅性」与元认知错觉系列' }
+      ],
+      features: [{ label: '自测', nav: 'quiz' }]
+    },
+    {
+      id: 'myth-hand', cat: 'myth', icon: '✏️', title: '手写一定优于打字',
+      summary: '证据混合；手写的真正价值在强迫概括与加工。',
+      points: [
+        '逐字打字与浅层手写都不如「生成式笔记」。',
+        '选让你必须加工的工具，而不是仪式感。'
+      ],
+      evidence: [
+        { g: '🟡', ref: 'Mueller & Oppenheimer 2014 · Psychological Science（与后续混合复制并存）' }
+      ],
+      features: []
+    },
+
+    // ---- 方法论附录 ----
+    {
+      id: 'grading', cat: 'appx', icon: '📏', title: '证据分级约定',
+      summary: '🟢 高 / 🟡 中 / ⚠️ 争议·社区方法——照录来源，不编造文献。',
+      points: [
+        '🟢 高：独立权威来源、大规模复制或元分析。',
+        '🟡 中：效应真实，但条件性强或样本有限。',
+        '⚠️ 争议/社区：复现失败、流行神话、或非同行评议方法论。',
+        'CTDP / RSIP 属 ⚠️ 社区技术文，与同行评议条目分离。'
+      ],
+      evidence: [
+        { g: '⚠️', ref: '分级本身为本库编排约定（对齐来源报告口径）' }
+      ],
+      features: []
+    },
+    {
+      id: 'dunlosky', cat: 'appx', icon: '🗂️', title: '学习技术效率速查',
+      summary: 'Dunlosky 2013 十技术评估的压缩版：A 级优先做。',
+      points: [
+        'A：检索练习、间隔重复。',
+        'B：交错、自我解释/精细提问、示例学习。',
+        'D：重读、划线、被动摘要——时间换微量收益。',
+        '应用映射：闪卡闭环=检索+间隔；辨析聚类=交错；错题本=真题检索。'
+      ],
+      evidence: [
+        { g: '🟢', ref: 'Dunlosky et al. 2013 · Psychological Science in the Public Interest' }
+      ],
+      features: [{ label: '自测', nav: 'quiz' }, { label: '错题本', nav: 'wrongBrowse' }]
+    },
+    {
+      id: 'trouble', cat: 'appx', icon: '🛠️', title: '学不进去排查',
+      summary: '先查睡眠/刺激/动机需要，再谈意志力。',
+      points: [
+        '不想启动 → 补觉优先；两分钟启动。',
+        '三分钟热度 → 补自主/胜任/关联；看微进步。',
+        '学完就忘 → 是不是只重读？间隔为零？',
+        '越学越麻木 → 刺激依赖？给辅助刺激做减法。',
+        'burnout 前兆 → 减载 + 睡眠 + 无目标日。'
+      ],
+      evidence: [
+        { g: '🟡', ref: '综合 SDT / 睡眠 / 刺激阈值条目（见本库对应出处）' }
+      ],
+      features: [{ label: '统计', nav: 'statistics' }, { label: '计划', nav: 'actPlan' }]
+    },
+    {
+      id: 'product-map', cat: 'appx', icon: '🗺️', title: '功能 ↔ 科学依据',
+      summary: '界面少科普；细节只在本知识库。',
+      points: [
+        '知识卡闭环 ↔ 检索 + 间隔 + FSRS。',
+        '辨析聚类/裸回忆 ↔ 交错 + 生成。',
+        '习惯树 ↔ 习惯回路 + 66 天 + 组容错（RSIP）。',
+        '专注链 ↔ 工作量证明 + 判例（CTDP）。',
+        '如果-那么 / WOOP / 环境审计 ↔ 执行意图 / 心理对照 / 提示控制。',
+        '不做兑换奖励 ↔ 过度辩护 + 变率强化红线。'
+      ],
+      evidence: [
+        { g: '🟢', ref: '映射关系；各条出处见对应条目' }
+      ],
+      features: [{ label: '习惯树', nav: 'actHabit' }, { label: '专注链', nav: 'actPlan' }, { label: '计划', nav: 'actPlan' }]
     }
   ];
 
-  let principleQuery = '';
-  function principleBlockText(sec) {
-    return sec.blocks.map(function (b) {
-      if (b.p) return b.p;
-      if (b.muted) return b.muted;
-      if (b.h) return b.h;
-      if (b.rows) return b.rows.map(function (r) { return r[0] + r[1]; }).join(' ');
-      return '';
-    }).join(' ');
+  let kbQuery = '';
+  let kbSel = null;
+
+  function kbEntryText(e) {
+    return [e.title, e.summary, (e.points || []).join(' '),
+      (e.evidence || []).map(function (x) { return x.g + ' ' + x.ref; }).join(' '),
+      (e.features || []).map(function (x) { return x.label; }).join(' ')
+    ].join(' ');
+  }
+
+  function kbMatches(e, q) {
+    if (!q) return true;
+    return kbEntryText(e).toLowerCase().indexOf(q) !== -1;
   }
 
   function renderPrinciples() {
     const app = document.getElementById('app');
-    const wrap = el('div', 'principles-wrap');
+    const wrap = el('div', 'principles-wrap kb-wrap');
 
-    wrap.appendChild(el('h2', null, '🧠 原理 · 学习科学'));
-    wrap.appendChild(el('p', 'muted', '本应用遵循认知科学中被反复验证的记忆与学习规律——目录跳转，或搜索关键词直达章节；条目后标注证据等级（A 强 / B 中 / C 弱）。'));
+    wrap.appendChild(el('h2', null, '🧠 知识库 · 原理与依据'));
+    wrap.appendChild(el('p', 'muted', '可检索条目库：每条写明研究者/年份/期刊或来源，并标 🟢 高 / 🟡 中 / ⚠️ 争议·社区方法。界面不堆长科普，细节只在这里。'));
 
-    // 搜索（实时过滤章节）
-    const search = el('input', 'search');
+    const search = el('input', 'search kb-search');
     search.type = 'search';
-    search.placeholder = '搜索关键词（如：睡眠 / 交错 / 遗忘曲线 / 拖延）…';
-    search.value = principleQuery;
+    search.placeholder = '搜索条目（如：睡眠 / 多巴胺 / WOOP / RSIP / 证伪）…';
+    search.value = kbQuery;
     wrap.appendChild(search);
 
-    // 目录（吸顶 chips，锚点跳转）
-    const toc = el('div', 'chips principle-toc');
-    const tocChips = {};
-    PRINCIPLE_SECTIONS.forEach(function (sec) {
-      const chip = el('button', 'chip', sec.icon + ' ' + sec.title);
-      chip.addEventListener('click', function () {
-        const node = document.getElementById('pr-' + sec.id);
-        if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-      tocChips[sec.id] = chip;
-      toc.appendChild(chip);
-    });
-    wrap.appendChild(toc);
+    const layout = el('div', 'kb-layout');
+    const side = el('div', 'kb-side');
+    const detail = el('div', 'kb-detail');
+    layout.appendChild(side);
+    layout.appendChild(detail);
+    wrap.appendChild(layout);
 
-    // 章节
-    const boxes = {};
-    PRINCIPLE_SECTIONS.forEach(function (sec) {
-      const box = el('div', 'principle');
-      box.id = 'pr-' + sec.id;
-      const head = el('div', 'principle-head');
-      head.appendChild(el('span', 'principle-icon', sec.icon));
-      head.appendChild(el('strong', null, sec.title));
-      box.appendChild(head);
-      sec.blocks.forEach(function (b) {
-        if (b.h) {
-          box.appendChild(el('div', 'mini-label', b.h));
-        } else if (b.p) {
-          box.appendChild(el('p', null, b.p));
-        } else if (b.muted) {
-          box.appendChild(el('p', 'muted how', b.muted));
-        } else if (b.rows) {
-          b.rows.forEach(function (row) {
-            const r = el('div', 'cat-bar-row');
-            r.appendChild(el('span', 'cat-bar-name', row[0]));
-            r.appendChild(el('span', 'pr-row-text', row[1]));
-            box.appendChild(r);
-          });
-        } else if (b.legend) {
-          const s = stats();
-          const legend = el('div', 'legend');
-          const levels = ['未学', '初学', '生疏', '巩固中', '已掌握', '熟练', '稳固', '毕业'];
-          const counts = {};
-          DATA.forEach(function (f) { const l = mastery(f.id).label; counts[l] = (counts[l] || 0) + 1; });
-          levels.forEach(function (lv) {
-            const p = el('span', 'legend-item');
-            p.textContent = lv + ' ' + (counts[lv] || 0);
-            legend.appendChild(p);
-          });
-          box.appendChild(legend);
-          box.appendChild(el('p', 'muted', '当前整体平均掌握度 ' + s.avg + '%（分级实时统计如上）。'));
-        }
-      });
-      boxes[sec.id] = box;
-      wrap.appendChild(box);
-    });
-
-    const empty = el('p', 'muted', '没有匹配的章节——换个关键词试试。');
+    const empty = el('p', 'muted', '没有匹配的条目——换个关键词试试。');
     empty.classList.add('hidden');
-    wrap.appendChild(empty);
 
-    function applyFilter() {
-      const q = principleQuery.trim().toLowerCase();
-      let visible = 0;
-      PRINCIPLE_SECTIONS.forEach(function (sec) {
-        const text = (sec.title + ' ' + principleBlockText(sec)).toLowerCase();
-        const show = !q || text.indexOf(q) !== -1;
-        boxes[sec.id].style.display = show ? '' : 'none';
-        tocChips[sec.id].style.display = show ? '' : 'none';
-        if (show) visible++;
-      });
-      empty.classList.toggle('hidden', visible > 0 || !q);
+    function visibleEntries() {
+      const q = kbQuery.trim().toLowerCase();
+      return KB_ENTRIES.filter(function (e) { return kbMatches(e, q); });
     }
-    search.addEventListener('input', function () {
-      principleQuery = search.value;
-      applyFilter();
-    });
-    applyFilter();
 
+    function renderSide() {
+      side.innerHTML = '';
+      const vis = visibleEntries();
+      if (!vis.length) {
+        side.appendChild(el('p', 'muted', '无匹配'));
+        return;
+      }
+      KB_CATS.forEach(function (cat) {
+        const list = vis.filter(function (e) { return e.cat === cat.id; });
+        if (!list.length) return;
+        const head = el('div', 'kb-cat-label', cat.icon + ' ' + cat.title);
+        side.appendChild(head);
+        list.forEach(function (e) {
+          const item = el('button', 'kb-item' + (e.id === kbSel ? ' active' : ''), e.title);
+          item.addEventListener('click', function () {
+            kbSel = e.id;
+            renderSide();
+            renderDetail();
+          });
+          side.appendChild(item);
+        });
+      });
+    }
+
+    function renderDetail() {
+      detail.innerHTML = '';
+      const vis = visibleEntries();
+      empty.classList.toggle('hidden', vis.length > 0 || !kbQuery.trim());
+      if (!vis.length) {
+        detail.appendChild(empty);
+        return;
+      }
+      let e = KB_ENTRIES.find(function (x) { return x.id === kbSel && kbMatches(x, kbQuery.trim().toLowerCase()); });
+      if (!e) {
+        e = vis[0];
+        kbSel = e.id;
+        renderSide();
+      }
+
+      const card = el('div', 'kb-card');
+      const head = el('div', 'kb-head');
+      head.appendChild(el('span', 'principle-icon', e.icon));
+      head.appendChild(el('strong', null, e.title));
+      card.appendChild(head);
+      card.appendChild(el('p', 'kb-summary', e.summary));
+
+      if (e.points && e.points.length) {
+        card.appendChild(el('div', 'mini-label', '要点'));
+        const ul = el('ul', 'kb-points');
+        e.points.forEach(function (p) {
+          ul.appendChild(el('li', null, p));
+        });
+        card.appendChild(ul);
+      }
+
+      card.appendChild(el('div', 'mini-label', '依据'));
+      const evBox = el('div', 'kb-evidence');
+      (e.evidence || []).forEach(function (x) {
+        const row = el('div', 'kb-evi-row');
+        row.appendChild(el('span', 'kb-evi-grade g' + (x.g === '🟢' ? 'hi' : x.g === '🟡' ? 'mid' : 'warn'), x.g));
+        row.appendChild(el('span', 'kb-evi-ref', x.ref));
+        evBox.appendChild(row);
+      });
+      card.appendChild(evBox);
+
+      if (e.liveMastery) {
+        const s = stats();
+        const legend = el('div', 'legend');
+        const levels = ['未学', '初学', '生疏', '巩固中', '已掌握', '熟练', '稳固', '毕业'];
+        const counts = {};
+        DATA.forEach(function (f) { const l = mastery(f.id).label; counts[l] = (counts[l] || 0) + 1; });
+        levels.forEach(function (lv) {
+          const p = el('span', 'legend-item');
+          p.textContent = lv + ' ' + (counts[lv] || 0);
+          legend.appendChild(p);
+        });
+        card.appendChild(legend);
+        card.appendChild(el('p', 'muted', '当前整体平均掌握度 ' + s.avg + '%（实时统计）。'));
+      }
+
+      if (e.features && e.features.length) {
+        card.appendChild(el('div', 'mini-label', '关联功能'));
+        const chips = el('div', 'chips kb-features');
+        e.features.forEach(function (f) {
+          const b = el('button', 'chip', f.label);
+          if (f.nav) {
+            b.setAttribute('data-action', 'nav');
+            b.setAttribute('data-arg', f.nav);
+          }
+          chips.appendChild(b);
+        });
+        card.appendChild(chips);
+      }
+
+      if (e.id === 'rsip' || e.id === 'ctdp') {
+        card.appendChild(el('p', 'muted how', '⚠️ 社区技术文条目：引用方法论原文思想，不是同行评议研究；产品实现以 docs/V2_PLAN.md 与 docs/ACT.md 为准。'));
+      }
+
+      detail.appendChild(card);
+    }
+
+    search.addEventListener('input', function () {
+      kbQuery = search.value;
+      renderSide();
+      renderDetail();
+    });
+
+    if (!kbSel || !KB_ENTRIES.some(function (x) { return x.id === kbSel; })) kbSel = KB_ENTRIES[0].id;
+    renderSide();
+    renderDetail();
     app.appendChild(wrap);
   }
-
   // ---------------- 思维导图视图 ----------------
   function svgEl(tag, attrs) {
     const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -4981,21 +6116,27 @@
     return n;
   }
 
-  // 考试倒计时：扫描各科设置里最近的正数目标日期
+  // 考试倒计时：扫描各科设置里最近的正数目标日期（尊重 prefScope：global 用全局值）
   function homeExamDays() {
     let best = null;
+    const consider = function (s) {
+      if (!s) return;
+      const d = new Date(s + 'T00:00:00');
+      if (!isNaN(d.getTime())) {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const days = Math.round((d - today) / DAY);
+        if (days > 0 && (best == null || days < best)) best = days;
+      }
+    };
+    // 全局目标日期（任一科选了 global 也生效；无科选 global 时全局值仍可作后备）
+    consider(loadGlobalPrefs().examDate);
     Object.keys(subjectList()).forEach(function (sid) {
       let db = null;
       try { db = JSON.parse(localStorage.getItem(sid + '_formula_srs_v1')); } catch (e) {}
-      const s = db && db.settings && db.settings.examDate;
-      if (s) {
-        const d = new Date(s + 'T00:00:00');
-        if (!isNaN(d.getTime())) {
-          const today = new Date(); today.setHours(0, 0, 0, 0);
-          const days = Math.round((d - today) / DAY);
-          if (days > 0 && (best == null || days < best)) best = days;
-        }
-      }
+      const st = (db && db.settings) || {};
+      const scope = prefResolveScope(st.prefScope, 'examDate');
+      const s = (scope === 'global') ? loadGlobalPrefs().examDate : st.examDate;
+      consider(s);
     });
     return best;
   }
@@ -5095,14 +6236,6 @@
     return box;
   }
 
-  // 每日一句（旧版入口：保留函数名兼容）
-  function homeQuote() {
-    const pool = quotePool();
-    const p = pickDaily(pool, 'quote');
-    if (!p) return null;
-    return { sid: p.item.sid, id: p.item.id, title: p.item.title, quote: p.item.text.split('。')[0] + '。' };
-  }
-
   // ---------------- 功能入口线稿图标（currentColor 单色，随文字颜色自适应） ----------------
   const UI_ICONS = {
     home: '<path d="M3.5 11 L12 3.5 L20.5 11"/><path d="M6 9.5 V20 H18 V9.5"/><path d="M10 20 V14.5 H14 V20"/>',
@@ -5113,7 +6246,10 @@
     chart: '<path d="M5 20 V11 M12 20 V4.5 M19 20 V14"/><path d="M3 20.5 H21"/>',
     cap: '<path d="M2.5 9.5 L12 4.5 L21.5 9.5 L12 14.5 Z"/><path d="M6.5 11.8 V16.2 C6.5 17.8 17.5 17.8 17.5 16.2 V11.8"/><path d="M21.5 9.5 V14.5"/>',
     sliders: '<path d="M4 7 H20 M4 12 H20 M4 17 H20"/><circle cx="9.5" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="10.5" cy="17" r="2.1"/>',
-    help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6 a2.4 2.4 0 1 1 3.9 1.9 c-.9.7-1.5 1.2-1.5 2.3"/><path d="M12 16.6 v.5"/>'
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6 a2.4 2.4 0 1 1 3.9 1.9 c-.9.7-1.5 1.2-1.5 2.3"/><path d="M12 16.6 v.5"/>',
+    act: '<rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4 V3 H15 V4"/><path d="M9 10 H15 M9 14 H13"/>',
+    habit: '<path d="M12 20 V11"/><path d="M12 11 C12 11 8 9.5 8 6.5 C8 6.5 12 7.5 12 11"/><path d="M12 13 C12 13 16 11.5 16 8.5 C16 8.5 12 9.5 12 13"/>',
+    mile: '<path d="M7 20 V4"/><path d="M7 5 H18 L15 9 L18 13 H7"/><path d="M5 20 H12"/>'
   };
   function icon(name) {
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -5137,6 +6273,143 @@
       }
     }
     return Math.round(100 * Math.max(0, Math.min(1, Math.log(1 + cardObj.stab) / Math.log(1 + sN))));
+  }
+
+  // ---------------- Today 右栏：习惯/专注摘要（V2_PLAN §4） ----------------
+  // 运行时从 habit/focus 取数；模块未挂载时优雅降级。
+  function homeActionSummary() {
+    const out = {
+      habit: { has: false, total: 0, done: 0, due: 0, library: 0, canAdd: false, addedToday: 0, addLimit: 1 },
+      focus: { has: false, chains: 0, work: 0, status: 'none', reserveMs: 0, precedents: 0, tier: '' }
+    };
+    if (typeof habitLoadNodes === 'function' && typeof habitDayStats === 'function') {
+      try {
+        const nodes = habitLoadNodes();
+        const today = (typeof habitToday === 'function') ? habitToday() : null;
+        const s = habitDayStats(nodes, today);
+        const can = (typeof habitCanAddToTree === 'function') ? habitCanAddToTree(nodes, today) : { ok: false, addedToday: 0, limit: 1 };
+        const lib = (typeof habitLibrary === 'function') ? habitLibrary(nodes).length : 0;
+        out.habit = {
+          has: true,
+          total: s.total, done: s.done, due: s.due,
+          library: lib,
+          canAdd: !!can.ok,
+          addedToday: can.addedToday || 0,
+          addLimit: can.limit != null ? can.limit : 1
+        };
+      } catch (e) {}
+    }
+    if (typeof loadFocus === 'function' && typeof focusActiveChain === 'function') {
+      try {
+        const st = loadFocus();
+        const ch = focusActiveChain(st);
+        out.focus.has = true;
+        out.focus.chains = (st.chains || []).length;
+        out.focus.precedents = (st.precedents || []).length;
+        if (ch) {
+          out.focus.work = ch.workCount || 0;
+          out.focus.status = ch.status || 'idle';
+          out.focus.tier = ch.tier === 'elite' ? '精锐' : '普通';
+          if (ch.reservation && typeof focusReservationRemainingMs === 'function') {
+            out.focus.reserveMs = focusReservationRemainingMs(ch.reservation, Date.now());
+          }
+        }
+      } catch (e) {}
+    }
+    return out;
+  }
+
+  // 里程碑：主页最多 1 条最近解锁（T37 · 读 athena_mile_v1；无积分/排行/赎买）
+  function homePickMilestone(sum) {
+    try {
+      if (typeof mileSync === 'function') mileSync(); // 观察者同步，顺手落新 Hit
+      if (typeof mileRecentHit === 'function') {
+        const m = mileRecentHit();
+        if (m) return { tag: m.tag, text: m.text, go: m.go || 'mile' };
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  // 左栏：今日复习（知识卡 due，按科聚合）
+  function homeDueReviewPanel(rows) {
+    const panel = el('div', 'home-panel home-due');
+    panel.appendChild(el('div', 'home-panel-title', '📖 今日复习'));
+    const dueRows = rows.filter(function (r) { return (r.due || 0) > 0 || (r.wrongDue || 0) > 0; })
+      .sort(function (a, b) { return (b.due || 0) - (a.due || 0); });
+    if (!dueRows.length) {
+      panel.appendChild(el('p', 'muted', '全库无待复习。可以预习新卡，或去习惯树/专注链走一圈。'));
+    } else {
+      const list = el('div', 'home-due-list');
+      dueRows.slice(0, 8).forEach(function (r) {
+        const row = el('button', 'home-due-row');
+        row.appendChild(el('span', 'home-due-name', r.short || r.name));
+        const bits = [];
+        if (r.due) bits.push('⏳' + r.due);
+        if (r.wrongDue) bits.push('✗' + r.wrongDue);
+        row.appendChild(el('span', 'muted', bits.join(' · ')));
+        row.addEventListener('click', function () {
+          if (r.sid !== currentSubjectId) switchSubject(r.sid);
+          currentView = 'learn';
+          renderApp();
+        });
+        list.appendChild(row);
+      });
+      if (dueRows.length > 8) list.appendChild(el('div', 'muted home-due-more', '…共 ' + dueRows.length + ' 科有待复习'));
+      panel.appendChild(list);
+    }
+    return panel;
+  }
+
+  // 右栏：习惯树 + 专注链摘要
+  function homeActionPanel(sum) {
+    const panel = el('div', 'home-panel home-action');
+    panel.appendChild(el('div', 'home-panel-title', '🌱 习惯 · 专注'));
+
+    const h = sum.habit;
+    const hBox = el('button', 'home-act-block');
+    hBox.appendChild(el('div', 'home-act-name', '习惯树'));
+    if (h.has) {
+      hBox.appendChild(el('div', 'muted', '树上 ' + h.total + ' · 今日 ' + h.done + '/' + h.total + ' · 待检 ' + h.due));
+      const slot = h.canAdd
+        ? ('入树名额 ' + h.addedToday + '/' + h.addLimit + '（今日仍可入树）')
+        : ('入树名额 ' + h.addedToday + '/' + h.addLimit + '（今日已用完）');
+      hBox.appendChild(el('div', 'muted', slot + (h.library ? ' · 库 ' + h.library : '')));
+    } else {
+      hBox.appendChild(el('div', 'muted', '尚未启用习惯树'));
+    }
+    hBox.addEventListener('click', function () {
+      currentModule = 'act';
+      currentView = 'actHabit';
+      renderApp();
+    });
+    panel.appendChild(hBox);
+
+    const f = sum.focus;
+    const fBox = el('button', 'home-act-block');
+    fBox.appendChild(el('div', 'home-act-name', '专注链'));
+    if (f.has) {
+      const label = (typeof focusWorkLabel === 'function') ? focusWorkLabel(f.work) : ('#' + f.work);
+      const stMap = { running: '专注中', scouting: '侦查中', reserved: '预约中', awaiting_verdict: '待裁决', cleared: '已清空', idle: '空闲', none: '—' };
+      let line = f.tier ? (f.tier + ' ' + label) : ('链 ' + f.chains);
+      line += ' · ' + (stMap[f.status] || f.status);
+      fBox.appendChild(el('div', 'muted', line));
+      if (f.status === 'reserved' && f.reserveMs > 0) {
+        const mins = Math.ceil(f.reserveMs / 60000);
+        fBox.appendChild(el('div', 'muted', '预约剩余约 ' + mins + ' 分钟——尽快就座'));
+      } else if (f.status === 'running') {
+        fBox.appendChild(el('div', 'muted', '完成本单元可记 ' + (typeof focusWorkLabel === 'function' ? focusWorkLabel(f.work + 1) : ('#' + (f.work + 1)))));
+      }
+    } else {
+      fBox.appendChild(el('div', 'muted', '尚未创建专注链'));
+    }
+    fBox.addEventListener('click', function () {
+      currentModule = 'act';
+      currentView = 'actFocus';
+      renderApp();
+    });
+    panel.appendChild(fBox);
+    return panel;
   }
 
   function renderHome() {
@@ -5197,6 +6470,30 @@
       });
       wrap.appendChild(hero);
     }
+
+    // 里程碑（最多 1 条最近解锁；点击查看深链或去里程碑时间线）
+    const sum = homeActionSummary();
+    const milestone = homePickMilestone(sum);
+    if (milestone) {
+      const m = el('button', 'home-milestone');
+      m.appendChild(el('span', 'home-milestone-tag', milestone.tag));
+      m.appendChild(el('span', 'home-milestone-text', milestone.text));
+      m.addEventListener('click', function () {
+        if (typeof mileGo === 'function') mileGo(milestone.go || 'mile');
+        else {
+          currentModule = 'act';
+          currentView = milestone.go || 'actHabit';
+          renderApp();
+        }
+      });
+      wrap.appendChild(m);
+    }
+
+    // Today 双栏：左今日复习 · 右习惯/专注摘要（V2_PLAN §4）
+    const cols = el('div', 'home-cols');
+    cols.appendChild(homeDueReviewPanel(rows));
+    cols.appendChild(homeActionPanel(sum));
+    wrap.appendChild(cols);
 
     // 学科网格（分类切换：全部/学业/技能/语言/爱好，会话内状态）
     if (renderHome._cat === undefined) renderHome._cat = 'all';
@@ -5288,21 +6585,6 @@
         wrap.appendChild(duo);
       }
     }
-
-    // 快捷入口
-    wrap.appendChild(el('h3', null, '⚡ 快捷入口'));
-    const tiles = el('div', 'home-tiles');
-    [['pencil', '自测', 'quiz'], ['chart', '统计', 'statistics'], ['cap', '原理', 'principle'], ['sliders', '设置', 'settings']].forEach(function (t) {
-      const b = el('button', 'home-tile');
-      const ic = icon(t[0]);
-      ic.classList.add('home-tile-icon');
-      b.appendChild(ic);
-      b.appendChild(el('span', null, t[1]));
-      b.setAttribute('data-action', 'nav');
-      b.setAttribute('data-arg', t[2]);
-      tiles.appendChild(b);
-    });
-    wrap.appendChild(tiles);
 
     app.appendChild(wrap);
   }
@@ -5531,6 +6813,242 @@
     return (j.private === true) ? '验证成功：私有仓库 ✓' : '验证成功，但这是公开仓库——学习数据对外可见，强烈建议改用私有仓库！';
   }
 
+  // —— 行动模块合并（H4）：athena_act_v1 / athena_habit_groups_v1 / athena_focus_v1 ——
+  // 规则：节点 id+updatedAt 取新；习惯 doneDates（日志）与专注判例并集；组并集冲突本地优先；
+  // 设置本地优先。绝不写入 *_formula_srs_v1，也不刷新其 updatedAt。
+  const ACT_SYNC_PATH = SYNC_DIR + '/data/_act.json';
+  const ACT_DATA_KEYS = ['athena_act_v1', 'athena_habit_groups_v1', 'athena_focus_v1'];
+
+  function mergeNodesByIdUpdatedAt(a, b, extra) {
+    const map = {};
+    const order = [];
+    [].concat(Array.isArray(a) ? a : [], Array.isArray(b) ? b : []).forEach(function (n) {
+      if (!n || typeof n !== 'object' || n.id == null || n.id === '') return;
+      const id = String(n.id);
+      if (map[id] == null) {
+        map[id] = n;
+        order.push(id);
+        return;
+      }
+      const prev = map[id];
+      const prevUp = Number(prev.updatedAt) || 0;
+      const curUp = Number(n.updatedAt) || 0;
+      let winner = curUp > prevUp ? n : prev;
+      if (extra) {
+        const merged = extra(prev, n, winner);
+        if (merged) winner = merged;
+      }
+      map[id] = winner;
+    });
+    return order.map(function (id) { return map[id]; });
+  }
+
+  function mergeDoneDates(a, b) {
+    const seen = {};
+    const out = [];
+    [].concat(Array.isArray(a) ? a : [], Array.isArray(b) ? b : []).forEach(function (d) {
+      const s = String(d == null ? '' : d);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s) && !seen[s]) { seen[s] = 1; out.push(s); }
+    });
+    out.sort();
+    return out;
+  }
+
+  function mergeActModule(local, remote) {
+    const L = (local && typeof local === 'object') ? local : {};
+    const R = (remote && typeof remote === 'object') ? remote : {};
+    const la = (L.act && typeof L.act === 'object') ? L.act : {};
+    const ra = (R.act && typeof R.act === 'object') ? R.act : {};
+    let changed = false;
+
+    const habitExtra = function (prev, cur, winner) {
+      const dates = mergeDoneDates(prev.doneDates, cur.doneDates);
+      const w = Object.assign({}, winner);
+      w.doneDates = dates;
+      return w;
+    };
+    // 计划主干 = WOOP（旧 ifThen / envAudit 不参与合并，加载时丢弃）
+    const woops = mergeNodesByIdUpdatedAt(la.woops, ra.woops);
+    const habits = mergeNodesByIdUpdatedAt(la.habits, ra.habits, habitExtra);
+
+    // 独有节点 → 云端带来了本机没有的内容
+    const countIds = function (arr) { const s = {}; (arr || []).forEach(function (n) { if (n && n.id != null) s[String(n.id)] = 1; }); return s; };
+    const localWo = countIds(la.woops), remoteWo = countIds(ra.woops);
+    const localHa = countIds(la.habits), remoteHa = countIds(ra.habits);
+    Object.keys(remoteWo).forEach(function (id) { if (!localWo[id]) changed = true; });
+    Object.keys(remoteHa).forEach(function (id) { if (!localHa[id]) changed = true; });
+
+    // 习惯组：并集，同 id 冲突本地优先（低频配置）
+    const groupMap = {};
+    const groupOrder = [];
+    [].concat(Array.isArray(R.habitGroups) ? R.habitGroups : [], Array.isArray(L.habitGroups) ? L.habitGroups : [])
+      .forEach(function (g) {
+        if (!g || typeof g !== 'object' || g.id == null || g.id === '') return;
+        const id = String(g.id);
+        if (groupMap[id] == null) {
+          groupMap[id] = g;
+          groupOrder.push(id);
+          if (!Array.isArray(L.habitGroups) || !L.habitGroups.some(function (x) { return x && String(x.id) === id; })) changed = true;
+        }
+        // 后写覆盖：L 在后 → 本地优先
+        else groupMap[id] = g;
+      });
+    const habitGroups = groupOrder.map(function (id) { return groupMap[id]; });
+
+    // 专注：链/单元/编制/计划 id+updatedAt 取新；判例并集；activeId 本地优先（须落在合并结果上）
+    const lf = (L.focus && typeof L.focus === 'object') ? L.focus : {};
+    const rf = (R.focus && typeof R.focus === 'object') ? R.focus : {};
+    const chains = mergeNodesByIdUpdatedAt(lf.chains, rf.chains);
+    const units = mergeNodesByIdUpdatedAt(lf.units, rf.units);
+    const orgs = mergeNodesByIdUpdatedAt(lf.orgs, rf.orgs);
+    const plans = mergeNodesByIdUpdatedAt(lf.plans, rf.plans);
+    const chainIds = {};
+    chains.forEach(function (c) { if (c && c.id != null) chainIds[String(c.id)] = 1; });
+    const localChainIds = countIds(lf.chains);
+    (Array.isArray(rf.chains) ? rf.chains : []).forEach(function (c) {
+      if (c && c.id != null && !localChainIds[String(c.id)]) changed = true;
+    });
+    ['units', 'orgs', 'plans'].forEach(function (key) {
+      const li = countIds(lf[key]);
+      (Array.isArray(rf[key]) ? rf[key] : []).forEach(function (n) {
+        if (n && n.id != null && !li[String(n.id)]) changed = true;
+      });
+    });
+    const precMap = {};
+    const precOrder = [];
+    [].concat(Array.isArray(rf.precedents) ? rf.precedents : [], Array.isArray(lf.precedents) ? lf.precedents : [])
+      .forEach(function (p) {
+        if (!p || typeof p !== 'object' || p.id == null || p.id === '') return;
+        const id = String(p.id);
+        if (precMap[id] == null) {
+          precMap[id] = p;
+          precOrder.push(id);
+          if (!Array.isArray(lf.precedents) || !lf.precedents.some(function (x) { return x && String(x.id) === id; })) changed = true;
+        } else precMap[id] = p; // 本地在后 → 优先
+      });
+    const precedents = precOrder.map(function (id) { return precMap[id]; });
+
+    let activeId = lf.activeId == null || lf.activeId === '' ? null : String(lf.activeId);
+    if (!activeId || !chainIds[activeId]) {
+      const rid = rf.activeId == null || rf.activeId === '' ? null : String(rf.activeId);
+      if (rid && chainIds[rid]) { activeId = rid; changed = true; }
+      else activeId = chains[0] ? String(chains[0].id) : null;
+    }
+
+    // 番号流水取各字段 max（永不重排/不回收）
+    const seq = {};
+    ['unit', 'group', 'corps', 'army'].forEach(function (k) {
+      seq[k] = Math.max(Number(lf.seq && lf.seq[k]) || 0, Number(rf.seq && rf.seq[k]) || 0);
+    });
+
+    // 设置本地优先（与学习库设置策略一致）
+    const settings = (L.settings && typeof L.settings === 'object') ? L.settings
+      : ((R.settings && typeof R.settings === 'object') ? R.settings : null);
+
+    const out = {
+      updatedAt: Math.max(Number(L.updatedAt) || 0, Number(R.updatedAt) || 0),
+      act: { woops: woops, habits: habits },
+      habitGroups: habitGroups,
+      focus: {
+        chains: chains,
+        precedents: precedents,
+        activeId: activeId,
+        units: units,
+        orgs: orgs,
+        plans: plans,
+        seq: seq
+      },
+      settings: settings
+    };
+    Object.defineProperty(out, '__changedFromRemote', { value: changed, enumerable: false });
+    return out;
+  }
+
+  function actModuleLocalPayload() {
+    const read = function (k) {
+      try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; }
+    };
+    return {
+      updatedAt: Date.now(),
+      act: read('athena_act_v1') || { woops: [], habits: [] },
+      habitGroups: read('athena_habit_groups_v1') || [],
+      focus: read('athena_focus_v1') || { chains: [], precedents: [], activeId: null },
+      settings: read('athena_act_cfg_v1') || null
+    };
+  }
+
+  function actModuleWriteLocal(payload) {
+    const p = (payload && typeof payload === 'object') ? payload : {};
+    const write = function (k, v) {
+      try {
+        if (v == null) localStorage.removeItem(k);
+        else localStorage.setItem(k, JSON.stringify(v));
+      } catch (e) { warnStorageFailure(); }
+    };
+    // 只写行动键 + 行动设置；绝不触碰 *_formula_srs_v1 及其 updatedAt
+    write('athena_act_v1', p.act || { woops: [], habits: [] });
+    write('athena_habit_groups_v1', Array.isArray(p.habitGroups) ? p.habitGroups : []);
+    write('athena_focus_v1', p.focus || { chains: [], precedents: [], activeId: null });
+    if (p.settings && typeof p.settings === 'object') write('athena_act_cfg_v1', p.settings);
+    if (typeof window !== 'undefined') {
+      window.__actData = p.act || { woops: [], habits: [] };
+      window.__habitGroups = Array.isArray(p.habitGroups) ? p.habitGroups : [];
+      window.__focusData = p.focus || { chains: [], precedents: [], activeId: null };
+      if (p.settings) window.__habitCfg = p.settings;
+    }
+    return true;
+  }
+
+  async function syncActModule() {
+    const local = actModuleLocalPayload();
+    const seenUp = syncLastUp('_act');
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const remote = await ghGetJson(ACT_SYNC_PATH);
+        const remoteUp = (remote && remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0;
+        if (!remote) {
+          try {
+            await ghPutJson(ACT_SYNC_PATH, local);
+            syncSetLastUp('_act', local.updatedAt || Date.now());
+            return { action: 'push' };
+          } catch (err) {
+            if (isShaConflict(err)) { lastErr = err; continue; }
+            throw err;
+          }
+        }
+        const merged = mergeActModule(local, remote.data);
+        const changedFromRemote = merged.__changedFromRemote === true;
+        const mergedUp = (typeof merged.updatedAt === 'number') ? merged.updatedAt : 0;
+        const cloudDiverged = remoteUp > seenUp + SYNC_TOLERANCE_MS;
+        let action = 'skip';
+        if (changedFromRemote) {
+          if (cloudDiverged) await ghPutJson(SYNC_DIR + '/archive/_act/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json', local);
+          actModuleWriteLocal(merged);
+          action = 'pull';
+        }
+        if (mergedUp > remoteUp + SYNC_TOLERANCE_MS || (changedFromRemote && mergedUp >= remoteUp)) {
+          if (remote && cloudDiverged) {
+            await ghPutJson(SYNC_DIR + '/archive/_act/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json', remote.data, remote.sha);
+          }
+          try {
+            await ghPutJson(ACT_SYNC_PATH, merged, remote.sha);
+          } catch (err) {
+            if (isShaConflict(err)) { lastErr = err; continue; }
+            throw err;
+          }
+          action = changedFromRemote ? 'merge' : 'push';
+        }
+        syncSetLastUp('_act', Math.max(remoteUp, mergedUp));
+        return { action: action };
+      } catch (err) {
+        if (isShaConflict(err)) { lastErr = err; continue; }
+        throw err;
+      }
+    }
+    throw new Error('云端正在被其他设备更新，重试 3 次未成功（' + (lastErr && lastErr.message ? lastErr.message : '') + '）');
+  }
+
   // 本地某学科的 DB 对象：当前学科取内存 DB，其他学科读 localStorage 快照
   function syncLocalDb(sid) {
     if (sid === currentSubjectId && DB) return DB;
@@ -5679,6 +7197,16 @@
         summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
       }
     }
+    // 行动模块（习惯/计划/专注）：独立文件，不触碰 *_formula_srs_v1 的 updatedAt
+    try {
+      const actRes = await syncActModule();
+      if (actRes.action === 'push') summary.cloud.push('_act');
+      else if (actRes.action === 'pull') summary.local.push('_act');
+      else if (actRes.action === 'merge') summary.both.push('_act');
+      else summary.skipped.push('_act');
+    } catch (err) {
+      summary.failed.push('行动模块：' + (err && err.message ? err.message : '未知错误'));
+    }
     const cfg = syncCfg();
     cfg.lastSyncAt = Date.now();
     cfg.lastSyncSummary = { cloud: summary.cloud.length, local: summary.local.length, both: summary.both.length, failed: summary.failed.length };
@@ -5751,6 +7279,39 @@
     saveSyncCfg(cfg);
   }
 
+  // 行动模块单向覆盖（完全上传/下载共用）
+  async function forceUploadAct() {
+    const local = actModuleLocalPayload();
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const remote = await ghGetJson(ACT_SYNC_PATH);
+        if (remote && remote.data) {
+          await ghPutJson(SYNC_DIR + '/archive/_act/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json', remote.data);
+        }
+        await ghPutJson(ACT_SYNC_PATH, local, remote ? remote.sha : undefined);
+        syncSetLastUp('_act', local.updatedAt || Date.now());
+        return { action: 'upload' };
+      } catch (err) {
+        if (isShaConflict(err)) { lastErr = err; continue; }
+        throw err;
+      }
+    }
+    throw new Error('云端正在被其他设备更新，重试 3 次未成功（' + (lastErr && lastErr.message ? lastErr.message : '') + '）');
+  }
+
+  async function forceDownloadAct() {
+    const remote = await ghGetJson(ACT_SYNC_PATH);
+    if (!remote || !remote.data) return { action: 'skip' };
+    const local = actModuleLocalPayload();
+    try {
+      await ghPutJson(SYNC_DIR + '/archive/_act/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json', local);
+    } catch (e) { /* 归档失败不阻断下载 */ }
+    actModuleWriteLocal(remote.data);
+    syncSetLastUp('_act', (remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0);
+    return { action: 'download' };
+  }
+
   // 完全上传：本机 → 云端（单向覆盖）。返回 { ok, skipped, failed }
   async function doForceUploadAll() {
     settleLocalSave();
@@ -5764,6 +7325,13 @@
       } catch (err) {
         summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
       }
+    }
+    try {
+      const ares = await forceUploadAct();
+      if (ares.action === 'upload') summary.ok.push('_act');
+      else summary.skipped.push('_act');
+    } catch (err) {
+      summary.failed.push('行动模块：' + (err && err.message ? err.message : '未知错误'));
     }
     recordForceSummary('upload', summary);
     for (const sid of sids) { await pruneArchives(sid); }
@@ -5783,6 +7351,13 @@
       } catch (err) {
         summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
       }
+    }
+    try {
+      const ares = await forceDownloadAct();
+      if (ares.action === 'download') summary.ok.push('_act');
+      else summary.skipped.push('_act');
+    } catch (err) {
+      summary.failed.push('行动模块：' + (err && err.message ? err.message : '未知错误'));
     }
     recordForceSummary('download', summary);
     // 当前学科被云端覆盖：重载内存 DB、重建学习队列并刷新界面（与 doRunSync 一致）
@@ -5824,6 +7399,6531 @@
     }).catch(function () {});
   }
 
+  // ---------------- 行动·计划：WOOP 主干（V2 计划模块重置） ----------------
+  // 规格：docs/ACT.md §3；如果-那么 = WOOP 的 P 步，环境审计 = 障碍步的「外部提示」清单。
+  // 存储 athena_act_v1，与学习库 *_formula_srs_v1 隔离。旧 ifThen / envAudit 字段加载时丢弃。
+  // 禁止：物质/娱乐兑换、连击惩罚、改动 FSRS。校验仅软提示，不强制阻断。
+
+  const ACT_KEY = 'athena_act_v1';
+
+  function actDefaultData() {
+    return { woops: [], habits: [] };
+  }
+
+  function actSanitizeCues(arr) {
+    return (Array.isArray(arr) ? arr : []).filter(function (c) { return c && typeof c === 'object'; }).map(function (c) {
+      return {
+        id: String(c.id || ('cue_' + Date.now() + '_' + Math.floor(Math.random() * 10000))),
+        text: String(c.text == null ? '' : c.text),
+        cueType: ['time', 'place', 'emotion', 'prior', 'app'].indexOf(c.cueType) >= 0 ? c.cueType : 'prior',
+        strategy: c.strategy === 'transform' ? 'transform' : 'remove',
+        method: ['digital', 'physical', 'route'].indexOf(c.method) >= 0 ? c.method : 'digital',
+        note: String(c.note == null ? '' : c.note)
+      };
+    }).filter(function (c) { return c.text; });
+  }
+
+  function actSanitize(raw) {
+    const out = actDefaultData();
+    if (!raw || typeof raw !== 'object') return out;
+    if (Array.isArray(raw.woops)) {
+      raw.woops.forEach(function (x) {
+        if (!x || typeof x !== 'object') return;
+        const created = Number(x.createdAt) || Date.now();
+        const w = {
+          id: String(x.id || ('woop_' + Date.now() + '_' + Math.floor(Math.random() * 10000))),
+          wish: String(x.wish == null ? '' : x.wish),
+          outcome: String(x.outcome == null ? '' : x.outcome),
+          obstacle: String(x.obstacle == null ? '' : x.obstacle),
+          cues: actSanitizeCues(x.cues),
+          planIf: String(x.planIf == null ? '' : x.planIf),
+          planThen: String(x.planThen == null ? '' : x.planThen),
+          createdAt: created,
+          updatedAt: Number(x.updatedAt) || created
+        };
+        if (w.wish && w.outcome && w.obstacle && w.planIf && w.planThen) out.woops.push(w);
+      });
+    }
+    // 旧计划数据（ifThen / envAudit）按产品决策丢弃，不进入新结构
+    // habits 由习惯树接管；此处只保留数组占位，不解析业务字段
+    if (Array.isArray(raw.habits)) out.habits = raw.habits.filter(function (h) { return h && typeof h === 'object'; });
+    return out;
+  }
+
+  function loadAct() {
+    if (typeof window !== 'undefined' && window.__actData) return window.__actData;
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(ACT_KEY)); } catch (e) {}
+    const data = actSanitize(raw);
+    if (typeof window !== 'undefined') window.__actData = data;
+    return data;
+  }
+
+  function saveAct(data) {
+    const d = data || actDefaultData();
+    if (typeof window !== 'undefined') window.__actData = d;
+    try { localStorage.setItem(ACT_KEY, JSON.stringify(d)); } catch (e) {}
+    return d;
+  }
+
+  function actUid(prefix) {
+    return (prefix || 'id') + '_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+  }
+
+  // ---------------- 纯校验（export 供 tests 对拍；软提示，不阻断） ----------------
+  // ACT §2 文案：「如果」外部情境；「那么」无需再决策的动作。
+  const ACT_IF_HINT = '「如果」必须是外部情境（时间 / 地点 / 前序行为），禁止纯内心状态（「如果我有动力」不合格）。';
+  const ACT_THEN_HINT = '「那么」必须是无需再决策的动作（「打开 Anki 复习 10 张」合格；「学习一会儿」不合格）。';
+  const ACT_OBSTACLE_HINT = '障碍必须是内心障碍（「因为我……」），不是外部困难。';
+
+  // 内心状态词（无外部锚点时判不合格）
+  const ACT_INNER_IF = /有动力|想学|想练|愿意学|心情好|状态好|有时间|有空|有精力|想做作业|来感觉|有心情|想努力|愿意努力/;
+  // 外部情境锚点：时间 / 地点 / 前序行为
+  const ACT_OUTER_IF = /早上|早晨|清晨|中午|下午|傍晚|晚上|夜里|深夜|睡前|起床|醒来|点|分|时|家|宿舍|图书馆|教室|自习室|办公室|工位|地铁|公交|路上|车上|桌前|书桌|床边|沙发|厨房|吃完|吃完饭|喝完|做完|写完|背完|上完|下课|下班|下课后|走进|到了|打开|关掉|回到|离开|之后|以后|之前|到家|进家|坐在|站在|闹钟|通知|提醒|出门|进门|拿起|放下|看到/;
+
+  function actValidateIf(text) {
+    const s = String(text == null ? '' : text).trim();
+    if (!s) return { ok: false, reason: 'empty', hint: '「如果」不能为空。' + ACT_IF_HINT };
+    const hasOuter = ACT_OUTER_IF.test(s);
+    const hasInner = ACT_INNER_IF.test(s);
+    if (hasInner && !hasOuter) return { ok: false, reason: 'internal', hint: ACT_IF_HINT };
+    if (!hasOuter && s.length < 8) return { ok: false, reason: 'vague', hint: ACT_IF_HINT };
+    return { ok: true, hint: '' };
+  }
+
+  function actValidateThen(text) {
+    const s = String(text == null ? '' : text).trim();
+    if (!s) return { ok: false, reason: 'empty', hint: '「那么」不能为空。' + ACT_THEN_HINT };
+    // 仍需再决策的模糊表述
+    if (/^(学习|复习|练习|看看|读书|写作|背书|刷题|看书|学)(一)?(会儿|下|点|些)$/.test(s)) {
+      return { ok: false, reason: 'vague', hint: ACT_THEN_HINT };
+    }
+    if (/^(好好学习|努力学习|努力|加油|尽力|尽量|争取|好好学|多学点|学一会儿|学一下|学一点)$/.test(s)) {
+      return { ok: false, reason: 'vague', hint: ACT_THEN_HINT };
+    }
+    return { ok: true, hint: '' };
+  }
+
+  function actValidateIfThen(ifText, thenText) {
+    return { if: actValidateIf(ifText), then: actValidateThen(thenText) };
+  }
+
+  function actValidateObstacle(text) {
+    const s = String(text == null ? '' : text).trim();
+    if (!s) return { ok: false, reason: 'empty', hint: ACT_OBSTACLE_HINT };
+    const external = /因为(没时间|太忙|工作忙|要加班|别人|天气|环境|没条件|没钱|设备|网络|老师|同学|室友|家人)/;
+    const internal = /因为我(会|就|容易|总是|老是|怕|担心|焦虑|拖延|分心|走神|想玩|想刷|不够|太累|懒|畏难|完美主义|在意|习惯)/;
+    if (external.test(s) && !internal.test(s)) return { ok: false, reason: 'external', hint: ACT_OBSTACLE_HINT };
+    return { ok: true, hint: '' };
+  }
+
+  function actFormatIfThen(item) {
+    const ifT = String((item && item.if) || '').trim();
+    const thenT = String((item && item.then) || '').trim();
+    return '如果 ' + ifT + '，那么我将 ' + thenT;
+  }
+
+  function actIsThisWeek(dateStr) {
+    if (!dateStr) return false;
+    const d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d.getTime())) return false;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = today.getTime() - 6 * 86400000;
+    return d.getTime() >= weekAgo && d.getTime() <= today.getTime() + 86400000;
+  }
+
+  // 主页/行动摘要（习惯数取自 habit.mjs；模块单独加载时回退占位）
+  function actTodaySummary() {
+    const d = loadAct();
+    let habitDue = 0, habitDone = 0, habitTotal = 0;
+    if (typeof habitHomeCounts === 'function') {
+      const hc = habitHomeCounts();
+      habitDue = hc.due; habitDone = hc.done; habitTotal = hc.total;
+    } else {
+      habitTotal = (d.habits || []).filter(function (h) { return h && !h.removedAt; }).length;
+    }
+    return {
+      woop: d.woops.length,
+      habitDue: habitDue,
+      habitDone: habitDone,
+      habitTotal: habitTotal
+    };
+  }
+
+  // ---------------- 会话级 UI 状态（不落盘） ----------------
+  let actView = 'plan';          // plan | habit | focus | help（由 currentView 驱动，见 renderAct）
+  let actWoopStep = 0;           // WOOP 向导 0–3
+  let actWoopDraft = null;       // { wish, outcome, obstacle, cues[], planIf, planThen }
+  const homePlanFold = { woop: false }; // 主页计划入口折叠态
+
+  // ---------------- WOOP 主干：删除 / 四步向导（含外部提示） ----------------
+  const ACT_CUE_TYPES = [
+    ['time', '时间'],
+    ['place', '地点'],
+    ['emotion', '情绪'],
+    ['prior', '前序动作'],
+    ['app', 'App 通知']
+  ];
+  const ACT_METHODS = [
+    ['digital', '数字', '删/隐藏 App、关通知、手机离卧室'],
+    ['physical', '物理', '零食不进家、运动服放床边'],
+    ['route', '路线', '绕开触发点']
+  ];
+
+  function actDeleteWoop(id) {
+    if (typeof window !== 'undefined' && !window.confirm('确定删除这条 WOOP 吗？（不可恢复）')) return;
+    const d = loadAct();
+    d.woops = d.woops.filter(function (w) { return w.id !== id; });
+    saveAct(d);
+    renderApp();
+    toast('已删除 WOOP');
+  }
+
+  function actOpenWoop(existing) {
+    actWoopStep = 0;
+    actWoopDraft = existing ? {
+      id: existing.id,
+      wish: existing.wish || '',
+      outcome: existing.outcome || '',
+      obstacle: existing.obstacle || '',
+      cues: (existing.cues || []).map(function (c) { return Object.assign({}, c); }),
+      planIf: existing.planIf || '',
+      planThen: existing.planThen || ''
+    } : { id: null, wish: '', outcome: '', obstacle: '', cues: [], planIf: '', planThen: '' };
+    actRenderWoopModal();
+  }
+
+  function actRenderWoopModal() {
+    const old = document.querySelector('.map-modal.woop-modal');
+    if (old) old.remove();
+    const modal = el('div', 'map-modal woop-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () {
+      const m = document.querySelector('.map-modal.woop-modal');
+      if (m) m.remove();
+      actWoopDraft = null;
+    });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+
+    const STEPS = [
+      { key: 'wish', label: 'W · 愿望', title: '愿望（Wish）', ph: '用一两句写下对你真正重要的愿望…' },
+      { key: 'outcome', label: 'O · 结果', title: '结果（Outcome）· 最佳画面', ph: '愿望实现后最好的画面/感受…' },
+      { key: 'obstacle', label: 'O · 障碍', title: '内心障碍 + 外部提示', ph: '写成「因为我……」的内心障碍（不是外部困难）…' },
+      { key: 'plan', label: 'P · 计划', title: '计划（Plan）→ 如果-那么', ph: '' }
+    ];
+    const step = STEPS[actWoopStep];
+    card.appendChild(el('h3', null, (actWoopDraft.id ? '✏️ 编辑' : '🌈') + ' WOOP · ' + step.label + '（' + (actWoopStep + 1) + '/4）'));
+    card.appendChild(el('p', 'muted', '顺序：愿望 → 结果 → 内心障碍（可附外部提示）→ 计划。'));
+
+    function goStep(n) {
+      actWoopStep = n;
+      actRenderWoopModal();
+    }
+
+    if (actWoopStep < 2) {
+      const ta = el('textarea', 'wrong-input');
+      ta.placeholder = step.ph;
+      ta.value = actWoopDraft[step.key] || '';
+      card.appendChild(el('span', 'mini-label', step.title));
+      card.appendChild(ta);
+      const btns = el('div', 'wrong-input-btns');
+      if (actWoopStep > 0) {
+        const back = el('button', 'btn', '上一步');
+        back.addEventListener('click', function () {
+          actWoopDraft[step.key] = ta.value;
+          goStep(actWoopStep - 1);
+        });
+        btns.appendChild(back);
+      }
+      const next = el('button', 'btn primary', '下一步');
+      next.addEventListener('click', function () {
+        const v = ta.value.trim();
+        if (!v) { toast(step.title + '不能为空'); return; }
+        actWoopDraft[step.key] = v;
+        goStep(actWoopStep + 1);
+      });
+      btns.appendChild(next);
+      const cancel = el('button', 'btn', '取消');
+      cancel.addEventListener('click', function () {
+        const m = document.querySelector('.map-modal.woop-modal');
+        if (m) m.remove();
+        actWoopDraft = null;
+      });
+      btns.appendChild(cancel);
+      card.appendChild(btns);
+    } else if (actWoopStep === 2) {
+      // O · 内心障碍 + 外部提示（原环境审计并入）
+      card.appendChild(el('span', 'mini-label', '内心障碍（因为我……）'));
+      const ta = el('textarea', 'wrong-input');
+      ta.value = actWoopDraft.obstacle || '';
+      ta.placeholder = step.ph;
+      card.appendChild(ta);
+      const hint = el('div', 'act-hint');
+      card.appendChild(hint);
+      ta.addEventListener('input', function () {
+        const v = actValidateObstacle(ta.value);
+        hint.textContent = ta.value.trim() ? (v.ok ? '' : v.hint) : '';
+        hint.className = 'act-hint' + (v.ok || !ta.value.trim() ? '' : ' warn');
+      });
+      const v0 = actValidateObstacle(ta.value);
+      hint.textContent = v0.ok ? '' : v0.hint;
+      hint.className = 'act-hint' + (v0.ok ? '' : ' warn');
+
+      card.appendChild(el('span', 'mini-label', '外部提示（可选）→ 移除 / 改造'));
+      card.appendChild(el('p', 'muted', '移除提示 ≫ 在提示面前硬扛。数字 / 物理 / 路线。'));
+      const list = el('div', 'audit-cue-list');
+      (actWoopDraft.cues || []).forEach(function (c, idx) {
+        const row = el('div', 'audit-cue-row');
+        row.appendChild(el('div', 'act-ifthen-main', (idx + 1) + '. ' + c.text));
+        const typeLabel = (ACT_CUE_TYPES.filter(function (t) { return t[0] === c.cueType; })[0] || [])[1] || '';
+        const methodLabel = (ACT_METHODS.filter(function (m) { return m[0] === c.method; })[0] || [])[1] || '';
+        row.appendChild(el('div', 'muted', typeLabel + ' · ' + (c.strategy === 'remove' ? '移除' : '改造') + ' · ' + methodLabel + (c.note ? ' · ' + c.note : '')));
+        const del = el('button', 'btn small danger', '删');
+        del.addEventListener('click', function () {
+          actWoopDraft.cues.splice(idx, 1);
+          actRenderWoopModal();
+        });
+        row.appendChild(del);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+
+      const addBox = el('div', 'audit-add');
+      const cueText = el('input', 'wrong-input');
+      cueText.type = 'text';
+      cueText.placeholder = '提示描述，如「手机放在床头」…';
+      addBox.appendChild(cueText);
+      let cueType = 'prior';
+      const typeWrap = el('div', 'chips');
+      ACT_CUE_TYPES.forEach(function (t) {
+        const chip = el('button', 'chip' + (t[0] === cueType ? ' active' : ''), t[1]);
+        chip.addEventListener('click', function () {
+          cueType = t[0];
+          typeWrap.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+          chip.classList.add('active');
+        });
+        typeWrap.appendChild(chip);
+      });
+      addBox.appendChild(typeWrap);
+      let strategy = 'remove';
+      const stratWrap = el('div', 'chips');
+      [['remove', '移除提示'], ['transform', '改造提示']].forEach(function (s) {
+        const chip = el('button', 'chip' + (s[0] === strategy ? ' active' : ''), s[1]);
+        chip.addEventListener('click', function () {
+          strategy = s[0];
+          stratWrap.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+          chip.classList.add('active');
+        });
+        stratWrap.appendChild(chip);
+      });
+      addBox.appendChild(stratWrap);
+      let method = 'digital';
+      const methodWrap = el('div', 'chips');
+      ACT_METHODS.forEach(function (m) {
+        const chip = el('button', 'chip' + (m[0] === method ? ' active' : ''), m[1]);
+        chip.addEventListener('click', function () {
+          method = m[0];
+          methodWrap.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+          chip.classList.add('active');
+        });
+        methodWrap.appendChild(chip);
+      });
+      addBox.appendChild(methodWrap);
+      const noteIn = el('input', 'wrong-input');
+      noteIn.type = 'text';
+      noteIn.placeholder = '做法（可选），如「删掉短视频 App」…';
+      addBox.appendChild(noteIn);
+      const addBtn = el('button', 'btn', '＋ 添加提示');
+      addBtn.addEventListener('click', function () {
+        const t = cueText.value.trim();
+        if (!t) { toast('请填写提示描述'); return; }
+        actWoopDraft.cues.push({
+          id: actUid('cue'),
+          text: t,
+          cueType: cueType,
+          strategy: strategy,
+          method: method,
+          note: noteIn.value.trim()
+        });
+        actRenderWoopModal();
+      });
+      addBox.appendChild(addBtn);
+      card.appendChild(addBox);
+
+      const btns = el('div', 'wrong-input-btns');
+      const back = el('button', 'btn', '上一步');
+      back.addEventListener('click', function () {
+        actWoopDraft.obstacle = ta.value;
+        goStep(1);
+      });
+      const next = el('button', 'btn primary', '下一步：计划');
+      next.addEventListener('click', function () {
+        const v = ta.value.trim();
+        if (!v) { toast('内心障碍不能为空'); return; }
+        const ov = actValidateObstacle(v);
+        if (!ov.ok) { toast(ov.hint); return; }
+        actWoopDraft.obstacle = v;
+        goStep(3);
+      });
+      btns.appendChild(back);
+      btns.appendChild(next);
+      const cancel = el('button', 'btn', '取消');
+      cancel.addEventListener('click', function () {
+        const m = document.querySelector('.map-modal.woop-modal');
+        if (m) m.remove();
+        actWoopDraft = null;
+      });
+      btns.appendChild(cancel);
+      card.appendChild(btns);
+    } else {
+      // P：如果-那么（主干内嵌，不再单列计划库）
+      card.appendChild(el('span', 'mini-label', '如果（外部情境）'));
+      const ifTa = el('textarea', 'wrong-input');
+      ifTa.value = actWoopDraft.planIf || '';
+      ifTa.placeholder = '如果 [时间/地点/前序行为]…';
+      card.appendChild(ifTa);
+      const hintIf = el('div', 'act-hint');
+      card.appendChild(hintIf);
+
+      card.appendChild(el('span', 'mini-label', '那么（无需再决策的动作）'));
+      const thenTa = el('textarea', 'wrong-input');
+      thenTa.value = actWoopDraft.planThen || '';
+      thenTa.placeholder = '那么我将 [具体动作]…';
+      card.appendChild(thenTa);
+      const hintThen = el('div', 'act-hint');
+      card.appendChild(hintThen);
+
+      function refreshP() {
+        const v = actValidateIfThen(ifTa.value, thenTa.value);
+        hintIf.textContent = v.if.ok ? '' : v.if.hint;
+        hintIf.className = 'act-hint' + (v.if.ok ? '' : ' warn');
+        hintThen.textContent = v.then.ok ? '' : v.then.hint;
+        hintThen.className = 'act-hint' + (v.then.ok ? '' : ' warn');
+      }
+      ifTa.addEventListener('input', refreshP);
+      thenTa.addEventListener('input', refreshP);
+      refreshP();
+
+      const btns = el('div', 'wrong-input-btns');
+      const back = el('button', 'btn', '上一步');
+      back.addEventListener('click', function () {
+        actWoopDraft.planIf = ifTa.value;
+        actWoopDraft.planThen = thenTa.value;
+        goStep(2);
+      });
+      const done = el('button', 'btn primary', actWoopDraft.id ? '保存 WOOP' : '保存 WOOP');
+      done.addEventListener('click', function () {
+        const ifT = ifTa.value.trim();
+        const thenT = thenTa.value.trim();
+        if (!ifT || !thenT) { toast('计划中的「如果」与「那么」不能为空'); return; }
+        const d = loadAct();
+        const now = Date.now();
+        const payload = {
+          wish: actWoopDraft.wish,
+          outcome: actWoopDraft.outcome,
+          obstacle: actWoopDraft.obstacle,
+          cues: (actWoopDraft.cues || []).slice(),
+          planIf: ifT,
+          planThen: thenT,
+          updatedAt: now
+        };
+        if (actWoopDraft.id) {
+          const hit = d.woops.filter(function (x) { return x.id === actWoopDraft.id; })[0];
+          if (hit) {
+            hit.wish = payload.wish;
+            hit.outcome = payload.outcome;
+            hit.obstacle = payload.obstacle;
+            hit.cues = payload.cues;
+            hit.planIf = payload.planIf;
+            hit.planThen = payload.planThen;
+            hit.updatedAt = now;
+          }
+        } else {
+          d.woops.push(Object.assign({ id: actUid('woop'), createdAt: now }, payload));
+        }
+        saveAct(d);
+        const m = document.querySelector('.map-modal.woop-modal');
+        if (m) m.remove();
+        actWoopDraft = null;
+        renderApp();
+        toast('WOOP 已保存');
+      });
+      btns.appendChild(back);
+      btns.appendChild(done);
+      card.appendChild(btns);
+    }
+
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+  // ---------------- 帮助子页：RSIP 设计手册（V2-E） ----------------
+  // 界面少长科普；科学细节/依据走知识库短链，口径与 map.mjs 一致。
+  function actOpenKb(entryId) {
+    // 与 map.mjs 同 IIFE 作用域：直接选中条目后进知识库
+    try { kbSel = String(entryId); } catch (e) {}
+    currentView = 'principle';
+    renderApp();
+  }
+
+  function actHelpStrategy(name, line, tip) {
+    const row = el('div', 'act-strategy');
+    row.appendChild(el('div', 'act-strategy-name', name));
+    row.appendChild(el('div', null, line));
+    if (tip) row.appendChild(el('div', 'muted', tip));
+    return row;
+  }
+
+  function renderActHelp(wrap) {
+    wrap.appendChild(el('h2', null, '📖 RSIP · 设计手册'));
+    wrap.appendChild(el('p', 'muted', '习惯设计四攻略 + 习惯树规则 + 计划/专注链速查。科学依据见知识库，这里只给可执行要点。'));
+
+    const sec1 = el('div', 'act-panel act-help-page');
+    sec1.appendChild(el('h3', null, '设计四攻略（习惯树 · RSIP）'));
+    sec1.appendChild(actHelpStrategy(
+      '① 零敲牛皮糖',
+      '动作小到不可能失败；每日最多 1 个新节点入树。',
+      '内化一点一点涨，失败不丢——碎片时间也能完成的动作优先。'
+    ));
+    sec1.appendChild(actHelpStrategy(
+      '② 农村包围城市',
+      '先建外围易行节点，再用父子层级逼近核心难习惯。',
+      '树用来「围」不是「冲」：外围站稳再打中心。'
+    ));
+    sec1.appendChild(actHelpStrategy(
+      '③ 组容错',
+      '同标签成保护组；组内有人维持时，本次漏做不因组内保护被移除。',
+      'minK 可编辑；全部超标才整组失败。一个人倒下 ≠ 整片倒下。'
+    ));
+    sec1.appendChild(actHelpStrategy(
+      '④ 不破不立',
+      '坏习惯是替换不是消灭；在 WOOP 障碍步列外部提示并移除/改造。',
+      '失败回习惯库、内化保留，可再入树——破了还能立。'
+    ));
+    wrap.appendChild(sec1);
+
+    const sec2 = el('div', 'act-panel act-help-page');
+    sec2.appendChild(el('h3', null, '专注链 · CTDP 简述'));
+    const ul2 = el('ul');
+    [
+      '神圣座位：固定触发说明 +「就座」启动，成功记 #N 工作量证明。',
+      '下必为例：可疑行为二选一——清链重来，或永久允许此例外（进判例表）。',
+      '预约链：信号后 15 分钟内启动；侦查任务 5 分钟低门槛，可延长。',
+      '精锐/普通链 + 继位：精锐崩溃由最强普通链继承。'
+    ].forEach(function (t) { ul2.appendChild(el('li', null, t)); });
+    sec2.appendChild(ul2);
+    const ctdpLink = el('button', 'btn small', '知识库 · 专注链 CTDP →');
+    ctdpLink.addEventListener('click', function () { actOpenKb('ctdp'); });
+    sec2.appendChild(ctdpLink);
+    wrap.appendChild(sec2);
+
+    const sec3 = el('div', 'act-panel act-help-page');
+    sec3.appendChild(el('h3', null, '计划 · WOOP 速查'));
+    const ul3 = el('ul');
+    [
+      'W 愿望：一两句写清对你真正重要的愿望。',
+      'O 结果：愿望实现后最好的画面。',
+      'O 障碍：内心障碍写成「因为我……」；可附外部提示 → 移除/改造（数字/物理/路线）。',
+      'P 计划：如果 [外部情境]，那么我将 [无需再决策的动作]。',
+      '计划主干只有 WOOP；如果-那么是 P 步，提示清单在障碍步。'
+    ].forEach(function (t) { ul3.appendChild(el('li', null, t)); });
+    sec3.appendChild(ul3);
+    const woopLink = el('button', 'btn small', '知识库 · WOOP →');
+    woopLink.addEventListener('click', function () { actOpenKb('woop'); });
+    sec3.appendChild(woopLink);
+    wrap.appendChild(sec3);
+
+    const sec4 = el('div', 'act-panel act-help-page');
+    sec4.appendChild(el('h3', null, '习惯树 · 规则简述'));
+    const ul4 = el('ul');
+    [
+      '每日最多 1 个新节点入树；当日成功后可继续点亮。',
+      '失败：节点回习惯库，级联熄灭子孙；内化进度不丢。',
+      '节点显示标题 / 内化条（0–100）/ 强化 +n；点击选中后可改父级。',
+      '内化 ≥50 强化保底 +1，≥100 保底 +2；失败降级 −1，子孙不连坐；可手动升/降。',
+      '组容错：同组维持数 ≥ minK 时，本次超标成员受组内保护；minK 可在面板或选中节点处编辑。',
+      '每日检查：未履行 miss+1，超容忍天数判失败；已履行 miss 清零并记内化。',
+      '过程反馈仅内化条 / 强化位 / 次数——无连击惩罚、无奖励兑换。',
+      '内化接近满时，行为趋于「定式」——无需再决策的自动反应。'
+    ].forEach(function (t) { ul4.appendChild(el('li', null, t)); });
+    sec4.appendChild(ul4);
+    const rsipLink = el('button', 'btn small', '知识库 · 习惯树 RSIP →');
+    rsipLink.addEventListener('click', function () { actOpenKb('rsip'); });
+    sec4.appendChild(rsipLink);
+    wrap.appendChild(sec4);
+
+    const sec5 = el('div', 'act-panel act-help-page');
+    sec5.appendChild(el('h3', null, '详见知识库'));
+    const links = el('div', 'act-help-kb-links');
+    [
+      ['rsip', '习惯树 · RSIP'],
+      ['ctdp', '专注链 · CTDP'],
+      ['woop', 'WOOP'],
+      ['if-then', '执行意图'],
+      ['env', '提示与替换'],
+      ['process-fb', '过程反馈']
+    ].forEach(function (pair) {
+      const b = el('button', 'chip', pair[1]);
+      b.addEventListener('click', function () { actOpenKb(pair[0]); });
+      links.appendChild(b);
+    });
+    sec5.appendChild(links);
+    wrap.appendChild(sec5);
+  }
+
+  // ---------------- 渲染：行动壳 / 计划区 ----------------
+  function renderAct() {
+    const app = document.getElementById('app');
+    const wrap = el('div', 'act-wrap');
+    const isHelp = currentView === 'actHelp';
+    const isHabit = currentView === 'actHabit';
+    const isFocus = currentView === 'actFocus';
+    actView = isHelp ? 'help' : (isHabit ? 'habit' : (isFocus ? 'focus' : 'plan'));
+
+    if (isHelp) {
+      renderActHelp(wrap);
+      app.appendChild(wrap);
+      return;
+    }
+
+    if (isHabit) {
+      wrap.appendChild(el('h2', null, '🌳 习惯树'));
+      renderHabitSection(wrap);
+      app.appendChild(wrap);
+      return;
+    }
+
+    if (isFocus) {
+      wrap.appendChild(el('h2', null, '⛓️ 专注链'));
+      renderFocusSection(wrap);
+      app.appendChild(wrap);
+      return;
+    }
+
+    // 计划区：WOOP 主干（如果-那么 = P 步，外部提示 = 障碍步）
+    wrap.appendChild(el('h2', null, '📋 计划 · WOOP'));
+    const head = el('div', 'act-section-head');
+    head.appendChild(el('h3', null, 'WOOP 记录'));
+    const add = el('button', 'btn primary', '开始 WOOP');
+    add.addEventListener('click', function () { actOpenWoop(null); });
+    head.appendChild(add);
+    wrap.appendChild(head);
+
+    const d = loadAct();
+    if (!d.woops.length) {
+      const empty = el('div', 'act-panel');
+      empty.appendChild(illus('empty-plan'));
+      empty.appendChild(el('p', null, '还没有 WOOP。四步：愿望 → 结果 → 内心障碍（可附外部提示）→ 计划。'));
+      wrap.appendChild(empty);
+    } else {
+      d.woops.slice().reverse().forEach(function (w) {
+        wrap.appendChild(actWoopCard(w));
+      });
+    }
+
+    app.appendChild(wrap);
+  }
+
+  function actWoopCard(w) {
+    const card = el('div', 'act-ifthen-card');
+    card.appendChild(el('div', 'act-ifthen-main', 'W：' + w.wish));
+    card.appendChild(el('div', 'muted', 'O：' + w.outcome));
+    const cues = w.cues || [];
+    card.appendChild(el('div', 'muted', '障碍：' + w.obstacle + (cues.length ? ' · 外部提示 ' + cues.length + ' 条' : '')));
+    if (cues.length) {
+      const cueBox = el('div', 'muted');
+      cueBox.style.marginTop = '2px';
+      cueBox.textContent = cues.map(function (c) {
+        return (c.strategy === 'remove' ? '移除·' : '改造·') + c.text;
+      }).join('；');
+      card.appendChild(cueBox);
+    }
+    card.appendChild(el('div', 'muted', 'P：' + actFormatIfThen({ if: w.planIf, then: w.planThen })));
+    const btns = el('div', 'act-ifthen-btns');
+    const edit = el('button', 'btn small', '编辑');
+    edit.addEventListener('click', function () { actOpenWoop(w); });
+    const del = el('button', 'btn small danger', '删除');
+    del.addEventListener('click', function () { actDeleteWoop(w.id); });
+    btns.appendChild(edit);
+    btns.appendChild(del);
+    card.appendChild(btns);
+    return card;
+  }
+
+  // 主页：计划模块入口——WOOP 主干
+  function actHomePlanSection(key, title, countText, bodyNodes) {
+    const sec = el('div', 'act-home-plan-sec');
+    const head = el('div', 'act-home-plan-sec-head');
+    const fold = el('button', 'act-home-fold', homePlanFold[key] ? '▸' : '▾');
+    fold.type = 'button';
+    fold.title = homePlanFold[key] ? '展开' : '折叠';
+    fold.setAttribute('aria-label', homePlanFold[key] ? '展开' : '折叠');
+    fold.addEventListener('click', function (e) {
+      e.stopPropagation();
+      homePlanFold[key] = !homePlanFold[key];
+      renderApp();
+    });
+    head.appendChild(fold);
+    const titleBtn = el('button', 'act-home-plan-sec-title', title + ' · ' + countText);
+    titleBtn.type = 'button';
+    titleBtn.addEventListener('click', function () {
+      currentModule = 'act';
+      currentView = 'actPlan';
+      renderApp();
+    });
+    head.appendChild(titleBtn);
+    sec.appendChild(head);
+    if (!homePlanFold[key] && bodyNodes.length) {
+      const body = el('div', 'act-home-plan-body');
+      bodyNodes.forEach(function (n) { body.appendChild(n); });
+      sec.appendChild(body);
+    } else if (!homePlanFold[key]) {
+      sec.appendChild(el('div', 'muted act-home-plan-empty', '暂无条目'));
+    }
+    return sec;
+  }
+
+  function renderHomePlanEntry() {
+    const d = loadAct();
+    const box = el('div', 'act-home-entry act-home-plan');
+    const head = el('div', 'act-home-plan-head');
+    head.appendChild(el('div', 'act-home-entry-title', '📋 计划 · WOOP'));
+    const go = el('button', 'act-home-entry-go', '进入 ▶');
+    go.type = 'button';
+    go.addEventListener('click', function () {
+      currentModule = 'act';
+      currentView = 'actPlan';
+      renderApp();
+    });
+    head.appendChild(go);
+    box.appendChild(head);
+
+    const cols = el('div', 'act-home-plan-cols');
+    const woopNodes = d.woops.slice().reverse().map(function (w) {
+      const line = el('div', 'act-home-ifthen-line');
+      line.textContent = 'W：' + w.wish + ' → ' + w.planThen;
+      return line;
+    });
+    cols.appendChild(actHomePlanSection('woop', 'WOOP', String(d.woops.length), woopNodes));
+    box.appendChild(cols);
+    return box;
+  }
+
+  // 主页：习惯树独立入口（待检 / 今日 / 活跃）
+  function renderHomeHabitEntry() {
+    let due = 0, done = 0, total = 0;
+    if (typeof habitHomeCounts === 'function') {
+      const hc = habitHomeCounts();
+      due = hc.due; done = hc.done; total = hc.total;
+    }
+    const box = el('button', 'act-home-entry act-home-habit');
+    const left = el('div', 'act-home-entry-main');
+    left.appendChild(el('div', 'act-home-entry-title', '🌳 习惯树'));
+    left.appendChild(el('div', 'muted', '待检 ' + due + ' · 今日 ' + done + '/' + total + ' · 活跃 ' + total));
+    box.appendChild(left);
+    box.appendChild(el('span', 'act-home-entry-go', '进入 ▶'));
+    box.addEventListener('click', function () {
+      currentModule = 'act';
+      currentView = 'actHabit';
+      renderApp();
+    });
+    return box;
+  }
+  // ---------------- 行动·习惯树（RSIP · V2-B + H1 今日结算） ----------------
+  // 规格：docs/V2_PLAN.md §2.1/§10.1 + docs/ACT.md §5/§11。产品名「习惯树」。
+  // 数据键 athena_act_v1.habits，与学习库隔离；组 athena_habit_groups_v1；设置 athena_act_cfg_v1（H4 同 schema）。
+  // H1：删除 miss 语义——未检查=未完成；全员检完才「今日结算」；零点自动结算前一日。
+  // 文案红线：形成中位数 66 天（Lally 2010，18–254），不说 21 天；坏习惯替换而非消灭。
+  // 禁止：连击惩罚、物质/娱乐兑换。过程反馈仅内化条 / 强化位 / 次数。
+
+  const HABIT_DOTS_DAYS = 7;
+  const HABIT_TOLERANCE_DEFAULT = 1;
+  const HABIT_INTERNALIZE_MAX = 100;
+  const HABIT_DAILY_ADD_LIMIT = 1;
+  const HABIT_DIFFICULTY_DEFAULT = 2;
+  const HABIT_MIN_K_DEFAULT = 1;
+  const HABIT_MIN_K_MAX = 99;
+  const HABIT_LEVEL_MAX = 9;
+  // 组配置独立键：避免被 actSanitize 剥掉，且与学习库隔离
+  const HABIT_GROUPS_KEY = 'athena_habit_groups_v1';
+  // H4 先行 schema：行动设置（缺省用现默认；键 athena_act_cfg_v1）
+  const ACT_CFG_KEY = 'athena_act_cfg_v1';
+  const HABIT_STATE_KEY = 'athena_habit_state_v1';
+  const HABIT_CFG_DEFAULTS = {
+    dailyAddLimit: 1,
+    manualLevelPerDay: 1,
+    manualLevelKeepRatio: 0.5,
+    failInternalizePenalty: 15,
+    autoSettle: true,
+    levelSteps: null
+  };
+  // 强化自动升阈值：内化达到后 level 保底（手动可更高）
+  const HABIT_LEVEL_STEPS = [
+    { internalize: 50, level: 1 },
+    { internalize: 100, level: 2 }
+  ];
+
+  // ---------------- 纯函数：模型与工具 ----------------
+  function habitYmd(d) {
+    const dt = d instanceof Date ? d : new Date(d);
+    if (isNaN(dt.getTime())) return '';
+    return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+  }
+
+  function habitToday() {
+    return habitYmd(new Date());
+  }
+
+  function habitParseYmd(ymd) {
+    const s = String(ymd || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+    const d = new Date(s + 'T00:00:00');
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function habitToIdSet(doneSet) {
+    const s = new Set();
+    if (!doneSet) return s;
+    if (doneSet instanceof Set) {
+      doneSet.forEach(function (x) { s.add(String(x)); });
+      return s;
+    }
+    if (Array.isArray(doneSet)) {
+      doneSet.forEach(function (x) { s.add(String(x)); });
+      return s;
+    }
+    if (typeof doneSet === 'object') {
+      Object.keys(doneSet).forEach(function (k) { if (doneSet[k]) s.add(String(k)); });
+    }
+    return s;
+  }
+
+  function habitNormalizeDoneDates(arr) {
+    const seen = {};
+    const out = [];
+    (Array.isArray(arr) ? arr : []).forEach(function (d) {
+      const s = String(d == null ? '' : d);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s) && !seen[s]) {
+        seen[s] = 1;
+        out.push(s);
+      }
+    });
+    out.sort();
+    return out;
+  }
+
+  function habitClampInternalize(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.min(HABIT_INTERNALIZE_MAX, Math.round(n)));
+  }
+
+  // ---------------- 组（HabitGroup · minK 容错名额） ----------------
+  // 组键：groupId 优先，否则 tag；无键节点各自为单人组。
+  function habitGroupKey(n) {
+    if (!n) return '';
+    const g = n.groupId == null || n.groupId === '' ? '' : String(n.groupId).trim();
+    if (g) return g;
+    return String(n.tag == null ? '' : n.tag).trim();
+  }
+
+  function habitClampMinK(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return HABIT_MIN_K_DEFAULT;
+    return Math.max(0, Math.min(HABIT_MIN_K_MAX, Math.floor(n)));
+  }
+
+  function habitSanitizeGroups(raw) {
+    const src = Array.isArray(raw) ? raw : [];
+    const out = [];
+    const seen = {};
+    src.forEach(function (x) {
+      if (!x || typeof x !== 'object') return;
+      const id = String(x.id == null ? '' : x.id).trim();
+      if (!id || seen[id]) return;
+      seen[id] = 1;
+      const nameRaw = String(x.name == null ? '' : x.name).trim();
+      out.push({
+        id: id,
+        name: nameRaw || id,
+        color: x.color == null || x.color === '' ? null : String(x.color),
+        minK: habitClampMinK(x.minK)
+      });
+    });
+    return out;
+  }
+
+  // 取组 minK；未配置或单人组用默认 1
+  function habitMinKOf(groups, key) {
+    const k = String(key == null ? '' : key).trim();
+    if (!k) return HABIT_MIN_K_DEFAULT;
+    const hit = habitSanitizeGroups(groups).filter(function (g) { return g.id === k; })[0];
+    return hit ? hit.minK : HABIT_MIN_K_DEFAULT;
+  }
+
+  function habitSetGroupMinK(groups, id, minK) {
+    const list = habitSanitizeGroups(groups);
+    const sid = String(id == null ? '' : id).trim();
+    if (!sid) return { groups: list, ok: false, reason: 'bad-id', group: null };
+    const mk = habitClampMinK(minK);
+    let hit = list.filter(function (g) { return g.id === sid; })[0];
+    if (hit) {
+      hit.minK = mk;
+    } else {
+      hit = { id: sid, name: sid, color: null, minK: mk };
+      list.push(hit);
+    }
+    return { groups: list, ok: true, group: hit };
+  }
+
+  function habitUpsertGroup(groups, patch) {
+    const list = habitSanitizeGroups(groups);
+    const p = patch || {};
+    const sid = String(p.id == null ? '' : p.id).trim();
+    if (!sid) return { groups: list, ok: false, reason: 'bad-id', group: null };
+    let hit = list.filter(function (g) { return g.id === sid; })[0];
+    if (!hit) {
+      hit = { id: sid, name: sid, color: null, minK: HABIT_MIN_K_DEFAULT };
+      list.push(hit);
+    }
+    if (p.name != null) hit.name = String(p.name).trim() || hit.id;
+    if (p.color !== undefined) hit.color = p.color == null || p.color === '' ? null : String(p.color);
+    if (p.minK != null) hit.minK = habitClampMinK(p.minK);
+    return { groups: list, ok: true, group: hit };
+  }
+
+  // 供 UI：节点上的组汇总（key/name/成员/完成/minK）
+  function habitGroupSummaries(nodes, groups, date) {
+    const ymd = String(date || habitToday());
+    const tree = habitOnTree(habitSanitize(nodes));
+    const cfg = habitSanitizeGroups(groups);
+    const byKey = {};
+    tree.forEach(function (n) {
+      const key = habitGroupKey(n);
+      if (!key) return;
+      if (!byKey[key]) {
+        const hit = cfg.filter(function (g) { return g.id === key; })[0];
+        byKey[key] = {
+          id: key,
+          name: hit ? hit.name : key,
+          color: hit ? hit.color : null,
+          minK: hit ? hit.minK : HABIT_MIN_K_DEFAULT,
+          members: [],
+          lit: 0,
+          over: 0
+        };
+      }
+      byKey[key].members.push(n.id);
+      if (habitCheckStatus(n, ymd) === 'done') byKey[key].lit += 1;
+      else byKey[key].over += 1;
+    });
+    return Object.keys(byKey).map(function (k) { return byKey[k]; });
+  }
+
+  // ---------------- 设置（H4 先行 schema） ----------------
+  function habitNormalizeLevelSteps(raw) {
+    if (!Array.isArray(raw) || !raw.length) return HABIT_LEVEL_STEPS.slice();
+    const out = [];
+    raw.forEach(function (s) {
+      if (!s || typeof s !== 'object') return;
+      const iv = habitClampInternalize(s.internalize);
+      const lv = habitClampLevel(s.level);
+      if (lv > 0) out.push({ internalize: iv, level: lv });
+    });
+    if (!out.length) return HABIT_LEVEL_STEPS.slice();
+    out.sort(function (a, b) { return a.internalize - b.internalize; });
+    return out;
+  }
+
+  function habitNormalizeCfg(raw) {
+    const src = raw && typeof raw === 'object' ? raw : {};
+    const d = HABIT_CFG_DEFAULTS;
+    const lim = Number(src.dailyAddLimit);
+    const mpd = Number(src.manualLevelPerDay);
+    const ratio = Number(src.manualLevelKeepRatio);
+    const pen = Number(src.failInternalizePenalty);
+    return {
+      dailyAddLimit: Number.isFinite(lim) && lim >= 1 ? Math.floor(lim) : d.dailyAddLimit,
+      manualLevelPerDay: Number.isFinite(mpd) && mpd >= 0 ? Math.floor(mpd) : d.manualLevelPerDay,
+      manualLevelKeepRatio: Number.isFinite(ratio) && ratio >= 0 && ratio <= 1 ? ratio : d.manualLevelKeepRatio,
+      failInternalizePenalty: Number.isFinite(pen) && pen >= 0 ? Math.min(HABIT_INTERNALIZE_MAX, Math.round(pen)) : d.failInternalizePenalty,
+      autoSettle: src.autoSettle == null ? d.autoSettle : !!src.autoSettle,
+      levelSteps: habitNormalizeLevelSteps(src.levelSteps)
+    };
+  }
+
+  function habitLoadCfg() {
+    if (typeof window !== 'undefined' && window.__habitCfg) return habitNormalizeCfg(window.__habitCfg);
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem('athena_act_cfg_v1')); } catch (e) {}
+    const cfg = habitNormalizeCfg(raw);
+    if (typeof window !== 'undefined') window.__habitCfg = cfg;
+    return cfg;
+  }
+
+  // ---------------- 检查态（done / undone / unchecked；无 miss 计数） ----------------
+  // doneDates=已完成；missDates=明确标未完成；两者皆无=未检查。
+  function habitCheckStatus(node, ymd) {
+    const d = String(ymd || habitToday());
+    if (!node) return 'unchecked';
+    const done = Array.isArray(node.doneDates) ? node.doneDates : [];
+    const miss = Array.isArray(node.missDates) ? node.missDates : [];
+    if (done.indexOf(d) >= 0) return 'done';
+    if (miss.indexOf(d) >= 0) return 'undone';
+    return 'unchecked';
+  }
+
+  // status: 'done' | 'undone' | 'unchecked'（清空当日检查）
+  function habitSetCheck(nodes, id, status, ymd, now) {
+    const list = habitCloneNodes(nodes);
+    const hit = habitFind(list, id);
+    if (!hit) return { nodes: list, ok: false, reason: 'missing', node: null };
+    if (hit.removedAt) return { nodes: list, ok: false, reason: 'removed', node: hit };
+    const d = String(ymd || habitToday());
+    const ts = Number(now) || Date.now();
+    const st = status === 'done' || status === 'undone' || status === 'unchecked' ? status : 'unchecked';
+    hit.doneDates = habitNormalizeDoneDates((hit.doneDates || []).filter(function (x) { return x !== d; }));
+    hit.missDates = habitNormalizeDoneDates((hit.missDates || []).filter(function (x) { return x !== d; }));
+    if (st === 'done') hit.doneDates.push(d);
+    if (st === 'undone') hit.missDates.push(d);
+    hit.doneDates = habitNormalizeDoneDates(hit.doneDates);
+    hit.missDates = habitNormalizeDoneDates(hit.missDates);
+    hit.updatedAt = ts;
+    return { nodes: list, ok: true, node: hit, status: st };
+  }
+
+  // 全员检查完才可结算
+  function habitAllChecked(nodes, ymd) {
+    const d = String(ymd || habitToday());
+    const tree = habitOnTree(habitSanitize(nodes));
+    const unchecked = [];
+    tree.forEach(function (n) {
+      if (habitCheckStatus(n, d) === 'unchecked') unchecked.push(n.id);
+    });
+    return { ok: unchecked.length === 0, unchecked: unchecked, total: tree.length };
+  }
+
+  // ---------------- 结算状态（已结算日 + 手动强化次数） ----------------
+  function habitDefaultState() {
+    return { settledDates: [], manualLevelOn: null, manualLevelCount: 0, manualLevelIds: [] };
+  }
+
+  function habitNormalizeState(raw) {
+    const out = habitDefaultState();
+    if (!raw || typeof raw !== 'object') return out;
+    const seen = {};
+    (Array.isArray(raw.settledDates) ? raw.settledDates : []).forEach(function (d) {
+      const s = String(d == null ? '' : d);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s) && !seen[s]) {
+        seen[s] = 1;
+        out.settledDates.push(s);
+      }
+    });
+    out.settledDates.sort();
+    out.manualLevelOn = /^\d{4}-\d{2}-\d{2}$/.test(String(raw.manualLevelOn || '')) ? String(raw.manualLevelOn) : null;
+    const mc = Number(raw.manualLevelCount);
+    out.manualLevelCount = Number.isFinite(mc) && mc > 0 ? Math.floor(mc) : 0;
+    out.manualLevelIds = Array.isArray(raw.manualLevelIds)
+      ? raw.manualLevelIds.map(function (x) { return String(x); }).filter(Boolean)
+      : [];
+    return out;
+  }
+
+  function habitLoadState() {
+    if (typeof window !== 'undefined' && window.__habitState) return habitNormalizeState(window.__habitState);
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(HABIT_STATE_KEY)); } catch (e) {}
+    const st = habitNormalizeState(raw);
+    if (typeof window !== 'undefined') window.__habitState = st;
+    return st;
+  }
+
+  function habitSaveState(state) {
+    const st = habitNormalizeState(state);
+    if (typeof window !== 'undefined') window.__habitState = st;
+    try { localStorage.setItem(HABIT_STATE_KEY, JSON.stringify(st)); } catch (e) {}
+    return st;
+  }
+
+  function habitSanitize(raw) {
+    const src = Array.isArray(raw) ? raw : [];
+    const out = [];
+    const seen = {};
+    src.forEach(function (x, idx) {
+      if (!x || typeof x !== 'object') return;
+      let id = String(x.id == null ? '' : x.id).trim();
+      if (!id) id = 'hab_' + Date.now() + '_' + idx + '_' + Math.floor(Math.random() * 10000);
+      if (seen[id]) return;
+      seen[id] = 1;
+      const tolRaw = Number(x.toleranceDays);
+      const missRaw = Number(x.missCount);
+      const diffRaw = Number(x.difficulty);
+      const levelRaw = Number(x.level);
+      const failRaw = Number(x.failCount);
+      // 旧数据无 onTree：未硬删则视为在树上（迁移兼容）
+      const onTree = x.onTree == null ? !x.removedAt : !!x.onTree;
+      out.push({
+        id: id,
+        title: String(x.title == null ? '' : x.title).trim(),
+        detail: String(x.detail == null ? '' : x.detail).trim(),
+        parentId: x.parentId == null || x.parentId === '' ? null : String(x.parentId),
+        groupId: x.groupId == null || x.groupId === '' ? null : String(x.groupId),
+        tag: String(x.tag == null ? '' : x.tag).trim(),
+        difficulty: Number.isFinite(diffRaw) && diffRaw >= 1 && diffRaw <= 5 ? Math.floor(diffRaw) : HABIT_DIFFICULTY_DEFAULT,
+        level: habitClampLevel(levelRaw),
+        internalize: habitClampInternalize(x.internalize),
+        onTree: onTree,
+        lastOk: /^\d{4}-\d{2}-\d{2}$/.test(String(x.lastOk || '')) ? String(x.lastOk) : null,
+        failCount: Number.isFinite(failRaw) && failRaw > 0 ? Math.floor(failRaw) : 0,
+        addedOn: /^\d{4}-\d{2}-\d{2}$/.test(String(x.addedOn || '')) ? String(x.addedOn) : null,
+        toleranceDays: Number.isFinite(tolRaw) && tolRaw >= 0 ? Math.floor(tolRaw) : HABIT_TOLERANCE_DEFAULT,
+        missCount: Number.isFinite(missRaw) && missRaw > 0 ? Math.floor(missRaw) : 0,
+        doneDates: habitNormalizeDoneDates(x.doneDates),
+        missDates: habitNormalizeDoneDates(x.missDates),
+        createdAt: Number(x.createdAt) || 0,
+        updatedAt: Number(x.updatedAt) || 0,
+        removedAt: x.removedAt == null || x.removedAt === '' ? null : (Number(x.removedAt) || String(x.removedAt))
+      });
+    });
+    const ids = {};
+    out.forEach(function (n) { ids[n.id] = 1; });
+    out.forEach(function (n) {
+      if (n.parentId && !ids[n.parentId]) n.parentId = null;
+    });
+    return out;
+  }
+
+  function habitCloneNodes(nodes) {
+    return habitSanitize(nodes).map(function (n) {
+      return {
+        id: n.id,
+        title: n.title,
+        detail: n.detail,
+        parentId: n.parentId,
+        groupId: n.groupId,
+        tag: n.tag,
+        difficulty: n.difficulty,
+        level: n.level,
+        internalize: n.internalize,
+        onTree: n.onTree,
+        lastOk: n.lastOk,
+        failCount: n.failCount,
+        addedOn: n.addedOn,
+        toleranceDays: n.toleranceDays,
+        missCount: n.missCount,
+        doneDates: n.doneDates.slice(),
+        missDates: (n.missDates || []).slice(),
+        createdAt: n.createdAt,
+        updatedAt: n.updatedAt,
+        removedAt: n.removedAt
+      };
+    });
+  }
+
+  // 未硬删（含习惯库）
+  function habitActive(nodes) {
+    return (nodes || []).filter(function (n) { return n && !n.removedAt; });
+  }
+
+  // 在树上
+  function habitOnTree(nodes) {
+    return (nodes || []).filter(function (n) { return n && !n.removedAt && n.onTree; });
+  }
+
+  // 习惯库（未上树、未硬删）
+  function habitLibrary(nodes) {
+    return (nodes || []).filter(function (n) { return n && !n.removedAt && !n.onTree; });
+  }
+
+  function habitFind(nodes, id) {
+    const sid = String(id);
+    return (nodes || []).filter(function (n) { return n && n.id === sid; })[0] || null;
+  }
+
+  function habitChildrenOf(nodes, parentId, opts) {
+    const onlyOnTree = !!(opts && opts.onTree);
+    const pid = parentId == null ? null : String(parentId);
+    return (nodes || []).filter(function (n) {
+      if (!n || n.removedAt) return false;
+      if (onlyOnTree && !n.onTree) return false;
+      if (pid == null) return n.parentId == null;
+      return n.parentId === pid;
+    });
+  }
+
+  function habitDescendantIds(nodes, id) {
+    const sid = String(id);
+    const byParent = {};
+    (nodes || []).forEach(function (n) {
+      if (!n) return;
+      const p = n.parentId == null ? '' : String(n.parentId);
+      if (!byParent[p]) byParent[p] = [];
+      byParent[p].push(String(n.id));
+    });
+    const out = [];
+    const stack = [sid];
+    const seen = {};
+    seen[sid] = 1;
+    while (stack.length) {
+      const cur = stack.pop();
+      const kids = byParent[cur] || [];
+      kids.forEach(function (k) {
+        if (seen[k]) return;
+        seen[k] = 1;
+        out.push(k);
+        stack.push(k);
+      });
+    }
+    return out;
+  }
+
+  function habitIsAncestorOf(nodes, maybeAncestorId, nodeId) {
+    const anc = String(maybeAncestorId);
+    return habitDescendantIds(nodes, anc).indexOf(String(nodeId)) >= 0;
+  }
+
+  function habitCanSetParent(nodes, id, parentId) {
+    const sid = String(id);
+    if (parentId == null || parentId === '') return true;
+    const pid = String(parentId);
+    if (pid === sid) return false;
+    if (habitIsAncestorOf(nodes, sid, pid)) return false;
+    return true;
+  }
+
+  function habitUid(prefix) {
+    return (prefix || 'hab') + '_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+  }
+
+  // 新建节点（默认进习惯库，onTree=false；返回新数组）
+  function habitAddNode(nodes, fields, now) {
+    const list = habitCloneNodes(nodes);
+    const ts = Number(now) || Date.now();
+    const f = fields || {};
+    let parentId = f.parentId == null || f.parentId === '' ? null : String(f.parentId);
+    if (parentId && !habitFind(list, parentId)) parentId = null;
+    const tol = Number(f.toleranceDays);
+    const diff = Number(f.difficulty);
+    const level = Number(f.level);
+    const node = {
+      id: String(f.id || habitUid('hab')),
+      title: String(f.title == null ? '' : f.title).trim(),
+      detail: String(f.detail == null ? '' : f.detail).trim(),
+      parentId: parentId,
+      groupId: f.groupId == null || f.groupId === '' ? null : String(f.groupId),
+      tag: String(f.tag == null ? '' : f.tag).trim(),
+      difficulty: Number.isFinite(diff) && diff >= 1 && diff <= 5 ? Math.floor(diff) : HABIT_DIFFICULTY_DEFAULT,
+      level: habitClampLevel(level),
+      internalize: habitClampInternalize(f.internalize),
+      onTree: !!f.onTree,
+      lastOk: null,
+      failCount: 0,
+      addedOn: null,
+      toleranceDays: Number.isFinite(tol) && tol >= 0 ? Math.floor(tol) : HABIT_TOLERANCE_DEFAULT,
+      missCount: 0,
+      doneDates: [],
+      missDates: [],
+      createdAt: ts,
+      updatedAt: ts,
+      removedAt: null
+    };
+    list.push(node);
+    return { nodes: list, node: node };
+  }
+
+  // 编辑字段；改父级用 habitSetParent
+  function habitUpdateNode(nodes, id, patch, now) {
+    const list = habitCloneNodes(nodes);
+    const hit = habitFind(list, id);
+    if (!hit) return { nodes: list, node: null };
+    const p = patch || {};
+    const ts = Number(now) || Date.now();
+    if (p.title != null) hit.title = String(p.title).trim();
+    if (p.detail != null) hit.detail = String(p.detail).trim();
+    if (p.tag != null) hit.tag = String(p.tag).trim();
+    if (p.groupId != null) hit.groupId = p.groupId == null || p.groupId === '' ? null : String(p.groupId);
+    if (p.toleranceDays != null) {
+      const tol = Number(p.toleranceDays);
+      hit.toleranceDays = Number.isFinite(tol) && tol >= 0 ? Math.floor(tol) : hit.toleranceDays;
+    }
+    if (p.difficulty != null) {
+      const diff = Number(p.difficulty);
+      if (Number.isFinite(diff) && diff >= 1 && diff <= 5) hit.difficulty = Math.floor(diff);
+    }
+    if (p.level != null) {
+      hit.level = habitClampLevel(p.level);
+    }
+    hit.updatedAt = ts;
+    return { nodes: list, node: hit };
+  }
+
+  function habitSetParent(nodes, id, parentId, now) {
+    const list = habitCloneNodes(nodes);
+    const hit = habitFind(list, id);
+    if (!hit) return { nodes: list, ok: false, reason: 'missing' };
+    const pid = parentId == null || parentId === '' ? null : String(parentId);
+    if (pid && !habitFind(list, pid)) return { nodes: list, ok: false, reason: 'parent-missing' };
+    if (!habitCanSetParent(list, hit.id, pid)) return { nodes: list, ok: false, reason: 'cycle' };
+    hit.parentId = pid;
+    hit.updatedAt = Number(now) || Date.now();
+    return { nodes: list, ok: true, node: hit };
+  }
+
+  // 手动硬删 = 移除该节点及全部子孙（removedAt，级联）
+  function habitDeleteNode(nodes, id, now) {
+    const list = habitCloneNodes(nodes);
+    const sid = String(id);
+    const ts = Number(now) || Date.now();
+    const doomed = {};
+    doomed[sid] = 1;
+    habitDescendantIds(list, sid).forEach(function (d) { doomed[d] = 1; });
+    const removed = [];
+    list.forEach(function (n) {
+      if (n && doomed[n.id] && !n.removedAt) {
+        n.removedAt = ts;
+        n.onTree = false;
+        n.updatedAt = ts;
+        removed.push(n.id);
+      }
+    });
+    return { nodes: list, removed: removed };
+  }
+
+  // ---------------- RSIP 纯函数 ----------------
+
+  // 当日已入树次数（按 addedOn；含当日已失败回库的，名额不退还）
+  function habitDailyAddCount(nodes, date) {
+    const ymd = String(date || habitToday());
+    return habitSanitize(nodes).filter(function (n) { return n.addedOn === ymd; }).length;
+  }
+
+  // 每日最多 N 个新节点入树（N 来自设置 dailyAddLimit）
+  function habitCanAddToTree(nodes, date, cfg) {
+    const limit = habitNormalizeCfg(cfg).dailyAddLimit;
+    const addedToday = habitDailyAddCount(nodes, date);
+    return {
+      ok: addedToday < limit,
+      addedToday: addedToday,
+      limit: limit,
+      reason: addedToday < limit ? null : 'daily-limit'
+    };
+  }
+
+  /**
+   * 入树（RSIP）：新建或把习惯库节点点亮到树上。
+   * habitAddToTree(nodes, fields, date, now) → { nodes, ok, reason?, node?, promoted?, addedToday }
+   * - 每日最多 HABIT_DAILY_ADD_LIMIT 个新节点上树（fields.id 已在库中 → 提升；否则新建并上树）。
+   * - 已在树上的节点不可重复入树。
+   */
+  function habitAddToTree(nodes, fields, date, now) {
+    const list = habitCloneNodes(nodes);
+    const ymd = String(date || habitToday());
+    const ts = Number(now) || Date.now();
+    const f = fields || {};
+    const can = habitCanAddToTree(list, ymd);
+    const existingId = f.id == null || f.id === '' ? '' : String(f.id);
+
+    if (existingId) {
+      const hit = habitFind(list, existingId);
+      if (hit && !hit.removedAt && hit.onTree) {
+        return { nodes: list, ok: false, reason: 'already-on-tree', node: hit, addedToday: can.addedToday };
+      }
+    }
+
+    if (!can.ok) {
+      return { nodes: list, ok: false, reason: 'daily-limit', node: existingId ? habitFind(list, existingId) : null, addedToday: can.addedToday };
+    }
+
+    if (existingId) {
+      const hit = habitFind(list, existingId);
+      if (hit && !hit.removedAt) {
+        hit.onTree = true;
+        hit.addedOn = ymd;
+        hit.updatedAt = ts;
+        if (f.title != null) hit.title = String(f.title).trim();
+        if (f.detail != null) hit.detail = String(f.detail).trim();
+        if (f.tag != null) hit.tag = String(f.tag).trim();
+        if (f.parentId !== undefined) {
+          const pid = f.parentId == null || f.parentId === '' ? null : String(f.parentId);
+          if (pid && habitFind(list, pid) && habitCanSetParent(list, hit.id, pid)) hit.parentId = pid;
+          else if (pid == null) hit.parentId = null;
+        }
+        return { nodes: list, ok: true, promoted: true, node: hit, addedToday: can.addedToday + 1 };
+      }
+    }
+
+    const created = habitAddNode(list, {
+      id: existingId || undefined,
+      title: f.title,
+      detail: f.detail,
+      parentId: f.parentId,
+      groupId: f.groupId,
+      tag: f.tag,
+      difficulty: f.difficulty,
+      level: f.level,
+      internalize: f.internalize,
+      toleranceDays: f.toleranceDays,
+      onTree: true
+    }, ts);
+    const node = habitFind(created.nodes, created.node.id);
+    if (node) {
+      node.addedOn = ymd;
+      node.onTree = true;
+    }
+    return { nodes: created.nodes, ok: true, promoted: false, node: node, addedToday: can.addedToday + 1 };
+  }
+
+  /**
+   * 失败回滚（RSIP）：节点回习惯库，级联熄灭子孙；**内化进度保留**。
+   * habitFailNode(nodes, id, now, opts) → { nodes, ok, reason?, failed[], cascaded[] }
+   * - failed：本次判失败的节点；cascaded：被级联熄灭的子孙。
+   * - 不写 removedAt（那是硬删）；仅 onTree=false，failCount 仅记在判败节点上。
+   * - 强化：判败节点降级 1（opts.demote===false 可关）；子孙不连坐降级。
+   */
+  function habitFailNode(nodes, id, now, opts) {
+    const list = habitCloneNodes(nodes);
+    const sid = String(id);
+    const ts = Number(now) || Date.now();
+    const hit = habitFind(list, sid);
+    if (!hit || hit.removedAt) return { nodes: list, ok: false, reason: 'missing', failed: [], cascaded: [] };
+
+    const scope = {};
+    scope[sid] = 1;
+    habitDescendantIds(list, sid).forEach(function (d) { scope[d] = 1; });
+
+    const failed = [];
+    const cascaded = [];
+    list.forEach(function (n) {
+      if (!n || !scope[n.id] || n.removedAt) return;
+      if (!n.onTree) return;
+      n.onTree = false;
+      // 内化进度失败不丢：不修改 internalize
+      n.updatedAt = ts;
+      if (n.id === sid) {
+        n.failCount = (Number(n.failCount) || 0) + 1;
+        n.level = habitDemoteLevel(n, opts);
+        failed.push(n.id);
+      } else {
+        cascaded.push(n.id);
+      }
+    });
+    return { nodes: list, ok: true, failed: failed, cascaded: cascaded };
+  }
+
+  /**
+   * 内化更新（RSIP）：delta 可正可负，夹到 0..100。
+   * habitUpdateInternalize(nodes, id, delta, now) → { nodes, ok, reason?, node }
+   */
+  function habitUpdateInternalize(nodes, id, delta, now) {
+    const list = habitCloneNodes(nodes);
+    const hit = habitFind(list, id);
+    if (!hit) return { nodes: list, ok: false, reason: 'missing', node: null };
+    const d = Number(delta);
+    if (!Number.isFinite(d)) return { nodes: list, ok: false, reason: 'bad-delta', node: hit };
+    hit.internalize = habitClampInternalize((Number(hit.internalize) || 0) + d);
+    hit.updatedAt = Number(now) || Date.now();
+    return { nodes: list, ok: true, node: hit };
+  }
+
+  // 履行成功时的内化增量（过程反馈，非交易奖励；难度低则略快）
+  function habitInternalizeGain(node) {
+    const diff = Math.min(5, Math.max(1, Number(node && node.difficulty) || HABIT_DIFFICULTY_DEFAULT));
+    return diff <= 2 ? 2 : 1;
+  }
+
+  // ---------------- 强化 level（+n） ----------------
+  function habitClampLevel(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.min(HABIT_LEVEL_MAX, Math.floor(n)));
+  }
+
+  // 按内化阈值的保底强化级（手动可更高；阈值可配）
+  function habitLevelFloor(internalize, steps) {
+    const iv = habitClampInternalize(internalize);
+    const list = habitNormalizeLevelSteps(steps);
+    let lv = 0;
+    list.forEach(function (s) {
+      if (iv >= s.internalize && s.level > lv) lv = s.level;
+    });
+    return habitClampLevel(lv);
+  }
+
+  // 履行成功后自动升：level = max(当前, 内化保底)
+  function habitAutoLevelOnOk(node, steps) {
+    const cur = habitClampLevel(node && node.level);
+    return Math.max(cur, habitLevelFloor(node && node.internalize, steps));
+  }
+
+  // 失败降级 1（不连坐子孙）；可配开关，关闭时保持原级
+  function habitDemoteLevel(node, opts) {
+    const cur = habitClampLevel(node && node.level);
+    const o = opts || {};
+    if (o.demote === false) return cur;
+    return Math.max(0, cur - 1);
+  }
+
+  // 手动升/降
+  function habitLevelDelta(nodes, id, delta, now) {
+    const list = habitCloneNodes(nodes);
+    const hit = habitFind(list, id);
+    if (!hit) return { nodes: list, ok: false, reason: 'missing', node: null };
+    const d = Number(delta);
+    if (!Number.isFinite(d)) return { nodes: list, ok: false, reason: 'bad-delta', node: hit };
+    hit.level = habitClampLevel((habitClampLevel(hit.level) || 0) + Math.floor(d));
+    hit.updatedAt = Number(now) || Date.now();
+    return { nodes: list, ok: true, node: hit };
+  }
+
+  /**
+   * 手动强化（H1）：每日有限次、仅 1 个习惯/次、内化按 keepRatio 保留。
+   * habitManualLevelUp(nodes, id, date, now, opts) → { nodes, ok, reason?, node?, state, keepRatio }
+   * - opts.cfg：设置；opts.state：结算状态（manualLevelOn/Count/Ids）。
+   * - reason: missing | daily-limit | already-used
+   */
+  function habitManualLevelUp(nodes, id, date, now, opts) {
+    const o = opts || {};
+    const cfg = habitNormalizeCfg(o.cfg);
+    const state = habitNormalizeState(o.state);
+    const ymd = String(date || habitToday());
+    const list = habitCloneNodes(nodes);
+    const hit = habitFind(list, id);
+    if (!hit || hit.removedAt) {
+      return { nodes: list, ok: false, reason: 'missing', node: null, state: state, keepRatio: cfg.manualLevelKeepRatio };
+    }
+    const limit = cfg.manualLevelPerDay;
+    if (limit <= 0) {
+      return { nodes: list, ok: false, reason: 'daily-limit', node: hit, state: state, keepRatio: cfg.manualLevelKeepRatio };
+    }
+    // 同一习惯同日重复 → already-used（优先于名额判断，便于 UI 提示）
+    if (state.manualLevelOn === ymd && state.manualLevelIds.indexOf(hit.id) >= 0) {
+      return { nodes: list, ok: false, reason: 'already-used', node: hit, state: state, keepRatio: cfg.manualLevelKeepRatio };
+    }
+    const usedToday = state.manualLevelOn === ymd ? state.manualLevelCount : 0;
+    if (usedToday >= limit) {
+      return { nodes: list, ok: false, reason: 'daily-limit', node: hit, state: state, keepRatio: cfg.manualLevelKeepRatio };
+    }
+    const ts = Number(now) || Date.now();
+    hit.level = habitClampLevel((habitClampLevel(hit.level) || 0) + 1);
+    const keep = Math.max(0, Math.min(1, Number(cfg.manualLevelKeepRatio)));
+    hit.internalize = habitClampInternalize(Math.round((Number(hit.internalize) || 0) * keep));
+    hit.updatedAt = ts;
+    const nextState = habitNormalizeState({
+      settledDates: state.settledDates,
+      manualLevelOn: ymd,
+      manualLevelCount: state.manualLevelOn === ymd ? usedToday + 1 : 1,
+      manualLevelIds: state.manualLevelOn === ymd ? state.manualLevelIds.concat([hit.id]) : [hit.id]
+    });
+    return { nodes: list, ok: true, node: hit, state: nextState, keepRatio: keep };
+  }
+
+  // 手动强化今日是否还能用
+  function habitCanManualLevel(state, date, cfg) {
+    const c = habitNormalizeCfg(cfg);
+    const st = habitNormalizeState(state);
+    const ymd = String(date || habitToday());
+    const used = st.manualLevelOn === ymd ? st.manualLevelCount : 0;
+    return {
+      ok: c.manualLevelPerDay > 0 && used < c.manualLevelPerDay,
+      used: used,
+      limit: c.manualLevelPerDay,
+      keepRatio: c.manualLevelKeepRatio,
+      reason: c.manualLevelPerDay <= 0 || used >= c.manualLevelPerDay ? 'daily-limit' : null
+    };
+  }
+
+  // 零点自动结算：补齐 lastSettle 到昨日的未结算日（未检查=未完成）
+  function habitPendingSettleDates(state, today, minDate) {
+    const st = habitNormalizeState(state);
+    const settled = {};
+    st.settledDates.forEach(function (d) { settled[d] = 1; });
+    const start = habitParseYmd(minDate) || new Date(2020, 0, 1);
+    const end = habitParseYmd(today) || new Date();
+    const out = [];
+    const cur = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const last = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1); // 昨日
+    while (cur <= last) {
+      const ymd = habitYmd(cur);
+      if (!settled[ymd]) out.push(ymd);
+      cur.setDate(cur.getDate() + 1);
+    }
+    return out;
+  }
+
+  // 累计次数 = doneDates 长度（过程反馈，非交易奖励）
+  function habitDoneCount(node) {
+    return node && Array.isArray(node.doneDates) ? node.doneDates.length : 0;
+  }
+
+  // 近 N 日点阵（默认 7）；endDate 为 YYYY-MM-DD
+  function habitDots(node, endDate, days) {
+    const n = days == null ? HABIT_DOTS_DAYS : Math.max(1, Math.floor(days));
+    const end = habitParseYmd(endDate) || new Date();
+    const set = {};
+    ((node && node.doneDates) || []).forEach(function (d) { set[String(d)] = 1; });
+    const out = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(end.getFullYear(), end.getMonth(), end.getDate() - i);
+      const ymd = habitYmd(d);
+      out.push({ date: ymd, done: !!set[ymd] });
+    }
+    return out;
+  }
+
+  // 今日待检/完成（树上节点；H1：done / undone / unchecked）
+  function habitDayStats(nodes, date) {
+    const ymd = String(date || habitToday());
+    const tree = habitOnTree(habitSanitize(nodes));
+    let done = 0;
+    let undone = 0;
+    let unchecked = 0;
+    tree.forEach(function (n) {
+      const st = habitCheckStatus(n, ymd);
+      if (st === 'done') done++;
+      else if (st === 'undone') undone++;
+      else unchecked++;
+    });
+    return {
+      total: tree.length,
+      done: done,
+      undone: undone,
+      unchecked: unchecked,
+      due: tree.length - done
+    };
+  }
+
+  // 标签/组：同 groupId 或同 tag 为一组；无键各自为组（ACT §5.3 + V2 §2.1 minK）
+  function habitTagGroups(activeNodes) {
+    const groups = [];
+    const keyIndex = {};
+    activeNodes.forEach(function (n) {
+      const key = habitGroupKey(n);
+      if (!key) {
+        groups.push({ tag: '', key: '', members: [n] });
+        return;
+      }
+      if (keyIndex[key] == null) {
+        keyIndex[key] = groups.length;
+        groups.push({ tag: key, key: key, members: [] });
+      }
+      groups[keyIndex[key]].members.push(n);
+    });
+    return groups;
+  }
+
+  /**
+   * 结算预览（H1 · 纯函数，不改数据）。
+   * habitSettlePreview(nodes, date, opts) → {
+   *   allChecked, unchecked[], completed[], incomplete[], protected[], violations[], cascadedPreview[]
+   * }
+   * - 无 miss：树上节点当日「已完成 / 未完成」；未检查=未完成（violations 候选）。
+   * - opts.doneSet 可显式指定完成集（自动结算历史日 / 单测）；缺省用检查态。
+   * - 组保护：同组已完成数（点亮）≥ minK ⇒ 未完成成员受保护。
+   */
+  function habitSettlePreview(nodes, date, opts) {
+    const o = opts || {};
+    const dateStr = String(date || habitToday());
+    const tree = habitOnTree(habitSanitize(nodes));
+    const done = o.doneSet != null ? habitToIdSet(o.doneSet) : null;
+    const groupsCfg = habitSanitizeGroups(o.groups);
+    const completed = [];
+    const incomplete = [];
+    const unchecked = [];
+
+    tree.forEach(function (n) {
+      const isDone = done ? done.has(n.id) : habitCheckStatus(n, dateStr) === 'done';
+      if (isDone) {
+        completed.push(n.id);
+        return;
+      }
+      if (!done && habitCheckStatus(n, dateStr) === 'unchecked') unchecked.push(n.id);
+      incomplete.push(n.id);
+    });
+
+    const isDoneMap = {};
+    completed.forEach(function (id) { isDoneMap[id] = 1; });
+    const incompleteSet = {};
+    incomplete.forEach(function (id) { incompleteSet[id] = 1; });
+
+    const protectedIds = [];
+    const violations = [];
+    habitTagGroups(tree).forEach(function (g) {
+      const minK = habitMinKOf(groupsCfg, g.key || g.tag);
+      const lit = g.members.filter(function (n) { return isDoneMap[n.id]; });
+      const over = g.members.filter(function (n) { return incompleteSet[n.id]; });
+      if (!over.length) return;
+      if (lit.length >= minK) {
+        over.forEach(function (n) { protectedIds.push(n.id); });
+      } else {
+        over.forEach(function (n) { violations.push(n.id); });
+      }
+    });
+
+    // 级联预览：违规根的子孙（无论是否完成）
+    const cascadedPreview = [];
+    const seen = {};
+    violations.forEach(function (rid) {
+      habitDescendantIds(tree, rid).forEach(function (d) {
+        if (seen[d]) return;
+        seen[d] = 1;
+        cascadedPreview.push(d);
+      });
+    });
+
+    return {
+      allChecked: unchecked.length === 0,
+      unchecked: unchecked,
+      completed: completed,
+      incomplete: incomplete,
+      protected: protectedIds,
+      violations: violations,
+      cascadedPreview: cascadedPreview
+    };
+  }
+
+  /**
+   * 综合结算（H1）：全员检完后由「今日结算」调用；零点自动结算未检查=未完成。
+   * habitSettleDay(nodes, date, now, opts) → { nodes, ...preview 字段, failed, cascaded, removed }
+   * - 完成：内化+、强化自动升。
+   * - 受保护未完成：不回库、不降级（只留在树上）。
+   * - 违规未完成：回库 + 级联子孙 + 强化降 1 + failInternalizePenalty（默认 0=内化不丢）。
+   * - 未检查视作未完成；单习惯不在结算外单独改写内化/强化。
+   */
+  function habitSettleDay(nodes, date, now, opts) {
+    const list = habitCloneNodes(nodes);
+    const dateStr = String(date || habitToday());
+    const ts = Number(now) || Date.now();
+    const o = opts || {};
+    const cfg = habitNormalizeCfg(o.cfg);
+    const preview = habitSettlePreview(list, dateStr, o);
+    const steps = cfg.levelSteps;
+    const doneMap = {};
+    preview.completed.forEach(function (id) { doneMap[id] = 1; });
+    const protectedMap = {};
+    preview.protected.forEach(function (id) { protectedMap[id] = 1; });
+
+    const completed = preview.completed.slice();
+    const protectedIds = preview.protected.slice();
+
+    // 完成 / 受保护：只调内化与强化
+    list.forEach(function (n) {
+      if (!n || n.removedAt || !n.onTree) return;
+      if (doneMap[n.id]) {
+        if (dateStr && n.doneDates.indexOf(dateStr) < 0) {
+          n.doneDates.push(dateStr);
+          n.doneDates = habitNormalizeDoneDates(n.doneDates);
+        }
+        n.missDates = habitNormalizeDoneDates((n.missDates || []).filter(function (x) { return x !== dateStr; }));
+        n.lastOk = dateStr;
+        n.internalize = habitClampInternalize((Number(n.internalize) || 0) + habitInternalizeGain(n));
+        n.level = habitAutoLevelOnOk(n, steps);
+        n.updatedAt = ts;
+      } else if (protectedMap[n.id]) {
+        // 组内保护：未完成但不回库；不扣内化、不降级
+        if (dateStr && n.missDates.indexOf(dateStr) < 0) {
+          n.missDates.push(dateStr);
+          n.missDates = habitNormalizeDoneDates(n.missDates);
+        }
+        n.updatedAt = ts;
+      }
+    });
+
+    // 违规：回库 + 级联 + 降级 + 内化罚（默认 0）
+    const failed = [];
+    const cascaded = [];
+    const off = {};
+    preview.violations.forEach(function (rid) {
+      if (off[rid]) return;
+      const scope = {};
+      scope[rid] = 1;
+      habitDescendantIds(list, rid).forEach(function (d) { scope[d] = 1; });
+      list.forEach(function (n) {
+        if (!n || !scope[n.id] || n.removedAt || off[n.id] || !n.onTree) return;
+        n.onTree = false;
+        if (dateStr && n.missDates.indexOf(dateStr) < 0 && n.doneDates.indexOf(dateStr) < 0) {
+          n.missDates.push(dateStr);
+          n.missDates = habitNormalizeDoneDates(n.missDates);
+        }
+        n.updatedAt = ts;
+        off[n.id] = 1;
+        if (n.id === rid) {
+          n.failCount = (Number(n.failCount) || 0) + 1;
+          n.level = habitDemoteLevel(n, o);
+          if (cfg.failInternalizePenalty > 0) {
+            n.internalize = habitClampInternalize((Number(n.internalize) || 0) - cfg.failInternalizePenalty);
+          }
+          failed.push(n.id);
+        } else {
+          cascaded.push(n.id);
+        }
+      });
+    });
+
+    return {
+      nodes: list,
+      allChecked: preview.allChecked,
+      unchecked: preview.unchecked,
+      completed: completed,
+      incomplete: preview.incomplete,
+      protected: protectedIds,
+      violations: preview.violations,
+      failed: failed,
+      cascaded: cascaded,
+      removed: failed.concat(cascaded),
+      // 兼容旧字段名
+      missed: preview.incomplete
+    };
+  }
+
+  // 兼容旧测试/调用：语义已并入 habitSettleDay（无 miss 计数）
+  function evaluateHabitDay(nodes, doneSet, date, now, opts) {
+    return habitSettleDay(nodes, date, now, Object.assign({}, opts || {}, { doneSet: doneSet }));
+  }
+
+  // ---------------- SVG 导图布局（纯函数，可测） ----------------
+  /**
+   * habitMapLayout(nodes, opts) → { items, edges, width, height }
+   * - opts.collapsed：{ nodeId: true } 折叠表；仅布局树上节点。
+   * - items: { id,x,y,w,h,depth,title,internalize,level,hasChildren,collapsed,childCount }
+   * - edges: { x1,y1,x2,y2,from,to }
+   */
+  function habitMapLayout(nodes, opts) {
+    const o = opts || {};
+    const collapsed = o.collapsed || {};
+    const NODE_W = 168;
+    const NODE_H = 52;
+    const COL = 210;
+    const ROW = 64;
+    const PAD = 24;
+
+    const tree = habitOnTree(habitSanitize(nodes));
+    const byId = {};
+    tree.forEach(function (n) { byId[n.id] = n; });
+
+    const kids = {};
+    tree.forEach(function (n) {
+      const key = (n.parentId && byId[n.parentId]) ? n.parentId : '';
+      if (!kids[key]) kids[key] = [];
+      kids[key].push(n.id);
+    });
+    Object.keys(kids).forEach(function (k) {
+      kids[k].sort(function (a, b) {
+        const na = byId[a];
+        const nb = byId[b];
+        if (na.createdAt !== nb.createdAt) return na.createdAt - nb.createdAt;
+        return a < b ? -1 : (a > b ? 1 : 0);
+      });
+    });
+
+    const items = [];
+    const edgePairs = [];
+    let yCursor = PAD;
+    let maxDepth = 0;
+
+    function walk(id, depth) {
+      const n = byId[id];
+      const childIds = kids[id] || [];
+      const isCollapsed = !!collapsed[id];
+      const visibleKids = isCollapsed ? [] : childIds;
+      let y;
+      if (!visibleKids.length) {
+        y = yCursor;
+        yCursor += ROW;
+      } else {
+        const childYs = visibleKids.map(function (cid) { return walk(cid, depth + 1); });
+        y = (childYs[0] + childYs[childYs.length - 1]) / 2;
+      }
+      if (depth > maxDepth) maxDepth = depth;
+      items.push({
+        id: id,
+        x: PAD + depth * COL,
+        y: y,
+        w: NODE_W,
+        h: NODE_H,
+        depth: depth,
+        title: n.title,
+        internalize: Number(n.internalize) || 0,
+        level: Number(n.level) || 0,
+        hasChildren: childIds.length > 0,
+        collapsed: isCollapsed,
+        childCount: childIds.length
+      });
+      visibleKids.forEach(function (cid) {
+        edgePairs.push({ from: id, to: cid });
+      });
+      return y;
+    }
+
+    (kids[''] || []).forEach(function (id) { walk(id, 0); });
+
+    const byMap = {};
+    items.forEach(function (it) { byMap[it.id] = it; });
+    const edges = edgePairs.map(function (e) {
+      const a = byMap[e.from];
+      const b = byMap[e.to];
+      return {
+        from: e.from,
+        to: e.to,
+        x1: a.x + a.w,
+        y1: a.y + a.h / 2,
+        x2: b.x,
+        y2: b.y + b.h / 2
+      };
+    });
+
+    return {
+      items: items,
+      edges: edges,
+      width: PAD * 2 + (maxDepth + 1) * COL,
+      height: Math.max(yCursor + PAD, 120)
+    };
+  }
+
+  // ---------------- 会话级 UI 状态（不落盘） ----------------
+  const habitCollapsed = {};
+  let habitSelectedId = null;
+  let habitDotsDays = HABIT_DOTS_DAYS; // 点阵预览 7 日，可展开 30
+  let habitCheckLog = null;
+
+  function habitLoadNodes() {
+    const d = loadAct();
+    return habitSanitize(d.habits);
+  }
+
+  function habitSaveNodes(nodes) {
+    const d = loadAct();
+    d.habits = habitSanitize(nodes);
+    saveAct(d);
+    return d.habits;
+  }
+
+  // 组配置（minK）独立键读写；纯函数已可测，此处仅 UI 落盘
+  function habitLoadGroups() {
+    if (typeof window !== 'undefined' && window.__habitGroups) return habitSanitizeGroups(window.__habitGroups);
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(HABIT_GROUPS_KEY)); } catch (e) {}
+    const groups = habitSanitizeGroups(raw);
+    if (typeof window !== 'undefined') window.__habitGroups = groups;
+    return groups;
+  }
+
+  function habitSaveGroups(groups) {
+    const g = habitSanitizeGroups(groups);
+    if (typeof window !== 'undefined') window.__habitGroups = g;
+    try { localStorage.setItem(HABIT_GROUPS_KEY, JSON.stringify(g)); } catch (e) {}
+    return g;
+  }
+
+  function habitDoneSetFor(nodes, ymd) {
+    const set = new Set();
+    (nodes || []).forEach(function (n) {
+      if (!n || n.removedAt) return;
+      if ((n.doneDates || []).indexOf(ymd) >= 0) set.add(n.id);
+    });
+    return set;
+  }
+
+  function habitSvgEl(tag, attrs) {
+    const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      if (attrs[k] != null) e.setAttribute(k, String(attrs[k]));
+    });
+    return e;
+  }
+
+  function habitTruncate(s, n) {
+    const t = String(s == null ? '' : s);
+    return t.length > n ? t.slice(0, n - 1) + '…' : t;
+  }
+
+  // ---------------- 习惯树 UI ----------------
+  function renderHabitSection(wrap) {
+    habitRunAutoSettle();
+    const nodes = habitLoadNodes();
+    const today = habitToday();
+    const cfg = habitLoadCfg();
+    const stats = habitDayStats(nodes, today);
+    const canAdd = habitCanAddToTree(nodes, today, cfg);
+    const lib = habitLibrary(nodes);
+    const checkGate = habitAllChecked(nodes, today);
+
+    const head = el('div', 'act-section-head');
+    head.appendChild(el('h3', null, '习惯树 · 导图'));
+    const addBtn = el('button', 'btn primary', '＋ 入树');
+    addBtn.addEventListener('click', function () {
+      if (!canAdd.ok) {
+        toast('今日入树名额已用完（每日最多 ' + canAdd.limit + ' 个），明天再来');
+        return;
+      }
+      habitOpenEditor(null, 'promote', habitSelectedId);
+    });
+    head.appendChild(addBtn);
+    wrap.appendChild(head);
+
+    const toolbar = el('div', 'habit-toolbar');
+    toolbar.appendChild(el('div', 'muted',
+      '今日入树 ' + canAdd.addedToday + '/' + canAdd.limit +
+      ' · 已完成 ' + stats.done + '/' + stats.total +
+      ' · 习惯库 ' + lib.length
+    ));
+    const settleBtn = el('button', 'btn primary' + (checkGate.ok ? '' : ' disabled'),
+      checkGate.ok ? '今日结算' : '先检查完 ' + checkGate.unchecked.length + ' 项');
+    if (checkGate.ok) {
+      settleBtn.addEventListener('click', function () { habitConfirmSettle(); });
+    }
+    toolbar.appendChild(settleBtn);
+    wrap.appendChild(toolbar);
+
+    if (habitCheckLog) {
+      const log = el('div', 'act-panel habit-check-log');
+      log.appendChild(el('div', 'act-ifthen-main', '上次今日结算（' + (habitCheckLog.date || today) + '）'));
+      log.appendChild(el('div', 'muted',
+        '完成 ' + (habitCheckLog.completed || []).length +
+        ' · 未完成 ' + (habitCheckLog.incomplete || []).length +
+        ' · 回库 ' + (habitCheckLog.failed || []).length +
+        ' · 级联 ' + (habitCheckLog.cascaded || []).length +
+        (habitCheckLog.protected && habitCheckLog.protected.length ? ' · 组保护 ' + habitCheckLog.protected.length : '')
+      ));
+      wrap.appendChild(log);
+    }
+
+    const mapBox = el('div', 'habit-map-box');
+    const treeNodes = habitOnTree(nodes);
+    if (!treeNodes.length) {
+      const empty = el('div', 'act-panel');
+      empty.appendChild(illus('empty-habit'));
+      empty.appendChild(el('p', null, '树上还没有习惯。从一个小而稳定的动作开始，今日入树 1 条即可。'));
+      wrap.appendChild(empty);
+    } else {
+      mapBox.appendChild(habitRenderSvgMap(nodes));
+      wrap.appendChild(mapBox);
+    }
+
+    // 当日检查清单（已完成 / 未完成）
+    if (treeNodes.length) {
+      wrap.appendChild(habitRenderChecklist(nodes, today));
+    }
+
+    // Inspector
+    const sel = habitSelectedId ? habitFind(nodes, habitSelectedId) : null;
+    if (sel && !sel.removedAt) {
+      wrap.appendChild(habitRenderInspector(sel, nodes));
+    }
+
+    // 组容错 minK（仅组列表）
+    wrap.appendChild(habitRenderGroupsPanel(nodes, today));
+
+    // 习惯库
+    const libHead = el('div', 'act-section-head');
+    libHead.appendChild(el('h3', null, '习惯库'));
+    const newLib = el('button', 'btn', '＋ 新建习惯');
+    newLib.addEventListener('click', function () { habitOpenEditor(null, 'library', null); });
+    libHead.appendChild(newLib);
+    wrap.appendChild(libHead);
+
+    if (!lib.length) {
+      const emptyLib = el('div', 'act-panel');
+      emptyLib.appendChild(el('p', 'muted', '习惯库为空。违规回库的习惯会出现在这里，内化进度按设置保留。'));
+      wrap.appendChild(emptyLib);
+    } else {
+      const listBox = el('div', 'habit-lib');
+      lib.forEach(function (n) {
+        listBox.appendChild(habitLibRow(n, nodes, canAdd.ok));
+      });
+      wrap.appendChild(listBox);
+    }
+    // 规则说明在「帮助」（H5），此处不再堆长文
+  }
+
+  function habitRenderChecklist(nodes, ymd) {
+    const panel = el('div', 'act-panel habit-checklist');
+    panel.appendChild(el('div', 'act-ifthen-main', '今日检查'));
+    const tree = habitOnTree(nodes);
+    const list = el('div', 'habit-check-list');
+    tree.forEach(function (n) {
+      const st = habitCheckStatus(n, ymd);
+      const row = el('div', 'habit-check-row' + (st === 'done' ? ' is-done' : st === 'undone' ? ' is-undone' : ''));
+      const main = el('div', 'habit-check-main');
+      main.appendChild(el('div', 'habit-node-title', n.title || '（未命名）'));
+      const stLabel = st === 'done' ? '已完成' : st === 'undone' ? '未完成' : '未检查';
+      main.appendChild(el('div', 'muted', stLabel + ' · 内化 ' + n.internalize + '% · 强化 +' + n.level));
+      row.appendChild(main);
+
+      const btns = el('div', 'habit-node-btns');
+      const doneBtn = el('button', 'btn small' + (st === 'done' ? ' primary' : ''), '已完成');
+      doneBtn.addEventListener('click', function () { habitSetCheckUi(n.id, 'done'); });
+      btns.appendChild(doneBtn);
+      const undoneBtn = el('button', 'btn small' + (st === 'undone' ? ' danger' : ''), '未完成');
+      undoneBtn.addEventListener('click', function () { habitSetCheckUi(n.id, 'undone'); });
+      btns.appendChild(undoneBtn);
+      row.appendChild(btns);
+      list.appendChild(row);
+    });
+    panel.appendChild(list);
+    return panel;
+  }
+
+  function habitSetCheckUi(id, status) {
+    const r = habitSetCheck(habitLoadNodes(), id, status, habitToday(), Date.now());
+    if (!r.ok) { toast('操作失败'); return; }
+    habitSaveNodes(r.nodes);
+    renderApp();
+  }
+
+  function habitRenderGroupsPanel(nodes, date) {
+    const panel = el('div', 'act-panel habit-groups-panel');
+    panel.appendChild(el('div', 'act-ifthen-main', '组容错 · minK'));
+    const groups = habitLoadGroups();
+    const summaries = habitGroupSummaries(nodes, groups, date);
+    if (!summaries.length) {
+      panel.appendChild(el('p', 'muted', '还没有带标签/组的习惯。给节点加同名标签即可组成保护组。'));
+      return panel;
+    }
+    const list = el('div', 'habit-group-list');
+    summaries.forEach(function (g) {
+      const row = el('div', 'habit-group-row');
+      const main = el('div', 'habit-group-main');
+      main.appendChild(el('div', 'habit-group-name', g.name));
+      main.appendChild(el('div', 'muted',
+        '成员 ' + g.members.length + ' · 已完成 ' + g.lit + ' · 未完成 ' + g.over
+      ));
+      row.appendChild(main);
+
+      const mkWrap = el('div', 'habit-group-mink');
+      mkWrap.appendChild(el('span', 'mini-label', 'minK'));
+      const input = el('input', 'wrong-input habit-mink-input');
+      input.type = 'number';
+      input.min = '0';
+      input.max = String(HABIT_MIN_K_MAX);
+      input.step = '1';
+      input.value = String(g.minK);
+      input.addEventListener('change', function () {
+        const r = habitSetGroupMinK(habitLoadGroups(), g.id, Number(input.value));
+        if (!r.ok) { toast('minK 保存失败'); return; }
+        habitSaveGroups(r.groups);
+        renderApp();
+        toast('「' + g.name + '」minK = ' + r.group.minK);
+      });
+      mkWrap.appendChild(input);
+      row.appendChild(mkWrap);
+      list.appendChild(row);
+    });
+    panel.appendChild(list);
+    panel.appendChild(el('div', 'muted', '组内已完成数 ≥ minK 时，未完成成员受组内保护，不因本次结算回库。'));
+    return panel;
+  }
+
+  function habitRenderSvgMap(nodes) {
+    const layout = habitMapLayout(nodes, { collapsed: habitCollapsed });
+    const svg = habitSvgEl('svg', {
+      viewBox: '0 0 ' + layout.width + ' ' + layout.height,
+      width: '100%',
+      height: String(Math.min(layout.height, 480)),
+      class: 'habit-map'
+    });
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', '习惯树导图');
+
+    layout.edges.forEach(function (e) {
+      const mx = (e.x1 + e.x2) / 2;
+      const path = habitSvgEl('path', {
+        d: 'M ' + e.x1 + ' ' + e.y1 + ' C ' + mx + ' ' + e.y1 + ', ' + mx + ' ' + e.y2 + ', ' + e.x2 + ' ' + e.y2,
+        fill: 'none',
+        stroke: 'var(--border)',
+        'stroke-width': '1.5',
+        'stroke-linecap': 'round',
+        class: 'habit-map-edge'
+      });
+      svg.appendChild(path);
+    });
+
+    layout.items.forEach(function (it) {
+      const g = habitSvgEl('g', {
+        class: 'habit-map-node' + (habitSelectedId === it.id ? ' selected' : ''),
+        'data-id': it.id,
+        transform: 'translate(' + it.x + ',' + it.y + ')',
+        cursor: 'pointer'
+      });
+
+      const rect = habitSvgEl('rect', {
+        x: 0, y: 0, width: it.w, height: it.h, rx: 10,
+        fill: 'var(--card)',
+        stroke: habitSelectedId === it.id ? 'var(--accent)' : 'var(--border)',
+        'stroke-width': habitSelectedId === it.id ? 2 : 1,
+        class: 'habit-map-node-bg'
+      });
+      g.appendChild(rect);
+
+      const title = habitSvgEl('text', {
+        x: 12, y: 20,
+        'font-size': '13',
+        'font-weight': '600',
+        fill: 'var(--text)',
+        class: 'habit-map-title'
+      });
+      title.textContent = habitTruncate(it.title || '（未命名）', 12);
+      g.appendChild(title);
+
+      // 内化条
+      const barW = it.w - 56;
+      const barBg = habitSvgEl('rect', {
+        x: 12, y: 32, width: barW, height: 6, rx: 3,
+        fill: 'var(--border)', opacity: '0.45', class: 'habit-map-bar-bg'
+      });
+      g.appendChild(barBg);
+      const fillW = Math.round(barW * (it.internalize / HABIT_INTERNALIZE_MAX));
+      if (fillW > 0) {
+        g.appendChild(habitSvgEl('rect', {
+          x: 12, y: 32, width: fillW, height: 6, rx: 3,
+          fill: 'var(--accent)', class: 'habit-map-bar-fill'
+        }));
+      }
+
+      // 内化 0–100 + 强化 +n（两者都展示）
+      const lv = habitSvgEl('text', {
+        x: it.w - 12, y: 38,
+        'font-size': '11',
+        'text-anchor': 'end',
+        fill: 'var(--muted)',
+        class: 'habit-map-level'
+      });
+      lv.textContent = it.internalize + '%' + (it.level > 0 ? ' · +' + it.level : '');
+      g.appendChild(lv);
+
+      // 折叠钮
+      if (it.hasChildren) {
+        const fold = habitSvgEl('g', {
+          class: 'habit-map-fold',
+          transform: 'translate(' + (it.w - 10) + ',' + 10 + ')',
+          cursor: 'pointer'
+        });
+        const fc = habitSvgEl('circle', {
+          cx: 0, cy: 0, r: 8,
+          fill: 'var(--bg)', stroke: 'var(--border)', 'stroke-width': 1
+        });
+        fold.appendChild(fc);
+        const ft = habitSvgEl('text', {
+          x: 0, y: 4,
+          'font-size': '11',
+          'text-anchor': 'middle',
+          fill: 'var(--muted)'
+        });
+        ft.textContent = it.collapsed ? '+' : '−';
+        fold.appendChild(ft);
+        fold.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          if (habitCollapsed[it.id]) delete habitCollapsed[it.id];
+          else habitCollapsed[it.id] = 1;
+          renderApp();
+        });
+        g.appendChild(fold);
+      }
+
+      g.addEventListener('click', function () {
+        habitSelectedId = it.id;
+        renderApp();
+      });
+
+      const tip = habitSvgEl('title', {});
+      tip.textContent = (it.title || '') + ' · 内化 ' + it.internalize + '% · 强化 +' + it.level + (it.childCount ? ' · 子项 ' + it.childCount : '');
+      g.appendChild(tip);
+
+      svg.appendChild(g);
+    });
+
+    return svg;
+  }
+
+  function habitRenderInspector(node, allNodes) {
+    const panel = el('div', 'act-panel habit-inspector');
+    panel.appendChild(el('div', 'act-ifthen-main', '选中 · ' + (node.title || node.id)));
+
+    const today = habitToday();
+    const st = habitCheckStatus(node, today);
+    const meta = el('div', 'habit-node-meta');
+    meta.appendChild(el('span', null, '今日 ' + (st === 'done' ? '已完成' : st === 'undone' ? '未完成' : '未检查')));
+    meta.appendChild(el('span', null, '内化 ' + node.internalize + '%'));
+    meta.appendChild(el('span', 'habit-level-chip', '强化 +' + node.level));
+    meta.appendChild(el('span', null, '难度 ' + node.difficulty));
+    meta.appendChild(el('span', null, '累计 ' + habitDoneCount(node) + ' 次'));
+    if (node.tag) meta.appendChild(el('span', 'habit-tag', node.tag));
+    panel.appendChild(meta);
+
+    // 内化大条（0–100）
+    const barWrap = el('div', 'habit-inspect-bar');
+    const bar = el('div', 'habit-inspect-bar-fill');
+    bar.style.width = node.internalize + '%';
+    barWrap.appendChild(bar);
+    panel.appendChild(barWrap);
+    panel.appendChild(el('div', 'habit-inspect-bar-label', '内化 ' + node.internalize + ' / 100'));
+
+    // 近 N 日点阵（默认 7，可展开 30）
+    if (!habitDotsDays) habitDotsDays = HABIT_DOTS_DAYS;
+    const dotsRow = el('div', 'habit-dots-row');
+    dotsRow.appendChild(el('span', 'habit-dots-label', '点阵 · 近 ' + habitDotsDays + ' 日'));
+    const dots = el('div', 'habit-dots');
+    const todayYmd = habitToday();
+    habitDots(node, todayYmd, habitDotsDays).forEach(function (d) {
+      const cell = el('div', 'habit-dot' + (d.done ? ' on' : '') + (d.date === todayYmd ? ' today' : ''));
+      cell.title = d.date + (d.done ? ' · 已完成' : ' · 未完成');
+      cell.textContent = d.done ? '✓' : '';
+      dots.appendChild(cell);
+    });
+    dotsRow.appendChild(dots);
+    const dotsBtn = el('button', 'btn small heat-expand-btn', habitDotsDays > HABIT_DOTS_DAYS ? '收起' : '展开 30 日');
+    dotsBtn.addEventListener('click', function () {
+      habitDotsDays = habitDotsDays > HABIT_DOTS_DAYS ? HABIT_DOTS_DAYS : 30;
+      renderApp();
+    });
+    dotsRow.appendChild(dotsBtn);
+    panel.appendChild(dotsRow);
+
+    // 强化：手动升（日限）/ 降
+    const cfg = habitLoadCfg();
+    const state = habitLoadState();
+    const canManual = habitCanManualLevel(state, today, cfg);
+    const levelRow = el('div', 'habit-level-row');
+    levelRow.appendChild(el('span', 'mini-label', '强化 +n'));
+    const lvText = el('span', 'habit-level-value', '+' + node.level);
+    const lvDown = el('button', 'btn small', '−');
+    lvDown.addEventListener('click', function () {
+      const r = habitLevelDelta(habitLoadNodes(), node.id, -1, Date.now());
+      if (!r.ok) { toast('操作失败'); return; }
+      habitSaveNodes(r.nodes);
+      renderApp();
+      toast('强化 +' + r.node.level);
+    });
+    const lvUp = el('button', 'btn small' + (canManual.ok ? '' : ' disabled'),
+      canManual.ok ? '手动＋' : '今日已用');
+    if (canManual.ok) {
+      lvUp.addEventListener('click', function () { habitConfirmManualLevel(node); });
+    }
+    levelRow.appendChild(lvDown);
+    levelRow.appendChild(lvText);
+    levelRow.appendChild(lvUp);
+    levelRow.appendChild(el('span', 'muted',
+      '手动每日 ' + canManual.limit + ' 次、内化保留 ' + Math.round(canManual.keepRatio * 100) + '%'
+    ));
+    panel.appendChild(levelRow);
+
+    // 改父（菜单）
+    const parentRow = el('div', 'habit-reparent-row');
+    parentRow.appendChild(el('span', 'mini-label', '父节点'));
+    const parentSel = el('select', 'wrong-input habit-parent-sel');
+    const rootOpt = el('option', null, '（根节点）');
+    rootOpt.value = '';
+    parentSel.appendChild(rootOpt);
+    habitActive(allNodes).forEach(function (n) {
+      if (n.id === node.id) return;
+      if (habitIsAncestorOf(allNodes, node.id, n.id)) return;
+      const depth = habitNodeDepth(allNodes, n.id);
+      const pad = depth > 0 ? '　'.repeat(depth) + '└ ' : '';
+      const opt = el('option', null, pad + (n.title || n.id) + (n.onTree ? '' : '（库）'));
+      opt.value = n.id;
+      parentSel.appendChild(opt);
+    });
+    parentSel.value = node.parentId || '';
+    parentSel.addEventListener('change', function () {
+      const r = habitSetParent(habitLoadNodes(), node.id, parentSel.value || null, Date.now());
+      if (!r.ok) {
+        toast(r.reason === 'cycle' ? '不能把节点挂到自己或子孙下' : '父节点不存在');
+        renderApp();
+        return;
+      }
+      habitSaveNodes(r.nodes);
+      toast('已调整父级');
+      renderApp();
+    });
+    parentRow.appendChild(parentSel);
+    panel.appendChild(parentRow);
+
+    // 单习惯：已完成 / 未完成 + 编辑 / 删除（不单独结算）
+    const btns = el('div', 'habit-node-btns habit-inspect-btns');
+    const doneBtn = el('button', 'btn small' + (st === 'done' ? ' primary' : ''), '已完成');
+    doneBtn.addEventListener('click', function () { habitSetCheckUi(node.id, 'done'); });
+    btns.appendChild(doneBtn);
+
+    const undoneBtn = el('button', 'btn small' + (st === 'undone' ? ' danger' : ''), '未完成');
+    undoneBtn.addEventListener('click', function () { habitSetCheckUi(node.id, 'undone'); });
+    btns.appendChild(undoneBtn);
+
+    const edit = el('button', 'btn small', '编辑');
+    edit.addEventListener('click', function () { habitOpenEditor(node, 'edit', null); });
+    btns.appendChild(edit);
+
+    const del = el('button', 'btn small danger', '删除');
+    del.addEventListener('click', function () { habitConfirmDelete(node, allNodes); });
+    btns.appendChild(del);
+    panel.appendChild(btns);
+    return panel;
+  }
+
+  function habitLibRow(node, allNodes, canAddToday) {
+    const row = el('div', 'habit-lib-row');
+    const main = el('div', 'habit-node-main');
+    main.appendChild(el('div', 'habit-node-title', node.title || '（未命名）'));
+    const meta = el('div', 'habit-node-meta');
+    meta.appendChild(el('span', null, '内化 ' + node.internalize + '%'));
+    meta.appendChild(el('span', 'habit-level-chip', '强化 +' + node.level));
+    meta.appendChild(el('span', null, '失败 ' + node.failCount + ' 次'));
+    if (node.tag) meta.appendChild(el('span', 'habit-tag', node.tag));
+    main.appendChild(meta);
+    row.appendChild(main);
+
+    const btns = el('div', 'habit-node-btns');
+    const promote = el('button', 'btn small primary' + (canAddToday ? '' : ' disabled'), canAddToday ? '入树' : '今日已满');
+    if (canAddToday) {
+      promote.addEventListener('click', function () {
+        const r = habitAddToTree(habitLoadNodes(), { id: node.id }, habitToday(), Date.now());
+        if (!r.ok) {
+          toast(r.reason === 'daily-limit' ? '今日入树名额已用完' : '入树失败');
+          return;
+        }
+        habitSaveNodes(r.nodes);
+        habitSelectedId = node.id;
+        renderApp();
+        toast('已入树 · 内化 ' + node.internalize + '% 保留');
+      });
+    }
+    btns.appendChild(promote);
+
+    const edit = el('button', 'btn small', '编辑');
+    edit.addEventListener('click', function () { habitOpenEditor(node, 'edit', null); });
+    btns.appendChild(edit);
+
+    const del = el('button', 'btn small danger', '删除');
+    del.addEventListener('click', function () { habitConfirmDelete(node, allNodes); });
+    btns.appendChild(del);
+    row.appendChild(btns);
+    return row;
+  }
+
+  // 全员检完 → 确认框 → 综合结算
+  function habitConfirmSettle() {
+    const nodes = habitLoadNodes();
+    const today = habitToday();
+    const cfg = habitLoadCfg();
+    const gate = habitAllChecked(nodes, today);
+    if (!gate.ok) {
+      toast('还有 ' + gate.unchecked.length + ' 项未检查，请先标「已完成 / 未完成」');
+      return;
+    }
+    const preview = habitSettlePreview(nodes, today, { groups: habitLoadGroups(), cfg: cfg });
+    const msg = '今日结算将综合判定：\n' +
+      '完成 ' + preview.completed.length + ' · 未完成 ' + preview.incomplete.length + '\n' +
+      '组保护 ' + preview.protected.length + ' · 违规回库 ' + preview.violations.length +
+      (preview.cascadedPreview.length ? ' · 级联 ' + preview.cascadedPreview.length : '') + '\n' +
+      '违规会回习惯库并熄灭子孙；内化按设置（罚 ' + cfg.failInternalizePenalty + '）。确认结算？';
+    if (typeof window !== 'undefined' && !window.confirm(msg)) return;
+    habitRunSettle(today);
+  }
+
+  function habitRunSettle(dateStr) {
+    const nodes = habitLoadNodes();
+    const cfg = habitLoadCfg();
+    const d = String(dateStr || habitToday());
+    const result = habitSettleDay(nodes, d, Date.now(), {
+      groups: habitLoadGroups(),
+      cfg: cfg
+    });
+    habitSaveNodes(result.nodes);
+    let state = habitLoadState();
+    if (state.settledDates.indexOf(d) < 0) {
+      state.settledDates.push(d);
+      state.settledDates.sort();
+      state = habitSaveState(state);
+    }
+    habitCheckLog = {
+      date: d,
+      completed: result.completed,
+      incomplete: result.incomplete,
+      failed: result.failed,
+      cascaded: result.cascaded,
+      protected: result.protected
+    };
+    if (habitSelectedId && !habitFind(result.nodes, habitSelectedId)) habitSelectedId = null;
+    renderApp();
+    const parts = ['今日结算完成', '完成 ' + result.completed.length, '未完成 ' + result.incomplete.length];
+    if (result.failed.length) parts.push('回库 ' + result.failed.length);
+    if (result.cascaded.length) parts.push('级联 ' + result.cascaded.length);
+    if (result.protected.length) parts.push('组保护 ' + result.protected.length);
+    toast(parts.join(' · '));
+  }
+
+  // 零点自动结算前一日（未检查视作未完成）
+  function habitRunAutoSettle() {
+    const cfg = habitLoadCfg();
+    if (!cfg.autoSettle) return;
+    const state = habitLoadState();
+    const today = habitToday();
+    const nodes = habitLoadNodes();
+    if (!nodes.length) return;
+    let minDate = null;
+    nodes.forEach(function (n) {
+      const c = n.createdAt ? habitYmd(new Date(n.createdAt)) : null;
+      if (c && (!minDate || c < minDate)) minDate = c;
+      if (n.addedOn && (!minDate || n.addedOn < minDate)) minDate = n.addedOn;
+    });
+    const pending = habitPendingSettleDates(state, today, minDate);
+    if (!pending.length) return;
+    let list = nodes;
+    let st = state;
+    let last = null;
+    pending.forEach(function (d) {
+      const r = habitSettleDay(list, d, Date.now(), { groups: habitLoadGroups(), cfg: cfg });
+      list = r.nodes;
+      last = r;
+      if (st.settledDates.indexOf(d) < 0) {
+        st.settledDates.push(d);
+      }
+    });
+    st.settledDates.sort();
+    habitSaveNodes(list);
+    habitSaveState(st);
+    habitCheckLog = {
+      date: pending[pending.length - 1],
+      completed: last ? last.completed : [],
+      incomplete: last ? last.incomplete : [],
+      failed: last ? last.failed : [],
+      cascaded: last ? last.cascaded : [],
+      protected: last ? last.protected : [],
+      auto: true
+    };
+  }
+
+  // 手动强化：确认改写更严
+  function habitConfirmManualLevel(node) {
+    const today = habitToday();
+    const cfg = habitLoadCfg();
+    const state = habitLoadState();
+    const can = habitCanManualLevel(state, today, cfg);
+    if (!can.ok) {
+      toast('今日手动强化次数已用完（每日 ' + can.limit + ' 次）');
+      return;
+    }
+    const keepPct = Math.round(can.keepRatio * 100);
+    const msg = '手动强化是「改写更严」的快捷键，不是白抬强化位。\n\n' +
+      '· 每日仅 ' + can.limit + ' 次，且每次只作用于 1 个习惯\n' +
+      '· 内化将只保留 ' + keepPct + '%（现 ' + node.internalize + '% → ' +
+      Math.round((Number(node.internalize) || 0) * can.keepRatio) + '%）\n' +
+      '· 请同步把「' + (node.title || node.id) + '」改写得更难、更具体\n\n' +
+      '确认手动强化 +1？';
+    if (typeof window !== 'undefined' && !window.confirm(msg)) return;
+    const r = habitManualLevelUp(habitLoadNodes(), node.id, today, Date.now(), { cfg: cfg, state: state });
+    if (!r.ok) {
+      toast(r.reason === 'already-used' ? '该习惯今日已手动强化过' : '今日手动强化次数已用完');
+      return;
+    }
+    habitSaveNodes(r.nodes);
+    habitSaveState(r.state);
+    renderApp();
+    toast('手动强化 +' + r.node.level + ' · 内化 ' + r.node.internalize + '%（请改写更严）');
+  }
+
+  function habitConfirmDelete(node, allNodes) {
+    const descendants = habitDescendantIds(allNodes || habitLoadNodes(), node.id);
+    const msg = descendants.length
+      ? '删除「' + (node.title || node.id) + '」将一并移除 ' + descendants.length + ' 个子孙节点。确认？'
+      : '删除「' + (node.title || node.id) + '」？';
+    if (typeof window !== 'undefined' && !window.confirm(msg)) return;
+    const r = habitDeleteNode(habitLoadNodes(), node.id, Date.now());
+    habitSaveNodes(r.nodes);
+    if (habitSelectedId === node.id) habitSelectedId = null;
+    renderApp();
+    toast('已删除 ' + r.removed.length + ' 个节点（含级联）');
+  }
+
+  // mode: 'edit' | 'promote'（入树，含新建）| 'library'（仅库）
+  // presetParentId：预填父节点
+  function habitOpenEditor(node, mode, presetParentId) {
+    const all = habitLoadNodes();
+    const isEdit = mode === 'edit' && node;
+    const isLibraryOnly = mode === 'library';
+    const today = habitToday();
+    const cfg = habitLoadCfg();
+    const canAdd = habitCanAddToTree(all, today, cfg);
+
+    if (!isEdit && !isLibraryOnly && !canAdd.ok) {
+      toast('今日入树名额已用完（每日最多 ' + canAdd.limit + ' 个）');
+      return;
+    }
+
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    const titleText = isEdit ? '✏️ 编辑习惯' : (isLibraryOnly ? '➕ 新建习惯（习惯库）' : '🌱 入树 · 新习惯');
+    card.appendChild(el('h3', null, titleText));
+
+    if (!isEdit && !isLibraryOnly) {
+      card.appendChild(el('div', 'muted', '今日入树 ' + canAdd.addedToday + '/' + canAdd.limit + ' · 每日最多 ' + canAdd.limit + ' 个新节点上树'));
+    }
+
+    // 注意：变量须在函数作用域，保存回调闭包引用
+    let title = null;
+    let tag = null;
+    let diff = null;
+    let detail = null;
+
+    card.appendChild(el('span', 'mini-label', '名称'));
+    title = el('input', 'wrong-input');
+    title.type = 'text';
+    title.placeholder = '例如：睡前关灯前背 20 个单词';
+    title.value = (node && node.title) || '';
+    card.appendChild(title);
+
+    card.appendChild(el('span', 'mini-label', '说明（可选）'));
+    detail = el('input', 'wrong-input');
+    detail.type = 'text';
+    detail.placeholder = '触发情境 / 具体动作';
+    detail.value = (node && node.detail) || '';
+    card.appendChild(detail);
+
+    card.appendChild(el('span', 'mini-label', '标签（同标签组成保护组，可选）'));
+    tag = el('input', 'wrong-input');
+    tag.type = 'text';
+    tag.placeholder = '例如：晨间 / 考研节奏';
+    tag.value = (node && node.tag) || '';
+    card.appendChild(tag);
+
+    const numRow = el('div', 'habit-edit-nums');
+    const diffWrap = el('div', 'habit-edit-num');
+    diffWrap.appendChild(el('span', 'mini-label', '难度 1–5'));
+    diff = el('input', 'wrong-input');
+    diff.type = 'number';
+    diff.min = '1';
+    diff.max = '5';
+    diff.step = '1';
+    diff.value = String(node ? node.difficulty : HABIT_DIFFICULTY_DEFAULT);
+    diffWrap.appendChild(diff);
+    numRow.appendChild(diffWrap);
+    card.appendChild(numRow);
+
+    card.appendChild(el('span', 'mini-label', '父节点（根节点 = 不设父级）'));
+    const parentSel = el('select', 'wrong-input');
+    const rootOpt = el('option', null, '（根节点）');
+    rootOpt.value = '';
+    parentSel.appendChild(rootOpt);
+    habitActive(all).forEach(function (n) {
+      if (node && n.id === node.id) return;
+      if (node && habitIsAncestorOf(all, node.id, n.id)) return;
+      const depth = habitNodeDepth(all, n.id);
+      const pad = depth > 0 ? '　'.repeat(depth) + '└ ' : '';
+      const opt = el('option', null, pad + (n.title || n.id) + (n.onTree ? '' : '（库）'));
+      opt.value = n.id;
+      parentSel.appendChild(opt);
+    });
+    const presetParent = node ? (node.parentId || '') : (presetParentId || '');
+    parentSel.value = presetParent && habitFind(all, presetParent) && !habitFind(all, presetParent).removedAt
+      ? presetParent
+      : '';
+    card.appendChild(parentSel);
+
+    const hint = el('div', 'act-hint');
+    card.appendChild(hint);
+
+    const btns = el('div', 'wrong-input-btns');
+    const save = el('button', 'btn primary', isLibraryOnly ? '存入习惯库' : '保存');
+    save.addEventListener('click', function () {
+      const parentId = parentSel.value || null;
+      const titleV = title.value.trim();
+      if (!titleV) { hint.textContent = '名称不能为空'; hint.className = 'act-hint warn'; return; }
+      const diffV = Number(diff.value);
+      const diffOk = Number.isFinite(diffV) && diffV >= 1 && diffV <= 5 ? Math.floor(diffV) : HABIT_DIFFICULTY_DEFAULT;
+
+      if (isEdit) {
+        const next = habitUpdateNode(habitLoadNodes(), node.id, {
+          title: titleV,
+          detail: detail.value.trim(),
+          tag: tag.value.trim(),
+          difficulty: diffOk
+        }, Date.now());
+        const pr = habitSetParent(next.nodes, node.id, parentId, Date.now());
+        if (pr.ok) next.nodes = pr.nodes;
+        habitSaveNodes(next.nodes);
+        modal.remove();
+        renderApp();
+        toast('习惯已更新');
+        return;
+      }
+
+      if (isLibraryOnly) {
+        const next = habitAddNode(habitLoadNodes(), {
+          title: titleV,
+          detail: detail.value.trim(),
+          tag: tag.value.trim(),
+          difficulty: diffOk,
+          parentId: parentId,
+          onTree: false
+        }, Date.now());
+        habitSaveNodes(next.nodes);
+        modal.remove();
+        renderApp();
+        toast('已存入习惯库');
+        return;
+      }
+
+      // promote：新建并入树（或提升库内节点）
+      const payload = {
+        title: titleV,
+        detail: detail.value.trim(),
+        tag: tag.value.trim(),
+        difficulty: diffOk,
+        parentId: parentId
+      };
+      const next = habitAddToTree(habitLoadNodes(), payload, habitToday(), Date.now());
+      if (!next.ok) {
+        hint.textContent = next.reason === 'daily-limit'
+          ? '今日入树名额已用完，明日再来'
+          : '入树失败';
+        hint.className = 'act-hint warn';
+        return;
+      }
+      habitSaveNodes(next.nodes);
+      if (next.node) habitSelectedId = next.node.id;
+      modal.remove();
+      renderApp();
+      toast('已入树（今日 ' + next.addedToday + '/' + canAdd.limit + '）');
+    });
+    btns.appendChild(save);
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+    setTimeout(function () {
+      try {
+        const first = modal.querySelector('input, select');
+        if (first) first.focus();
+      } catch (e) {}
+    }, 50);
+  }
+
+  // 节点深度（根 = 0）；用于父级下拉缩进
+  function habitNodeDepth(nodes, id) {
+    let depth = 0;
+    let cur = habitFind(nodes, id);
+    const guard = {};
+    while (cur && cur.parentId && !guard[cur.id]) {
+      guard[cur.id] = 1;
+      depth++;
+      cur = habitFind(nodes, cur.parentId);
+    }
+    return depth;
+  }
+
+  // 主页摘要数字（供 actTodaySummary 在运行时取用）
+  function habitHomeCounts() {
+    const nodes = habitLoadNodes();
+    const s = habitDayStats(nodes, habitToday());
+    return { due: s.due, done: s.done, total: s.total, unchecked: s.unchecked, undone: s.undone };
+  }
+
+  // ---------------- 行动·专注链（CTDP + H2/H3） ----------------
+  // 规格：docs/V2_PLAN.md §2.2 · §10.2–10.4 · docs/ACT.md §11.3。
+  // UI 文案「专注链」。⚠️ CTDP 为社区技术文方法论参考，非同行评议。
+  // H2：计时结束才可完成；开始必填内容；结束记达成+完成度；侦查可转正。
+  // H3：#N/●N/▲N/◆N 独立流水；状态竖列树（计划并入）；主链唯一。
+  // 数据键 athena_focus_v1。禁止连击惩罚、物质兑换、改 FSRS。
+
+  const FOCUS_KEY = 'athena_focus_v1';
+  const FOCUS_DURATIONS = [25, 50, 60];
+  const FOCUS_DEFAULT_DURATION = 25;
+  const FOCUS_SCOUT_MIN = 5;
+  const FOCUS_SCOUT_EXTEND_MIN = 5;
+  const FOCUS_RESERVE_WINDOW_MS = 15 * 60 * 1000;
+  const FOCUS_TYPE_KEYS = ['focus', 'assault', 'life', 'plan', 'scout'];
+  const FOCUS_FORMAL_TYPE_KEYS = ['focus', 'assault', 'life', 'plan'];
+  const FOCUS_LEVEL_KEYS = ['unit', 'group', 'corps', 'army'];
+  const FOCUS_ORG_LEVELS = ['group', 'corps', 'army'];
+  const FOCUS_SEQ_KEYS = { unit: '#', group: '●', corps: '▲', army: '◆' };
+  // 主链 tier（原「精锐」）；同一时间仅一条
+  const FOCUS_TIER_MAIN = 'main';
+  const FOCUS_TIER_NORMAL = 'normal';
+  // 预约链：自动存在，仅计数；预约成功就座 +1，违规清零
+  const FOCUS_RESERVE_CHAIN_ID = '__reserve_chain__';
+  const FOCUS_ROLE_RESERVE = 'reserve';
+
+  // 设置缺省（V2_PLAN §10.4；风味/三三制只在设置开，模块内不再放选项）
+  function focusDefaultSettings() {
+    return {
+      unitMinutes: FOCUS_DEFAULT_DURATION,
+      reserveWindowMin: 15,
+      scoutMinutes: FOCUS_SCOUT_MIN,
+      scoutExtendMin: FOCUS_SCOUT_EXTEND_MIN,
+      structure: 'free',              // 'free' | 'triad'（仅设置）
+      flavor: false,                  // 风味总开关（仅设置）
+      planDueRemindDays: 3,
+      triadChildCount: 3,
+      typeNames: {
+        focus: '专注',
+        assault: '突击',
+        life: '生活',
+        plan: '计划',
+        scout: '侦查'
+      },
+      levelNames: {
+        unit: '任务单元',
+        group: '任务组',
+        corps: '任务群',
+        army: '任务集团'
+      }
+    };
+  }
+
+  // ---------------- 纯函数：工具 ----------------
+
+  function focusDefaultState() {
+    return {
+      chains: [{
+        id: FOCUS_RESERVE_CHAIN_ID,
+        tier: FOCUS_TIER_NORMAL,
+        role: FOCUS_ROLE_RESERVE,
+        seatNote: '预约信号后在窗口内就座',
+        unitMinutes: FOCUS_DEFAULT_DURATION,
+        status: 'idle',
+        workCount: 0,
+        lastUnitAt: null,
+        current: null,
+        reservation: null,
+        awaiting: null,
+        clearedAt: null,
+        clearReason: '',
+        inheritedFrom: null,
+        createdAt: 0,
+        updatedAt: 0
+      }],
+      precedents: [],
+      activeId: FOCUS_RESERVE_CHAIN_ID,
+      units: [],
+      orgs: [],
+      plans: [],
+      planMode: false,               // 计划模式（状态模块内开关）
+      seq: { unit: 0, group: 0, corps: 0, army: 0 },
+      settings: focusDefaultSettings()
+    };
+  }
+
+  function focusUid(prefix) {
+    return (prefix || 'fc') + '_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+  }
+
+  function focusClampMinutes(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) return FOCUS_DEFAULT_DURATION;
+    return Math.max(1, Math.min(240, Math.round(n)));
+  }
+
+  function focusClampPct(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.min(100, Math.round(n)));
+  }
+
+  function focusNormalizeBehavior(s) {
+    return String(s == null ? '' : s).trim().replace(/\s+/g, ' ');
+  }
+
+  function focusYmd(ts) {
+    const d = new Date(Number(ts) || 0);
+    if (isNaN(d.getTime())) return '';
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function focusSanitizeTypeNames(raw) {
+    const def = focusDefaultSettings().typeNames;
+    const out = {};
+    FOCUS_TYPE_KEYS.forEach(function (k) {
+      const v = raw && raw[k];
+      out[k] = (v == null || v === '') ? def[k] : String(v);
+    });
+    return out;
+  }
+
+  function focusSanitizeLevelNames(raw) {
+    const def = focusDefaultSettings().levelNames;
+    const out = {};
+    FOCUS_LEVEL_KEYS.forEach(function (k) {
+      const v = raw && raw[k];
+      out[k] = (v == null || v === '') ? def[k] : String(v);
+    });
+    return out;
+  }
+
+  function focusSanitizeSettings(raw) {
+    const def = focusDefaultSettings();
+    if (!raw || typeof raw !== 'object') return def;
+    const st = Number(raw.unitMinutes);
+    const rw = Number(raw.reserveWindowMin);
+    const sm = Number(raw.scoutMinutes);
+    const se = Number(raw.scoutExtendMin);
+    const prd = Number(raw.planDueRemindDays);
+    const tc = Number(raw.triadChildCount);
+    return {
+      unitMinutes: focusClampMinutes(Number.isFinite(st) ? st : def.unitMinutes),
+      reserveWindowMin: Number.isFinite(rw) && rw > 0 ? Math.min(180, Math.round(rw)) : def.reserveWindowMin,
+      scoutMinutes: Number.isFinite(sm) && sm > 0 ? Math.min(60, Math.round(sm)) : def.scoutMinutes,
+      scoutExtendMin: Number.isFinite(se) && se > 0 ? Math.min(60, Math.round(se)) : def.scoutExtendMin,
+      structure: raw.structure === 'triad' ? 'triad' : 'free',
+      flavor: !!raw.flavor,
+      planDueRemindDays: Number.isFinite(prd) && prd >= 0 ? Math.min(30, Math.round(prd)) : def.planDueRemindDays,
+      triadChildCount: Number.isFinite(tc) && tc > 0 ? Math.min(9, Math.round(tc)) : def.triadChildCount,
+      typeNames: focusSanitizeTypeNames(raw.typeNames),
+      levelNames: focusSanitizeLevelNames(raw.levelNames)
+    };
+  }
+
+  function focusSanitizePrecedent(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const behavior = focusNormalizeBehavior(raw.behavior);
+    if (!behavior) return null;
+    return {
+      id: String(raw.id || focusUid('prec')),
+      behavior: behavior,
+      note: String(raw.note == null ? '' : raw.note),
+      createdAt: Number(raw.createdAt) || 0
+    };
+  }
+
+  function focusSanitizeUnit(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const typeKey = FOCUS_TYPE_KEYS.indexOf(String(raw.typeKey)) >= 0 ? String(raw.typeKey) : 'focus';
+    const taskText = String(raw.taskText == null ? '' : raw.taskText).trim();
+    const name = String(raw.name == null ? '' : raw.name).trim();
+    const startedAt = Number(raw.startedAt) || 0;
+    const endedAt = Number(raw.endedAt) || 0;
+    const planned = focusClampMinutes(raw.plannedMin);
+    let actual = Number(raw.actualMin);
+    if (!Number.isFinite(actual) || actual < 0) {
+      actual = endedAt && startedAt ? Math.max(0, Math.round((endedAt - startedAt) / 60000)) : planned;
+    }
+    const seq = Number(raw.seq);
+    return {
+      id: String(raw.id || focusUid('unit')),
+      seq: Number.isFinite(seq) && seq > 0 ? Math.floor(seq) : 0,
+      typeKey: typeKey,
+      name: name,
+      taskText: taskText,
+      chainId: raw.chainId == null ? null : String(raw.chainId),
+      orgId: raw.orgId == null ? null : String(raw.orgId),
+      planId: raw.planId == null ? null : String(raw.planId),
+      startedAt: startedAt,
+      endedAt: endedAt,
+      plannedMin: planned,
+      actualMin: Math.max(0, Math.round(actual)),
+      achieved: !!raw.achieved,
+      completion: focusClampPct(raw.completion),
+      promotedFromScout: !!raw.promotedFromScout
+    };
+  }
+
+  function focusSanitizeOrg(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const level = FOCUS_ORG_LEVELS.indexOf(String(raw.level)) >= 0 ? String(raw.level) : 'group';
+    const seq = Number(raw.seq);
+    const minChild = Number(raw.minChildCount);
+    return {
+      id: String(raw.id || focusUid('org')),
+      level: level,
+      seq: Number.isFinite(seq) && seq > 0 ? Math.floor(seq) : 1,
+      name: String(raw.name == null ? '' : raw.name),
+      parentId: raw.parentId == null || raw.parentId === '' ? null : String(raw.parentId),
+      planId: raw.planId == null ? null : String(raw.planId),
+      fromPlan: !!raw.fromPlan,
+      formalized: raw.formalized == null ? !raw.fromPlan : !!raw.formalized,
+      dueAt: raw.dueAt == null ? null : (Number(raw.dueAt) || null),
+      minChildCount: Number.isFinite(minChild) && minChild > 0 ? Math.min(99, Math.floor(minChild)) : 1,
+      createdAt: Number(raw.createdAt) || 0,
+      updatedAt: Number(raw.updatedAt) || 0
+    };
+  }
+
+  function focusSanitizePlan(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const target = Number(raw.targetCount);
+    const statusList = ['active', 'done', 'failed'];
+    let status = String(raw.status || 'active');
+    if (statusList.indexOf(status) < 0) status = 'active';
+    return {
+      id: String(raw.id || focusUid('plan')),
+      title: String(raw.title == null ? '' : raw.title),
+      dueAt: Number(raw.dueAt) || 0,
+      targetCount: Number.isFinite(target) && target > 0 ? Math.floor(target) : 1,
+      template: raw.template === 'triad' ? 'triad' : 'free',
+      orgId: raw.orgId == null ? null : String(raw.orgId),
+      status: status,
+      createdAt: Number(raw.createdAt) || 0
+    };
+  }
+
+  function focusSanitizeTier(raw) {
+    // 兼容旧「elite」→「main」
+    const t = String(raw == null ? FOCUS_TIER_NORMAL : raw);
+    if (t === FOCUS_TIER_MAIN || t === 'elite') return FOCUS_TIER_MAIN;
+    return FOCUS_TIER_NORMAL;
+  }
+
+  function focusSanitizeChain(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const tier = focusSanitizeTier(raw.tier);
+    const role = raw.role === FOCUS_ROLE_RESERVE ? FOCUS_ROLE_RESERVE : 'normal';
+    const statusList = ['idle', 'running', 'reserved', 'scouting', 'awaiting_verdict', 'cleared'];
+    let status = String(raw.status || 'idle');
+    if (statusList.indexOf(status) < 0) status = 'idle';
+    const workRaw = Number(raw.workCount);
+    let current = null;
+    if (raw.current && typeof raw.current === 'object') {
+      const typeKey = FOCUS_TYPE_KEYS.indexOf(String(raw.current.typeKey)) >= 0
+        ? String(raw.current.typeKey)
+        : (raw.current.kind === 'scout' ? 'scout' : 'focus');
+      const planned = focusClampMinutes(raw.current.plannedMin != null ? raw.current.plannedMin : raw.current.minutes);
+      const ext = Number(raw.current.extendCount);
+      const taskText = String(raw.current.taskText == null ? '' : raw.current.taskText).trim();
+      current = {
+        typeKey: typeKey,
+        taskText: taskText,
+        startedAt: Number(raw.current.startedAt) || 0,
+        plannedMin: planned,
+        extendCount: Number.isFinite(ext) && ext > 0 ? Math.floor(ext) : 0,
+        promotedFromScout: !!raw.current.promotedFromScout,
+        planId: raw.current.planId == null ? null : String(raw.current.planId)
+      };
+    }
+    let reservation = null;
+    if (raw.reservation && typeof raw.reservation === 'object') {
+      const signalAt = Number(raw.reservation.signalAt) || 0;
+      const deadline = Number(raw.reservation.deadline) || (signalAt + FOCUS_RESERVE_WINDOW_MS);
+      reservation = { signalAt: signalAt, deadline: deadline };
+    }
+    let awaiting = null;
+    if (raw.awaiting && typeof raw.awaiting === 'object') {
+      const behavior = focusNormalizeBehavior(raw.awaiting.behavior);
+      if (behavior) awaiting = { behavior: behavior, at: Number(raw.awaiting.at) || 0 };
+    }
+    return {
+      id: String(raw.id || focusUid('chain')),
+      tier: tier,
+      seatNote: String(raw.seatNote == null ? '' : raw.seatNote),
+      unitMinutes: focusClampMinutes(raw.unitMinutes),
+      role: role,
+      status: status,
+      workCount: Number.isFinite(workRaw) && workRaw > 0 ? Math.floor(workRaw) : 0,
+      lastUnitAt: raw.lastUnitAt == null ? null : (Number(raw.lastUnitAt) || null),
+      current: current,
+      reservation: reservation,
+      awaiting: awaiting,
+      clearedAt: raw.clearedAt == null ? null : (Number(raw.clearedAt) || null),
+      clearReason: String(raw.clearReason == null ? '' : raw.clearReason),
+      inheritedFrom: raw.inheritedFrom == null ? null : String(raw.inheritedFrom),
+      createdAt: Number(raw.createdAt) || 0,
+      updatedAt: Number(raw.updatedAt) || 0
+    };
+  }
+
+  function focusSanitizeState(raw) {
+    const out = focusDefaultState();
+    if (!raw || typeof raw !== 'object') return out;
+    out.settings = focusSanitizeSettings(raw.settings);
+    out.planMode = !!raw.planMode;
+    // 重建链列表（default 里的预约链随后由 ensure 补回，避免副本）
+    out.chains = [];
+    const seen = {};
+    (Array.isArray(raw.chains) ? raw.chains : []).forEach(function (c) {
+      const ch = focusSanitizeChain(c);
+      if (!ch || seen[ch.id]) return;
+      seen[ch.id] = 1;
+      out.chains.push(ch);
+    });
+    // 主链唯一：仅保留最早一条 main，其余降为 normal
+    let mainKept = false;
+    out.chains.forEach(function (c) {
+      if (c.tier !== FOCUS_TIER_MAIN) return;
+      if (!mainKept) mainKept = true;
+      else c.tier = FOCUS_TIER_NORMAL;
+    });
+    // 预约链自动存在（仅计数，无需编制）
+    if (!seen[FOCUS_RESERVE_CHAIN_ID] && !focusFindChain(out, FOCUS_RESERVE_CHAIN_ID)) {
+      out.chains.unshift({
+        id: FOCUS_RESERVE_CHAIN_ID,
+        tier: FOCUS_TIER_NORMAL,
+        role: FOCUS_ROLE_RESERVE,
+        seatNote: '预约信号后在窗口内就座',
+        unitMinutes: out.settings.unitMinutes,
+        status: 'idle',
+        workCount: 0,
+        lastUnitAt: null,
+        current: null,
+        reservation: null,
+        awaiting: null,
+        clearedAt: null,
+        clearReason: '',
+        inheritedFrom: null,
+        createdAt: 0,
+        updatedAt: 0
+      });
+    }
+    const pseen = {};
+    (Array.isArray(raw.precedents) ? raw.precedents : []).forEach(function (p) {
+      const pr = focusSanitizePrecedent(p);
+      if (!pr || pseen[pr.id]) return;
+      pseen[pr.id] = 1;
+      out.precedents.push(pr);
+    });
+    const useen = {};
+    (Array.isArray(raw.units) ? raw.units : []).forEach(function (u) {
+      const un = focusSanitizeUnit(u);
+      if (!un || useen[un.id]) return;
+      useen[un.id] = 1;
+      out.units.push(un);
+    });
+    const oseen = {};
+    (Array.isArray(raw.orgs) ? raw.orgs : []).forEach(function (o) {
+      const og = focusSanitizeOrg(o);
+      if (!og || oseen[og.id]) return;
+      oseen[og.id] = 1;
+      out.orgs.push(og);
+    });
+    out.orgs.forEach(function (o) {
+      if (o.parentId && !oseen[o.parentId]) o.parentId = null;
+    });
+    out.units.forEach(function (u) {
+      if (u.orgId && !oseen[u.orgId]) u.orgId = null;
+    });
+    const plseen = {};
+    (Array.isArray(raw.plans) ? raw.plans : []).forEach(function (p) {
+      const pl = focusSanitizePlan(p);
+      if (!pl || plseen[pl.id]) return;
+      plseen[pl.id] = 1;
+      out.plans.push(pl);
+    });
+    out.plans.forEach(function (p) {
+      if (p.orgId && !oseen[p.orgId]) p.orgId = null;
+    });
+    out.units.forEach(function (u) {
+      if (u.planId && !plseen[u.planId]) u.planId = null;
+    });
+    const sq = raw.seq && typeof raw.seq === 'object' ? raw.seq : {};
+    ['unit', 'group', 'corps', 'army'].forEach(function (k) {
+      const n = Number(sq[k]);
+      out.seq[k] = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+    });
+    out.units.forEach(function (u) { if (u.seq > out.seq.unit) out.seq.unit = u.seq; });
+    out.orgs.forEach(function (o) {
+      if (o.level === 'group' && o.seq > out.seq.group) out.seq.group = o.seq;
+      if (o.level === 'corps' && o.seq > out.seq.corps) out.seq.corps = o.seq;
+      if (o.level === 'army' && o.seq > out.seq.army) out.seq.army = o.seq;
+    });
+    const aid = raw.activeId == null ? null : String(raw.activeId);
+    out.activeId = aid && seen[aid] ? aid : (out.chains[0] ? out.chains[0].id : null);
+    return out;
+  }
+
+  function focusCloneState(state) {
+    return focusSanitizeState(state);
+  }
+
+  function focusFindChain(state, id) {
+    const sid = String(id);
+    return ((state && state.chains) || []).filter(function (c) { return c && c.id === sid; })[0] || null;
+  }
+
+  function focusActiveChain(state) {
+    if (!state || !state.chains || !state.chains.length) return null;
+    return focusFindChain(state, state.activeId) || state.chains[0];
+  }
+
+  function focusFindOrg(state, id) {
+    const sid = String(id);
+    return ((state && state.orgs) || []).filter(function (o) { return o && o.id === sid; })[0] || null;
+  }
+
+  function focusFindUnit(state, id) {
+    const sid = String(id);
+    return ((state && state.units) || []).filter(function (u) { return u && u.id === sid; })[0] || null;
+  }
+
+  function focusFindPlan(state, id) {
+    const sid = String(id);
+    return ((state && state.plans) || []).filter(function (p) { return p && p.id === sid; })[0] || null;
+  }
+
+  function focusMainChain(state) {
+    return ((state && state.chains) || []).filter(function (c) { return c && c.tier === FOCUS_TIER_MAIN; })[0] || null;
+  }
+
+  // 番号标签
+  function focusSeqLabel(level, seq) {
+    const prefix = FOCUS_SEQ_KEYS[level] || '#';
+    const v = Number(seq);
+    return prefix + (Number.isFinite(v) && v > 0 ? Math.floor(v) : 0);
+  }
+
+  function focusUnitLabel(unit, settings) {
+    if (!unit) return focusSeqLabel('unit', 0);
+    const base = focusSeqLabel('unit', unit.seq);
+    const st = settings || focusDefaultSettings();
+    const nm = unit.name || unit.taskText;
+    if (!st.flavor) return base + (nm ? ' · ' + nm : '');
+    return base + ' · ' + (st.typeNames[unit.typeKey] || unit.typeKey) + (nm ? ' ' + nm : '');
+  }
+
+  function focusOrgLabel(org, settings) {
+    if (!org) return '';
+    const base = focusSeqLabel(org.level, org.seq);
+    const st = settings || focusDefaultSettings();
+    const levelName = st.levelNames[org.level] || org.level;
+    const nm = org.name || '';
+    if (!st.flavor) return base + (nm ? ' ' + nm : '');
+    return base + ' · ' + levelName + (nm ? ' ' + nm : '');
+  }
+
+  function focusWorkLabel(n) {
+    return focusSeqLabel('unit', n);
+  }
+
+  function focusIsPrecedent(precedents, behavior) {
+    const b = focusNormalizeBehavior(behavior);
+    if (!b) return null;
+    return ((precedents || [])).filter(function (p) {
+      return p && focusNormalizeBehavior(p.behavior) === b;
+    })[0] || null;
+  }
+
+  function focusReservationRemainingMs(reservation, now) {
+    if (!reservation) return 0;
+    return Math.max(0, Number(reservation.deadline) - (Number(now) || 0));
+  }
+
+  function focusIsReservationOpen(reservation, now) {
+    return !!reservation && focusReservationRemainingMs(reservation, now) > 0;
+  }
+
+  function focusUnitRemainingMs(current, now) {
+    if (!current) return 0;
+    const end = (Number(current.startedAt) || 0) + (Number(current.plannedMin) || 0) * 60000;
+    return Math.max(0, end - (Number(now) || 0));
+  }
+
+  function focusCanComplete(current, now) {
+    return !!current && focusUnitRemainingMs(current, now) <= 0;
+  }
+
+  function focusIsTypeKey(k) {
+    return FOCUS_TYPE_KEYS.indexOf(String(k)) >= 0;
+  }
+
+  // ---------------- 设置（纯；风味/三三制只在设置里改） ----------------
+
+  function focusSetTypeName(state, typeKey, name, now) {
+    const next = focusCloneState(state);
+    if (!focusIsTypeKey(typeKey)) return { ok: false, reason: 'bad_type', state: next };
+    const s = String(name == null ? '' : name).trim();
+    if (!s) return { ok: false, reason: 'empty_name', state: next };
+    next.settings.typeNames[typeKey] = s;
+    return { ok: true, state: next };
+  }
+
+  function focusSetLevelName(state, level, name, now) {
+    const next = focusCloneState(state);
+    if (FOCUS_LEVEL_KEYS.indexOf(String(level)) < 0) return { ok: false, reason: 'bad_level', state: next };
+    const s = String(name == null ? '' : name).trim();
+    if (!s) return { ok: false, reason: 'empty_name', state: next };
+    next.settings.levelNames[level] = s;
+    return { ok: true, state: next };
+  }
+
+  function focusSetFlavor(state, on) {
+    const next = focusCloneState(state);
+    next.settings.flavor = !!on;
+    return { ok: true, state: next, flavor: next.settings.flavor };
+  }
+
+  function focusSetStructure(state, structure) {
+    const next = focusCloneState(state);
+    next.settings.structure = structure === 'triad' ? 'triad' : 'free';
+    return { ok: true, state: next, structure: next.settings.structure };
+  }
+
+  function focusSetPlanMode(state, on) {
+    const next = focusCloneState(state);
+    next.planMode = !!on;
+    return { ok: true, state: next, planMode: next.planMode };
+  }
+
+  // ---------------- 链（主链 / 普通） ----------------
+
+  // 创建链；主链唯一：已有 main 时拒绝，除非 inherit 覆盖
+  function focusCreateChain(state, fields, now) {
+    const next = focusCloneState(state);
+    const f = fields || {};
+    const tier = focusSanitizeTier(f.tier);
+    const unit = focusClampMinutes(f.unitMinutes != null ? f.unitMinutes : next.settings.unitMinutes);
+    const t = Number(now) || 0;
+
+    if (tier === FOCUS_TIER_MAIN && focusMainChain(next)) {
+      return { ok: false, reason: 'main_exists', state: next, chain: null };
+    }
+
+    const chain = {
+      id: String(f.id || focusUid('chain')),
+      tier: tier,
+      seatNote: String(f.seatNote == null ? '' : f.seatNote),
+      unitMinutes: unit,
+      status: 'idle',
+      workCount: 0,
+      lastUnitAt: null,
+      current: null,
+      reservation: null,
+      awaiting: null,
+      clearedAt: null,
+      clearReason: '',
+      inheritedFrom: null,
+      createdAt: t,
+      updatedAt: t
+    };
+    if (focusFindChain(next, chain.id)) return { ok: false, reason: 'dup_id', state: next, chain: null };
+
+    // 从普通链继承：拷贝工作量/座位/时长
+    if (f.inheritFrom) {
+      const src = focusFindChain(next, f.inheritFrom);
+      if (!src) return { ok: false, reason: 'not_found', state: next, chain: null };
+      if (src.tier === FOCUS_TIER_MAIN || src.role === FOCUS_ROLE_RESERVE) {
+        return { ok: false, reason: 'bad_inherit', state: next, chain: null };
+      }
+      chain.workCount = src.workCount;
+      chain.seatNote = src.seatNote || chain.seatNote;
+      chain.unitMinutes = src.unitMinutes || chain.unitMinutes;
+      chain.lastUnitAt = src.lastUnitAt;
+      chain.inheritedFrom = src.id;
+    }
+
+    next.chains.push(chain);
+    if (!next.activeId) next.activeId = chain.id;
+    return { ok: true, state: next, chain: chain };
+  }
+
+  // 主链入口：重新创建 | 从普通链继承（同一时间只能有一个主链）
+  function focusCreateMainChain(state, opts, now) {
+    const o = opts || {};
+    const mode = o.mode === 'inherit' ? 'inherit' : 'fresh';
+    if (focusMainChain(state)) return { ok: false, reason: 'main_exists', state: focusCloneState(state) };
+    if (mode === 'inherit') {
+      if (!o.fromChainId) return { ok: false, reason: 'bad_inherit', state: focusCloneState(state) };
+      return focusCreateChain(state, {
+        tier: FOCUS_TIER_MAIN,
+        inheritFrom: o.fromChainId,
+        unitMinutes: o.unitMinutes
+      }, now);
+    }
+    return focusCreateChain(state, {
+      tier: FOCUS_TIER_MAIN,
+      unitMinutes: o.unitMinutes,
+      seatNote: o.seatNote
+    }, now);
+  }
+
+  function focusSetSeatNote(state, chainId, note, now) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    ch.seatNote = String(note == null ? '' : note);
+    ch.updatedAt = Number(now) || 0;
+    return { ok: true, state: next, chain: ch };
+  }
+
+  function focusSetUnitMinutes(state, chainId, minutes, now) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    ch.unitMinutes = focusClampMinutes(minutes);
+    ch.updatedAt = Number(now) || 0;
+    return { ok: true, state: next, chain: ch };
+  }
+
+  function focusSetActive(state, chainId) {
+    const next = focusCloneState(state);
+    if (!focusFindChain(next, chainId)) return { ok: false, reason: 'not_found', state: next };
+    next.activeId = String(chainId);
+    return { ok: true, state: next };
+  }
+
+  function focusReserve(state, chainId, now) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    // 预约链自身不产生预约；计数绑定其他链的预约
+    if (focusIsReserveChain(ch)) return { ok: false, reason: 'reserve_chain_bound', state: next };
+    if (ch.status === 'running' || ch.status === 'scouting' || ch.status === 'awaiting_verdict') {
+      return { ok: false, reason: 'busy', state: next };
+    }
+    const t = Number(now) || 0;
+    const win = (next.settings.reserveWindowMin || 15) * 60000;
+    ch.reservation = { signalAt: t, deadline: t + win };
+    ch.status = 'reserved';
+    ch.current = null;
+    ch.updatedAt = t;
+    return { ok: true, state: next, chain: ch, reservation: ch.reservation };
+  }
+
+  // 预约链：其他链预约违规（窗口内未就座）→ 计数从零开始
+  function focusExpireReservations(state, now) {
+    const next = focusCloneState(state);
+    const t = Number(now) || 0;
+    let expired = [];
+    let reserveReset = false;
+    next.chains.forEach(function (ch) {
+      if (!ch || !ch.reservation) return;
+      if (focusIsReservationOpen(ch.reservation, t)) return;
+      ch.reservation = null;
+      if (ch.status === 'reserved') ch.status = 'idle';
+      ch.updatedAt = t;
+      // 任一链预约违规 → 预约链清零
+      if (!focusIsReserveChain(ch)) {
+        reserveReset = true;
+        expired.push(ch.id);
+      }
+    });
+    if (reserveReset) {
+      const rc = focusFindChain(next, FOCUS_RESERVE_CHAIN_ID);
+      if (rc && rc.workCount > 0) {
+        rc.workCount = 0;
+        rc.updatedAt = t;
+      }
+    }
+    return { ok: true, state: next, expired: expired, reserveReset: reserveReset };
+  }
+
+  function focusIsReserveChain(ch) {
+    return !!ch && ch.role === FOCUS_ROLE_RESERVE;
+  }
+
+  // 预约链计数 +1（由其他链预约成功后就座触发）
+  function focusBumpReserveCount(state, now) {
+    const next = focusCloneState(state);
+    const rc = focusFindChain(next, FOCUS_RESERVE_CHAIN_ID);
+    if (!rc) return { ok: false, reason: 'not_found', state: next };
+    const t = Number(now) || 0;
+    rc.workCount += 1;
+    rc.lastUnitAt = t;
+    rc.updatedAt = t;
+    return { ok: true, state: next, chain: rc, label: focusWorkLabel(rc.workCount) };
+  }
+
+  // ---------------- H2：单元任务化 ----------------
+
+  function focusSitDown(state, chainId, now, opts) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    // 预约链仅计数，不自行就座/开单元
+    if (focusIsReserveChain(ch)) return { ok: false, reason: 'reserve_chain_bound', state: next };
+    if (ch.status === 'running' || ch.status === 'scouting' || ch.status === 'awaiting_verdict') {
+      return { ok: false, reason: 'busy', state: next };
+    }
+    const o = opts || {};
+    const taskText = String(o.taskText == null ? '' : o.taskText).trim();
+    if (!taskText) return { ok: false, reason: 'empty_task', state: next };
+    const typeKey = focusIsTypeKey(o.typeKey) ? String(o.typeKey) : 'focus';
+    if (typeKey === 'scout') return { ok: false, reason: 'use_scout', state: next };
+    const t = Number(now) || 0;
+    let minutes = ch.unitMinutes;
+    if (o.minutes != null) minutes = focusClampMinutes(o.minutes);
+    let hadOpenReservation = false;
+    if (ch.reservation) {
+      if (!focusIsReservationOpen(ch.reservation, t)) {
+        ch.reservation = null;
+        if (ch.status === 'reserved') ch.status = 'idle';
+        // 其他链预约违规 → 预约链从零开始
+        const rc = focusFindChain(next, FOCUS_RESERVE_CHAIN_ID);
+        if (rc && rc.workCount > 0) {
+          rc.workCount = 0;
+          rc.updatedAt = t;
+        }
+        return { ok: false, reason: 'reservation_expired', state: next, chain: ch };
+      }
+      ch.reservation = null;
+      hadOpenReservation = true;
+    }
+    ch.current = {
+      typeKey: typeKey,
+      taskText: taskText,
+      startedAt: t,
+      plannedMin: minutes,
+      extendCount: 0,
+      promotedFromScout: false,
+      planId: o.planId == null ? null : String(o.planId)
+    };
+    ch.status = 'running';
+    ch.updatedAt = t;
+    // 其他链预约成功就座 → 预约链 +1
+    if (hadOpenReservation) {
+      const rc = focusFindChain(next, FOCUS_RESERVE_CHAIN_ID);
+      if (rc) {
+        rc.workCount += 1;
+        rc.lastUnitAt = t;
+        rc.updatedAt = t;
+      }
+      return {
+        ok: true, state: next, chain: ch,
+        reserveCounted: true,
+        reserveLabel: rc ? focusWorkLabel(rc.workCount) : null
+      };
+    }
+    return { ok: true, state: next, chain: ch, reserveCounted: false };
+  }
+
+  // 完成：仅计时结束；记达成+完成度+实际分钟；入 units（name 缺省=任务内容）
+  function focusCompleteUnit(state, chainId, now, opts) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    if (!ch.current) return { ok: false, reason: 'no_unit', state: next };
+    const t = Number(now) || 0;
+    const cur = ch.current;
+    if (!focusCanComplete(cur, t)) {
+      return { ok: false, reason: 'timer_not_done', state: next, remainingMs: focusUnitRemainingMs(cur, t) };
+    }
+    const o = opts || {};
+    const typeKey = cur.typeKey;
+    ch.current = null;
+    ch.updatedAt = t;
+
+    // 预约链：仅计数（就座时已 +1），完成不入流水/不编制
+    if (focusIsReserveChain(ch)) {
+      if (ch.status === 'running') ch.status = 'idle';
+      return {
+        ok: true, state: next, chain: ch, kind: 'reserve',
+        workCount: ch.workCount, label: focusWorkLabel(ch.workCount), unit: null
+      };
+    }
+
+    if (typeKey === 'scout' && !cur.promotedFromScout) {
+      if (ch.status === 'scouting') ch.status = 'idle';
+      return { ok: true, state: next, chain: ch, kind: 'scout', workCount: ch.workCount, label: null, unit: null };
+    }
+
+    const achieved = o.achieved == null ? true : !!o.achieved;
+    const completion = focusClampPct(o.completion == null ? (achieved ? 100 : 0) : o.completion);
+    next.seq.unit += 1;
+    const actualMin = Math.max(0, Math.round((t - cur.startedAt) / 60000));
+    const name = String(o.name == null ? '' : o.name).trim() || cur.taskText;
+    const unit = {
+      id: focusUid('unit'),
+      seq: next.seq.unit,
+      typeKey: typeKey,
+      name: name,
+      taskText: cur.taskText,
+      chainId: ch.id,
+      orgId: o.orgId == null ? null : String(o.orgId),
+      planId: cur.planId || null,
+      startedAt: cur.startedAt,
+      endedAt: t,
+      plannedMin: cur.plannedMin,
+      actualMin: actualMin,
+      achieved: achieved,
+      completion: completion,
+      promotedFromScout: !!cur.promotedFromScout
+    };
+    next.units.push(unit);
+    ch.workCount += 1;
+    ch.lastUnitAt = t;
+    if (ch.status === 'running' || ch.status === 'scouting') ch.status = 'idle';
+    return {
+      ok: true, state: next, chain: ch, kind: typeKey, unit: unit,
+      workCount: ch.workCount, label: focusSeqLabel('unit', unit.seq)
+    };
+  }
+
+  function focusSetUnitName(state, unitId, name, now) {
+    const next = focusCloneState(state);
+    const u = focusFindUnit(next, unitId);
+    if (!u) return { ok: false, reason: 'not_found', state: next };
+    u.name = String(name == null ? '' : name).trim();
+    return { ok: true, state: next, unit: u };
+  }
+
+  function focusScoutPromote(state, chainId, typeKey, now) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    if (!ch.current || ch.current.typeKey !== 'scout') return { ok: false, reason: 'not_scouting', state: next };
+    if (!focusCanComplete(ch.current, now)) {
+      return { ok: false, reason: 'timer_not_done', state: next, remainingMs: focusUnitRemainingMs(ch.current, now) };
+    }
+    const tk = String(typeKey);
+    if (FOCUS_FORMAL_TYPE_KEYS.indexOf(tk) < 0) return { ok: false, reason: 'bad_type', state: next };
+    const t = Number(now) || 0;
+    ch.current.typeKey = tk;
+    ch.current.promotedFromScout = true;
+    ch.status = 'running';
+    ch.updatedAt = t;
+    return { ok: true, state: next, chain: ch, typeKey: tk };
+  }
+
+  function focusFlagSuspicious(state, chainId, behavior, now) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    const b = focusNormalizeBehavior(behavior);
+    if (!b) return { ok: false, reason: 'empty_behavior', state: next };
+    const prec = focusIsPrecedent(next.precedents, b);
+    if (prec) return { ok: true, state: next, chain: ch, alreadyAllowed: true, precedent: prec };
+    if (ch.status !== 'running' && ch.status !== 'scouting') {
+      return { ok: false, reason: 'not_in_unit', state: next };
+    }
+    const t = Number(now) || 0;
+    ch.awaiting = { behavior: b, at: t };
+    ch.status = 'awaiting_verdict';
+    ch.updatedAt = t;
+    return { ok: true, state: next, chain: ch, alreadyAllowed: false, awaiting: ch.awaiting };
+  }
+
+  function focusResolveSuspicious(state, chainId, decision, now) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    if (!ch.awaiting) return { ok: false, reason: 'no_pending', state: next };
+    const t = Number(now) || 0;
+    const behavior = ch.awaiting.behavior;
+    ch.awaiting = null;
+    ch.updatedAt = t;
+
+    if (decision === 'clear') {
+      ch.workCount = 0;
+      ch.current = null;
+      ch.status = 'cleared';
+      ch.clearedAt = t;
+      ch.clearReason = behavior;
+      if (ch.tier === FOCUS_TIER_MAIN) {
+        const suc = focusSuccession(next, t);
+        const after = suc.state || next;
+        return {
+          ok: true, state: after, chain: focusFindChain(after, chainId),
+          decision: 'clear', behavior: behavior, successorId: suc.successorId || null, workCount: 0
+        };
+      }
+      return { ok: true, state: next, chain: ch, decision: 'clear', behavior: behavior, successorId: null, workCount: 0 };
+    }
+
+    if (decision === 'allow') {
+      const exists = focusIsPrecedent(next.precedents, behavior);
+      if (!exists) {
+        next.precedents.push({ id: focusUid('prec'), behavior: behavior, note: '', createdAt: t });
+      }
+      if (ch.current) ch.status = ch.current.typeKey === 'scout' ? 'scouting' : 'running';
+      else ch.status = 'idle';
+      return {
+        ok: true, state: next, chain: ch, decision: 'allow', behavior: behavior,
+        precedent: exists || next.precedents[next.precedents.length - 1], workCount: ch.workCount
+      };
+    }
+    return { ok: false, reason: 'bad_decision', state: next };
+  }
+
+  function focusScoutStart(state, chainId, now, opts) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    if (ch.status === 'running' || ch.status === 'scouting' || ch.status === 'awaiting_verdict') {
+      return { ok: false, reason: 'busy', state: next };
+    }
+    const o = opts || {};
+    const taskText = String(o.taskText == null ? '' : o.taskText).trim();
+    if (!taskText) return { ok: false, reason: 'empty_task', state: next };
+    const t = Number(now) || 0;
+    const minutes = o.minutes != null ? focusClampMinutes(o.minutes) : next.settings.scoutMinutes;
+    ch.current = {
+      typeKey: 'scout', taskText: taskText, startedAt: t, plannedMin: minutes,
+      extendCount: 0, promotedFromScout: false,
+      planId: o.planId == null ? null : String(o.planId)
+    };
+    ch.status = 'scouting';
+    if (ch.reservation) ch.reservation = null;
+    ch.updatedAt = t;
+    return { ok: true, state: next, chain: ch };
+  }
+
+  function focusScoutExtend(state, chainId, now) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    if (!ch.current || ch.current.typeKey !== 'scout') return { ok: false, reason: 'not_scouting', state: next };
+    const t = Number(now) || 0;
+    ch.current.plannedMin += next.settings.scoutExtendMin;
+    ch.current.extendCount += 1;
+    ch.updatedAt = t;
+    return { ok: true, state: next, chain: ch, minutes: ch.current.plannedMin };
+  }
+
+  function focusScoutEnd(state, chainId, now) {
+    const next = focusCloneState(state);
+    const ch = focusFindChain(next, chainId);
+    if (!ch) return { ok: false, reason: 'not_found', state: next };
+    if (!ch.current || (ch.current.typeKey !== 'scout' && !ch.current.promotedFromScout)) {
+      return { ok: false, reason: 'not_scouting', state: next };
+    }
+    const t = Number(now) || 0;
+    ch.current = null;
+    if (ch.status === 'scouting') ch.status = 'idle';
+    ch.updatedAt = t;
+    return { ok: true, state: next, chain: ch, workCount: ch.workCount };
+  }
+
+  function focusStrongestNormal(state) {
+    const normals = ((state && state.chains) || []).filter(function (c) {
+      return c && c.tier === FOCUS_TIER_NORMAL && c.status !== 'cleared' && c.role !== FOCUS_ROLE_RESERVE;
+    });
+    if (!normals.length) return null;
+    return normals.reduce(function (best, c) {
+      return (!best || c.workCount > best.workCount) ? c : best;
+    }, null);
+  }
+
+  // 主链崩溃 → 最强普通链继位
+  function focusSuccession(state, now) {
+    const next = focusCloneState(state);
+    const main = next.chains.filter(function (c) {
+      return c && c.tier === FOCUS_TIER_MAIN && c.status === 'cleared';
+    })[0] || null;
+    const best = focusStrongestNormal(next);
+    if (!main || !best) return { ok: false, state: next, successorId: null, reason: main ? 'no_normal' : 'no_elite' };
+    const t = Number(now) || 0;
+    best.tier = FOCUS_TIER_MAIN;
+    best.inheritedFrom = main.id;
+    best.updatedAt = t;
+    return { ok: true, state: next, successorId: best.id, fromId: main.id, workCount: best.workCount };
+  }
+
+  // ---------------- H2：统计 ----------------
+
+  function focusDailyMinutes(state, opts) {
+    const out = {};
+    ((state && state.units) || []).forEach(function (u) {
+      if (!u || !u.endedAt) return;
+      if (opts && opts.typeKey && u.typeKey !== opts.typeKey) return;
+      const day = focusYmd(u.endedAt);
+      if (!day) return;
+      out[day] = (out[day] || 0) + (u.actualMin || 0);
+    });
+    return out;
+  }
+
+  // 日均完成度（0–100）：当日已结束单元 completion 平均
+  function focusDailyAvgCompletion(state, opts) {
+    const sums = {};
+    const counts = {};
+    ((state && state.units) || []).forEach(function (u) {
+      if (!u || !u.endedAt) return;
+      if (opts && opts.typeKey && u.typeKey !== opts.typeKey) return;
+      const day = focusYmd(u.endedAt);
+      if (!day) return;
+      sums[day] = (sums[day] || 0) + focusClampPct(u.completion);
+      counts[day] = (counts[day] || 0) + 1;
+    });
+    const out = {};
+    Object.keys(sums).forEach(function (d) {
+      out[d] = Math.round(sums[d] / counts[d]);
+    });
+    return out;
+  }
+
+  function focusTrendSeries(state, days, endDateTs) {
+    const n = Math.max(1, Math.min(365, Number(days) || 30));
+    const end = Number(endDateTs) || Date.now();
+    const map = focusDailyMinutes(state);
+    const avg = focusDailyAvgCompletion(state);
+    const out = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const ts = end - i * 86400000;
+      const day = focusYmd(ts);
+      out.push({
+        date: day,
+        minutes: map[day] || 0,
+        avgCompletion: avg[day] == null ? null : avg[day]
+      });
+    }
+    return out;
+  }
+
+  // ---------------- H3：编制树 / 聚合 ----------------
+
+  function focusCreateOrg(state, fields, now) {
+    const next = focusCloneState(state);
+    const f = fields || {};
+    const level = String(f.level || 'group');
+    if (FOCUS_ORG_LEVELS.indexOf(level) < 0) return { ok: false, reason: 'bad_level', state: next };
+    // 高层次任务创建须计划模式
+    if (!next.planMode && !f.force) return { ok: false, reason: 'need_plan_mode', state: next };
+    const t = Number(now) || 0;
+    next.seq[level] += 1;
+    const fromPlan = f.fromPlan == null ? next.planMode : !!f.fromPlan;
+    const minChild = Number(f.minChildCount);
+    const dueRaw = f.dueAt;
+    const org = {
+      id: String(f.id || focusUid('org')),
+      level: level,
+      seq: next.seq[level],
+      name: String(f.name == null ? '' : f.name),
+      parentId: f.parentId == null || f.parentId === '' ? null : String(f.parentId),
+      planId: f.planId == null ? null : String(f.planId),
+      fromPlan: fromPlan,
+      formalized: !fromPlan,
+      dueAt: dueRaw == null ? null : (Number(dueRaw) || null),
+      minChildCount: Number.isFinite(minChild) && minChild > 0 ? Math.min(99, Math.floor(minChild)) : 1,
+      createdAt: t,
+      updatedAt: t
+    };
+    if (focusFindOrg(next, org.id)) return { ok: false, reason: 'dup_id', state: next, org: null };
+    if (org.parentId) {
+      const parent = focusFindOrg(next, org.parentId);
+      if (!parent) return { ok: false, reason: 'bad_parent', state: next, org: null };
+      const rank = { army: 3, corps: 2, group: 1 };
+      if (rank[parent.level] !== rank[level] + 1) return { ok: false, reason: 'bad_parent', state: next, org: null };
+    }
+    next.orgs.push(org);
+    return { ok: true, state: next, org: org };
+  }
+
+  function focusRenameOrg(state, orgId, name, now) {
+    const next = focusCloneState(state);
+    const org = focusFindOrg(next, orgId);
+    if (!org) return { ok: false, reason: 'not_found', state: next };
+    org.name = String(name == null ? '' : name);
+    org.updatedAt = Number(now) || 0;
+    return { ok: true, state: next, org: org };
+  }
+
+  function focusDeleteOrg(state, orgId, now) {
+    const next = focusCloneState(state);
+    const org = focusFindOrg(next, orgId);
+    if (!org) return { ok: false, reason: 'not_found', state: next };
+    const removed = [];
+    const stack = [String(orgId)];
+    const kill = {};
+    while (stack.length) {
+      const id = stack.pop();
+      if (kill[id]) continue;
+      kill[id] = 1;
+      removed.push(id);
+      next.orgs.forEach(function (o) {
+        if (o && o.parentId === id) stack.push(o.id);
+      });
+    }
+    next.orgs = next.orgs.filter(function (o) { return o && !kill[o.id]; });
+    next.units.forEach(function (u) {
+      if (u && u.orgId && kill[u.orgId]) u.orgId = null;
+    });
+    return { ok: true, state: next, removed: removed };
+  }
+
+  function focusAssignUnit(state, unitId, orgId, now) {
+    const next = focusCloneState(state);
+    const u = focusFindUnit(next, unitId);
+    if (!u) return { ok: false, reason: 'not_found', state: next };
+    if (orgId == null || orgId === '') {
+      u.orgId = null;
+      return { ok: true, state: next, unit: u };
+    }
+    const org = focusFindOrg(next, orgId);
+    if (!org || org.level !== 'group') return { ok: false, reason: 'bad_org', state: next };
+    u.orgId = org.id;
+    return { ok: true, state: next, unit: u };
+  }
+
+  // 批量编入 / 移动（树内多选组合）
+  function focusAssignUnits(state, unitIds, orgId, now) {
+    const next = focusCloneState(state);
+    const ids = Array.isArray(unitIds) ? unitIds.map(String) : [];
+    if (!ids.length) return { ok: false, reason: 'empty_selection', state: next };
+    if (orgId) {
+      const org = focusFindOrg(next, orgId);
+      if (!org || org.level !== 'group') return { ok: false, reason: 'bad_org', state: next };
+    }
+    const touched = [];
+    ids.forEach(function (id) {
+      const u = focusFindUnit(next, id);
+      if (!u) return;
+      u.orgId = orgId ? String(orgId) : null;
+      touched.push(u.id);
+    });
+    return { ok: true, state: next, touched: touched };
+  }
+
+  // 批量改父（树内多选组合到已有节点）
+  function focusReparentOrgs(state, orgIds, parentId, now) {
+    const next = focusCloneState(state);
+    const ids = Array.isArray(orgIds) ? orgIds.map(String) : [];
+    if (!ids.length) return { ok: false, reason: 'empty_selection', state: next };
+    const rank = { army: 3, corps: 2, group: 1 };
+    let parent = null;
+    if (parentId) {
+      parent = focusFindOrg(next, parentId);
+      if (!parent) return { ok: false, reason: 'bad_parent', state: next };
+    }
+    const t = Number(now) || 0;
+    const touched = [];
+    ids.forEach(function (id) {
+      const o = focusFindOrg(next, id);
+      if (!o) return;
+      if (parent) {
+        if (rank[parent.level] !== rank[o.level] + 1) return;
+        if (focusIsAncestorOrg(next, o.id, parent.id)) return;
+      }
+      o.parentId = parent ? parent.id : null;
+      o.updatedAt = t;
+      touched.push(o.id);
+    });
+    if (!touched.length) return { ok: false, reason: 'bad_parent', state: next };
+    return { ok: true, state: next, touched: touched };
+  }
+
+  function focusIsAncestorOrg(state, maybeAncestorId, nodeId) {
+    let cur = focusFindOrg(state, nodeId);
+    const guard = {};
+    while (cur && cur.parentId && !guard[cur.id]) {
+      guard[cur.id] = 1;
+      if (cur.parentId === String(maybeAncestorId)) return true;
+      cur = focusFindOrg(state, cur.parentId);
+    }
+    return false;
+  }
+
+  function focusUnassignedUnits(state) {
+    return ((state && state.units) || []).filter(function (u) { return u && !u.orgId; });
+  }
+
+  // 子树单元（含自身直接挂的 + 孙级）
+  function focusDescendantUnitIds(state, orgId) {
+    const orgs = (state && state.orgs) || [];
+    const byParent = {};
+    orgs.forEach(function (o) {
+      if (!o) return;
+      const p = o.parentId == null ? '' : String(o.parentId);
+      if (!byParent[p]) byParent[p] = [];
+      byParent[p].push(String(o.id));
+    });
+    const stack = [String(orgId)];
+    const seen = {};
+    const orgIds = [];
+    while (stack.length) {
+      const cur = stack.pop();
+      if (seen[cur]) continue;
+      seen[cur] = 1;
+      orgIds.push(cur);
+      (byParent[cur] || []).forEach(function (k) { stack.push(k); });
+    }
+    const idSet = {};
+    orgIds.forEach(function (id) { idSet[id] = 1; });
+    return ((state && state.units) || [])
+      .filter(function (u) { return u && u.orgId && idSet[String(u.orgId)]; })
+      .map(function (u) { return u.id; });
+  }
+
+  // 高层聚合：子树全部单元的 总起止 / 总时长 / 平均完成度
+  function focusOrgAggregates(state, orgId) {
+    const ids = focusDescendantUnitIds(state, orgId);
+    const units = ids.map(function (id) { return focusFindUnit(state, id); }).filter(Boolean);
+    if (!units.length) {
+      return { unitCount: 0, startAt: null, endAt: null, totalMin: 0, avgCompletion: null, totalPlannedMin: 0 };
+    }
+    let startAt = units[0].startedAt || 0;
+    let endAt = units[0].endedAt || 0;
+    let totalMin = 0;
+    let totalPlanned = 0;
+    let sumPct = 0;
+    units.forEach(function (u) {
+      if (u.startedAt && (!startAt || u.startedAt < startAt)) startAt = u.startedAt;
+      if (u.endedAt && u.endedAt > endAt) endAt = u.endedAt;
+      totalMin += u.actualMin || 0;
+      totalPlanned += u.plannedMin || 0;
+      sumPct += focusClampPct(u.completion);
+    });
+    return {
+      unitCount: units.length,
+      startAt: startAt || null,
+      endAt: endAt || null,
+      totalMin: totalMin,
+      totalPlannedMin: totalPlanned,
+      avgCompletion: Math.round(sumPct / units.length)
+    };
+  }
+
+  // 计划高层转正：下级任务数须 ≥ minChildCount（默认 1）
+  function focusOrgCanFormalize(state, orgId) {
+    const org = focusFindOrg(state, orgId);
+    if (!org) return { ok: false, reason: 'not_found' };
+    if (!org.fromPlan) return { ok: false, reason: 'not_plan' };
+    if (org.formalized) return { ok: false, reason: 'already_formal' };
+    const need = Math.max(1, Number(org.minChildCount) || 1);
+    // 下一级：子 org 数；组下无子 org 时看直接挂靠单元数
+    const childOrgs = ((state && state.orgs) || []).filter(function (o) { return o && o.parentId === org.id; });
+    const childUnits = ((state && state.units) || []).filter(function (u) { return u && u.orgId === org.id; });
+    const nextLevelCount = childOrgs.length > 0 ? childOrgs.length : childUnits.length;
+    if (nextLevelCount < need) {
+      return { ok: false, reason: 'need_fill', need: need, childCount: nextLevelCount };
+    }
+    return { ok: true, need: need, childCount: nextLevelCount };
+  }
+
+  function focusFormalizeOrg(state, orgId, now) {
+    const next = focusCloneState(state);
+    const chk = focusOrgCanFormalize(next, orgId);
+    if (!chk.ok) return { ok: false, reason: chk.reason, state: next };
+    const org = focusFindOrg(next, orgId);
+    org.formalized = true;
+    org.updatedAt = Number(now) || 0;
+    return { ok: true, state: next, org: org };
+  }
+
+  function focusTemplateTriad(state, fields, now) {
+    const next = focusCloneState(state);
+    const f = fields || {};
+    const count = Math.max(1, Math.min(9, Number(f.count) || next.settings.triadChildCount || 3));
+    const parentId = f.parentId == null ? null : String(f.parentId);
+    if (!next.planMode && !f.force) return { ok: false, reason: 'need_plan_mode', state: next, created: [] };
+    let level = 'group';
+    if (parentId) {
+      const parent = focusFindOrg(next, parentId);
+      if (!parent) return { ok: false, reason: 'bad_parent', state: next, created: [] };
+      if (parent.level === 'army') level = 'corps';
+      else if (parent.level === 'corps') level = 'group';
+      else return { ok: false, reason: 'bad_parent', state: next, created: [] };
+    }
+    const created = [];
+    const t = Number(now) || 0;
+    const fromPlan = f.fromPlan == null ? next.planMode : !!f.fromPlan;
+    for (let i = 0; i < count; i++) {
+      next.seq[level] += 1;
+      const org = {
+        id: focusUid('org'),
+        level: level,
+        seq: next.seq[level],
+        name: '',
+        parentId: parentId,
+        planId: f.planId == null ? null : String(f.planId),
+        fromPlan: fromPlan,
+        formalized: !fromPlan,
+        createdAt: t,
+        updatedAt: t
+      };
+      next.orgs.push(org);
+      created.push(org);
+    }
+    return { ok: true, state: next, created: created, level: level };
+  }
+
+  // 竖列树行
+  function focusTreeRows(state, opts) {
+    const o = opts || {};
+    const collapsed = o.collapsed || {};
+    const chainFilter = o.chainFilter == null ? null : String(o.chainFilter);
+    const assignFilter = o.assignFilter || 'all';
+    const rows = [];
+    const orgs = (state && state.orgs) || [];
+    const allUnits = (state && state.units) || [];
+    const byChain = chainFilter
+      ? allUnits.filter(function (u) { return u && String(u.chainId) === chainFilter; })
+      : allUnits;
+    const units = byChain.filter(function (u) {
+      if (!u) return false;
+      if (assignFilter === 'unassigned') return !u.orgId;
+      if (assignFilter === 'assigned') return !!u.orgId;
+      return true;
+    });
+
+    function unitRow(u, depth) {
+      rows.push({
+        kind: 'unit', depth: depth, id: u.id, unit: u,
+        label: focusUnitLabel(u, state.settings),
+        aggregates: null
+      });
+    }
+
+    function orgRow(org, depth) {
+      const agg = focusOrgAggregates(state, org.id);
+      rows.push({
+        kind: 'org', depth: depth, id: org.id, org: org,
+        label: focusOrgLabel(org, state.settings),
+        level: org.level,
+        collapsed: !!collapsed[org.id],
+        aggregates: agg
+      });
+    }
+
+    function childrenOf(parentId) {
+      return orgs.filter(function (x) {
+        return x && (x.parentId == null ? parentId == null : x.parentId === parentId);
+      });
+    }
+
+    function walk(parentId, depth) {
+      childrenOf(parentId).slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (org) {
+        orgRow(org, depth);
+        if (!collapsed[org.id]) {
+          walk(org.id, depth + 1);
+          units.filter(function (u) { return u && u.orgId === org.id; })
+            .sort(function (a, b) { return a.seq - b.seq; })
+            .forEach(function (u) { unitRow(u, depth + 1); });
+        }
+      });
+    }
+
+    if (assignFilter === 'unassigned' || assignFilter === 'assigned') {
+      rows.push({ kind: 'root', depth: 0, id: '__unassigned', label: assignFilter === 'unassigned' ? '未编入' : '已编入', aggregates: null });
+      units.slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (u) { unitRow(u, 1); });
+      return rows;
+    }
+
+    walk(null, 0);
+    const unassigned = units.filter(function (u) { return u && !u.orgId; });
+    if (unassigned.length || o.showUnassignedRoot !== false) {
+      rows.push({ kind: 'root', depth: 0, id: '__unassigned', label: '未编入', aggregates: null });
+      if (!collapsed['__unassigned']) {
+        unassigned.slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (u) { unitRow(u, 1); });
+      }
+    }
+    return rows;
+  }
+
+  // ---------------- 计划（并入状态模块） ----------------
+
+  function focusPlanCreate(state, fields, now) {
+    const next = focusCloneState(state);
+    const f = fields || {};
+    const title = String(f.title == null ? '' : f.title).trim();
+    if (!title) return { ok: false, reason: 'empty_title', state: next };
+    const dueAt = Number(f.dueAt) || 0;
+    if (!dueAt) return { ok: false, reason: 'empty_due', state: next };
+    const target = Number(f.targetCount);
+    if (!Number.isFinite(target) || target < 1) return { ok: false, reason: 'bad_target', state: next };
+    const t = Number(now) || 0;
+    const plan = {
+      id: String(f.id || focusUid('plan')),
+      title: title,
+      dueAt: dueAt,
+      targetCount: Math.floor(target),
+      template: f.template === 'triad' ? 'triad' : 'free',
+      orgId: f.orgId == null ? null : String(f.orgId),
+      status: 'active',
+      createdAt: t
+    };
+    if (focusFindPlan(next, plan.id)) return { ok: false, reason: 'dup_id', state: next, plan: null };
+    next.plans.push(plan);
+    return { ok: true, state: next, plan: plan };
+  }
+
+  function focusPlanFilledCount(state, planId) {
+    const p = focusFindPlan(state, planId);
+    if (!p) return 0;
+    return ((state && state.units) || []).filter(function (u) { return u && u.planId === p.id; }).length;
+  }
+
+  function focusPlanDueSoon(state, now) {
+    const t = Number(now) || 0;
+    const days = ((state && state.settings) || focusDefaultSettings()).planDueRemindDays;
+    const win = days * 86400000;
+    return ((state && state.plans) || []).filter(function (p) {
+      if (!p || p.status !== 'active') return false;
+      return p.dueAt && p.dueAt - t <= win && p.dueAt >= t - 86400000;
+    });
+  }
+
+  function focusPlanOverdue(state, now) {
+    const t = Number(now) || 0;
+    return ((state && state.plans) || []).filter(function (p) {
+      return p && p.status === 'active' && p.dueAt && p.dueAt < t;
+    });
+  }
+
+  function focusPlanSettle(state, planId, now) {
+    const next = focusCloneState(state);
+    const p = focusFindPlan(next, planId);
+    if (!p) return { ok: false, reason: 'not_found', state: next };
+    if (p.status !== 'active') return { ok: false, reason: 'not_active', state: next };
+    const filled = focusPlanFilledCount(next, planId);
+    const t = Number(now) || 0;
+    if (filled >= p.targetCount) {
+      p.status = 'done';
+      return { ok: true, state: next, plan: p, filled: filled, cleared: false };
+    }
+    p.status = 'failed';
+    next.chains.forEach(function (c) {
+      if (!c) return;
+      c.workCount = 0;
+      c.current = null;
+      if (c.status === 'running' || c.status === 'scouting' || c.status === 'reserved' || c.status === 'awaiting_verdict') {
+        c.status = 'cleared';
+        c.clearedAt = t;
+        c.clearReason = 'plan:' + p.id;
+      }
+    });
+    return { ok: true, state: next, plan: p, filled: filled, cleared: true, target: p.targetCount };
+  }
+
+  // ---------------- 存储 ----------------
+  function loadFocus() {
+    if (typeof window !== 'undefined' && window.__focusData) return window.__focusData;
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(FOCUS_KEY)); } catch (e) {}
+    const data = focusSanitizeState(raw);
+    if (typeof window !== 'undefined') window.__focusData = data;
+    return data;
+  }
+
+  function saveFocus(data) {
+    const d = data || focusDefaultState();
+    if (typeof window !== 'undefined') window.__focusData = d;
+    try { localStorage.setItem(FOCUS_KEY, JSON.stringify(d)); } catch (e) {}
+    return d;
+  }
+
+  // ---------------- UI 会话态 ----------------
+  let focusTickTimer = null;
+  const focusUiState = {
+    tab: 'seat',
+    collapsed: {},
+    assignFilter: 'all',       // all | assigned | unassigned（是否编入）
+    selected: {},          // 树内多选
+    dragId: null,          // 拖动源
+    chainFilter: null      // 状态页按链筛选（null=全部）
+  };
+
+  function focusClearTick() {
+    if (focusTickTimer) {
+      clearInterval(focusTickTimer);
+      focusTickTimer = null;
+    }
+  }
+
+  function focusFmtClock(ms) {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return m + ':' + String(r).padStart(2, '0');
+  }
+
+  function focusFmtTs(ts) {
+    if (!ts) return '—';
+    const d = new Date(Number(ts));
+    return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  function focusFmtDur(min) {
+    const m = Math.max(0, Math.round(Number(min) || 0));
+    if (m < 60) return m + ' 分';
+    return Math.floor(m / 60) + ' 时 ' + (m % 60) + ' 分';
+  }
+
+  function focusSelectedIds() {
+    return Object.keys(focusUiState.selected).filter(function (k) { return focusUiState.selected[k]; });
+  }
+
+  function focusApply(mutator, msg) {
+    const st = loadFocus();
+    const r = mutator(st);
+    if (r && r.state) saveFocus(r.state);
+    renderApp();
+    if (msg && r && r.ok) toast(msg);
+    else if (!r || !r.ok) {
+      const map = {
+        busy: '当前有进行中的单元',
+        not_found: '对象不存在',
+        reservation_expired: '预约已超时',
+        no_unit: '没有进行中的单元',
+        empty_behavior: '请描述可疑行为',
+        not_in_unit: '仅专注/侦查中途可标记可疑行为',
+        no_pending: '没有待裁决的可疑行为',
+        bad_decision: '无效选择',
+        not_scouting: '当前不在侦查任务中',
+        no_normal: '没有可继位的普通链',
+        no_elite: '没有崩溃的主链',
+        main_exists: '同一时间只能有一个主链',
+        bad_inherit: '只能从普通链继承',
+        dup_id: 'id 冲突',
+        empty_task: '请先填写任务内容',
+        timer_not_done: '计时结束才可完成',
+        use_scout: '侦查请用「侦查」入口',
+        bad_type: '无效类型',
+        empty_name: '名称不能为空',
+        bad_level: '无效层次',
+        bad_parent: '父级层次不匹配',
+        bad_org: '只能编入任务组',
+        need_plan_mode: '请先开启计划模式',
+        need_fill: '须至少填充一个下级层次',
+        not_plan: '不是计划创建的节点',
+        already_formal: '已转正',
+        empty_selection: '请先选择节点',
+        reserve_chain_bound: '预约链仅计数，由其他链预约绑定',
+        empty_title: '请填写计划标题',
+        empty_due: '请设置截止时间',
+        bad_target: '目标单元数须 ≥ 1',
+        not_active: '计划已结算'
+      };
+      toast(map[(r && r.reason) || ''] || '操作失败');
+    }
+    return r;
+  }
+
+  // ---------------- UI：主入口 ----------------
+  function renderFocusSection(wrap) {
+    focusClearTick();
+    const st = loadFocus();
+    const now = Date.now();
+
+    // tabs：专注 | 状态 | 统计（计划已并入状态）
+    const tabs = el('div', 'chips act-tabs');
+    [['seat', '专注'], ['tree', '状态'], ['stats', '统计']].forEach(function (t) {
+      const chip = el('button', 'chip' + (focusUiState.tab === t[0] ? ' active' : ''), t[1]);
+      chip.addEventListener('click', function () { focusUiState.tab = t[0]; renderApp(); });
+      tabs.appendChild(chip);
+    });
+    wrap.appendChild(tabs);
+
+    if (focusUiState.tab === 'tree') {
+      focusRenderTree(wrap, st, now);
+      return;
+    }
+    if (focusUiState.tab === 'stats') {
+      focusRenderStats(wrap, st, now);
+      return;
+    }
+    focusRenderSeat(wrap, st, now);
+  }
+
+  // ---------------- UI：专注座位 ----------------
+  function focusRenderSeat(wrap, st, now) {
+    if (!st.chains.length) {
+      const panel = el('div', 'act-panel focus-empty');
+      panel.appendChild(illus('empty-focus'));
+      panel.appendChild(el('p', 'muted', '专注链：开始须写清任务；计时结束后记「是否达成 + 完成度」。'));
+      const btns = el('div', 'focus-btns');
+      const addN = el('button', 'btn primary', '创建普通链');
+      addN.addEventListener('click', function () {
+        focusApply(function (s) {
+          return focusCreateChain(s, { tier: FOCUS_TIER_NORMAL, unitMinutes: s.settings.unitMinutes }, Date.now());
+        }, '已创建普通链');
+      });
+      const addM = el('button', 'btn', '创建主链…');
+      addM.addEventListener('click', function () { focusOpenMainChainModal(); });
+      btns.appendChild(addN);
+      btns.appendChild(addM);
+      panel.appendChild(btns);
+      wrap.appendChild(panel);
+      return;
+    }
+
+    const chips = el('div', 'chips focus-chain-chips');
+    st.chains.forEach(function (c) {
+      const isRes = c.role === 'reserve';
+      const isMain = c.tier === FOCUS_TIER_MAIN;
+      const label = isRes
+        ? '预约链 ' + focusWorkLabel(c.workCount)
+        : (isMain ? '主链' : '普通') + ' ' + focusWorkLabel(c.workCount);
+      const chip = el('button', 'chip' + (c.id === st.activeId ? ' active' : ''), label);
+      chip.addEventListener('click', function () {
+        focusApply(function (s) { return focusSetActive(s, c.id); });
+      });
+      chips.appendChild(chip);
+    });
+    const addChip = el('button', 'chip', '＋ 新链');
+    addChip.addEventListener('click', function () {
+      if (focusMainChain(st)) focusOpenCreateModal(true);
+      else focusOpenMainChainModal();
+    });
+    chips.appendChild(addChip);
+    wrap.appendChild(chips);
+
+    const chain = focusActiveChain(st) || st.chains[0];
+    if (!chain) return;
+
+    const seat = el('div', 'act-panel focus-seat');
+    const seatHead = el('div', 'focus-seat-head');
+    seatHead.appendChild(el('h3', null, '神圣座位'));
+    const isResChain = chain.role === 'reserve';
+    const tierTxt = isResChain ? '预约链' : (chain.tier === FOCUS_TIER_MAIN ? '主链' : '普通链');
+    seatHead.appendChild(el('span', 'focus-tier-badge' + (chain.tier === FOCUS_TIER_MAIN && !isResChain ? ' elite' : ''), tierTxt));
+    seat.appendChild(seatHead);
+    if (isResChain) {
+      seat.appendChild(el('div', 'act-hint', '预约链自动存在：其他链「预约」成功并窗口内就座则 +1；违规则从零开始。仅计数，不编制，无独立预约/侦查。'));
+    }
+
+    const noteRow = el('div', 'focus-note-row');
+    noteRow.appendChild(el('div', 'muted', '触发说明'));
+    noteRow.appendChild(el('div', 'focus-seat-note', chain.seatNote || '（未填写——写下你坐下的触发情境）'));
+    const editNote = el('button', 'btn small', '编辑说明');
+    editNote.addEventListener('click', function () { focusOpenSeatModal(chain); });
+    noteRow.appendChild(editNote);
+    seat.appendChild(noteRow);
+
+    const durRow = el('div', 'focus-dur-row');
+    durRow.appendChild(el('span', 'muted', '单元时长'));
+    FOCUS_DURATIONS.forEach(function (d) {
+      const b = el('button', 'chip' + (chain.unitMinutes === d ? ' active' : ''), d + ' 分');
+      b.addEventListener('click', function () {
+        focusApply(function (s) { return focusSetUnitMinutes(s, chain.id, d, Date.now()); });
+      });
+      durRow.appendChild(b);
+    });
+    seat.appendChild(durRow);
+
+    const statusBox = el('div', 'focus-status');
+    if (chain.status === 'awaiting_verdict' && chain.awaiting) {
+      statusBox.appendChild(el('div', 'focus-await-title', '下必为例 · 可疑行为裁决'));
+      statusBox.appendChild(el('div', 'focus-await-behavior', '「' + chain.awaiting.behavior + '」'));
+      statusBox.appendChild(el('div', 'muted', '选择将作为先例约束后续同类行为。'));
+      const verdictBtns = el('div', 'focus-btns');
+      const bClear = el('button', 'btn danger', '清链重来');
+      bClear.addEventListener('click', function () {
+        const id = chain.id;
+        focusApply(function (s) { return focusResolveSuspicious(s, id, 'clear', Date.now()); }, '已清链重来 · #N 归零');
+      });
+      const bAllow = el('button', 'btn primary', '永久允许此例外');
+      bAllow.addEventListener('click', function () {
+        const id = chain.id;
+        focusApply(function (s) { return focusResolveSuspicious(s, id, 'allow', Date.now()); }, '已写入判例 · 单元继续');
+      });
+      verdictBtns.appendChild(bClear);
+      verdictBtns.appendChild(bAllow);
+      statusBox.appendChild(verdictBtns);
+    } else if ((chain.status === 'running' || chain.status === 'scouting') && chain.current) {
+      focusRenderRunning(statusBox, chain, st, now);
+    } else if (isResChain) {
+      // 预约链：只读计数，不提供预约/侦查/就座
+      statusBox.appendChild(el('div', 'focus-run-title', '预约链 · ' + focusWorkLabel(chain.workCount)));
+      statusBox.appendChild(el('div', 'muted', chain.lastUnitAt ? '最近计入 ' + focusFmtTs(chain.lastUnitAt) : '尚未计入'));
+      statusBox.appendChild(el('div', 'muted', '请在其他链上点「预约」；窗口内就座则本链 +1，违规清零。'));
+    } else if (chain.status === 'reserved' && chain.reservation) {
+      const remain = focusReservationRemainingMs(chain.reservation, now);
+      statusBox.appendChild(el('div', 'focus-run-title', '预约中 · 请在窗口内就座'));
+      const clock = el('div', 'focus-clock', focusFmtClock(remain));
+      clock.id = 'focusClock';
+      statusBox.appendChild(clock);
+      statusBox.appendChild(el('div', 'muted', '就座成功将计入预约链'));
+      const revBtns = el('div', 'focus-btns');
+      const bSit = el('button', 'btn primary', '就座…');
+      bSit.addEventListener('click', function () { focusOpenStartModal(chain, st); });
+      revBtns.appendChild(bSit);
+      statusBox.appendChild(revBtns);
+    } else {
+      statusBox.appendChild(el('div', 'focus-run-title', chain.status === 'cleared' ? '链已清空 · 可重新开始' : '空闲 · 准备就座'));
+      statusBox.appendChild(el('div', 'muted', '链上 ' + focusWorkLabel(chain.workCount) + (chain.lastUnitAt ? ' · 最近完成 ' + focusFmtTs(chain.lastUnitAt) : '')));
+      const idleBtns = el('div', 'focus-btns');
+      const bSit = el('button', 'btn primary', '就座…');
+      bSit.addEventListener('click', function () { focusOpenStartModal(chain, st); });
+      const bRes = el('button', 'btn', '预约');
+      bRes.addEventListener('click', function () {
+        const id = chain.id;
+        focusApply(function (s) { return focusReserve(s, id, Date.now()); }, '已预约 · 窗口内就座可计入预约链');
+      });
+      const bScout = el('button', 'btn', '侦查…');
+      bScout.addEventListener('click', function () { focusOpenStartModal(chain, st, 'scout'); });
+      idleBtns.appendChild(bSit);
+      idleBtns.appendChild(bRes);
+      idleBtns.appendChild(bScout);
+      statusBox.appendChild(idleBtns);
+    }
+    seat.appendChild(statusBox);
+    wrap.appendChild(seat);
+
+    // 判例（保留）；链状态面板已按要求去除
+    const precPanel = el('div', 'act-panel focus-prec');
+    precPanel.appendChild(el('h3', null, '判例 · 永久允许的例外'));
+    if (!st.precedents.length) {
+      precPanel.appendChild(el('p', 'muted', '暂无判例。'));
+    } else {
+      const ul = el('ul', 'focus-prec-list');
+      st.precedents.forEach(function (p) {
+        const li = el('li');
+        li.appendChild(el('span', 'focus-prec-behavior', p.behavior));
+        ul.appendChild(li);
+      });
+      precPanel.appendChild(ul);
+    }
+    wrap.appendChild(precPanel);
+
+    // 倒计时 + 时间到自动弹出完成度询问
+    if (chain.status === 'running' || chain.status === 'scouting' || chain.status === 'reserved') {
+      focusTickTimer = setInterval(function () {
+        if (currentView !== 'actFocus') { focusClearTick(); return; }
+        const clock = document.getElementById('focusClock');
+        if (!clock) { focusClearTick(); return; }
+        const s = loadFocus();
+        const ch = focusActiveChain(s);
+        if (!ch) return;
+        const t = Date.now();
+        if (ch.status === 'running' || ch.status === 'scouting') {
+          if (!ch.current) return;
+          const remain = focusUnitRemainingMs(ch.current, t);
+          if (remain <= 0) {
+            clock.textContent = '时间到';
+            clock.classList.add('done');
+            focusClearTick();
+            renderApp();
+            // 计时结束：自动询问完成度（正式单元）
+            if (ch.current && ch.current.typeKey !== 'scout') {
+              setTimeout(function () { focusOpenCompleteModal(ch, loadFocus()); }, 80);
+            }
+          } else {
+            clock.textContent = focusFmtClock(remain);
+          }
+        } else if (ch.status === 'reserved' && ch.reservation) {
+          const remain = focusReservationRemainingMs(ch.reservation, t);
+          clock.textContent = focusFmtClock(remain);
+          if (remain <= 0) {
+            focusClearTick();
+            const er = focusExpireReservations(s, t);
+            if (er && er.state) saveFocus(er.state);
+            renderApp();
+            if (er && er.expired && er.expired.length) {
+              toast('预约违规 · 预约链计数已从零开始');
+            } else {
+              toast('预约已超时');
+            }
+          }
+        }
+      }, 1000);
+    }
+  }
+
+  function focusRenderRunning(statusBox, chain, st, now) {
+    const cur = chain.current;
+    const remain = focusUnitRemainingMs(cur, now);
+    const canDone = focusCanComplete(cur, now);
+    const isScout = cur.typeKey === 'scout' && !cur.promotedFromScout;
+    const typeLabel = st.settings.typeNames[cur.typeKey] || cur.typeKey;
+    statusBox.appendChild(el('div', 'focus-run-title', (isScout ? '侦查' : typeLabel) + ' · ' + cur.plannedMin + ' 分钟'));
+    if (st.settings.flavor) statusBox.appendChild(el('div', 'muted', '类型：' + typeLabel));
+    statusBox.appendChild(el('div', 'focus-task-text', cur.taskText || '（无任务内容）'));
+    const clock = el('div', 'focus-clock' + (canDone ? ' done' : ''), canDone ? '时间到' : focusFmtClock(remain));
+    clock.id = 'focusClock';
+    statusBox.appendChild(clock);
+
+    const runBtns = el('div', 'focus-btns');
+    if (isScout) {
+      if (!canDone) {
+        const bExt = el('button', 'btn', '延长 ' + st.settings.scoutExtendMin + ' 分');
+        bExt.addEventListener('click', function () {
+          const id = chain.id;
+          focusApply(function (s) { return focusScoutExtend(s, id, Date.now()); }, '已延长');
+        });
+        runBtns.appendChild(bExt);
+      } else {
+        statusBox.appendChild(el('div', 'muted', '侦查到期：转为正式单元，或放弃（均不伤链）。'));
+        const bPromote = el('button', 'btn primary', '转正…');
+        bPromote.addEventListener('click', function () { focusOpenPromoteModal(chain, st); });
+        runBtns.appendChild(bPromote);
+      }
+      const bQuit = el('button', 'btn', '放弃侦查');
+      bQuit.addEventListener('click', function () {
+        const id = chain.id;
+        focusApply(function (s) { return focusScoutEnd(s, id, Date.now()); }, '已放弃 · 链未受伤');
+      });
+      runBtns.appendChild(bQuit);
+    } else {
+      const bDone = el('button', 'btn primary', '完成 · 记 ' + focusWorkLabel(st.seq.unit + 1));
+      if (canDone) {
+        bDone.addEventListener('click', function () { focusOpenCompleteModal(chain, st); });
+      } else {
+        bDone.setAttribute('disabled', 'disabled');
+        bDone.title = '计时结束才可完成';
+      }
+      runBtns.appendChild(bDone);
+    }
+    const bSus = el('button', 'btn', '可疑行为…');
+    bSus.addEventListener('click', function () { focusOpenSuspiciousModal(chain); });
+    runBtns.appendChild(bSus);
+    statusBox.appendChild(runBtns);
+  }
+
+  // ---------------- UI：状态树（编制 + 计划合并） ----------------
+  function focusRenderTree(wrap, st, now) {
+    // 计划模式开关
+    const modeRow = el('div', 'act-section-head');
+    modeRow.appendChild(el('h3', null, '状态 · 竖列树'));
+    const modeBtn = el('button', 'chip' + (st.planMode ? ' active' : ''), st.planMode ? '计划模式：开' : '计划模式：关');
+    modeBtn.addEventListener('click', function () {
+      focusApply(function (s) { return focusSetPlanMode(s, !s.planMode); });
+    });
+    modeRow.appendChild(modeBtn);
+    wrap.appendChild(modeRow);
+
+    if (st.planMode) {
+      wrap.appendChild(el('div', 'act-hint', '计划模式：可创建高层次任务；须手动填充至少一个下级，完成后可「转正」为正式层次。'));
+    }
+
+    // 计划摘要（合并自原计划页）
+    const dueSoon = focusPlanDueSoon(st, now);
+    if (dueSoon.length) {
+      const warn = el('div', 'act-panel focus-plan-warn');
+      warn.appendChild(el('div', 'focus-await-title', '临近截止'));
+      dueSoon.forEach(function (p) {
+        warn.appendChild(el('div', null, p.title + ' · 截止 ' + focusFmtTs(p.dueAt) + ' · 已填 ' + focusPlanFilledCount(st, p.id) + '/' + p.targetCount));
+      });
+      wrap.appendChild(warn);
+    }
+
+    // 树工具：是否编入 + 链 筛选（两类），以及多选/计划操作
+    const selIds = focusSelectedIds();
+    const tools = el('div', 'focus-tree-tools');
+    const viewReserve = focusUiState.chainFilter === FOCUS_RESERVE_CHAIN_ID;
+    if (st.planMode && !viewReserve) {
+      const addPlan = el('button', 'btn small primary', '＋ 计划任务');
+      addPlan.addEventListener('click', function () { focusOpenPlanTaskModal(st); });
+      tools.appendChild(addPlan);
+    }
+    if (selIds.length && !viewReserve) {
+      tools.appendChild(el('span', 'muted', '已选 ' + selIds.length + ' 项'));
+      const combine = el('button', 'btn small', '组合到新组');
+      combine.addEventListener('click', function () { focusOpenCombineModal(st); });
+      tools.appendChild(combine);
+      const moveBtn = el('button', 'btn small', '移动到…');
+      moveBtn.addEventListener('click', function () { focusOpenMoveModal(st, selIds); });
+      tools.appendChild(moveBtn);
+      const clear = el('button', 'btn small', '取消选择');
+      clear.addEventListener('click', function () {
+        focusUiState.selected = {};
+        renderApp();
+      });
+      tools.appendChild(clear);
+    }
+    wrap.appendChild(tools);
+
+    // 筛选行 1：是否编入
+    const filterRow1 = el('div', 'chips focus-filter-row');
+    filterRow1.appendChild(el('span', 'focus-filter-label', '编入'));
+    [['all', '全部'], ['assigned', '已编入'], ['unassigned', '未编入']].forEach(function (t) {
+      const chip = el('button', 'chip' + (focusUiState.assignFilter === t[0] ? ' active' : ''), t[1]);
+      chip.addEventListener('click', function () {
+        focusUiState.assignFilter = t[0];
+        renderApp();
+      });
+      filterRow1.appendChild(chip);
+    });
+    wrap.appendChild(filterRow1);
+
+    // 筛选行 2：链
+    const filterRow2 = el('div', 'chips focus-filter-row');
+    filterRow2.appendChild(el('span', 'focus-filter-label', '链'));
+    const cAll = el('button', 'chip' + (!focusUiState.chainFilter ? ' active' : ''), '全部');
+    cAll.addEventListener('click', function () { focusUiState.chainFilter = null; renderApp(); });
+    filterRow2.appendChild(cAll);
+    st.chains.forEach(function (c) {
+      const isRes = c.role === 'reserve';
+      const nm = isRes ? '预约链' : (c.tier === 'main' ? '主链' : '普通');
+      const chip = el('button', 'chip' + (focusUiState.chainFilter === c.id ? ' active' : ''),
+        nm + (isRes ? ' #' + c.workCount : ' ' + focusWorkLabel(c.workCount)));
+      chip.addEventListener('click', function () {
+        focusUiState.chainFilter = c.id;
+        renderApp();
+      });
+      filterRow2.appendChild(chip);
+    });
+    wrap.appendChild(filterRow2);
+    if (viewReserve) {
+      wrap.appendChild(el('div', 'act-hint', '预约链仅计数，不支持编制操作。'));
+    }
+
+    const rows = focusTreeRows(st, {
+      collapsed: focusUiState.collapsed,
+      assignFilter: focusUiState.assignFilter,
+      chainFilter: focusUiState.chainFilter
+    });
+    const tree = el('div', 'act-panel focus-tree');
+    tree.id = 'focusTree';
+    if (!rows.length) {
+      tree.appendChild(illus('empty-focus'));
+      tree.appendChild(el('p', 'muted', '暂无数据。完成专注单元后会出现在「未编入」。' + (st.planMode ? '点上方「＋ 计划任务」创建高层次。' : '开启计划模式后可创建高层次任务。')));
+    }
+
+    rows.forEach(function (r) {
+      const row = el('div', 'focus-tree-row' + (focusUiState.selected[r.id] ? ' selected' : ''));
+      row.style.paddingLeft = (8 + r.depth * 18) + 'px';
+      row.setAttribute('data-id', r.id);
+      row.setAttribute('data-kind', r.kind);
+
+      // 多选
+      if (r.kind === 'unit' || r.kind === 'org') {
+        const cb = el('input', 'focus-tree-check');
+        cb.type = 'checkbox';
+        cb.checked = !!focusUiState.selected[r.id];
+        cb.addEventListener('click', function (e) {
+          e.stopPropagation();
+          focusUiState.selected[r.id] = !focusUiState.selected[r.id];
+          renderApp();
+        });
+        row.appendChild(cb);
+      }
+
+      // 拖放：把选中项/自身放进目标 org
+      if (r.kind === 'org') {
+        row.addEventListener('dragover', function (e) { e.preventDefault(); row.classList.add('drop'); });
+        row.addEventListener('dragleave', function () { row.classList.remove('drop'); });
+        row.addEventListener('drop', function (e) {
+          e.preventDefault();
+          row.classList.remove('drop');
+          const ids = focusSelectedIds();
+          const src = focusUiState.dragId;
+          const targetId = r.id;
+          if (!ids.length && !src) return;
+          focusApply(function (s) {
+            if (ids.length) {
+              const unitIds = ids.filter(function (id) { return focusFindUnit(s, id); });
+              const orgIds = ids.filter(function (id) { return focusFindOrg(s, id); });
+              let rr = { ok: true, state: s };
+              if (unitIds.length) rr = focusAssignUnits(rr.state, unitIds, targetId, Date.now());
+              if (orgIds.length) rr = focusReparentOrgs(rr.state, orgIds, targetId, Date.now());
+              return rr;
+            }
+            if (src && focusFindUnit(s, src)) return focusAssignUnits(s, [src], targetId, Date.now());
+            if (src && focusFindOrg(s, src)) return focusReparentOrgs(s, [src], targetId, Date.now());
+            return { ok: false, reason: 'empty_selection', state: s };
+          }, '已组合到 ' + r.label);
+        });
+      }
+
+      if (r.kind === 'org') {
+        const fold = el('button', 'focus-tree-fold', r.collapsed ? '▸' : '▾');
+        fold.type = 'button';
+        fold.addEventListener('click', function (e) {
+          e.stopPropagation();
+          focusUiState.collapsed[r.id] = !focusUiState.collapsed[r.id];
+          renderApp();
+        });
+        row.appendChild(fold);
+
+        const main = el('div', 'focus-tree-main');
+        const tag = r.org.fromPlan && !r.org.formalized ? ' · 计划中' : '';
+        const dueTxt = r.org.dueAt ? ' · 截止 ' + focusFmtTs(r.org.dueAt) : '';
+        main.appendChild(el('div', 'focus-tree-label', r.label + tag + dueTxt));
+        const agg = r.aggregates;
+        const needN = Math.max(1, Number(r.org.minChildCount) || 1);
+        const nextCount = (function () {
+          const kids = st.orgs.filter(function (o) { return o && o.parentId === r.id; });
+          return kids.length > 0 ? kids.length : (st.units.filter(function (u) { return u && u.orgId === r.id; }).length);
+        })();
+        if (agg && agg.unitCount) {
+          main.appendChild(el('div', 'focus-tree-meta',
+            agg.unitCount + ' 单元 · ' + focusFmtTs(agg.startAt) + ' → ' + focusFmtTs(agg.endAt) +
+            ' · 总时 ' + focusFmtDur(agg.totalMin) + ' · 均完成 ' + agg.avgCompletion + '%' +
+            (r.org.fromPlan && !r.org.formalized ? ' · 下级 ' + nextCount + '/' + needN : '')));
+        } else {
+          main.appendChild(el('div', 'focus-tree-meta muted',
+            '暂无下级单元' + (r.org.fromPlan && !r.org.formalized ? ' · 转正需下级 ≥ ' + needN + '（现有 ' + nextCount + '）' : '')));
+        }
+        row.appendChild(main);
+
+        // 树内操作（非「新建」大按钮）
+        const act = el('div', 'focus-tree-acts');
+        const addChild = el('button', 'btn small', '＋子级');
+        addChild.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (!st.planMode) { toast('请先开启计划模式'); return; }
+          focusOpenInlineChildModal(r.org, st);
+        });
+        act.appendChild(addChild);
+
+        const rename = el('button', 'btn small', '改名');
+        rename.addEventListener('click', function (e) {
+          e.stopPropagation();
+          focusOpenRenameOrgModal(r.org);
+        });
+        act.appendChild(rename);
+
+        if (r.org.fromPlan && !r.org.formalized) {
+          const fin = el('button', 'btn small primary', '转正');
+          fin.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const chk = focusOrgCanFormalize(loadFocus(), r.id);
+            if (!chk.ok) {
+              if (chk.reason === 'need_fill') {
+                toast('须至少 ' + (chk.need || 1) + ' 个下级（现有 ' + (chk.childCount || 0) + '）');
+              } else {
+                toast('当前不可转正');
+              }
+              return;
+            }
+            focusApply(function (s) { return focusFormalizeOrg(s, r.id, Date.now()); }, '已转正为正式层次');
+          });
+          act.appendChild(fin);
+        }
+
+        const del = el('button', 'btn small danger', '删');
+        del.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (!window.confirm('删除该节点将级联子孙，单元回「未编入」。确认？')) return;
+          focusApply(function (s) { return focusDeleteOrg(s, r.id, Date.now()); }, '已删除');
+        });
+        act.appendChild(del);
+        row.appendChild(act);
+      } else if (r.kind === 'unit') {
+        row.draggable = true;
+        row.addEventListener('dragstart', function () {
+          focusUiState.dragId = r.id;
+          if (!focusUiState.selected[r.id]) {
+            focusUiState.selected = {};
+            focusUiState.selected[r.id] = true;
+          }
+        });
+        row.addEventListener('dragend', function () { focusUiState.dragId = null; });
+
+        const main = el('div', 'focus-tree-main');
+        main.appendChild(el('div', 'focus-tree-label', r.label));
+        const u = r.unit;
+        main.appendChild(el('div', 'focus-tree-meta',
+          '完成 ' + u.completion + '% · ' + focusFmtDur(u.actualMin) +
+          ' · ' + focusFmtTs(u.startedAt) + ' → ' + focusFmtTs(u.endedAt)));
+        row.appendChild(main);
+
+        const act = el('div', 'focus-tree-acts');
+        const editName = el('button', 'btn small', '改名');
+        editName.addEventListener('click', function (e) {
+          e.stopPropagation();
+          focusOpenRenameUnitModal(u);
+        });
+        act.appendChild(editName);
+        row.appendChild(act);
+      } else {
+        row.appendChild(el('span', 'focus-tree-root', r.label));
+      }
+      tree.appendChild(row);
+    });
+    wrap.appendChild(tree);
+  }
+
+  // ---------------- UI：统计 ----------------
+  let focusHeatExpanded = false; // 热力图：预览 8 周 ↔ 展开 26 周
+  function focusRenderStats(wrap, st, now) {
+    wrap.appendChild(el('h3', null, '统计 · 实际完成分钟'));
+
+    const heat = el('div', 'act-panel focus-heat chart-card');
+    const map = focusDailyMinutes(st);
+    const today = focusYmd(now);
+    const end = new Date(now);
+    end.setHours(12, 0, 0, 0);
+    const weeks = focusHeatExpanded ? 26 : 8;
+    const days = weeks * 7;
+    const startTs = end.getTime() - (days - 1) * 86400000;
+    let maxMin = 1, activeDays = 0, totalMin = 0, peakMin = 0;
+    Object.keys(map).forEach(function (k) { if (map[k] > maxMin) maxMin = map[k]; });
+
+    const head = el('div', 'chart-head');
+    head.appendChild(el('span', 'chart-title', '热力图 · 日实际完成分钟'));
+    const expandBtn = el('button', 'btn small heat-expand-btn', focusHeatExpanded ? '收起' : '展开完整点阵');
+    expandBtn.addEventListener('click', function () {
+      focusHeatExpanded = !focusHeatExpanded;
+      renderApp();
+    });
+    head.appendChild(expandBtn);
+    heat.appendChild(head);
+    heat.appendChild(el('div', 'chart-label muted',
+      focusHeatExpanded ? '完整视图 · 近 ' + weeks + ' 周' : '预览 · 近 ' + weeks + ' 周（可展开更完整）'));
+
+    const grid = el('div', 'focus-heat-grid');
+    for (let i = 0; i < days; i++) {
+      const ts = startTs + i * 86400000;
+      const day = focusYmd(ts);
+      const v = map[day] || 0;
+      if (v > 0) { activeDays++; totalMin += v; if (v > peakMin) peakMin = v; }
+      const cell = el('div', 'focus-heat-cell');
+      const lv = v <= 0 ? 0 : Math.min(4, Math.ceil((v / maxMin) * 4));
+      cell.setAttribute('data-lv', String(lv));
+      cell.title = day + ' · ' + v + ' 分';
+      if (day === today) cell.classList.add('today');
+      grid.appendChild(cell);
+    }
+    heat.appendChild(grid);
+    if (focusHeatExpanded) {
+      const sum = el('div', 'heat-summary');
+      sum.appendChild(el('span', null, '有专注'));
+      sum.appendChild(el('b', null, activeDays + ' 天'));
+      sum.appendChild(el('span', null, '· 合计'));
+      sum.appendChild(el('b', null, totalMin + ' 分'));
+      sum.appendChild(el('span', null, '· 日均有记录日'));
+      sum.appendChild(el('b', null, activeDays ? Math.round(totalMin / activeDays) + ' 分' : '—'));
+      sum.appendChild(el('span', null, '· 峰值日'));
+      sum.appendChild(el('b', null, peakMin + ' 分'));
+      heat.appendChild(sum);
+    }
+    wrap.appendChild(heat);
+
+    // 趋势拆成两张图：专注时间 · 完成度
+    const series = focusTrendSeries(st, 30, now);
+    const avgMap = focusDailyAvgCompletion(st);
+    const sumMin = series.reduce(function (a, x) { return a + x.minutes; }, 0);
+    const avgVals = series.filter(function (x) { return x.avgCompletion != null; }).map(function (x) { return x.avgCompletion; });
+    const avgOfAvg = avgVals.length ? Math.round(avgVals.reduce(function (a, b) { return a + b; }, 0) / avgVals.length) : null;
+
+    // 图 1 · 专注时间（柱）
+    const tMin = el('div', 'act-panel focus-trend chart-card');
+    const hMin = el('div', 'chart-head');
+    hMin.appendChild(el('span', 'chart-title', '专注时间 · 近 30 天'));
+    hMin.appendChild(el('span', 'chart-pill', sumMin + ' 分'));
+    tMin.appendChild(hMin);
+    tMin.appendChild(el('div', 'chart-label muted', '柱高 = 当日实际完成分钟 · 今日 ' + (map[today] || 0) + ' 分'));
+    const maxV = Math.max(1, series.reduce(function (a, x) { return Math.max(a, x.minutes); }, 0));
+    const bars = el('div', 'focus-trend-bars');
+    series.forEach(function (x) {
+      const col = el('div', 'focus-trend-col');
+      const bar = el('div', 'focus-trend-bar');
+      bar.style.height = Math.max(2, Math.round((x.minutes / maxV) * 88)) + 'px';
+      bar.title = x.date + ' · ' + x.minutes + ' 分钟';
+      col.appendChild(bar);
+      bars.appendChild(col);
+    });
+    tMin.appendChild(bars);
+    wrap.appendChild(tMin);
+
+    // 图 2 · 完成度（折线 + 点）
+    const tAvg = el('div', 'act-panel focus-trend chart-card');
+    const hAvg = el('div', 'chart-head');
+    hAvg.appendChild(el('span', 'chart-title', '日均完成度 · 近 30 天'));
+    hAvg.appendChild(el('span', 'chart-pill', avgOfAvg == null ? '—' : avgOfAvg + '%'));
+    tAvg.appendChild(hAvg);
+    tAvg.appendChild(el('div', 'chart-label muted',
+      '点 = 当日平均完成度 · 今日 ' + (avgMap[today] == null ? '—' : avgMap[today] + '%')));
+    const compWrap = el('div', 'focus-comp-chart');
+    const CW = 320, CH = 110, cpL = 28, cpR = 8, cpT = 12, cpB = 18;
+    const csvg = svgEl('svg', { viewBox: '0 0 ' + CW + ' ' + CH, width: '100%', class: 'chart-svg' });
+    const cx = function (i) {
+      return cpL + (series.length <= 1 ? 0 : (i / (series.length - 1)) * (CW - cpL - cpR));
+    };
+    const cy = function (v) { return cpT + (1 - v / 100) * (CH - cpT - cpB); };
+    [0, 50, 100].forEach(function (v) {
+      const y = cy(v);
+      csvg.appendChild(svgEl('line', {
+        x1: cpL, x2: CW - cpR, y1: y, y2: y,
+        class: v === 100 ? 'chart-goal' : 'chart-grid'
+      }));
+      csvg.appendChild(svgText('text', cpL - 5, y + 3, String(v), {
+        'text-anchor': 'end', class: 'chart-axis'
+      }));
+    });
+    const pts = [];
+    series.forEach(function (x, i) {
+      if (x.avgCompletion == null) return;
+      pts.push(cx(i) + ',' + cy(x.avgCompletion));
+    });
+    if (pts.length >= 2) {
+      csvg.appendChild(svgEl('polyline', { points: pts.join(' '), class: 'chart-line' }));
+    }
+    series.forEach(function (x, i) {
+      if (x.avgCompletion == null) return;
+      const isLast = i === series.length - 1;
+      const dot = svgEl('circle', {
+        cx: cx(i), cy: cy(x.avgCompletion), r: isLast ? 4 : 2.8,
+        class: isLast ? 'chart-dot chart-dot-last' : 'chart-dot'
+      });
+      const tt = svgEl('title', {});
+      tt.textContent = x.date + ' · 均完成 ' + x.avgCompletion + '%';
+      dot.appendChild(tt);
+      csvg.appendChild(dot);
+    });
+    csvg.appendChild(svgText('text', cpL, CH - 5, series.length ? series[0].date.slice(5) : '', { class: 'chart-axis' }));
+    csvg.appendChild(svgText('text', CW - cpR, CH - 5, series.length ? series[series.length - 1].date.slice(5) : '', {
+      'text-anchor': 'end', class: 'chart-axis'
+    }));
+    compWrap.appendChild(csvg);
+    tAvg.appendChild(compWrap);
+    wrap.appendChild(tAvg);
+  }
+
+  // ---------------- UI：弹窗 ----------------
+  function focusOpenMainChainModal() {
+    const st = loadFocus();
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '创建主链'));
+    card.appendChild(el('p', 'muted', '同一时间只能有一个主链。可重新创建，或从现有普通链继承工作量。'));
+    const modeSel = el('select', 'wrong-input');
+    const oFresh = el('option', null, '重新创建');
+    oFresh.value = 'fresh';
+    const oInh = el('option', null, '从普通链继承');
+    oInh.value = 'inherit';
+    modeSel.appendChild(oFresh);
+    modeSel.appendChild(oInh);
+    card.appendChild(modeSel);
+
+    const inheritWrap = el('div');
+    inheritWrap.style.display = 'none';
+    inheritWrap.appendChild(el('div', 'muted', '继承来源'));
+    const inhSel = el('select', 'wrong-input');
+    st.chains.filter(function (c) { return c && c.tier === FOCUS_TIER_NORMAL; }).forEach(function (c) {
+      const o = el('option', null, '普通 ' + focusWorkLabel(c.workCount) + (c.seatNote ? ' · ' + c.seatNote : ''));
+      o.value = c.id;
+      inhSel.appendChild(o);
+    });
+    inheritWrap.appendChild(inhSel);
+    card.appendChild(inheritWrap);
+    modeSel.addEventListener('change', function () {
+      inheritWrap.style.display = modeSel.value === 'inherit' ? '' : 'none';
+    });
+
+    const note = el('input', 'wrong-input');
+    note.placeholder = '触发说明（可选）';
+    card.appendChild(note);
+
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '创建主链');
+    ok.addEventListener('click', function () {
+      const mode = modeSel.value;
+      const fromId = inhSel.value;
+      modal.remove();
+      focusApply(function (s) {
+        return focusCreateMainChain(s, {
+          mode: mode,
+          fromChainId: mode === 'inherit' ? fromId : null,
+          seatNote: note.value
+        }, Date.now());
+      }, '已创建主链');
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
+  function focusOpenCreateModal(normalOnly) {
+    const st = loadFocus();
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '新建专注链'));
+    const tierSel = el('select', 'wrong-input');
+    if (!normalOnly && !focusMainChain(st)) {
+      const oM = el('option', null, '主链');
+      oM.value = FOCUS_TIER_MAIN;
+      tierSel.appendChild(oM);
+    }
+    const oN = el('option', null, '普通链');
+    oN.value = FOCUS_TIER_NORMAL;
+    tierSel.appendChild(oN);
+    card.appendChild(tierSel);
+    const durSel = el('select', 'wrong-input');
+    FOCUS_DURATIONS.forEach(function (d) {
+      const o = el('option', null, d + ' 分钟');
+      o.value = String(d);
+      if (d === st.settings.unitMinutes) o.selected = true;
+      durSel.appendChild(o);
+    });
+    card.appendChild(durSel);
+    const note = el('input', 'wrong-input');
+    note.placeholder = '触发说明（可选）';
+    card.appendChild(note);
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '创建');
+    ok.addEventListener('click', function () {
+      const tier = tierSel.value;
+      modal.remove();
+      if (tier === FOCUS_TIER_MAIN) {
+        focusOpenMainChainModal();
+        return;
+      }
+      focusApply(function (s) {
+        return focusCreateChain(s, {
+          tier: tier,
+          unitMinutes: Number(durSel.value),
+          seatNote: note.value
+        }, Date.now());
+      }, '已创建专注链');
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
+  function focusOpenStartModal(chain, st, forceKind) {
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    const isScout = forceKind === 'scout';
+    card.appendChild(el('h3', null, isScout ? '开始侦查任务' : '就座 · 开始单元'));
+    card.appendChild(el('div', 'muted', '任务内容（必填）'));
+    const task = el('input', 'wrong-input');
+    task.placeholder = isScout ? '例如：先看一遍提纲' : '例如：完成高数第三章习题 1–10';
+    card.appendChild(task);
+    let typeSel = null;
+    if (!isScout) {
+      card.appendChild(el('div', 'muted', '类型'));
+      typeSel = el('select', 'wrong-input');
+      FOCUS_FORMAL_TYPE_KEYS.forEach(function (k) {
+        const o = el('option', null, st.settings.typeNames[k] || k);
+        o.value = k;
+        typeSel.appendChild(o);
+      });
+      card.appendChild(typeSel);
+    }
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', isScout ? '开始侦查' : '就座');
+    ok.addEventListener('click', function () {
+      const text = task.value;
+      const tk = typeSel ? typeSel.value : 'scout';
+      modal.remove();
+      if (isScout) {
+        focusApply(function (s) { return focusScoutStart(s, chain.id, Date.now(), { taskText: text }); }, '侦查已开始');
+      } else {
+        focusApply(function (s) {
+          return focusSitDown(s, chain.id, Date.now(), { taskText: text, typeKey: tk });
+        }, '已就座');
+      }
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+    setTimeout(function () { try { task.focus(); } catch (e) {} }, 50);
+  }
+
+  // 完成度询问（计时结束自动弹出 / 点完成也会弹）
+  function focusOpenCompleteModal(chain, st) {
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '完成单元 · 记录完成度'));
+    card.appendChild(el('p', 'muted', '记录是否达成原定，以及完成度（0–100%）。将计入每日均完成度趋势。'));
+    card.appendChild(el('div', 'muted', '是否达成原定'));
+    const achSel = el('select', 'wrong-input');
+    [['1', '达成'], ['0', '未达成']].forEach(function (t) {
+      const o = el('option', null, t[1]);
+      o.value = t[0];
+      achSel.appendChild(o);
+    });
+    card.appendChild(achSel);
+    card.appendChild(el('div', 'muted', '完成度 %'));
+    const pct = el('input', 'wrong-input');
+    pct.type = 'number';
+    pct.min = '0';
+    pct.max = '100';
+    pct.value = '100';
+    card.appendChild(pct);
+    card.appendChild(el('div', 'muted', '单元名称（可选，默认为任务内容）'));
+    const nameInp = el('input', 'wrong-input');
+    nameInp.placeholder = (chain.current && chain.current.taskText) || '';
+    card.appendChild(nameInp);
+
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '记录完成');
+    ok.addEventListener('click', function () {
+      const achieved = achSel.value === '1';
+      const completion = Number(pct.value);
+      const name = nameInp.value;
+      modal.remove();
+      focusApply(function (s) {
+        return focusCompleteUnit(s, chain.id, Date.now(), {
+          achieved: achieved,
+          completion: completion,
+          name: name
+        });
+      }, '已记 ' + focusWorkLabel(st.seq.unit + 1) + ' · 完成度 ' + (Number.isFinite(completion) ? completion : 0) + '%');
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
+  function focusOpenPromoteModal(chain, st) {
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '侦查转正'));
+    card.appendChild(el('p', 'muted', '选择正式类型。转正后与一般单元相同。'));
+    const typeSel = el('select', 'wrong-input');
+    FOCUS_FORMAL_TYPE_KEYS.forEach(function (k) {
+      const o = el('option', null, st.settings.typeNames[k] || k);
+      o.value = k;
+      typeSel.appendChild(o);
+    });
+    card.appendChild(typeSel);
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '转正');
+    ok.addEventListener('click', function () {
+      const tk = typeSel.value;
+      modal.remove();
+      focusApply(function (s) { return focusScoutPromote(s, chain.id, tk, Date.now()); }, '已转正');
+    });
+    const cancel = el('button', 'btn', '放弃');
+    cancel.addEventListener('click', function () {
+      modal.remove();
+      focusApply(function (s) { return focusScoutEnd(s, chain.id, Date.now()); }, '已放弃 · 链未受伤');
+    });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
+  function focusOpenSeatModal(chain) {
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '神圣座位 · 触发说明'));
+    const note = el('input', 'wrong-input');
+    note.value = chain.seatNote || '';
+    card.appendChild(note);
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '保存');
+    ok.addEventListener('click', function () {
+      modal.remove();
+      focusApply(function (s) { return focusSetSeatNote(s, chain.id, note.value, Date.now()); }, '已更新触发说明');
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
+  function focusOpenSuspiciousModal(chain) {
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '标记可疑行为'));
+    const input = el('input', 'wrong-input');
+    input.placeholder = '例如：起身刷了手机短视频';
+    card.appendChild(input);
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '进入裁决');
+    ok.addEventListener('click', function () {
+      const behavior = input.value;
+      modal.remove();
+      focusApply(function (s) { return focusFlagSuspicious(s, chain.id, behavior, Date.now()); });
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
+  // 计划模式：创建高层次任务（根级或挂在合法父级下）
+  function focusOpenPlanTaskModal(st) {
+    if (!st.planMode) { toast('请先开启计划模式'); return; }
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '新建计划任务'));
+    card.appendChild(el('p', 'muted', '创建高层次任务；须填充至少一个下级后，才能「转正」为正式层次。'));
+
+    card.appendChild(el('div', 'muted', '层次'));
+    const levelSel = el('select', 'wrong-input');
+    FOCUS_ORG_LEVELS.forEach(function (lv) {
+      const o = el('option', null, st.settings.levelNames[lv] || lv);
+      o.value = lv;
+      levelSel.appendChild(o);
+    });
+    card.appendChild(levelSel);
+
+    card.appendChild(el('div', 'muted', '名称（可选）'));
+    const name = el('input', 'wrong-input');
+    card.appendChild(name);
+
+    card.appendChild(el('div', 'muted', '截止日期（可选）'));
+    const dueInp = el('input', 'wrong-input');
+    dueInp.type = 'date';
+    card.appendChild(dueInp);
+
+    card.appendChild(el('div', 'muted', '可转正最低下一级任务数'));
+    const minChild = el('input', 'wrong-input');
+    minChild.type = 'number';
+    minChild.min = '1';
+    minChild.max = '99';
+    minChild.value = '1';
+    card.appendChild(minChild);
+
+    // 父级：按层次约束过滤
+    card.appendChild(el('div', 'muted', '上级（可选）'));
+    const parentSel = el('select', 'wrong-input');
+    function fillParents() {
+      parentSel.innerHTML = '';
+      const none = el('option', null, '（根级）');
+      none.value = '';
+      parentSel.appendChild(none);
+      const lv = levelSel.value;
+      const wantParent = lv === 'group' ? 'corps' : (lv === 'corps' ? 'army' : null);
+      if (wantParent) {
+        st.orgs.filter(function (o) { return o && o.level === wantParent; }).forEach(function (o) {
+          const opt = el('option', null, focusOrgLabel(o, st.settings));
+          opt.value = o.id;
+          parentSel.appendChild(opt);
+        });
+      }
+    }
+    levelSel.addEventListener('change', fillParents);
+    fillParents();
+    card.appendChild(parentSel);
+
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '创建');
+    ok.addEventListener('click', function () {
+      const level = levelSel.value;
+      const parentId = parentSel.value || null;
+      const nm = name.value;
+      const dueAt = dueInp.value ? new Date(dueInp.value + 'T23:59:59').getTime() : null;
+      const minN = Math.max(1, Math.floor(Number(minChild.value) || 1));
+      modal.remove();
+      const r = focusApply(function (s) {
+        return focusCreateOrg(s, {
+          level: level,
+          name: nm,
+          parentId: parentId,
+          fromPlan: true,
+          dueAt: dueAt,
+          minChildCount: minN
+        }, Date.now());
+      }, '已创建计划任务');
+      if (r && r.ok && r.org) {
+        focusUiState.collapsed[r.org.id] = false;
+      }
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+    setTimeout(function () { try { name.focus(); } catch (e) {} }, 50);
+  }
+
+  // 树内：给某节点加子级（计划模式）
+  function focusOpenInlineChildModal(parentOrg, st) {
+    const rank = { army: 3, corps: 2, group: 1 };
+    const childLevel = parentOrg.level === 'army' ? 'corps' : (parentOrg.level === 'corps' ? 'group' : null);
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '添加子级 · ' + focusOrgLabel(parentOrg, st.settings)));
+    if (!childLevel) {
+      card.appendChild(el('p', 'muted', '任务组之下是单元，由专注完成生成，不在此创建。'));
+      const close = el('button', 'btn', '知道了');
+      close.addEventListener('click', function () { modal.remove(); });
+      card.appendChild(close);
+      modal.appendChild(card);
+      document.body.appendChild(modal);
+      return;
+    }
+    card.appendChild(el('div', 'muted', '名称（可选）'));
+    const name = el('input', 'wrong-input');
+    card.appendChild(name);
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '创建 ' + (st.settings.levelNames[childLevel] || childLevel));
+    ok.addEventListener('click', function () {
+      modal.remove();
+      focusApply(function (s) {
+        return focusCreateOrg(s, {
+          level: childLevel,
+          name: name.value,
+          parentId: parentOrg.id,
+          fromPlan: true
+        }, Date.now());
+      }, '已添加子级');
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+    setTimeout(function () { try { name.focus(); } catch (e) {} }, 50);
+  }
+
+  // 多选 → 组合到新组
+  function focusOpenCombineModal(st) {
+    const ids = focusSelectedIds();
+    const unitIds = ids.filter(function (id) { return focusFindUnit(st, id); });
+    const orgIds = ids.filter(function (id) { return focusFindOrg(st, id); });
+    if (!unitIds.length && !orgIds.length) { toast('请先选择单元或下级'); return; }
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '组合到新组'));
+    card.appendChild(el('p', 'muted', '将 ' + unitIds.length + ' 个单元、' + orgIds.length + ' 个下级节点组合为新任务组。'));
+    if (!st.planMode) {
+      card.appendChild(el('div', 'focus-await-title', '需开启计划模式'));
+    }
+    card.appendChild(el('div', 'muted', '新组名称（可选）'));
+    const name = el('input', 'wrong-input');
+    card.appendChild(name);
+    card.appendChild(el('div', 'muted', '挂在（可选）'));
+    const parentSel = el('select', 'wrong-input');
+    const none = el('option', null, '（根级）');
+    none.value = '';
+    parentSel.appendChild(none);
+    st.orgs.filter(function (o) { return o && o.level === 'corps'; }).forEach(function (o) {
+      const opt = el('option', null, focusOrgLabel(o, st.settings));
+      opt.value = o.id;
+      parentSel.appendChild(opt);
+    });
+    card.appendChild(parentSel);
+
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '组合');
+    ok.addEventListener('click', function () {
+      const parentId = parentSel.value || null;
+      modal.remove();
+      focusApply(function (s) {
+        if (!s.planMode) return { ok: false, reason: 'need_plan_mode', state: s };
+        const cr = focusCreateOrg(s, {
+          level: 'group',
+          name: name.value,
+          parentId: parentId,
+          fromPlan: true
+        }, Date.now());
+        if (!cr.ok) return cr;
+        const gid = cr.org.id;
+        let st2 = cr.state;
+        if (unitIds.length) {
+          const ar = focusAssignUnits(st2, unitIds, gid, Date.now());
+          if (ar.ok) st2 = ar.state;
+        }
+        // 子级 orgs 若是 group 则挂到新 group 不合法——仅 unit 编入；orgs 改父到新 group 仅当是 unit 级
+        return { ok: true, state: st2, org: cr.org };
+      }, '已组合到新组');
+      focusUiState.selected = {};
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
+  function focusOpenMoveModal(st, ids) {
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '移动到…'));
+    const sel = el('select', 'wrong-input');
+    const none = el('option', null, '未编入');
+    none.value = '';
+    sel.appendChild(none);
+    st.orgs.filter(function (o) { return o && o.level === 'group'; }).forEach(function (o) {
+      const opt = el('option', null, focusOrgLabel(o, st.settings));
+      opt.value = o.id;
+      sel.appendChild(opt);
+    });
+    card.appendChild(sel);
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '移动');
+    ok.addEventListener('click', function () {
+      const target = sel.value || null;
+      modal.remove();
+      const unitIds = ids.filter(function (id) { return focusFindUnit(loadFocus(), id); });
+      const orgIds = ids.filter(function (id) { return focusFindOrg(loadFocus(), id); });
+      focusApply(function (s) {
+        let rr = { ok: true, state: s };
+        if (unitIds.length) rr = focusAssignUnits(rr.state, unitIds, target, Date.now());
+        if (orgIds.length && target) rr = focusReparentOrgs(rr.state, orgIds, target, Date.now());
+        else if (orgIds.length && !target) rr = focusReparentOrgs(rr.state, orgIds, null, Date.now());
+        return rr;
+      }, '已移动');
+      focusUiState.selected = {};
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
+  function focusOpenRenameOrgModal(org) {
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '改名 · ' + focusSeqLabel(org.level, org.seq)));
+    const name = el('input', 'wrong-input');
+    name.value = org.name || '';
+    card.appendChild(name);
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '保存');
+    ok.addEventListener('click', function () {
+      modal.remove();
+      focusApply(function (s) { return focusRenameOrg(s, org.id, name.value, Date.now()); }, '已改名');
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
+  function focusOpenRenameUnitModal(unit) {
+    const modal = el('div', 'map-modal habit-modal');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', function () { modal.remove(); });
+    modal.appendChild(backdrop);
+    const card = el('div', 'map-modal-card wrong-input-card');
+    card.appendChild(el('h3', null, '改名 · ' + focusSeqLabel('unit', unit.seq)));
+    const name = el('input', 'wrong-input');
+    name.value = unit.name || unit.taskText || '';
+    card.appendChild(name);
+    const btns = el('div', 'wrong-input-btns');
+    const ok = el('button', 'btn primary', '保存');
+    ok.addEventListener('click', function () {
+      modal.remove();
+      focusApply(function (s) { return focusSetUnitName(s, unit.id, name.value, Date.now()); }, '已改名');
+    });
+    const cancel = el('button', 'btn', '取消');
+    cancel.addEventListener('click', function () { modal.remove(); });
+    btns.appendChild(ok);
+    btns.appendChild(cancel);
+    card.appendChild(btns);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+  }
+
+  // ---------------- 里程碑（T37 · V2_PLAN §12 / ACT §12） ----------------
+  // 叙事里程碑：条件 + 解锁时间 +「这说明…」+ 深链。无积分/兑换/排行/连击惩罚/失败羞辱。
+  // 数据键 athena_mile_v1（MilestoneHit），与学习库隔离；Def 为代码常量（含纯函数谓词）。
+  // 观察者模式：只读 habit/focus/学习公开状态，不改其规则本体。
+  // title 为 Steam 式风味名（T37b 扩至 50 条）；hint 仍是可核对条件，meaning 仍是「这说明…」。
+
+  const MILE_KEY = 'athena_mile_v1';
+  const MILE_KINDS = ['habit', 'focus', 'learn'];
+
+  // ---------------- 纯日期工具（测试可独立调用） ----------------
+  function mileYmd(ts) {
+    const d = (ts instanceof Date) ? ts : new Date(Number(ts) || 0);
+    if (isNaN(d.getTime())) return '';
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function mileAddDays(ymd, n) {
+    const s = String(ymd || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return '';
+    const p = s.split('-').map(Number);
+    const d = new Date(Date.UTC(p[0], p[1] - 1, p[2] + (Number(n) || 0)));
+    return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+  }
+
+  function mileDayDiff(a, b) {
+    const sa = String(a || ''), sb = String(b || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(sa) || !/^\d{4}-\d{2}-\d{2}$/.test(sb)) return NaN;
+    const pa = sa.split('-').map(Number), pb = sb.split('-').map(Number);
+    return Math.round((Date.UTC(pb[0], pb[1] - 1, pb[2]) - Date.UTC(pa[0], pa[1] - 1, pa[2])) / 86400000);
+  }
+
+  // 连续日数：从 endYmd 往前数（endYmd 当天不在集合则从昨天起算，与主页连击口径一致）
+  function mileConsecutiveStreak(dateSet, endYmd) {
+    const set = {};
+    if (Array.isArray(dateSet)) dateSet.forEach(function (d) { if (d) set[String(d)] = 1; });
+    else if (dateSet && typeof dateSet === 'object') {
+      Object.keys(dateSet).forEach(function (k) { if (dateSet[k]) set[k] = 1; });
+    }
+    let cur = String(endYmd || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(cur)) return 0;
+    if (!set[cur]) {
+      cur = mileAddDays(cur, -1);
+      if (!set[cur]) return 0;
+    }
+    let n = 0;
+    while (set[cur]) { n++; cur = mileAddDays(cur, -1); }
+    return n;
+  }
+
+  // ---------------- 规则谓词（纯函数，读 snapshot） ----------------
+  // snapshot 口径（由 mileCollectSnapshot 从公开状态汇总，测试可手造）：
+  // {
+  //   habit: { maxInternalize, fullInternalize, midInternalize, settleStreak, groupStableDays,
+  //            treeCount, libraryCount, maxLevel, maxDoneCount, totalDone, tagCount, oldestTreeDays },
+  //   focus: { mainWorkCount, successionCount, maxDailyMinutes, totalUnits, totalMinutes,
+  //            precedents, scoutPromoted, perfectUnits, typeCount, focusStreak },
+  //   learn: { anyCleared, reviewStreak, totalReviews, subjectsStarted, subjectsCleared,
+  //            maxDailyReviews, maxDailyStudyMin, allClearToday }
+  // }
+  function mileSnap(s, kind) { return (s && s[kind]) || {}; }
+  function mileNum(s, kind, key) { return Number(mileSnap(s, kind)[key]) || 0; }
+  function mileFlag(s, kind, key) { return !!mileSnap(s, kind)[key]; }
+  function mileAtLeast(s, kind, key, n) { return mileNum(s, kind, key) >= n; }
+
+  // 原首批 9 条（保留 id，兼容已落盘 Hit）
+  function mileRuleHabitFull(s) {
+    return mileAtLeast(s, 'habit', 'maxInternalize', 100) || mileNum(s, 'habit', 'fullInternalize') > 0;
+  }
+  function mileRuleHabitSettle7(s) { return mileAtLeast(s, 'habit', 'settleStreak', 7); }
+  function mileRuleHabitGroup14(s) { return mileAtLeast(s, 'habit', 'groupStableDays', 14); }
+  function mileRuleFocusMain10(s) { return mileAtLeast(s, 'focus', 'mainWorkCount', 10); }
+  function mileRuleFocusMain50(s) { return mileAtLeast(s, 'focus', 'mainWorkCount', 50); }
+  function mileRuleFocusSuccession(s) { return mileAtLeast(s, 'focus', 'successionCount', 1); }
+  function mileRuleFocusDay120(s) { return mileAtLeast(s, 'focus', 'maxDailyMinutes', 120); }
+  function mileRuleLearnClear(s) { return mileFlag(s, 'learn', 'anyCleared'); }
+  function mileRuleLearnStreak7(s) { return mileAtLeast(s, 'learn', 'reviewStreak', 7); }
+
+  // ---------------- Def 表（代码常量；rule 为纯函数谓词） ----------------
+  // 解锁文案结构：条件 + 时间 +「这说明…」+ 深链（go → 习惯/专注/学习）。
+  // title = 风味名（Steam 成就腔）；hint = 可核对条件；meaning 以「这说明」开头。
+  const MILESTONE_DEFS = [
+    // ===== 习惯 · 17 =====
+    {
+      id: 'mile_habit_full',
+      title: '定式已成',
+      kind: 'habit',
+      rule: mileRuleHabitFull,
+      hint: '单节点内化达到 100%',
+      meaning: '这说明该行为已接近自动化，可视为定式。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_settle7',
+      title: '七日之约',
+      kind: 'habit',
+      rule: mileRuleHabitSettle7,
+      hint: '树上连续 7 日结算完成',
+      meaning: '这说明日常节律已经立住，结算不再是突击。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_group14',
+      title: '互相托底',
+      kind: 'habit',
+      rule: mileRuleHabitGroup14,
+      hint: '同标签组稳定 14 日（全员强化 ≥1）',
+      meaning: '这说明组内互相托底，容错机制在起作用。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_first',
+      title: '破土而出',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'treeCount', 1); },
+      hint: '第 1 个习惯节点入树',
+      meaning: '这说明想法变成了可检查的日课，而不是停留在备忘录。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_tree5',
+      title: '小树林',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'treeCount', 5); },
+      hint: '树上同时有 5 个节点',
+      meaning: '这说明日课已经成林，彼此能互相提醒。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_tree10',
+      title: '郁郁葱葱',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'treeCount', 10); },
+      hint: '树上同时有 10 个节点',
+      meaning: '这说明生活骨架已经铺开，检查清单本身就是节律。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_mid',
+      title: '半自动化',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'midInternalize', 1) || mileAtLeast(s, 'habit', 'maxInternalize', 50); },
+      hint: '单节点内化达到 50%',
+      meaning: '这说明行为已经过半自动，提醒成本在下降。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_full3',
+      title: '定式量产',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'fullInternalize', 3); },
+      hint: '3 个节点内化同时达到 100%',
+      meaning: '这说明定式不是偶然，方法可以复制。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_settle14',
+      title: '两周节律',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'settleStreak', 14); },
+      hint: '树上连续 14 日结算完成',
+      meaning: '这说明节律扛过了新鲜感消退期。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_settle30',
+      title: '整月不落',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'settleStreak', 30); },
+      hint: '树上连续 30 日结算完成',
+      meaning: '这说明月级节律已经立住，接近自动化生活。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_level2',
+      title: '强化到位',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'maxLevel', 2); },
+      hint: '单节点强化达到 +2',
+      meaning: '这说明该行为在树上站稳了，不只是打卡过。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_level5',
+      title: '树上元老',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'maxLevel', 5); },
+      hint: '单节点强化达到 +5',
+      meaning: '这说明该行为已经是身份的一部分，而非任务清单条目。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_done50',
+      title: '打卡半百',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'maxDoneCount', 50); },
+      hint: '单节点累计完成 50 次',
+      meaning: '这说明重复本身产生了证据，而不只是感觉。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_done100',
+      title: '百次成习',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'maxDoneCount', 100); },
+      hint: '单节点累计完成 100 次',
+      meaning: '这说明百次重复把行为写进了日程的身体记忆。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_lib10',
+      title: '休养生息',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'libraryCount', 10); },
+      hint: '习惯库中存有 10 个节点',
+      meaning: '这说明你允许习惯排队，而不是硬塞进每天——容量管理也是方法。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_tags5',
+      title: '多线程选手',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'tagCount', 5); },
+      hint: '树上出现 5 个不同标签/组',
+      meaning: '这说明自我提升是多线程的，不是单点突破。',
+      go: 'actHabit'
+    },
+    {
+      id: 'mile_habit_oldest30',
+      title: '满月老友',
+      kind: 'habit',
+      rule: function (s) { return mileAtLeast(s, 'habit', 'oldestTreeDays', 30); },
+      hint: '最早入树节点在树上满 30 天',
+      meaning: '这说明你和这个行为相处满月，它已经是老朋友。',
+      go: 'actHabit'
+    },
+
+    // ===== 专注 · 18 =====
+    {
+      id: 'mile_focus_first',
+      title: '坐下，开干',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'totalUnits', 1); },
+      hint: '完成第 1 个任务单元',
+      meaning: '这说明你把「想做」变成了「计时做完」。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_10',
+      title: '热身完毕',
+      kind: 'focus',
+      rule: mileRuleFocusMain10,
+      hint: '主链完成第 10 单元',
+      meaning: '这说明专注链能持续产出，不是一次性冲刺。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_50',
+      title: '深度工作',
+      kind: 'focus',
+      rule: mileRuleFocusMain50,
+      hint: '主链完成第 50 单元',
+      meaning: '这说明深度工作已嵌入日程，量级到了。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_succession',
+      title: '继位大典',
+      kind: 'focus',
+      rule: mileRuleFocusSuccession,
+      hint: '主链继位发生 1 次',
+      meaning: '这说明崩溃有预案——调试器生效，而不是清零重来。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_day60',
+      title: '一小时沉浸',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'maxDailyMinutes', 60); },
+      hint: '单日实际专注 ≥60 分钟',
+      meaning: '这说明你已经能护住一整段不被打断的时间。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_day120',
+      title: '完整上午',
+      kind: 'focus',
+      rule: mileRuleFocusDay120,
+      hint: '单日实际专注 ≥120 分钟',
+      meaning: '这说明单日深度专注能达到一个完整上午的量级。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_day240',
+      title: '四小时熔炉',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'maxDailyMinutes', 240); },
+      hint: '单日实际专注 ≥240 分钟',
+      meaning: '这说明你进入了整块深度工作日，而不是碎片拼盘。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_units10',
+      title: '单元小队',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'totalUnits', 10); },
+      hint: '累计完成 10 个任务单元',
+      meaning: '这说明产出有了流水线，而不是灵感驱动。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_units50',
+      title: '半百流水',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'totalUnits', 50); },
+      hint: '累计完成 50 个任务单元',
+      meaning: '这说明工作单元已经成为默认单位，大脑知道怎么切题。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_units100',
+      title: '百单元俱乐部',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'totalUnits', 100); },
+      hint: '累计完成 100 个任务单元',
+      meaning: '这说明你已经用一百次计时证明了「坐得住」。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_total20h',
+      title: '二十小时',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'totalMinutes', 1200); },
+      hint: '累计实际专注 ≥1200 分钟（20 小时）',
+      meaning: '这说明深度时间已经成箱入库，不是感觉「今天很忙」。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_total60h',
+      title: '时间领主',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'totalMinutes', 3600); },
+      hint: '累计实际专注 ≥3600 分钟（60 小时）',
+      meaning: '这说明你已经支配了整整两个半工作日的深度时间。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_prec1',
+      title: '下必为例',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'precedents', 1); },
+      hint: '沉淀 1 条永久允许的例外（判例）',
+      meaning: '这说明规则开始长出例外法理，而不是一刀切硬扛。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_prec5',
+      title: '判例汇编',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'precedents', 5); },
+      hint: '沉淀 5 条判例',
+      meaning: '这说明你已经有了一部自己的执行法典。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_scout1',
+      title: '侦察兵转正',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'scoutPromoted', 1); },
+      hint: '侦查单元转正 1 次',
+      meaning: '这说明五分钟低门槛入口真的能把人带进深度工作。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_perfect10',
+      title: '十分完美',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'perfectUnits', 10); },
+      hint: '10 个单元完成度 = 100%',
+      meaning: '这说明你不仅坐下了，还把事情做到了自己认账的完成度。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_types4',
+      title: '多面手',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'typeCount', 4); },
+      hint: '专注/突击/生活/计划 四类单元都做过',
+      meaning: '这说明深度工作覆盖了生活全谱，不是只会刷题。',
+      go: 'actFocus'
+    },
+    {
+      id: 'mile_focus_streak7',
+      title: '七日入座',
+      kind: 'focus',
+      rule: function (s) { return mileAtLeast(s, 'focus', 'focusStreak', 7); },
+      hint: '连续 7 日都有任务单元完成',
+      meaning: '这说明入座已经变成每日默认动作。',
+      go: 'actFocus'
+    },
+
+    // ===== 学习 · 15 =====
+    {
+      id: 'mile_learn_first',
+      title: '第一张卡',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'totalReviews', 1); },
+      hint: '完成第 1 次复习/刷卡',
+      meaning: '这说明主动回忆开始了，而不只是划线。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_clear',
+      title: '收工铃响',
+      kind: 'learn',
+      rule: mileRuleLearnClear,
+      hint: '单科首次清空到期',
+      meaning: '这说明复习节奏追上了遗忘曲线，不是被拖着走。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_streak7',
+      title: '一周不落',
+      kind: 'learn',
+      rule: mileRuleLearnStreak7,
+      hint: '连续 7 日有复习',
+      meaning: '这说明学习已进入日常，而不是靠考前突击。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_streak14',
+      title: '两周续航',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'reviewStreak', 14); },
+      hint: '连续 14 日有复习',
+      meaning: '这说明续航过了意志力消耗期，靠的是日程而不是热情。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_streak30',
+      title: '整月续航',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'reviewStreak', 30); },
+      hint: '连续 30 日有复习',
+      meaning: '这说明月级学习节律已经写进生活结构。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_reviews100',
+      title: '百次回忆',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'totalReviews', 100); },
+      hint: '累计复习/刷卡 ≥100 次',
+      meaning: '这说明回忆次数本身就是记忆强度的来源。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_reviews500',
+      title: '五百次回眸',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'totalReviews', 500); },
+      hint: '累计复习/刷卡 ≥500 次',
+      meaning: '这说明你已经和遗忘曲线正面交手五百回合。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_reviews1000',
+      title: '千锤百炼',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'totalReviews', 1000); },
+      hint: '累计复习/刷卡 ≥1000 次',
+      meaning: '这说明主动回忆已经成为肌肉，而不再需要鼓起勇气。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_subjects3',
+      title: '三线并进',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'subjectsStarted', 3); },
+      hint: '3 个科目开始学习（有非新卡）',
+      meaning: '这说明你能在多条战线同时推进，而不是单科赌一把。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_subjects5',
+      title: '五线作战',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'subjectsStarted', 5); },
+      hint: '5 个科目开始学习（有非新卡）',
+      meaning: '这说明知识版图已经铺开，交错练习有了土壤。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_day30',
+      title: '三十张日',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'maxDailyReviews', 30); },
+      hint: '单日复习/刷卡 ≥30 张',
+      meaning: '这说明你已经能吃下一次像样的复习量，而不是象征性打卡。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_day50',
+      title: '肝帝觉醒',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'maxDailyReviews', 50); },
+      hint: '单日复习/刷卡 ≥50 张',
+      meaning: '这说明爆发力也在线——记得留休息，长期主义靠续航。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_clear3',
+      title: '三科收工',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'subjectsCleared', 3); },
+      hint: '3 个科目同时清空到期',
+      meaning: '这说明多科节奏都被调到了遗忘曲线前面。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_study60',
+      title: '一小时书桌',
+      kind: 'learn',
+      rule: function (s) { return mileAtLeast(s, 'learn', 'maxDailyStudyMin', 60); },
+      hint: '单日学习时长 ≥60 分钟',
+      meaning: '这说明你护住了一小时书桌时间，大脑需要这种连续段。',
+      go: 'learn'
+    },
+    {
+      id: 'mile_learn_allclear',
+      title: '今日功成',
+      kind: 'learn',
+      rule: function (s) { return mileFlag(s, 'learn', 'allClearToday'); },
+      hint: '全库无待复习，且今天确实学过',
+      meaning: '这说明今天可以安心收工——该做的都做完了。',
+      go: 'learn'
+    }
+  ];
+
+  function mileFindDef(id) {
+    const sid = String(id || '');
+    return MILESTONE_DEFS.filter(function (d) { return d.id === sid; })[0] || null;
+  }
+
+  /**
+   * 纯函数：给定公开状态快照，返回已满足条件的里程碑 defId 列表。
+   * 不读写存储；不产生 Hit。测试可手造 snapshot 边界值。
+   */
+  function evaluateMilestones(snapshot) {
+    const out = [];
+    MILESTONE_DEFS.forEach(function (def) {
+      try {
+        if (typeof def.rule === 'function' && def.rule(snapshot)) out.push(def.id);
+      } catch (e) { /* 谓词异常视为未满足，不中断 */ }
+    });
+    return out;
+  }
+
+  /**
+   * 纯函数：把「已满足」并入 Hit 列表，只新增未记录过的 defId。
+   * 返回 { hits, created }；created 为本次新产生的 Hit（用于轻提示）。
+   */
+  function mileRecordNew(hits, metIds, now) {
+    const seen = {};
+    const base = Array.isArray(hits) ? hits.slice() : [];
+    base.forEach(function (h) { if (h && h.defId) seen[String(h.defId)] = 1; });
+    const created = [];
+    const t = Number(now) || Date.now();
+    (Array.isArray(metIds) ? metIds : []).forEach(function (defId) {
+      const sid = String(defId || '');
+      if (!sid || seen[sid] || !mileFindDef(sid)) return;
+      const hit = { id: 'milehit_' + t + '_' + sid, defId: sid, at: t, note: '' };
+      seen[sid] = 1;
+      base.push(hit);
+      created.push(hit);
+    });
+    return { hits: base, created: created };
+  }
+
+  // ---------------- 存储（athena_mile_v1） ----------------
+  function mileNormalizeHit(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const defId = String(raw.defId == null ? '' : raw.defId);
+    if (!mileFindDef(defId)) return null;
+    const at = Number(raw.at) || 0;
+    if (!at) return null;
+    return {
+      id: String(raw.id || ('milehit_' + at + '_' + defId)),
+      defId: defId,
+      at: at,
+      note: String(raw.note == null ? '' : raw.note)
+    };
+  }
+
+  function mileNormalize(raw) {
+    const out = { hits: [] };
+    const src = raw && typeof raw === 'object' && Array.isArray(raw.hits) ? raw.hits : [];
+    const seen = {};
+    src.forEach(function (h) {
+      const hit = mileNormalizeHit(h);
+      if (!hit || seen[hit.defId]) return;
+      seen[hit.defId] = 1;
+      out.hits.push(hit);
+    });
+    out.hits.sort(function (a, b) { return a.at - b.at; });
+    return out;
+  }
+
+  function mileLoad() {
+    if (typeof window !== 'undefined' && window.__mileData) return mileNormalize(window.__mileData);
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(MILE_KEY)); } catch (e) {}
+    const st = mileNormalize(raw);
+    if (typeof window !== 'undefined') window.__mileData = st;
+    return st;
+  }
+
+  function mileSave(data) {
+    const st = mileNormalize(data);
+    if (typeof window !== 'undefined') window.__mileData = st;
+    try { localStorage.setItem(MILE_KEY, JSON.stringify(st)); } catch (e) {}
+    return st;
+  }
+
+  // ---------------- 快照采集（观察者，只读公开状态） ----------------
+  // 组稳定天数（简化）：同 groupId/tag 的在树成员全部强化 ≥1 时，
+  // 取最早 addedOn 到今天的天数为该组稳定龄；返回所有组的最大值。
+  function mileGroupStableDays(nodes, todayYmd) {
+    const today = String(todayYmd || mileYmd(Date.now()));
+    const groups = {};
+    (nodes || []).forEach(function (n) {
+      if (!n || n.removedAt || !n.onTree) return;
+      let key = n.groupId == null || n.groupId === '' ? '' : String(n.groupId).trim();
+      if (!key) key = String(n.tag == null ? '' : n.tag).trim();
+      if (!key) return;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(n);
+    });
+    let best = 0;
+    Object.keys(groups).forEach(function (k) {
+      const members = groups[k];
+      if (members.length < 1) return;
+      const allLeveled = members.every(function (n) { return (Number(n.level) || 0) >= 1; });
+      if (!allLeveled) return;
+      let earliest = null;
+      members.forEach(function (n) {
+        const a = String(n.addedOn || '');
+        if (/^\d{4}-\d{2}-\d{2}$/.test(a) && (!earliest || a < earliest)) earliest = a;
+      });
+      if (!earliest) return;
+      const age = mileDayDiff(earliest, today);
+      if (Number.isFinite(age) && age > best) best = age;
+    });
+    return best;
+  }
+
+  function mileEmptySnapshot() {
+    return {
+      habit: {
+        maxInternalize: 0, fullInternalize: 0, midInternalize: 0, settleStreak: 0, groupStableDays: 0,
+        treeCount: 0, libraryCount: 0, maxLevel: 0, maxDoneCount: 0, totalDone: 0, tagCount: 0, oldestTreeDays: 0
+      },
+      focus: {
+        mainWorkCount: 0, successionCount: 0, maxDailyMinutes: 0, totalUnits: 0, totalMinutes: 0,
+        precedents: 0, scoutPromoted: 0, perfectUnits: 0, typeCount: 0, focusStreak: 0
+      },
+      learn: {
+        anyCleared: false, reviewStreak: 0, totalReviews: 0, subjectsStarted: 0, subjectsCleared: 0,
+        maxDailyReviews: 0, maxDailyStudyMin: 0, allClearToday: false
+      }
+    };
+  }
+
+  function mileCollectSnapshot(now) {
+    const t = Number(now) || Date.now();
+    const today = mileYmd(t);
+    const snap = mileEmptySnapshot();
+
+    // 习惯：只读 habitLoadNodes / habitLoadState 公开状态
+    try {
+      if (typeof habitLoadNodes === 'function') {
+        const all = habitLoadNodes() || [];
+        const live = all.filter(function (n) { return n && !n.removedAt; });
+        const tree = live.filter(function (n) { return n.onTree; });
+        snap.habit.treeCount = tree.length;
+        snap.habit.libraryCount = live.filter(function (n) { return !n.onTree; }).length;
+        live.forEach(function (n) {
+          const iv = Number(n.internalize) || 0;
+          if (iv > snap.habit.maxInternalize) snap.habit.maxInternalize = iv;
+          if (iv >= 100) snap.habit.fullInternalize += 1;
+          if (iv >= 50) snap.habit.midInternalize += 1;
+          const lv = Number(n.level) || 0;
+          if (lv > snap.habit.maxLevel) snap.habit.maxLevel = lv;
+          const done = Array.isArray(n.doneDates) ? n.doneDates.length : 0;
+          if (done > snap.habit.maxDoneCount) snap.habit.maxDoneCount = done;
+          snap.habit.totalDone += done;
+        });
+        const tagSet = {};
+        tree.forEach(function (n) {
+          let key = n.groupId == null || n.groupId === '' ? '' : String(n.groupId).trim();
+          if (!key) key = String(n.tag == null ? '' : n.tag).trim();
+          if (key) tagSet[key] = 1;
+        });
+        snap.habit.tagCount = Object.keys(tagSet).length;
+        let oldest = 0;
+        tree.forEach(function (n) {
+          const a = String(n.addedOn || '');
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(a)) return;
+          const age = mileDayDiff(a, today);
+          if (Number.isFinite(age) && age > oldest) oldest = age;
+        });
+        snap.habit.oldestTreeDays = oldest;
+        snap.habit.groupStableDays = mileGroupStableDays(tree, today);
+      }
+      if (typeof habitLoadState === 'function') {
+        const st = habitLoadState() || {};
+        snap.habit.settleStreak = mileConsecutiveStreak(st.settledDates || [], today);
+      }
+    } catch (e) {}
+
+    // 专注：只读 loadFocus 公开状态
+    try {
+      if (typeof loadFocus === 'function') {
+        const st = loadFocus() || {};
+        const chains = st.chains || [];
+        chains.forEach(function (c) {
+          if (!c) return;
+          const tier = String(c.tier || '');
+          if (tier === 'main' || tier === 'elite') {
+            const w = Number(c.workCount) || 0;
+            if (w > snap.focus.mainWorkCount) snap.focus.mainWorkCount = w;
+          }
+          if (c.inheritedFrom) snap.focus.successionCount += 1;
+        });
+        if (typeof focusMainChain === 'function') {
+          try {
+            const main = focusMainChain(st);
+            if (main) {
+              const w = Number(main.workCount) || 0;
+              if (w > snap.focus.mainWorkCount) snap.focus.mainWorkCount = w;
+            }
+          } catch (e2) {}
+        }
+        snap.focus.precedents = (st.precedents || []).length;
+        const units = st.units || [];
+        snap.focus.totalUnits = units.length;
+        const typeSet = {};
+        const daySet = {};
+        units.forEach(function (u) {
+          if (!u) return;
+          snap.focus.totalMinutes += Number(u.actualMin) || 0;
+          if (u.promotedFromScout) snap.focus.scoutPromoted += 1;
+          if ((Number(u.completion) || 0) >= 100) snap.focus.perfectUnits += 1;
+          const tk = String(u.typeKey || '');
+          if (tk && tk !== 'scout') typeSet[tk] = 1;
+          if (u.endedAt) {
+            const day = mileYmd(u.endedAt);
+            if (day) daySet[day] = 1;
+          }
+        });
+        snap.focus.typeCount = Object.keys(typeSet).length;
+        snap.focus.focusStreak = mileConsecutiveStreak(daySet, today);
+        if (typeof focusDailyMinutes === 'function') {
+          try {
+            const map = focusDailyMinutes(st) || {};
+            Object.keys(map).forEach(function (d) {
+              const v = Number(map[d]) || 0;
+              if (v > snap.focus.maxDailyMinutes) snap.focus.maxDailyMinutes = v;
+            });
+          } catch (e2) {}
+        } else {
+          const byDay = {};
+          units.forEach(function (u) {
+            if (!u || !u.endedAt) return;
+            const day = mileYmd(u.endedAt);
+            if (!day) return;
+            byDay[day] = (byDay[day] || 0) + (Number(u.actualMin) || 0);
+          });
+          Object.keys(byDay).forEach(function (d) {
+            if (byDay[d] > snap.focus.maxDailyMinutes) snap.focus.maxDailyMinutes = byDay[d];
+          });
+        }
+      }
+    } catch (e) {}
+
+    // 学习：各科 localStorage 快照（与 home 同口径），不切换学科
+    try {
+      if (typeof subjectList === 'function') {
+        const reviewDates = {};
+        const dayReviews = {};
+        let totalDue = 0, totalToday = 0;
+        Object.keys(subjectList() || {}).forEach(function (sid) {
+          let db = null;
+          try { db = JSON.parse(localStorage.getItem(sid + '_formula_srs_v1')); } catch (e) {}
+          if (!db || !db.cards) return;
+          let total = 0, due = 0, nonNew = 0;
+          Object.keys(db.cards).forEach(function (id) {
+            const c = db.cards[id];
+            if (!c || c.state === 'new') return;
+            total += 1;
+            nonNew += 1;
+            if ((c.state === 'review' || c.state === 'learning' || c.state === 'relearning') && c.due && c.due <= t) due += 1;
+          });
+          if (nonNew > 0) snap.learn.subjectsStarted += 1;
+          if (total > 0 && due === 0) {
+            snap.learn.anyCleared = true;
+            snap.learn.subjectsCleared += 1;
+          }
+          totalDue += due;
+          const daily = (db.log && db.log.daily) || {};
+          Object.keys(daily).forEach(function (d) {
+            const v = Number(daily[d]) || 0;
+            if (v > 0) {
+              reviewDates[d] = 1;
+              snap.learn.totalReviews += v;
+              dayReviews[d] = (dayReviews[d] || 0) + v;
+            }
+          });
+          const todayCount = Number(daily[today]) || 0;
+          totalToday += todayCount;
+          const study = (db.log && db.log.studyTime) || {};
+          Object.keys(study).forEach(function (d) {
+            const mins = Math.round((Number(study[d]) || 0) / 60000);
+            if (mins > snap.learn.maxDailyStudyMin) snap.learn.maxDailyStudyMin = mins;
+          });
+        });
+        Object.keys(dayReviews).forEach(function (d) {
+          if (dayReviews[d] > snap.learn.maxDailyReviews) snap.learn.maxDailyReviews = dayReviews[d];
+        });
+        snap.learn.reviewStreak = mileConsecutiveStreak(reviewDates, today);
+        snap.learn.allClearToday = (totalDue === 0 && totalToday > 0);
+      }
+    } catch (e) {}
+
+    return snap;
+  }
+
+  /**
+   * 观察者同步：采集快照 → evaluate → 写入新 Hit。
+   * 返回 { created, hits, snapshot }；created 非空时调用方可轻提示（可跳过）。
+   */
+  function mileSync(now) {
+    const t = Number(now) || Date.now();
+    const snap = mileCollectSnapshot(t);
+    const met = evaluateMilestones(snap);
+    const cur = mileLoad();
+    const rec = mileRecordNew(cur.hits, met, t);
+    if (rec.created.length) mileSave({ hits: rec.hits });
+    return { created: rec.created, hits: rec.hits, snapshot: snap };
+  }
+
+  // 主页用：最近 1 条解锁（tag/text/go），无记录返回 null
+  function mileRecentHit() {
+    try {
+      const st = mileLoad();
+      if (!st.hits.length) return null;
+      const hit = st.hits[st.hits.length - 1];
+      const def = mileFindDef(hit.defId);
+      if (!def) return null;
+      return {
+        tag: def.title,
+        text: def.hint + '——' + def.meaning,
+        go: def.go || 'actHabit',
+        at: hit.at,
+        defId: def.id
+      };
+    } catch (e) { return null; }
+  }
+
+  // ---------------- UI ----------------
+  function mileFmtTime(at) {
+    const t = Number(at) || 0;
+    if (!t) return '';
+    const d = new Date(t);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return y + '-' + m + '-' + day + ' ' + hh + ':' + mm;
+  }
+
+  const MILE_KIND_LABEL = { habit: '习惯', focus: '专注', learn: '学习' };
+
+  function mileGo(view) {
+    if (view === 'learn') {
+      currentModule = 'cards';
+      currentView = 'learn';
+    } else if (view === 'actFocus') {
+      currentModule = 'act';
+      currentView = 'actFocus';
+    } else if (view === 'actHabit') {
+      currentModule = 'act';
+      currentView = 'actHabit';
+    } else if (view === 'mile') {
+      currentView = 'mile';
+    } else {
+      currentModule = 'act';
+      currentView = view || 'actHabit';
+    }
+    renderApp();
+  }
+
+  // 分类筛选：会话内状态（all | habit | focus | learn）
+  let mileUiFilter = 'all';
+
+  function mileCard(hit, def) {
+    const card = el('div', 'mile-card');
+    const head = el('div', 'mile-card-head');
+    head.appendChild(el('span', 'mile-kind mile-kind-' + def.kind, MILE_KIND_LABEL[def.kind] || def.kind));
+    head.appendChild(el('span', 'mile-title', def.title));
+    head.appendChild(el('span', 'mile-time', mileFmtTime(hit.at)));
+    card.appendChild(head);
+    card.appendChild(el('div', 'mile-cond', '条件 · ' + def.hint));
+    card.appendChild(el('div', 'mile-meaning', def.meaning));
+    const btn = el('button', 'btn small mile-go', '去看 ' + (def.go === 'learn' ? '学习' : (def.go === 'actFocus' ? '专注链' : '习惯树')));
+    btn.addEventListener('click', function () { mileGo(def.go); });
+    card.appendChild(btn);
+    return card;
+  }
+
+  function mileLockedCard(def) {
+    const card = el('div', 'mile-card mile-locked');
+    const head = el('div', 'mile-card-head');
+    head.appendChild(el('span', 'mile-kind mile-kind-' + def.kind, MILE_KIND_LABEL[def.kind] || def.kind));
+    head.appendChild(el('span', 'mile-title', def.title));
+    head.appendChild(el('span', 'mile-badge', '未解锁'));
+    card.appendChild(head);
+    card.appendChild(el('div', 'mile-cond', '条件 · ' + def.hint));
+    card.appendChild(el('div', 'muted mile-meaning', def.meaning));
+    return card;
+  }
+
+  function renderMile() {
+    // 先同步一次，保证时间线与公开状态一致（解锁时轻提示）
+    let created = [];
+    try {
+      const r = mileSync();
+      created = r.created || [];
+      if (created.length && typeof toast === 'function') {
+        const def = mileFindDef(created[0].defId);
+        toast(def ? ('里程碑解锁 · ' + def.title) : '里程碑解锁');
+      }
+    } catch (e) {}
+
+    const app = document.getElementById('app');
+    const wrap = el('div', 'mile-wrap');
+    wrap.appendChild(el('h2', null, '🏁 里程碑'));
+    wrap.appendChild(el('p', 'muted mile-intro', '叙事路标，不是积分。风味名是玩笑，条件与「这说明」才是正事。'));
+
+    // 分类筛选
+    const chips = el('div', 'chips mile-chips');
+    [['all', '全部'], ['habit', '习惯'], ['focus', '专注'], ['learn', '学习']].forEach(function (c) {
+      const chip = el('button', 'chip' + (mileUiFilter === c[0] ? ' active' : ''), c[1]);
+      chip.addEventListener('click', function () {
+        mileUiFilter = c[0];
+        renderApp();
+      });
+      chips.appendChild(chip);
+    });
+    wrap.appendChild(chips);
+
+    const data = mileLoad();
+    const hitByDef = {};
+    data.hits.forEach(function (h) { hitByDef[h.defId] = h; });
+
+    // 时间线：已解锁（按解锁时间倒序）
+    const unlocked = MILESTONE_DEFS.filter(function (d) {
+      return hitByDef[d.id] && (mileUiFilter === 'all' || d.kind === mileUiFilter);
+    }).sort(function (a, b) {
+      return (hitByDef[b.id].at || 0) - (hitByDef[a.id].at || 0);
+    });
+
+    wrap.appendChild(el('h3', null, '时间线 · 已解锁 ' + unlocked.length));
+    if (!unlocked.length) {
+      const empty = el('div', 'mile-empty');
+      empty.appendChild(illus('milestone-habit'));
+      empty.appendChild(el('p', null, '还没有解锁记录。去习惯树结算、专注链做几个单元，或清一科到期——第一条里程碑会在这里落笔。'));
+      wrap.appendChild(empty);
+    } else {
+      const list = el('div', 'mile-list');
+      unlocked.forEach(function (def) {
+        list.appendChild(mileCard(hitByDef[def.id], def));
+      });
+      wrap.appendChild(list);
+    }
+
+    // 未解锁：只显示条件与「这说明」，无失败羞辱
+    const locked = MILESTONE_DEFS.filter(function (d) {
+      return !hitByDef[d.id] && (mileUiFilter === 'all' || d.kind === mileUiFilter);
+    });
+    wrap.appendChild(el('h3', null, '未解锁 ' + locked.length));
+    if (locked.length) {
+      const list = el('div', 'mile-list');
+      locked.forEach(function (def) { list.appendChild(mileLockedCard(def)); });
+      wrap.appendChild(list);
+    }
+
+    app.appendChild(wrap);
+  }
 
   // ---------------- 导入 / 导出共用 ----------------
   // 把对象序列化为 JSON 并触发浏览器下载
@@ -5860,12 +13960,14 @@
         currentView = arg;
         if (arg === 'wrong' || arg === 'wrongBrowse' || arg === 'wrongStats') currentModule = 'wrong';
         else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics') currentModule = 'cards';
+        else if (arg === 'actPlan' || arg === 'actHabit' || arg === 'actFocus' || arg === 'actHelp') currentModule = 'act';
+        else if (arg === 'mile') currentModule = 'cards';
         renderApp();
         break;
       case 'module':
         closeDrawer();
         currentModule = arg;
-        currentView = (arg === 'wrong') ? 'wrong' : 'learn';
+        currentView = (arg === 'wrong') ? 'wrong' : (arg === 'act') ? 'actPlan' : 'learn';
         renderApp();
         break;
       case 'menuclose':
@@ -6212,7 +14314,16 @@
   }
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { document.body.classList.remove('immersive'); closeDrawer(); const cm = document.querySelector('.countdown-modal'); if (cm) cm.remove(); }
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      if (cmdPalette) closeCmdPalette();
+      else openCmdPalette();
+      return;
+    }
+    if (e.key === 'Escape') {
+      if (cmdPalette) { closeCmdPalette(); return; }
+      document.body.classList.remove('immersive'); closeDrawer(); const cm = document.querySelector('.countdown-modal'); if (cm) cm.remove();
+    }
   });
 
   // 导图 Ctrl+滚轮缩放
@@ -6398,6 +14509,92 @@
       if (menu && !menu.classList.contains('hidden')) updateSubjectDdBadges();
     };
   })();
+
+  // ---------------- 命令面板（⌘K / Ctrl+K） ----------------
+  let cmdPalette = null;
+  let cmdQuery = '';
+  let cmdIndex = 0;
+
+  function cmdItems() {
+    return [
+      { label: '主页', hint: 'Today', run: function () { currentModule = 'cards'; currentView = 'home'; renderApp(); } },
+      { label: '学习 · 知识卡', hint: 'learn', run: function () { currentModule = 'cards'; currentView = 'learn'; renderApp(); } },
+      { label: '错题本', hint: 'wrong', run: function () { currentModule = 'wrong'; currentView = 'wrong'; renderApp(); } },
+      { label: '行动 · 计划', hint: 'actPlan', run: function () { currentModule = 'act'; currentView = 'actPlan'; renderApp(); } },
+      { label: '行动 · 习惯树', hint: 'actHabit', run: function () { currentModule = 'act'; currentView = 'actHabit'; renderApp(); } },
+      { label: '行动 · 专注链', hint: 'actFocus', run: function () { currentModule = 'act'; currentView = 'actFocus'; renderApp(); } },
+      { label: '行动 · 帮助', hint: 'actHelp', run: function () { currentModule = 'act'; currentView = 'actHelp'; renderApp(); } },
+      { label: '里程碑', hint: 'mile', run: function () { currentView = 'mile'; renderApp(); } },
+      { label: '统计', hint: 'statistics', run: function () { currentModule = 'cards'; currentView = 'statistics'; renderApp(); } },
+      { label: '原理 · 知识库', hint: 'principle', run: function () { currentModule = 'cards'; currentView = 'principle'; renderApp(); } },
+      { label: '设置', hint: 'settings', run: function () { currentModule = 'cards'; currentView = 'settings'; renderApp(); } }
+    ];
+  }
+
+  function cmdFiltered() {
+    const q = cmdQuery.trim().toLowerCase();
+    const list = cmdItems();
+    if (!q) return list;
+    return list.filter(function (it) {
+      return (it.label + ' ' + it.hint).toLowerCase().indexOf(q) >= 0;
+    });
+  }
+
+  function closeCmdPalette() {
+    if (cmdPalette) { cmdPalette.remove(); cmdPalette = null; }
+    cmdQuery = '';
+    cmdIndex = 0;
+  }
+
+  function runCmd(it) {
+    closeCmdPalette();
+    if (it && it.run) it.run();
+    toast(it ? it.label : '');
+  }
+
+  function renderCmdList() {
+    if (!cmdPalette) return;
+    const list = cmdPalette.querySelector('.cmd-list');
+    if (!list) return;
+    list.innerHTML = '';
+    const items = cmdFiltered();
+    if (cmdIndex >= items.length) cmdIndex = Math.max(0, items.length - 1);
+    items.forEach(function (it, i) {
+      const row = el('button', 'cmd-item' + (i === cmdIndex ? ' active' : ''), '');
+      row.type = 'button';
+      row.appendChild(el('span', null, it.label));
+      row.appendChild(el('span', 'muted cmd-hint', it.hint || ''));
+      row.addEventListener('click', function () { runCmd(it); });
+      list.appendChild(row);
+    });
+    if (!items.length) list.appendChild(el('div', 'cmd-empty', '无匹配命令'));
+  }
+
+  function openCmdPalette() {
+    if (cmdPalette) return;
+    cmdPalette = el('div', 'cmd-palette');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', closeCmdPalette);
+    cmdPalette.appendChild(backdrop);
+    const box = el('div', 'cmd-box');
+    const input = el('input', 'cmd-input');
+    input.type = 'text';
+    input.placeholder = '跳转模块 / 专注链 / 习惯树…';
+    input.addEventListener('input', function () { cmdQuery = input.value; cmdIndex = 0; renderCmdList(); });
+    input.addEventListener('keydown', function (e) {
+      const items = cmdFiltered();
+      if (e.key === 'ArrowDown') { e.preventDefault(); cmdIndex = Math.min(cmdIndex + 1, Math.max(0, items.length - 1)); renderCmdList(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); cmdIndex = Math.max(cmdIndex - 1, 0); renderCmdList(); }
+      else if (e.key === 'Enter') { e.preventDefault(); runCmd(items[cmdIndex]); }
+      else if (e.key === 'Escape') { e.preventDefault(); closeCmdPalette(); }
+    });
+    box.appendChild(input);
+    box.appendChild(el('div', 'cmd-list'));
+    cmdPalette.appendChild(box);
+    document.body.appendChild(cmdPalette);
+    renderCmdList();
+    setTimeout(function () { try { input.focus(); } catch (e) {} }, 30);
+  }
 
   // ---------------- 启动 ----------------
   function initApp() {

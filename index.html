@@ -4,17 +4,62 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Athena 考研记忆：把考点拆成卡片，抽一张、背一张、对一张。数三 / 微观 / 统计 / 政治。">
-  <meta name="theme-color" content="#D4537E">
+  <meta name="theme-color" content="#3B82F6">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Athena">
-  <link rel="manifest" href="manifest.webmanifest?v=70">
-  <link rel="icon" type="image/png" href="icons/favicon.png?v=70">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=70">
+  <link rel="manifest" href="manifest.webmanifest?v=73">
+  <link rel="icon" type="image/png" href="icons/favicon.png?v=73">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=73">
   <title>Athena · 考研知识点记忆</title>
+  <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- 桌面左侧栏（≥768px）：主页/学习/错题/行动/统计/原理/设置 -->
+  <aside class="sidebar" id="sidebar" aria-label="主导航">
+    <div class="sidebar-brand">
+      <span class="brand-mark">A</span>
+      <span class="brand-name">Athena</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-btn" data-shell="home" data-action="nav" data-arg="home" type="button">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 L12 3.5 L20.5 11"/><path d="M6 9.5 V20 H18 V9.5"/><path d="M10 20 V14.5 H14 V20"/></svg>
+        <span>主页</span>
+      </button>
+      <button class="sidebar-btn" data-shell="cards" data-action="module" data-arg="cards" type="button">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7.5" width="12.5" height="12.5" rx="2"/><path d="M8.5 4.5 H18 A2 2 0 0 1 20 6.5 V16"/></svg>
+        <span>学习</span>
+      </button>
+      <button class="sidebar-btn" data-shell="wrong" data-action="module" data-arg="wrong" type="button">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9 L15 15 M15 9 L9 15"/></svg>
+        <span>错题</span>
+      </button>
+      <button class="sidebar-btn" data-shell="act" data-accent="2" data-action="module" data-arg="act" type="button">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4 V3 H15 V4"/><path d="M9 10 H15 M9 14 H13"/></svg>
+        <span>行动</span>
+      </button>
+      <button class="sidebar-btn" data-shell="mile" data-accent="2" data-action="nav" data-arg="mile" type="button">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 20 V4"/><path d="M7 5 H18 L15 9 L18 13 H7"/><path d="M5 20 H12"/></svg>
+        <span>里程碑</span>
+      </button>
+      <button class="sidebar-btn" data-shell="stats" data-action="nav" data-arg="statistics" type="button">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20 V11 M12 20 V4.5 M19 20 V14"/><path d="M3 20.5 H21"/></svg>
+        <span>统计</span>
+      </button>
+      <button class="sidebar-btn" data-shell="principle" data-action="nav" data-arg="principle" type="button">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5 L12 4.5 L21.5 9.5 L12 14.5 Z"/><path d="M6.5 11.8 V16.2 C6.5 17.8 17.5 17.8 17.5 16.2 V11.8"/><path d="M21.5 9.5 V14.5"/></svg>
+        <span>原理</span>
+      </button>
+      <button class="sidebar-btn" data-shell="settings" data-action="nav" data-arg="settings" type="button">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7 H20 M4 12 H20 M4 17 H20"/><circle cx="9.5" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="10.5" cy="17" r="2.1"/></svg>
+        <span>设置</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">亮色蓝粉 · 2.0</div>
+  </aside>
+
   <header>
     <div class="brand">
       <div class="subject-dd" id="subjectDropdown">
@@ -23,26 +68,32 @@
     </div>
     <nav>
       <button class="nav-btn" id="homeBtn" data-action="nav" data-arg="home" title="主页"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 L12 3.5 L20.5 11"/><path d="M6 9.5 V20 H18 V9.5"/><path d="M10 20 V14.5 H14 V20"/></svg></button>
-      <button class="nav-btn module-tab" data-action="module" data-arg="cards"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7.5" width="12.5" height="12.5" rx="2"/><path d="M8.5 4.5 H18 A2 2 0 0 1 20 6.5 V16"/></svg> 知识卡</button>
-      <button class="nav-btn module-tab" data-action="module" data-arg="wrong"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9 L15 15 M15 9 L9 15"/></svg> 错题本</button>
-      <button class="icon-btn" id="themeToggle" title="切换明暗主题">🌓</button>
-      <button class="icon-btn" id="immersiveToggle" title="沉浸模式（Esc 退出）">⛶</button>
-      <button class="icon-btn" id="menuToggle" title="菜单" aria-label="打开菜单">☰</button>
+      <button class="nav-btn module-tab" data-action="module" data-arg="cards"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7.5" width="12.5" height="12.5" rx="2"/><path d="M8.5 4.5 H18 A2 2 0 0 1 20 6.5 V16"/></svg> 学习</button>
+      <button class="nav-btn module-tab" data-action="module" data-arg="wrong"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9 L15 15 M15 9 L9 15"/></svg> 错题</button>
+      <button class="nav-btn module-tab" data-action="module" data-arg="act"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4 V3 H15 V4"/><path d="M9 10 H15 M9 14 H13"/></svg> 行动</button>
+      <button class="icon-btn" id="themeToggle" title="切换明暗主题" aria-label="切换明暗主题"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 3.2 V5 M12 19 V20.8 M3.2 12 H5 M19 12 H20.8 M5.8 5.8 L7.1 7.1 M16.9 16.9 L18.2 18.2 M18.2 5.8 L16.9 7.1 M7.1 16.9 L5.8 18.2"/></svg></button>
+      <button class="icon-btn" id="immersiveToggle" title="沉浸模式（Esc 退出）" aria-label="沉浸模式"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9 V4 H9"/><path d="M15 4 H20 V9"/><path d="M20 15 V20 H15"/><path d="M9 20 H4 V15"/></svg></button>
+      <button class="icon-btn" id="menuToggle" title="菜单" aria-label="打开菜单"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7 H20"/><path d="M4 12 H20"/><path d="M4 17 H20"/></svg></button>
     </nav>
   </header>
 
   <div class="subnav" id="subnav"></div>
   <div class="dock" id="dock"></div>
 
-  <button class="icon-btn" id="immersiveExit" title="退出沉浸">✕</button>
+  <button class="icon-btn" id="immersiveExit" title="退出沉浸" aria-label="退出沉浸"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 L18 18"/><path d="M18 6 L6 18"/></svg></button>
 
   <div class="drawer-backdrop" id="drawerBackdrop" data-action="menuclose"></div>
   <nav class="drawer" id="drawer" aria-label="导航菜单">
-    <div class="drawer-head">📚 菜单</div>
+    <div class="drawer-head">菜单</div>
     <button class="nav-btn drawer-item" data-action="nav" data-arg="home"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 L12 3.5 L20.5 11"/><path d="M6 9.5 V20 H18 V9.5"/><path d="M10 20 V14.5 H14 V20"/></svg> 主页</button>
+    <button class="nav-btn drawer-item" data-action="module" data-arg="cards"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7.5" width="12.5" height="12.5" rx="2"/><path d="M8.5 4.5 H18 A2 2 0 0 1 20 6.5 V16"/></svg> 学习</button>
+    <button class="nav-btn drawer-item" data-action="module" data-arg="wrong"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9 L15 15 M15 9 L9 15"/></svg> 错题</button>
+    <button class="nav-btn drawer-item" data-action="module" data-arg="act"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4 V3 H15 V4"/><path d="M9 10 H15 M9 14 H13"/></svg> 行动</button>
+    <button class="nav-btn drawer-item" data-action="nav" data-arg="mile"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 20 V4"/><path d="M7 5 H18 L15 9 L18 13 H7"/><path d="M5 20 H12"/></svg> 里程碑</button>
+    <button class="nav-btn drawer-item" data-action="nav" data-arg="statistics"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20 V11 M12 20 V4.5 M19 20 V14"/><path d="M3 20.5 H21"/></svg> 统计</button>
     <button class="nav-btn drawer-item" data-action="nav" data-arg="principle"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5 L12 4.5 L21.5 9.5 L12 14.5 Z"/><path d="M6.5 11.8 V16.2 C6.5 17.8 17.5 17.8 17.5 16.2 V11.8"/><path d="M21.5 9.5 V14.5"/></svg> 原理</button>
     <button class="nav-btn drawer-item" data-action="nav" data-arg="settings"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7 H20 M4 12 H20 M4 17 H20"/><circle cx="9.5" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="10.5" cy="17" r="2.1"/></svg> 设置</button>
-    <div class="drawer-foot">Athena · 考研知识点记忆</div>
+    <div class="drawer-foot">Athena · 综合自我提升</div>
   </nav>
 
   <!-- 学科下拉菜单：挂在 body 根节点（fixed 定位由 JS 计算），避免 sticky/backdrop-filter 祖先

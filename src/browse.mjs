@@ -11,6 +11,8 @@
     else if (currentView === 'wrongStats') renderWrongStats();
     else if (currentView === 'principle') renderPrinciples();
     else if (currentView === 'settings') renderSettings();
+    else if (currentView === 'mile') renderMile();
+    else if (currentView === 'actPlan' || currentView === 'actHabit' || currentView === 'actFocus' || currentView === 'actHelp') renderAct();
     // 高亮一级 tab + 渲染二级导航
     document.querySelectorAll('.module-tab').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-arg') === currentModule);
@@ -84,7 +86,7 @@
     if (!DB.log.counts) DB.log.counts = {};
     const t = todayStr();
     if (!DB.log.counts[t]) DB.log.counts[t] = {};
-    const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
+    const cap = (function () { const v = prefGet('dailyNew'); return (typeof v === 'number' && v >= 0) ? v : 10; })();
     const introducedToday = DB.log.counts[t].intro || 0;
     // 每日语义：队列中今天可学的新卡 ≤ cap − 今日已学新卡数（counts.n 只在新卡首评时累计）。
     // 此前只限制「今日引入动作」，历史上累积引入、一直未学到的新卡会全部塞进队列——上限形同虚设。
@@ -139,7 +141,7 @@
   // 「再来一批」：每日上限达到后，用户手动越过上限再引入一批新卡（批量 = 每日上限设置值）。
   // 手动引入同样计入今日 intro 计数（后续自动引入保持关闭），队列重建后新卡续上。
   function introMore() {
-    const cap = (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10;
+    const cap = (function () { const v = prefGet('dailyNew'); return (typeof v === 'number' && v >= 0) ? v : 10; })();
     const st = introState();
     if (!DB.log) DB.log = {};
     if (!DB.log.counts) DB.log.counts = {};
@@ -252,7 +254,7 @@
         stepDues.sort(function (a, b) { return a - b; });
         const waitMs = stepDues[0] - Date.now();
         wrap.appendChild(el('h2', null, '⏳ 巩固步进中'));
-        wrap.appendChild(illus('learn-done'));
+        wrap.appendChild(illus('empty-learn'));
         wrap.appendChild(el('p', 'muted', stepDues.length + ' 张卡在短间隔巩固中——最早约 ' + fmtPreview(waitMs) + '后自动回到队列，本页到点会自动刷新。'));
         const back = el('button', 'btn', '🏠 回主页');
         back.setAttribute('data-action', 'nav');
@@ -274,7 +276,7 @@
           ? '今日的队列已清空——另有 ' + waiting + ' 张新卡将按「每日新卡上限」在之后的日期逐步引入；到期复习卡会按排期自动进入队列。'
           : '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
         if (waiting > 0) {
-          const more = el('button', 'btn primary', '➕ 再来一批（' + Math.min(waiting, (DB.settings && typeof DB.settings.dailyNew === 'number' && DB.settings.dailyNew >= 0) ? DB.settings.dailyNew : 10) + ' 张）');
+          const more = el('button', 'btn primary', '➕ 再来一批（' + Math.min(waiting, (function () { const v = prefGet('dailyNew'); return (typeof v === 'number' && v >= 0) ? v : 10; })()) + ' 张）');
           more.addEventListener('click', introMore);
           wrap.appendChild(more);
         }

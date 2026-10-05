@@ -145,6 +145,32 @@
 - 静态 `DATA` 中已不存在的 `cards` id → 删除（孤儿）。
 - 规范化回写 **保留** 原 `updatedAt`。
 
+## 行动模块存储（独立于学习库）
+
+规格与规则以 [`ACT.md`](ACT.md) 为准。键 `athena_act_v1`（可拆 `athena_habit_v1`）：
+
+```js
+{
+  // 计划主干 = WOOP；旧 ifThen / envAudit 加载与 mergeActModule 时丢弃
+  woops: [{
+    id, wish, outcome, obstacle,
+    planIf, planThen,
+    cues?: [{ text, action: 'remove'|'adapt', note? }],  // 外部提示（原环境审计并入障碍步）
+    createdAt, updatedAt
+  }],
+  habits: [{
+    id, title, parentId: string|null, tag?: string,
+    toleranceDays: number, missCount: number,
+    doneDates: string[],           // YYYY-MM-DD
+    createdAt, updatedAt, removedAt?: string
+  }]
+}
+```
+
+- **不写入**各科 `*_formula_srs_v1`；同步合并若扩展须另表，禁止刷新学习库 `updatedAt`。
+- 习惯树判定纯函数建议 `evaluateHabitDay`（级联移除 / 容忍天数 / 标签组保护）— 测试在 `tests/habit.test.mjs`。
+- 合并 `mergeActModule` 只并 `woops` + `habits`；默认载荷 `{ woops: [], habits: [] }`。
+
 ## 云同步合并（摘要）
 
 见 `docs/ARCHITECTURE.md`。要点：`cards`/`wrongs` 并集按卡选边；`revlogs` 按「时间+卡片+评分」去重并集；日志逐日取大；设置本地优先。

@@ -67,6 +67,16 @@
     return '下次 ' + fmtDayMs(w.due) + '（间隔 ' + w.ivl + ' 天）' + (isWrongGraduated(w) ? ' · ✔已稳固' : '');
   }
 
+  // 预览：错题选某档后距下次重做的时长（克隆卡跑一遍，不动真实数据）
+  function previewWrongNextTime(wid, rating) {
+    const src = wrongCard(wid);
+    if (!src) return 0;
+    const clone = Object.assign({}, src);
+    applyRatingToWrongCard(clone, rating);
+    if (clone.state === 'review' && clone.ivl >= 1) return clone.ivl * DAY;
+    return Math.max(0, clone.due - Date.now());
+  }
+
   // 错题失败（不会/思路错）→ 关联知识卡降级，提前重现补漏。
   // 降级是一次真实的调度事件：必须更新 lastR——否则跨端合并（按 lastR 选边）时，
   // 另一端仍持较旧但 lastR 相同的复习态副本，降级会被静默丢弃、行为在两端间反复。
@@ -265,16 +275,21 @@
       wrap.appendChild(controls);
 
       const rating = el('div', 'rating hidden');
-      const mk = function (label, r) {
-        const b = el('button', 'btn rate r' + r, label);
+      const mk = function (label, sub, r) {
+        const prev = fmtPreview(previewWrongNextTime(wid, r));
+        const b = el('button', 'btn rate r' + r, '');
         b.setAttribute('data-action', 'wrate');
         b.setAttribute('data-arg', String(r));
+        b.setAttribute('title', sub + ' · 下次约 ' + prev);
+        b.setAttribute('aria-label', label + '：' + sub + '，下次约 ' + prev);
+        b.appendChild(el('span', null, label));
+        b.appendChild(el('small', 'rate-prev', prev));
         rating.appendChild(b);
       };
-      mk('不会', 0);
-      mk('思路错', 1);
-      mk('算错', 2);
-      mk('会做对', 3);
+      mk('不会', '完全没做出来', 0);
+      mk('思路错', '方向偏了', 1);
+      mk('算错', '会做但算错', 2);
+      mk('会做对', '完整做对', 3);
       const kbd = el('div', 'keyboard-hint muted', '1 不会 · 2 思路错 · 3 算错 · 4 会做对 · Space/Enter 显示解析 · ←→ 切题');
       rating.appendChild(kbd);
       wrap.appendChild(rating);

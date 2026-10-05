@@ -27,6 +27,10 @@ const ORDER = [
   'map.mjs',
   'home.mjs',
   'sync.mjs',
+  'act.mjs',
+  'habit.mjs',
+  'focus.mjs',
+  'mile.mjs',
   'actions.mjs'
 ];
 
@@ -35,17 +39,19 @@ function read(rel) {
 }
 
 function stripExports(text) {
-  // 仅用于自带 ESM 导出的可测试纯函数模块：剥离 export 行，使其成为浏览器 IIFE 内的普通声明。
-  return text
-    .split('\n')
-    .filter((line) => !/^\s*export\s*\{[^}]*\}\s*;?\s*$/.test(line))
-    .join('\n');
+  // 剥离 ESM 导出，使模块成为浏览器 IIFE 内的普通声明。
+  // 兼容：单行 `export { a, b };` 与多行 `export {\n a,\n b,\n};`
+  // 以及 `export function foo` / `export const foo`（转为普通声明）。
+  let out = text.replace(/^\s*export\s*\{[\s\S]*?\}\s*;?\s*$/gm, '');
+  out = out.replace(/^\s*export\s+(function|const|let|var|class)\s+/gm, '$1 ');
+  return out;
 }
 
 const banner = '/* 本文件由 tools/build.mjs 自动生成，请勿手改；修改 src/ 后运行 node tools/build.mjs 重新生成。 */\n';
 
+const STRIP = new Set(['fsrs-core.mjs', 'interleave.mjs', 'sched.mjs', 'wrong.mjs', 'sync.mjs', 'stats.mjs', 'act.mjs', 'habit.mjs', 'focus.mjs', 'mile.mjs']);
 const body = ORDER
-  .map((rel) => ((rel === 'fsrs-core.mjs' || rel === 'interleave.mjs' || rel === 'sched.mjs' || rel === 'wrong.mjs' || rel === 'sync.mjs' || rel === 'stats.mjs') ? stripExports(read(rel)) : read(rel)))
+  .map((rel) => (STRIP.has(rel) ? stripExports(read(rel)) : read(rel)))
   .join('\n');
 
 const out = banner + body + '\n';

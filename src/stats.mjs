@@ -21,32 +21,50 @@
 
   // 统计页折线图（从每日 metrics 快照画一条趋势线，含图例/最新值）
   function sparkTrend(title, items, color, unit, fixedMax) {
-    const box = el('div', 'stat-card');
-    const head = el('div', 'trend-head');
-    head.appendChild(el('strong', null, title));
-    if (items.length) head.appendChild(el('span', 'trend-latest muted', '最新 ' + items[items.length - 1].value + (unit || '')));
+    const box = el('div', 'stat-card chart-card');
+    const head = el('div', 'chart-head');
+    head.appendChild(el('span', 'chart-title', title));
+    if (items.length) head.appendChild(el('span', 'chart-pill', items[items.length - 1].value + (unit || '')));
     box.appendChild(head);
-    if (items.length < 2) { box.appendChild(illus('stats-growing')); box.appendChild(el('p', 'muted', '数据积累中——每天打开应用记录一次，几天后显示趋势。')); return box; }
+    if (items.length < 2) { box.appendChild(illus('empty-stats')); box.appendChild(el('p', 'muted', '数据积累中——每天打开应用记录一次，几天后显示趋势。')); return box; }
     const W = 680, H = 150, pad = 30;
     const vals = items.map(function (i) { return i.value; });
     let mn = (fixedMax != null) ? 0 : Math.min.apply(null, vals);
     let mx = (fixedMax != null) ? fixedMax : Math.max.apply(null, vals);
     if (mx - mn < 1e-6) { mn -= 1; mx += 1; }
-    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%' });
+    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%', class: 'chart-svg' });
     [mn, (mn + mx) / 2, mx].forEach(function (v) {
       const y = H - pad - (v - mn) / (mx - mn) * (H - 2 * pad);
-      svg.appendChild(svgEl('line', { x1: pad, x2: W - pad, y1: y, y2: y, stroke: '#E7E4DD', 'stroke-width': '1' }));
-      svg.appendChild(svgText('text', pad - 4, y + 3, String(Math.round(v)), { 'text-anchor': 'end' }));
+      svg.appendChild(svgEl('line', { x1: pad, x2: W - pad, y1: y, y2: y, class: 'chart-grid' }));
+      svg.appendChild(svgText('text', pad - 4, y + 3, String(Math.round(v)), { 'text-anchor': 'end', class: 'chart-axis' }));
     });
     const pts = items.map(function (i, idx) {
       return [pad + idx * (W - 2 * pad) / (items.length - 1), H - pad - (i.value - mn) / (mx - mn) * (H - 2 * pad)];
     });
-    svg.appendChild(svgEl('path', { d: 'M ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L '), fill: 'none', stroke: color, 'stroke-width': '2' }));
-    pts.forEach(function (p) { svg.appendChild(svgEl('circle', { cx: p[0], cy: p[1], r: '2.5', fill: color })); });
+    // 面积 + 折线
+    const areaD = 'M ' + pts[0][0] + ' ' + (H - pad) + ' L ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L ') + ' L ' + pts[pts.length - 1][0] + ' ' + (H - pad) + ' Z';
+    svg.appendChild(svgEl('path', {
+      d: areaD, class: 'chart-area',
+      style: 'fill: color-mix(in srgb, ' + (color === '#D4537E' ? 'var(--accent-2)' : 'var(--accent)') + ' 12%, transparent)'
+    }));
+    svg.appendChild(svgEl('path', {
+      d: 'M ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L '),
+      fill: 'none', class: 'chart-line',
+      style: 'stroke: ' + (color === '#D4537E' ? 'var(--accent-2)' : 'var(--accent)')
+    }));
+    pts.forEach(function (p) {
+      svg.appendChild(svgEl('circle', {
+        cx: p[0], cy: p[1], r: '2.5', class: 'chart-dot',
+        style: 'stroke: ' + (color === '#D4537E' ? 'var(--accent-2)' : 'var(--accent)')
+      }));
+    });
     const li = [0, Math.floor((items.length - 1) / 2), items.length - 1];
     li.forEach(function (idx, j) {
       const x = pts[idx][0];
-      svg.appendChild(svgText('text', x, H - 4, items[idx].label, j === li.length - 1 ? { 'text-anchor': 'end' } : (j === 0 ? {} : { 'text-anchor': 'middle' })));
+      svg.appendChild(svgText('text', x, H - 4, items[idx].label, Object.assign(
+        { class: 'chart-axis' },
+        j === li.length - 1 ? { 'text-anchor': 'end' } : (j === 0 ? {} : { 'text-anchor': 'middle' })
+      )));
     });
     box.appendChild(svg);
     return box;
@@ -54,6 +72,7 @@
 
   // ---------------- 学习报告（日/周/月/年聚合） ----------------
   let reportPeriod = 'day'; // 会话内状态，不持久化
+  let heatWeeksExpanded = false; // 学习日历：紧凑 8 周 ↔ 展开 26 周
   const REPORT_PERIODS = [['day', '日报'], ['week', '周报'], ['month', '月报'], ['year', '年报']];
   const REPORT_DAYS = { day: 1, week: 7, month: 30, year: 365 };
 
@@ -270,21 +289,35 @@
     wrap.appendChild(tg);
     wrap.appendChild(el('p', 'muted', '每天打开应用自动记录一次指标（掌握度按存储强度），积累几天后即可看趋势。'));
 
-    // —— 学习日历（近 16 周热力图，点击查看当日明细）——
-    wrap.appendChild(el('h3', null, '🔥 学习日历（近 16 周）'));
+    // —— 学习日历热力图（紧凑 8 周 · 可展开 26 周 + 汇总）——
+    wrap.appendChild(el('h3', null, '🔥 学习日历'));
     const daily = (DB.log && DB.log.daily) || {};
     const detailLog = (DB.log && DB.log.detail) || {};
-    const weeks = 16, total = weeks * 7;
+    const weeks = heatWeeksExpanded ? 26 : 8;
+    const total = weeks * 7;
     const start = new Date(); start.setDate(start.getDate() - (total - 1));
     const heatDays = [];
-    let heatMax = 0;
+    let heatMax = 0, activeDays = 0, totalCards = 0, peak = 0;
     for (let d = 0; d < total; d++) {
       const date = new Date(start); date.setDate(start.getDate() + d);
       const key = fmtDate(date), cnt = daily[key] || 0;
       heatDays.push({ key: key, cnt: cnt });
       if (cnt > heatMax) heatMax = cnt;
+      if (cnt > 0) { activeDays++; totalCards += cnt; if (cnt > peak) peak = cnt; }
     }
-    const grid = el('div', 'heatmap-grid');
+    const expandRow = el('div', 'heat-expand-row');
+    expandRow.appendChild(el('span', 'muted', heatWeeksExpanded
+      ? '完整视图 · 近 ' + weeks + ' 周'
+      : '预览 · 近 ' + weeks + ' 周（可展开更完整）'));
+    const expandBtn = el('button', 'btn small heat-expand-btn', heatWeeksExpanded ? '收起' : '展开完整日历');
+    expandBtn.addEventListener('click', function () {
+      heatWeeksExpanded = !heatWeeksExpanded;
+      renderApp();
+    });
+    expandRow.appendChild(expandBtn);
+    wrap.appendChild(expandRow);
+
+    const grid = el('div', 'heatmap-grid' + (heatWeeksExpanded ? ' expanded' : ' compact'));
     grid.style.gridTemplateColumns = 'repeat(' + weeks + ', 12px)';
     heatDays.forEach(function (item) {
       const cell = el('div', 'heat-cell');
@@ -316,6 +349,18 @@
       legend.appendChild(el('span', 'heat-legend-end', '多'));
     }
     hb.appendChild(legend);
+    if (heatWeeksExpanded) {
+      const sum = el('div', 'heat-summary');
+      sum.appendChild(el('span', null, '有记录'));
+      sum.appendChild(el('b', null, activeDays + ' 天'));
+      sum.appendChild(el('span', null, '· 窗口内合计'));
+      sum.appendChild(el('b', null, totalCards + ' 张'));
+      sum.appendChild(el('span', null, '· 日均有记录日'));
+      sum.appendChild(el('b', null, activeDays ? Math.round(totalCards / activeDays) + ' 张' : '—'));
+      sum.appendChild(el('span', null, '· 峰值日'));
+      sum.appendChild(el('b', null, peak + ' 张'));
+      hb.appendChild(sum);
+    }
     hb.appendChild(el('p', 'muted', '颜色深浅表示当天学习张数（按本窗口最高日等比划分）；点击有记录的格子可查看当日明细。'));
     wrap.appendChild(hb);
 

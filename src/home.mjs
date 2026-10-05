@@ -52,21 +52,27 @@
     return n;
   }
 
-  // 考试倒计时：扫描各科设置里最近的正数目标日期
+  // 考试倒计时：扫描各科设置里最近的正数目标日期（尊重 prefScope：global 用全局值）
   function homeExamDays() {
     let best = null;
+    const consider = function (s) {
+      if (!s) return;
+      const d = new Date(s + 'T00:00:00');
+      if (!isNaN(d.getTime())) {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const days = Math.round((d - today) / DAY);
+        if (days > 0 && (best == null || days < best)) best = days;
+      }
+    };
+    // 全局目标日期（任一科选了 global 也生效；无科选 global 时全局值仍可作后备）
+    consider(loadGlobalPrefs().examDate);
     Object.keys(subjectList()).forEach(function (sid) {
       let db = null;
       try { db = JSON.parse(localStorage.getItem(sid + '_formula_srs_v1')); } catch (e) {}
-      const s = db && db.settings && db.settings.examDate;
-      if (s) {
-        const d = new Date(s + 'T00:00:00');
-        if (!isNaN(d.getTime())) {
-          const today = new Date(); today.setHours(0, 0, 0, 0);
-          const days = Math.round((d - today) / DAY);
-          if (days > 0 && (best == null || days < best)) best = days;
-        }
-      }
+      const st = (db && db.settings) || {};
+      const scope = prefResolveScope(st.prefScope, 'examDate');
+      const s = (scope === 'global') ? loadGlobalPrefs().examDate : st.examDate;
+      consider(s);
     });
     return best;
   }
@@ -166,14 +172,6 @@
     return box;
   }
 
-  // 每日一句（旧版入口：保留函数名兼容）
-  function homeQuote() {
-    const pool = quotePool();
-    const p = pickDaily(pool, 'quote');
-    if (!p) return null;
-    return { sid: p.item.sid, id: p.item.id, title: p.item.title, quote: p.item.text.split('。')[0] + '。' };
-  }
-
   // ---------------- 功能入口线稿图标（currentColor 单色，随文字颜色自适应） ----------------
   const UI_ICONS = {
     home: '<path d="M3.5 11 L12 3.5 L20.5 11"/><path d="M6 9.5 V20 H18 V9.5"/><path d="M10 20 V14.5 H14 V20"/>',
@@ -184,7 +182,10 @@
     chart: '<path d="M5 20 V11 M12 20 V4.5 M19 20 V14"/><path d="M3 20.5 H21"/>',
     cap: '<path d="M2.5 9.5 L12 4.5 L21.5 9.5 L12 14.5 Z"/><path d="M6.5 11.8 V16.2 C6.5 17.8 17.5 17.8 17.5 16.2 V11.8"/><path d="M21.5 9.5 V14.5"/>',
     sliders: '<path d="M4 7 H20 M4 12 H20 M4 17 H20"/><circle cx="9.5" cy="7" r="2.1"/><circle cx="15" cy="12" r="2.1"/><circle cx="10.5" cy="17" r="2.1"/>',
-    help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6 a2.4 2.4 0 1 1 3.9 1.9 c-.9.7-1.5 1.2-1.5 2.3"/><path d="M12 16.6 v.5"/>'
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6 a2.4 2.4 0 1 1 3.9 1.9 c-.9.7-1.5 1.2-1.5 2.3"/><path d="M12 16.6 v.5"/>',
+    act: '<rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4 V3 H15 V4"/><path d="M9 10 H15 M9 14 H13"/>',
+    habit: '<path d="M12 20 V11"/><path d="M12 11 C12 11 8 9.5 8 6.5 C8 6.5 12 7.5 12 11"/><path d="M12 13 C12 13 16 11.5 16 8.5 C16 8.5 12 9.5 12 13"/>',
+    mile: '<path d="M7 20 V4"/><path d="M7 5 H18 L15 9 L18 13 H7"/><path d="M5 20 H12"/>'
   };
   function icon(name) {
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -208,6 +209,143 @@
       }
     }
     return Math.round(100 * Math.max(0, Math.min(1, Math.log(1 + cardObj.stab) / Math.log(1 + sN))));
+  }
+
+  // ---------------- Today 右栏：习惯/专注摘要（V2_PLAN §4） ----------------
+  // 运行时从 habit/focus 取数；模块未挂载时优雅降级。
+  function homeActionSummary() {
+    const out = {
+      habit: { has: false, total: 0, done: 0, due: 0, library: 0, canAdd: false, addedToday: 0, addLimit: 1 },
+      focus: { has: false, chains: 0, work: 0, status: 'none', reserveMs: 0, precedents: 0, tier: '' }
+    };
+    if (typeof habitLoadNodes === 'function' && typeof habitDayStats === 'function') {
+      try {
+        const nodes = habitLoadNodes();
+        const today = (typeof habitToday === 'function') ? habitToday() : null;
+        const s = habitDayStats(nodes, today);
+        const can = (typeof habitCanAddToTree === 'function') ? habitCanAddToTree(nodes, today) : { ok: false, addedToday: 0, limit: 1 };
+        const lib = (typeof habitLibrary === 'function') ? habitLibrary(nodes).length : 0;
+        out.habit = {
+          has: true,
+          total: s.total, done: s.done, due: s.due,
+          library: lib,
+          canAdd: !!can.ok,
+          addedToday: can.addedToday || 0,
+          addLimit: can.limit != null ? can.limit : 1
+        };
+      } catch (e) {}
+    }
+    if (typeof loadFocus === 'function' && typeof focusActiveChain === 'function') {
+      try {
+        const st = loadFocus();
+        const ch = focusActiveChain(st);
+        out.focus.has = true;
+        out.focus.chains = (st.chains || []).length;
+        out.focus.precedents = (st.precedents || []).length;
+        if (ch) {
+          out.focus.work = ch.workCount || 0;
+          out.focus.status = ch.status || 'idle';
+          out.focus.tier = ch.tier === 'elite' ? '精锐' : '普通';
+          if (ch.reservation && typeof focusReservationRemainingMs === 'function') {
+            out.focus.reserveMs = focusReservationRemainingMs(ch.reservation, Date.now());
+          }
+        }
+      } catch (e) {}
+    }
+    return out;
+  }
+
+  // 里程碑：主页最多 1 条最近解锁（T37 · 读 athena_mile_v1；无积分/排行/赎买）
+  function homePickMilestone(sum) {
+    try {
+      if (typeof mileSync === 'function') mileSync(); // 观察者同步，顺手落新 Hit
+      if (typeof mileRecentHit === 'function') {
+        const m = mileRecentHit();
+        if (m) return { tag: m.tag, text: m.text, go: m.go || 'mile' };
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  // 左栏：今日复习（知识卡 due，按科聚合）
+  function homeDueReviewPanel(rows) {
+    const panel = el('div', 'home-panel home-due');
+    panel.appendChild(el('div', 'home-panel-title', '📖 今日复习'));
+    const dueRows = rows.filter(function (r) { return (r.due || 0) > 0 || (r.wrongDue || 0) > 0; })
+      .sort(function (a, b) { return (b.due || 0) - (a.due || 0); });
+    if (!dueRows.length) {
+      panel.appendChild(el('p', 'muted', '全库无待复习。可以预习新卡，或去习惯树/专注链走一圈。'));
+    } else {
+      const list = el('div', 'home-due-list');
+      dueRows.slice(0, 8).forEach(function (r) {
+        const row = el('button', 'home-due-row');
+        row.appendChild(el('span', 'home-due-name', r.short || r.name));
+        const bits = [];
+        if (r.due) bits.push('⏳' + r.due);
+        if (r.wrongDue) bits.push('✗' + r.wrongDue);
+        row.appendChild(el('span', 'muted', bits.join(' · ')));
+        row.addEventListener('click', function () {
+          if (r.sid !== currentSubjectId) switchSubject(r.sid);
+          currentView = 'learn';
+          renderApp();
+        });
+        list.appendChild(row);
+      });
+      if (dueRows.length > 8) list.appendChild(el('div', 'muted home-due-more', '…共 ' + dueRows.length + ' 科有待复习'));
+      panel.appendChild(list);
+    }
+    return panel;
+  }
+
+  // 右栏：习惯树 + 专注链摘要
+  function homeActionPanel(sum) {
+    const panel = el('div', 'home-panel home-action');
+    panel.appendChild(el('div', 'home-panel-title', '🌱 习惯 · 专注'));
+
+    const h = sum.habit;
+    const hBox = el('button', 'home-act-block');
+    hBox.appendChild(el('div', 'home-act-name', '习惯树'));
+    if (h.has) {
+      hBox.appendChild(el('div', 'muted', '树上 ' + h.total + ' · 今日 ' + h.done + '/' + h.total + ' · 待检 ' + h.due));
+      const slot = h.canAdd
+        ? ('入树名额 ' + h.addedToday + '/' + h.addLimit + '（今日仍可入树）')
+        : ('入树名额 ' + h.addedToday + '/' + h.addLimit + '（今日已用完）');
+      hBox.appendChild(el('div', 'muted', slot + (h.library ? ' · 库 ' + h.library : '')));
+    } else {
+      hBox.appendChild(el('div', 'muted', '尚未启用习惯树'));
+    }
+    hBox.addEventListener('click', function () {
+      currentModule = 'act';
+      currentView = 'actHabit';
+      renderApp();
+    });
+    panel.appendChild(hBox);
+
+    const f = sum.focus;
+    const fBox = el('button', 'home-act-block');
+    fBox.appendChild(el('div', 'home-act-name', '专注链'));
+    if (f.has) {
+      const label = (typeof focusWorkLabel === 'function') ? focusWorkLabel(f.work) : ('#' + f.work);
+      const stMap = { running: '专注中', scouting: '侦查中', reserved: '预约中', awaiting_verdict: '待裁决', cleared: '已清空', idle: '空闲', none: '—' };
+      let line = f.tier ? (f.tier + ' ' + label) : ('链 ' + f.chains);
+      line += ' · ' + (stMap[f.status] || f.status);
+      fBox.appendChild(el('div', 'muted', line));
+      if (f.status === 'reserved' && f.reserveMs > 0) {
+        const mins = Math.ceil(f.reserveMs / 60000);
+        fBox.appendChild(el('div', 'muted', '预约剩余约 ' + mins + ' 分钟——尽快就座'));
+      } else if (f.status === 'running') {
+        fBox.appendChild(el('div', 'muted', '完成本单元可记 ' + (typeof focusWorkLabel === 'function' ? focusWorkLabel(f.work + 1) : ('#' + (f.work + 1)))));
+      }
+    } else {
+      fBox.appendChild(el('div', 'muted', '尚未创建专注链'));
+    }
+    fBox.addEventListener('click', function () {
+      currentModule = 'act';
+      currentView = 'actFocus';
+      renderApp();
+    });
+    panel.appendChild(fBox);
+    return panel;
   }
 
   function renderHome() {
@@ -268,6 +406,30 @@
       });
       wrap.appendChild(hero);
     }
+
+    // 里程碑（最多 1 条最近解锁；点击查看深链或去里程碑时间线）
+    const sum = homeActionSummary();
+    const milestone = homePickMilestone(sum);
+    if (milestone) {
+      const m = el('button', 'home-milestone');
+      m.appendChild(el('span', 'home-milestone-tag', milestone.tag));
+      m.appendChild(el('span', 'home-milestone-text', milestone.text));
+      m.addEventListener('click', function () {
+        if (typeof mileGo === 'function') mileGo(milestone.go || 'mile');
+        else {
+          currentModule = 'act';
+          currentView = milestone.go || 'actHabit';
+          renderApp();
+        }
+      });
+      wrap.appendChild(m);
+    }
+
+    // Today 双栏：左今日复习 · 右习惯/专注摘要（V2_PLAN §4）
+    const cols = el('div', 'home-cols');
+    cols.appendChild(homeDueReviewPanel(rows));
+    cols.appendChild(homeActionPanel(sum));
+    wrap.appendChild(cols);
 
     // 学科网格（分类切换：全部/学业/技能/语言/爱好，会话内状态）
     if (renderHome._cat === undefined) renderHome._cat = 'all';
@@ -359,21 +521,6 @@
         wrap.appendChild(duo);
       }
     }
-
-    // 快捷入口
-    wrap.appendChild(el('h3', null, '⚡ 快捷入口'));
-    const tiles = el('div', 'home-tiles');
-    [['pencil', '自测', 'quiz'], ['chart', '统计', 'statistics'], ['cap', '原理', 'principle'], ['sliders', '设置', 'settings']].forEach(function (t) {
-      const b = el('button', 'home-tile');
-      const ic = icon(t[0]);
-      ic.classList.add('home-tile-icon');
-      b.appendChild(ic);
-      b.appendChild(el('span', null, t[1]));
-      b.setAttribute('data-action', 'nav');
-      b.setAttribute('data-arg', t[2]);
-      tiles.appendChild(b);
-    });
-    wrap.appendChild(tiles);
 
     app.appendChild(wrap);
   }

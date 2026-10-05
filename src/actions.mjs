@@ -33,12 +33,14 @@
         currentView = arg;
         if (arg === 'wrong' || arg === 'wrongBrowse' || arg === 'wrongStats') currentModule = 'wrong';
         else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics') currentModule = 'cards';
+        else if (arg === 'actPlan' || arg === 'actHabit' || arg === 'actFocus' || arg === 'actHelp') currentModule = 'act';
+        else if (arg === 'mile') currentModule = 'cards';
         renderApp();
         break;
       case 'module':
         closeDrawer();
         currentModule = arg;
-        currentView = (arg === 'wrong') ? 'wrong' : 'learn';
+        currentView = (arg === 'wrong') ? 'wrong' : (arg === 'act') ? 'actPlan' : 'learn';
         renderApp();
         break;
       case 'menuclose':
@@ -385,7 +387,16 @@
   }
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { document.body.classList.remove('immersive'); closeDrawer(); const cm = document.querySelector('.countdown-modal'); if (cm) cm.remove(); }
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      if (cmdPalette) closeCmdPalette();
+      else openCmdPalette();
+      return;
+    }
+    if (e.key === 'Escape') {
+      if (cmdPalette) { closeCmdPalette(); return; }
+      document.body.classList.remove('immersive'); closeDrawer(); const cm = document.querySelector('.countdown-modal'); if (cm) cm.remove();
+    }
   });
 
   // 导图 Ctrl+滚轮缩放
@@ -571,6 +582,92 @@
       if (menu && !menu.classList.contains('hidden')) updateSubjectDdBadges();
     };
   })();
+
+  // ---------------- 命令面板（⌘K / Ctrl+K） ----------------
+  let cmdPalette = null;
+  let cmdQuery = '';
+  let cmdIndex = 0;
+
+  function cmdItems() {
+    return [
+      { label: '主页', hint: 'Today', run: function () { currentModule = 'cards'; currentView = 'home'; renderApp(); } },
+      { label: '学习 · 知识卡', hint: 'learn', run: function () { currentModule = 'cards'; currentView = 'learn'; renderApp(); } },
+      { label: '错题本', hint: 'wrong', run: function () { currentModule = 'wrong'; currentView = 'wrong'; renderApp(); } },
+      { label: '行动 · 计划', hint: 'actPlan', run: function () { currentModule = 'act'; currentView = 'actPlan'; renderApp(); } },
+      { label: '行动 · 习惯树', hint: 'actHabit', run: function () { currentModule = 'act'; currentView = 'actHabit'; renderApp(); } },
+      { label: '行动 · 专注链', hint: 'actFocus', run: function () { currentModule = 'act'; currentView = 'actFocus'; renderApp(); } },
+      { label: '行动 · 帮助', hint: 'actHelp', run: function () { currentModule = 'act'; currentView = 'actHelp'; renderApp(); } },
+      { label: '里程碑', hint: 'mile', run: function () { currentView = 'mile'; renderApp(); } },
+      { label: '统计', hint: 'statistics', run: function () { currentModule = 'cards'; currentView = 'statistics'; renderApp(); } },
+      { label: '原理 · 知识库', hint: 'principle', run: function () { currentModule = 'cards'; currentView = 'principle'; renderApp(); } },
+      { label: '设置', hint: 'settings', run: function () { currentModule = 'cards'; currentView = 'settings'; renderApp(); } }
+    ];
+  }
+
+  function cmdFiltered() {
+    const q = cmdQuery.trim().toLowerCase();
+    const list = cmdItems();
+    if (!q) return list;
+    return list.filter(function (it) {
+      return (it.label + ' ' + it.hint).toLowerCase().indexOf(q) >= 0;
+    });
+  }
+
+  function closeCmdPalette() {
+    if (cmdPalette) { cmdPalette.remove(); cmdPalette = null; }
+    cmdQuery = '';
+    cmdIndex = 0;
+  }
+
+  function runCmd(it) {
+    closeCmdPalette();
+    if (it && it.run) it.run();
+    toast(it ? it.label : '');
+  }
+
+  function renderCmdList() {
+    if (!cmdPalette) return;
+    const list = cmdPalette.querySelector('.cmd-list');
+    if (!list) return;
+    list.innerHTML = '';
+    const items = cmdFiltered();
+    if (cmdIndex >= items.length) cmdIndex = Math.max(0, items.length - 1);
+    items.forEach(function (it, i) {
+      const row = el('button', 'cmd-item' + (i === cmdIndex ? ' active' : ''), '');
+      row.type = 'button';
+      row.appendChild(el('span', null, it.label));
+      row.appendChild(el('span', 'muted cmd-hint', it.hint || ''));
+      row.addEventListener('click', function () { runCmd(it); });
+      list.appendChild(row);
+    });
+    if (!items.length) list.appendChild(el('div', 'cmd-empty', '无匹配命令'));
+  }
+
+  function openCmdPalette() {
+    if (cmdPalette) return;
+    cmdPalette = el('div', 'cmd-palette');
+    const backdrop = el('div', 'map-modal-backdrop');
+    backdrop.addEventListener('click', closeCmdPalette);
+    cmdPalette.appendChild(backdrop);
+    const box = el('div', 'cmd-box');
+    const input = el('input', 'cmd-input');
+    input.type = 'text';
+    input.placeholder = '跳转模块 / 专注链 / 习惯树…';
+    input.addEventListener('input', function () { cmdQuery = input.value; cmdIndex = 0; renderCmdList(); });
+    input.addEventListener('keydown', function (e) {
+      const items = cmdFiltered();
+      if (e.key === 'ArrowDown') { e.preventDefault(); cmdIndex = Math.min(cmdIndex + 1, Math.max(0, items.length - 1)); renderCmdList(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); cmdIndex = Math.max(cmdIndex - 1, 0); renderCmdList(); }
+      else if (e.key === 'Enter') { e.preventDefault(); runCmd(items[cmdIndex]); }
+      else if (e.key === 'Escape') { e.preventDefault(); closeCmdPalette(); }
+    });
+    box.appendChild(input);
+    box.appendChild(el('div', 'cmd-list'));
+    cmdPalette.appendChild(box);
+    document.body.appendChild(cmdPalette);
+    renderCmdList();
+    setTimeout(function () { try { input.focus(); } catch (e) {} }, 30);
+  }
 
   // ---------------- 启动 ----------------
   function initApp() {

@@ -90,9 +90,13 @@
   }
 
   // ---------------- 目标倒计时（原「考研倒计时」，目标名可编辑文本，便于考研后复用） ----------------
-  function goalTitle() { return (DB && DB.settings && typeof DB.settings.goalTitle === 'string' && DB.settings.goalTitle.trim()) ? DB.settings.goalTitle.trim() : GOAL_DEFAULT; }
+  // 经 prefGet：支持「本课 | 全局」作用域（可重叠项用户自选）
+  function goalTitle() {
+    const v = prefGet('goalTitle');
+    return (typeof v === 'string' && v.trim()) ? v.trim() : GOAL_DEFAULT;
+  }
   function examDateObj() {
-    const s = (DB && DB.settings && DB.settings.examDate) || '';
+    const s = prefGet('examDate') || '';
     if (s) {
       const d = new Date(s + 'T00:00:00');
       if (!isNaN(d.getTime())) return d;
@@ -211,34 +215,70 @@
     }
     return '下次复习：' + fmtDayMs(c.due) + '（间隔 ' + c.ivl + ' 天）';
   }
-  // 掌握度趋势：实际掌握度历史点（每次评分后跳变）+ 100% 目标参考线
+  // 掌握度趋势：面积+折线+网格+当前值（V2 设计 token，知识卡/错题共用）
   function svgMasteryTrend(id) { return svgTrendCore(card(id).hist || []); }
-  // 趋势图核心（hist 元素 {t, m}）——知识卡与错题卡共用
   function svgTrendCore(hist) {
-    const wrap = el('div', 'chart-wrap');
-    wrap.appendChild(el('div', 'chart-label muted', '掌握度趋势（时间）· ● 每次评分后的掌握度 · ─ 目标(100%)'));
-    if (hist.length < 2) { wrap.appendChild(el('p', 'muted', '📈 数据积累中——学习 2 次后显示趋势。')); return wrap; }
-    let minT = hist[0].t;
-    let maxT = hist[hist.length - 1].t;
+    const wrap = el('div', 'chart-wrap chart-card');
+    const head = el('div', 'chart-head');
+    head.appendChild(el('span', 'chart-title', '掌握度趋势'));
+    if (hist.length >= 2) {
+      const last = hist[hist.length - 1];
+      head.appendChild(el('span', 'chart-pill', last.m + '%'));
+    }
+    wrap.appendChild(head);
+    wrap.appendChild(el('div', 'chart-label muted', '每次评分后的掌握度 · 虚线为目标 100%'));
+    if (hist.length < 2) {
+      wrap.appendChild(el('p', 'muted chart-empty', '📈 数据积累中——学习 2 次后显示趋势。'));
+      return wrap;
+    }
+    const minT = hist[0].t;
+    const maxT = hist[hist.length - 1].t;
     const spanT = Math.max(1, (maxT - minT) || 1);
-    const W = 300, H = 118, padL = 28, padR = 8, padT = 12, padB = 18;
+    const W = 320, H = 132, padL = 32, padR = 12, padT = 14, padB = 22;
     const X = function (t) { return padL + (t - minT) / spanT * (W - padL - padR); };
     const Y = function (m) { return padT + (1 - m / 100) * (H - padT - padB); };
-    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%' });
-    [0, 50, 100].forEach(function (m) { const y = Y(m); svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: y, y2: y, stroke: '#E7E4DD', 'stroke-width': '1' })); svg.appendChild(svgText('text', padL - 4, y + 3, String(m), { 'text-anchor': 'end' })); });
-    // 目标参考线（100% = 毕业/稳固）
-    svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: Y(100), y2: Y(100), stroke: '#A9C9E8', 'stroke-width': '1', 'stroke-dasharray': '4 3' }));
-    // 实际掌握度曲线 + 点
-    const pts = hist.map(function (p) { return X(p.t) + ',' + Y(p.m); }).join(' ');
-    svg.appendChild(svgEl('polyline', { points: pts, fill: 'none', stroke: '#D4537E', 'stroke-width': '2' }));
-    hist.forEach(function (p) {
-      const cEl = svgEl('circle', { cx: X(p.t), cy: Y(p.m), r: '3', fill: '#378ADD' });
-      const tt = svgEl('title', {}); tt.textContent = fmtDayMs(p.t) + ' 掌握度 ' + p.m + '%';
-      cEl.appendChild(tt); svg.appendChild(cEl);
+    const svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%', class: 'chart-svg' });
+
+    // 水平网格 + 刻度
+    [0, 25, 50, 75, 100].forEach(function (m) {
+      const y = Y(m);
+      svg.appendChild(svgEl('line', {
+        x1: padL, x2: W - padR, y1: y, y2: y,
+        class: m === 100 ? 'chart-goal' : 'chart-grid'
+      }));
+      svg.appendChild(svgText('text', padL - 6, y + 3, String(m), {
+        'text-anchor': 'end', class: 'chart-axis'
+      }));
     });
-    // 日期横坐标
-    svg.appendChild(svgText('text', padL, H - 5, fmtDayMs(minT)));
-    svg.appendChild(svgText('text', W - padR, H - 5, fmtDayMs(maxT), { 'text-anchor': 'end' }));
+
+    // 面积填充
+    const areaD = 'M ' + X(hist[0].t) + ' ' + Y(0) +
+      ' L ' + hist.map(function (p) { return X(p.t) + ' ' + Y(p.m); }).join(' L ') +
+      ' L ' + X(maxT) + ' ' + Y(0) + ' Z';
+    svg.appendChild(svgEl('path', { d: areaD, class: 'chart-area' }));
+
+    // 折线
+    const pts = hist.map(function (p) { return X(p.t) + ',' + Y(p.m); }).join(' ');
+    svg.appendChild(svgEl('polyline', { points: pts, class: 'chart-line' }));
+
+    // 数据点
+    hist.forEach(function (p, i) {
+      const isLast = i === hist.length - 1;
+      const cEl = svgEl('circle', {
+        cx: X(p.t), cy: Y(p.m), r: isLast ? 4 : 3,
+        class: isLast ? 'chart-dot chart-dot-last' : 'chart-dot'
+      });
+      const tt = svgEl('title', {});
+      tt.textContent = fmtDayMs(p.t) + ' · 掌握度 ' + p.m + '%';
+      cEl.appendChild(tt);
+      svg.appendChild(cEl);
+    });
+
+    // 横轴日期
+    svg.appendChild(svgText('text', padL, H - 6, fmtDayMs(minT), { class: 'chart-axis' }));
+    svg.appendChild(svgText('text', W - padR, H - 6, fmtDayMs(maxT), {
+      'text-anchor': 'end', class: 'chart-axis'
+    }));
     wrap.appendChild(svg);
     return wrap;
   }
@@ -327,21 +367,22 @@
   //   因 R(S,S)=0.9，S 目标数值即「距目标天数」，直观合理（不再用半衰期 h=90·S，避免 120 天目标被显示成 1 万多天）。
   // 关「挂钩」：回退到用户手动填的固定目标稳定度（默认 90 天）。
   function targetS() {
-    const manual = (DB && DB.settings && typeof DB.settings.targetS === 'number') ? DB.settings.targetS : TARGET_S_DEFAULT;
-    if (!targetLinked()) return manual;
+    const manual = prefGet('targetS');
+    const m = (typeof manual === 'number' && isFinite(manual)) ? manual : TARGET_S_DEFAULT;
+    if (!targetLinked()) return m;
     const days = countdownDays();
-    if (days == null) return manual;
+    if (days == null) return m;
     return Math.max(TARGET_MIN_DAYS, days);
   }
   // 是否与目标倒计时挂钩（用于记忆框/设置页文案）
-  function targetLinked() { return !(DB && DB.settings && DB.settings.targetLinkExam === false) && countdownDays() != null; }
+  function targetLinked() { return prefGet('targetLinkExam') !== false && countdownDays() != null; }
   // 期望保留率（FSRS 安排间隔的目标保留率）：设置可调 0.80–0.98，默认 0.90（官方默认工作点）。
   // 只影响间隔计算（下次复习排多远），不影响毕业判据与掌握度。
   function desiredRetention() {
-    const v = DB && DB.settings && DB.settings.fdr;
+    const v = prefGet('fdr');
     return (typeof v === 'number' && v >= 0.8 && v <= 0.98) ? v : 0.9;
   }
-  function bareRecallOn() { return !!(DB && DB.settings && DB.settings.bareRecall); }
+  function bareRecallOn() { return !!prefGet('bareRecall'); }
   function isGraduated(c) { return c.state === 'review' && (typeof c.stab === 'number' ? c.stab : 0) >= targetS(); }
 
   // 学习计时：应用前台可见期间按天累计时长（DB.log.studyTime['yyyy-mm-dd'] = 毫秒）。
@@ -463,7 +504,7 @@
 
   // ---------------- 视图状态 ----------------
   let currentView = 'learn';
-  let currentModule = 'cards'; // 一级界面：cards(知识卡) | wrong(错题本)
+  let currentModule = 'cards'; // 一级界面：cards(知识卡) | wrong(错题本) | act(行动)
   let deck = [];
   let pos = 0;
   let frontier = 0;
@@ -522,18 +563,61 @@
     t._timer = setTimeout(function () { t.classList.remove('show'); }, 1800);
   }
 
+  // ---------------- 应用壳（V2_PLAN §1.3）----------------
+  // 一级模块：主页/学习/错题/行动/统计/原理/设置。桌面左侧栏 + 移动 Dock。
+  const SHELL_NAV = [
+    { id: 'home', label: '主页', icon: 'home', action: 'nav', arg: 'home' },
+    { id: 'cards', label: '学习', icon: 'deck', action: 'module', arg: 'cards' },
+    { id: 'wrong', label: '错题', icon: 'wrong', action: 'module', arg: 'wrong' },
+    { id: 'act', label: '行动', icon: 'act', action: 'module', arg: 'act', accent: '2' },
+    { id: 'mile', label: '里程碑', icon: 'mile', action: 'nav', arg: 'mile', accent: '2' },
+    { id: 'stats', label: '统计', icon: 'chart', action: 'nav', arg: 'statistics' },
+    { id: 'principle', label: '原理', icon: 'cap', action: 'nav', arg: 'principle' },
+    { id: 'settings', label: '设置', icon: 'sliders', action: 'nav', arg: 'settings' }
+  ];
+
+  // 由 currentView/currentModule 推导壳层高亮项（统计/设置/原理/主页用 view 判定）
+  function shellModuleId() {
+    if (currentView === 'home') return 'home';
+    if (currentView === 'settings') return 'settings';
+    if (currentView === 'statistics') return 'stats';
+    if (currentView === 'principle') return 'principle';
+    if (currentView === 'mile') return 'mile';
+    if (currentModule === 'wrong') return 'wrong';
+    if (currentModule === 'act') return 'act';
+    return 'cards';
+  }
+
+  function highlightShell() {
+    const id = shellModuleId();
+    document.querySelectorAll('[data-shell]').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-shell') === id);
+    });
+  }
+
   // 渲染二级导航（随一级界面切换）；吸顶定位紧贴 sticky header 下方，
   // 并把「header+subnav」总高写入 CSS 变量 --chrome-h（原理页目录等使用）
   function renderSubnav() {
     const sub = document.getElementById('subnav');
     if (!sub) return;
     sub.innerHTML = '';
+    // 主页/设置/原理/里程碑无二级导航（里程碑筛选在页内）
+    if (currentView === 'home' || currentView === 'settings' || currentView === 'principle' || currentView === 'mile') {
+      sub.style.top = '0px';
+      document.documentElement.style.setProperty('--chrome-h', '0px');
+      highlightShell();
+      return;
+    }
     const items = currentModule === 'wrong'
       ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
-      : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计'], ['help', '帮助']];
+      : currentModule === 'act'
+        ? [['actPlan', '计划'], ['actHabit', '习惯树'], ['actFocus', '专注链'], ['actHelp', '帮助']]
+        : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计'], ['help', '帮助']];
     const icons = currentModule === 'wrong'
       ? { wrong: 'wrong', wrongBrowse: 'search', wrongStats: 'chart' }
-      : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart', help: 'help' };
+      : currentModule === 'act'
+        ? { actPlan: 'act', actHabit: 'habit', actFocus: 'act', actHelp: 'help' }
+        : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart', help: 'help' };
     items.forEach(function (it) {
       const b = el('button', 'nav-btn sub-btn' + (currentView === it[0] ? ' active' : ''));
       b.appendChild(icon(icons[it[0]]));
@@ -546,31 +630,29 @@
     const headerH = header ? header.offsetHeight : 0;
     sub.style.top = headerH + 'px';
     document.documentElement.style.setProperty('--chrome-h', (headerH + sub.offsetHeight) + 'px');
+    highlightShell();
   }
 
-  // 移动端底部 Dock：主页 + 两个一级模块；二级导航（学习/浏览等）在顶栏下方 subnav 横滑条
+  // 移动端底部 Dock：V2_PLAN 四项（主页/学习/错题/行动）；统计与设置在抽屉
   function renderDock() {
     const dock = document.getElementById('dock');
     if (!dock) return;
     dock.innerHTML = '';
-    const home = el('button', 'dock-btn' + (currentView === 'home' ? ' active' : ''));
-    home.appendChild(icon('home'));
-    home.appendChild(document.createTextNode('主页'));
-    home.setAttribute('data-action', 'nav');
-    home.setAttribute('data-arg', 'home');
-    dock.appendChild(home);
-    [['cards', 'deck', '知识卡'], ['wrong', 'wrong', '错题本']].forEach(function (m) {
-      const b = el('button', 'dock-btn' + (currentView !== 'home' && currentModule === m[0] ? ' active' : ''));
-      b.appendChild(icon(m[1]));
-      b.appendChild(document.createTextNode(m[2]));
-      b.setAttribute('data-action', 'module');
-      b.setAttribute('data-arg', m[0]);
+    const shellId = shellModuleId();
+    [SHELL_NAV[0], SHELL_NAV[1], SHELL_NAV[2], SHELL_NAV[3]].forEach(function (m) {
+      const b = el('button', 'dock-btn' + (shellId === m.id ? ' active' : ''));
+      b.appendChild(icon(m.icon));
+      b.appendChild(document.createTextNode(m.label));
+      b.setAttribute('data-action', m.action);
+      b.setAttribute('data-arg', m.arg);
+      if (m.accent) b.setAttribute('data-accent', m.accent);
       dock.appendChild(b);
     });
     // 实测 Dock 高度写入 CSS 变量：吸附评分栏贴着 Dock 顶对齐（无缝、不留缝、不遮挡）
     requestAnimationFrame(function () {
       document.documentElement.style.setProperty('--dock-h', dock.offsetHeight + 'px');
     });
+    highlightShell();
   }
 
   function renderApp() {

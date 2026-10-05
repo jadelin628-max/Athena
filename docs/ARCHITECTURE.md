@@ -20,16 +20,19 @@ flowchart LR
   subgraph 运行时
     A --> ST["store: localStorage 主\nIndexedDB 备份"]
     A --> UI["home/learn/wrong/\nbrowse/quiz/stats/map/settings"]
+    A --> ACT["act.mjs + habit.mjs + focus.mjs\n行动：计划/习惯树/专注链"]
     A --> SY["sync.mjs\nGitHub 私仓"]
     A --> R["render.mjs + KaTeX"]
   end
   D --> UI
   ST <--> SY
+  ACT --> UI
 ```
 
 - **零 npm 运行时依赖**：浏览器直接加载 `index.html` → `data/*.js` → `app.js`。
 - **源码拼接**：`src/*.mjs` 不是 ESM 运行单元，而是 IIFE 内片段；带 `export` 的纯函数模块在拼接时剥离 `export` 行（见 `tools/build.mjs` 的 `stripExports`），以便 `tests/*.mjs` 以 ESM 方式单独 import 对拍。
 - **生成物**：`app.js`、`CHANGELOG.md`、`dist/` 不可手改。
+- **行动模块规格**：`docs/ACT.md`（WOOP 主干计划 / 习惯树 / 专注链 / 过程反馈红线）。
 
 ## `src/` 拼接顺序（`tools/build.mjs` `ORDER`）
 
@@ -48,14 +51,17 @@ flowchart LR
 | 11 | `quiz.mjs` | **帮助 + 浏览列表 + 自测**（易误导）：`renderHelp` / `renderBrowse` / `renderQuiz` |
 | 12 | `settings.mjs` | 设置、初学者章节、更新日志 UI |
 | 13 | `stats.mjs` | 统计、负载预测、考试日展望（export） |
-| 14 | `map.mjs` | 原理页 + 知识图谱 |
-| 15 | `home.mjs` | 主页 KPI、学科网格、每日一句 |
+| 14 | `map.mjs` | 原理页（学习科学 + 认知科学）+ 知识图谱 |
+| 15 | `home.mjs` | **Today 主页**：双栏（左今日复习 due / 右习惯·专注摘要）、里程碑 1 条、快捷入口、学科网格、每日精选 |
 | 16 | `sync.mjs` | GitHub 云同步合并 `mergeDb`/`runSync`（export） |
-| 17 | `actions.mjs` | 事件总线 `handleAction`、主题/抽屉/学科下拉、导入导出、`initApp`；键盘刷卡：Space/Enter 显示答案、1-4 评分、←/→ 切卡（learn→goback/gofront，wrong→wgoback/wgofront，输入框焦点不触发） |
+| 17 | `act.mjs` | **行动·计划**：WOOP 主干（P=如果-那么，外部提示并入障碍）、RSIP 设计手册帮助（export 纯校验可测） |
+| 18 | `habit.mjs` | **行动·习惯树**：RSIP 层级/每日检查/组 minK/内化/强化（export `evaluateHabitDay` 等） |
+| 19 | `focus.mjs` | **行动·专注链**：CTDP 神圣座位 `#N`/下必为例/预约 15 分/侦查/继位（export 纯函数） |
+| 20 | `actions.mjs` | 事件总线 `handleAction`、主题/抽屉/学科下拉、导入导出、`initApp`；键盘刷卡：Space/Enter 显示答案、1-4 评分、←/→ 切卡（learn→goback/gofront，wrong→wgoback/wgofront，输入框焦点不触发） |
 
 **文件名 ≠ 职责**（历史命名）：改知识卡学习 UI 去 `browse.mjs`；改掌握度/评分入口/应用壳层去 `learn.mjs`；改浏览列表或帮助或自测去 `quiz.mjs`。找错文件是本仓最常见的浪费。
 
-`stripExports`（拼接时去掉 `export`，便于 tests 以 ESM 导入）：`fsrs-core` `interleave` `sched` `wrong` `sync` `stats`。
+`stripExports`（拼接时去掉 `export`，便于 tests 以 ESM 导入）：`fsrs-core` `interleave` `sched` `wrong` `sync` `stats` `act` `habit` `focus`。
 
 改顺序或增删模块时，必须同步：`tools/build.mjs` `ORDER`、`stripExports` 列表（若需测试导出）、以及本文表格。
 
@@ -73,6 +79,11 @@ flowchart LR
 | `<subjId>_formula_srs_v1` | 该科学习库 DB（主存 localStorage） |
 | `<subjId>_formula_session_v2` | 学习会话（队列游标等） |
 | `ms3_formula_theme` | 明暗主题 |
+| `athena_act_v1` | 行动·计划 + 习惯节点（WOOP / habits；旧 ifThen/envAudit 丢弃；见 `ACT.md`；**独立于学习库**） |
+| `athena_habit_groups_v1` | 习惯树组配置（minK 等；与学习库、act 隔离，避免被 `actSanitize` 剥掉） |
+| `athena_focus_v1` | 专注链 CTDP 状态（链/判例/预约；与学习库及 `athena_act_v1` 隔离） |
+
+**键隔离红线**：`athena_act_v1` / `athena_habit_groups_v1` / `athena_focus_v1` 一律**不得**写入 `*_formula_srs_v1`（云同步、导入导出亦只认学习库键）。
 
 IndexedDB `kv` 作为同 key 备份；加载时 `localStorage` 优先，缺失则回退 IDB。写入走 `saveDB` → 100ms 合并 `flushSave`。规范化（`normalizeDB`）会补默认字段、拒收 NaN、修远期 due、删孤儿卡，并以 `saveDB(true)` 回写（**不**刷新 `updatedAt`，避免污染云同步新旧判断）。
 

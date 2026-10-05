@@ -222,6 +222,242 @@
     return (j.private === true) ? '验证成功：私有仓库 ✓' : '验证成功，但这是公开仓库——学习数据对外可见，强烈建议改用私有仓库！';
   }
 
+  // —— 行动模块合并（H4）：athena_act_v1 / athena_habit_groups_v1 / athena_focus_v1 ——
+  // 规则：节点 id+updatedAt 取新；习惯 doneDates（日志）与专注判例并集；组并集冲突本地优先；
+  // 设置本地优先。绝不写入 *_formula_srs_v1，也不刷新其 updatedAt。
+  const ACT_SYNC_PATH = SYNC_DIR + '/data/_act.json';
+  const ACT_DATA_KEYS = ['athena_act_v1', 'athena_habit_groups_v1', 'athena_focus_v1'];
+
+  function mergeNodesByIdUpdatedAt(a, b, extra) {
+    const map = {};
+    const order = [];
+    [].concat(Array.isArray(a) ? a : [], Array.isArray(b) ? b : []).forEach(function (n) {
+      if (!n || typeof n !== 'object' || n.id == null || n.id === '') return;
+      const id = String(n.id);
+      if (map[id] == null) {
+        map[id] = n;
+        order.push(id);
+        return;
+      }
+      const prev = map[id];
+      const prevUp = Number(prev.updatedAt) || 0;
+      const curUp = Number(n.updatedAt) || 0;
+      let winner = curUp > prevUp ? n : prev;
+      if (extra) {
+        const merged = extra(prev, n, winner);
+        if (merged) winner = merged;
+      }
+      map[id] = winner;
+    });
+    return order.map(function (id) { return map[id]; });
+  }
+
+  function mergeDoneDates(a, b) {
+    const seen = {};
+    const out = [];
+    [].concat(Array.isArray(a) ? a : [], Array.isArray(b) ? b : []).forEach(function (d) {
+      const s = String(d == null ? '' : d);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s) && !seen[s]) { seen[s] = 1; out.push(s); }
+    });
+    out.sort();
+    return out;
+  }
+
+  function mergeActModule(local, remote) {
+    const L = (local && typeof local === 'object') ? local : {};
+    const R = (remote && typeof remote === 'object') ? remote : {};
+    const la = (L.act && typeof L.act === 'object') ? L.act : {};
+    const ra = (R.act && typeof R.act === 'object') ? R.act : {};
+    let changed = false;
+
+    const habitExtra = function (prev, cur, winner) {
+      const dates = mergeDoneDates(prev.doneDates, cur.doneDates);
+      const w = Object.assign({}, winner);
+      w.doneDates = dates;
+      return w;
+    };
+    // 计划主干 = WOOP（旧 ifThen / envAudit 不参与合并，加载时丢弃）
+    const woops = mergeNodesByIdUpdatedAt(la.woops, ra.woops);
+    const habits = mergeNodesByIdUpdatedAt(la.habits, ra.habits, habitExtra);
+
+    // 独有节点 → 云端带来了本机没有的内容
+    const countIds = function (arr) { const s = {}; (arr || []).forEach(function (n) { if (n && n.id != null) s[String(n.id)] = 1; }); return s; };
+    const localWo = countIds(la.woops), remoteWo = countIds(ra.woops);
+    const localHa = countIds(la.habits), remoteHa = countIds(ra.habits);
+    Object.keys(remoteWo).forEach(function (id) { if (!localWo[id]) changed = true; });
+    Object.keys(remoteHa).forEach(function (id) { if (!localHa[id]) changed = true; });
+
+    // 习惯组：并集，同 id 冲突本地优先（低频配置）
+    const groupMap = {};
+    const groupOrder = [];
+    [].concat(Array.isArray(R.habitGroups) ? R.habitGroups : [], Array.isArray(L.habitGroups) ? L.habitGroups : [])
+      .forEach(function (g) {
+        if (!g || typeof g !== 'object' || g.id == null || g.id === '') return;
+        const id = String(g.id);
+        if (groupMap[id] == null) {
+          groupMap[id] = g;
+          groupOrder.push(id);
+          if (!Array.isArray(L.habitGroups) || !L.habitGroups.some(function (x) { return x && String(x.id) === id; })) changed = true;
+        }
+        // 后写覆盖：L 在后 → 本地优先
+        else groupMap[id] = g;
+      });
+    const habitGroups = groupOrder.map(function (id) { return groupMap[id]; });
+
+    // 专注：链/单元/编制/计划 id+updatedAt 取新；判例并集；activeId 本地优先（须落在合并结果上）
+    const lf = (L.focus && typeof L.focus === 'object') ? L.focus : {};
+    const rf = (R.focus && typeof R.focus === 'object') ? R.focus : {};
+    const chains = mergeNodesByIdUpdatedAt(lf.chains, rf.chains);
+    const units = mergeNodesByIdUpdatedAt(lf.units, rf.units);
+    const orgs = mergeNodesByIdUpdatedAt(lf.orgs, rf.orgs);
+    const plans = mergeNodesByIdUpdatedAt(lf.plans, rf.plans);
+    const chainIds = {};
+    chains.forEach(function (c) { if (c && c.id != null) chainIds[String(c.id)] = 1; });
+    const localChainIds = countIds(lf.chains);
+    (Array.isArray(rf.chains) ? rf.chains : []).forEach(function (c) {
+      if (c && c.id != null && !localChainIds[String(c.id)]) changed = true;
+    });
+    ['units', 'orgs', 'plans'].forEach(function (key) {
+      const li = countIds(lf[key]);
+      (Array.isArray(rf[key]) ? rf[key] : []).forEach(function (n) {
+        if (n && n.id != null && !li[String(n.id)]) changed = true;
+      });
+    });
+    const precMap = {};
+    const precOrder = [];
+    [].concat(Array.isArray(rf.precedents) ? rf.precedents : [], Array.isArray(lf.precedents) ? lf.precedents : [])
+      .forEach(function (p) {
+        if (!p || typeof p !== 'object' || p.id == null || p.id === '') return;
+        const id = String(p.id);
+        if (precMap[id] == null) {
+          precMap[id] = p;
+          precOrder.push(id);
+          if (!Array.isArray(lf.precedents) || !lf.precedents.some(function (x) { return x && String(x.id) === id; })) changed = true;
+        } else precMap[id] = p; // 本地在后 → 优先
+      });
+    const precedents = precOrder.map(function (id) { return precMap[id]; });
+
+    let activeId = lf.activeId == null || lf.activeId === '' ? null : String(lf.activeId);
+    if (!activeId || !chainIds[activeId]) {
+      const rid = rf.activeId == null || rf.activeId === '' ? null : String(rf.activeId);
+      if (rid && chainIds[rid]) { activeId = rid; changed = true; }
+      else activeId = chains[0] ? String(chains[0].id) : null;
+    }
+
+    // 番号流水取各字段 max（永不重排/不回收）
+    const seq = {};
+    ['unit', 'group', 'corps', 'army'].forEach(function (k) {
+      seq[k] = Math.max(Number(lf.seq && lf.seq[k]) || 0, Number(rf.seq && rf.seq[k]) || 0);
+    });
+
+    // 设置本地优先（与学习库设置策略一致）
+    const settings = (L.settings && typeof L.settings === 'object') ? L.settings
+      : ((R.settings && typeof R.settings === 'object') ? R.settings : null);
+
+    const out = {
+      updatedAt: Math.max(Number(L.updatedAt) || 0, Number(R.updatedAt) || 0),
+      act: { woops: woops, habits: habits },
+      habitGroups: habitGroups,
+      focus: {
+        chains: chains,
+        precedents: precedents,
+        activeId: activeId,
+        units: units,
+        orgs: orgs,
+        plans: plans,
+        seq: seq
+      },
+      settings: settings
+    };
+    Object.defineProperty(out, '__changedFromRemote', { value: changed, enumerable: false });
+    return out;
+  }
+
+  function actModuleLocalPayload() {
+    const read = function (k) {
+      try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; }
+    };
+    return {
+      updatedAt: Date.now(),
+      act: read('athena_act_v1') || { woops: [], habits: [] },
+      habitGroups: read('athena_habit_groups_v1') || [],
+      focus: read('athena_focus_v1') || { chains: [], precedents: [], activeId: null },
+      settings: read('athena_act_cfg_v1') || null
+    };
+  }
+
+  function actModuleWriteLocal(payload) {
+    const p = (payload && typeof payload === 'object') ? payload : {};
+    const write = function (k, v) {
+      try {
+        if (v == null) localStorage.removeItem(k);
+        else localStorage.setItem(k, JSON.stringify(v));
+      } catch (e) { warnStorageFailure(); }
+    };
+    // 只写行动键 + 行动设置；绝不触碰 *_formula_srs_v1 及其 updatedAt
+    write('athena_act_v1', p.act || { woops: [], habits: [] });
+    write('athena_habit_groups_v1', Array.isArray(p.habitGroups) ? p.habitGroups : []);
+    write('athena_focus_v1', p.focus || { chains: [], precedents: [], activeId: null });
+    if (p.settings && typeof p.settings === 'object') write('athena_act_cfg_v1', p.settings);
+    if (typeof window !== 'undefined') {
+      window.__actData = p.act || { woops: [], habits: [] };
+      window.__habitGroups = Array.isArray(p.habitGroups) ? p.habitGroups : [];
+      window.__focusData = p.focus || { chains: [], precedents: [], activeId: null };
+      if (p.settings) window.__habitCfg = p.settings;
+    }
+    return true;
+  }
+
+  async function syncActModule() {
+    const local = actModuleLocalPayload();
+    const seenUp = syncLastUp('_act');
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const remote = await ghGetJson(ACT_SYNC_PATH);
+        const remoteUp = (remote && remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0;
+        if (!remote) {
+          try {
+            await ghPutJson(ACT_SYNC_PATH, local);
+            syncSetLastUp('_act', local.updatedAt || Date.now());
+            return { action: 'push' };
+          } catch (err) {
+            if (isShaConflict(err)) { lastErr = err; continue; }
+            throw err;
+          }
+        }
+        const merged = mergeActModule(local, remote.data);
+        const changedFromRemote = merged.__changedFromRemote === true;
+        const mergedUp = (typeof merged.updatedAt === 'number') ? merged.updatedAt : 0;
+        const cloudDiverged = remoteUp > seenUp + SYNC_TOLERANCE_MS;
+        let action = 'skip';
+        if (changedFromRemote) {
+          if (cloudDiverged) await ghPutJson(SYNC_DIR + '/archive/_act/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json', local);
+          actModuleWriteLocal(merged);
+          action = 'pull';
+        }
+        if (mergedUp > remoteUp + SYNC_TOLERANCE_MS || (changedFromRemote && mergedUp >= remoteUp)) {
+          if (remote && cloudDiverged) {
+            await ghPutJson(SYNC_DIR + '/archive/_act/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json', remote.data, remote.sha);
+          }
+          try {
+            await ghPutJson(ACT_SYNC_PATH, merged, remote.sha);
+          } catch (err) {
+            if (isShaConflict(err)) { lastErr = err; continue; }
+            throw err;
+          }
+          action = changedFromRemote ? 'merge' : 'push';
+        }
+        syncSetLastUp('_act', Math.max(remoteUp, mergedUp));
+        return { action: action };
+      } catch (err) {
+        if (isShaConflict(err)) { lastErr = err; continue; }
+        throw err;
+      }
+    }
+    throw new Error('云端正在被其他设备更新，重试 3 次未成功（' + (lastErr && lastErr.message ? lastErr.message : '') + '）');
+  }
+
   // 本地某学科的 DB 对象：当前学科取内存 DB，其他学科读 localStorage 快照
   function syncLocalDb(sid) {
     if (sid === currentSubjectId && DB) return DB;
@@ -370,6 +606,16 @@
         summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
       }
     }
+    // 行动模块（习惯/计划/专注）：独立文件，不触碰 *_formula_srs_v1 的 updatedAt
+    try {
+      const actRes = await syncActModule();
+      if (actRes.action === 'push') summary.cloud.push('_act');
+      else if (actRes.action === 'pull') summary.local.push('_act');
+      else if (actRes.action === 'merge') summary.both.push('_act');
+      else summary.skipped.push('_act');
+    } catch (err) {
+      summary.failed.push('行动模块：' + (err && err.message ? err.message : '未知错误'));
+    }
     const cfg = syncCfg();
     cfg.lastSyncAt = Date.now();
     cfg.lastSyncSummary = { cloud: summary.cloud.length, local: summary.local.length, both: summary.both.length, failed: summary.failed.length };
@@ -442,6 +688,39 @@
     saveSyncCfg(cfg);
   }
 
+  // 行动模块单向覆盖（完全上传/下载共用）
+  async function forceUploadAct() {
+    const local = actModuleLocalPayload();
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const remote = await ghGetJson(ACT_SYNC_PATH);
+        if (remote && remote.data) {
+          await ghPutJson(SYNC_DIR + '/archive/_act/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json', remote.data);
+        }
+        await ghPutJson(ACT_SYNC_PATH, local, remote ? remote.sha : undefined);
+        syncSetLastUp('_act', local.updatedAt || Date.now());
+        return { action: 'upload' };
+      } catch (err) {
+        if (isShaConflict(err)) { lastErr = err; continue; }
+        throw err;
+      }
+    }
+    throw new Error('云端正在被其他设备更新，重试 3 次未成功（' + (lastErr && lastErr.message ? lastErr.message : '') + '）');
+  }
+
+  async function forceDownloadAct() {
+    const remote = await ghGetJson(ACT_SYNC_PATH);
+    if (!remote || !remote.data) return { action: 'skip' };
+    const local = actModuleLocalPayload();
+    try {
+      await ghPutJson(SYNC_DIR + '/archive/_act/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json', local);
+    } catch (e) { /* 归档失败不阻断下载 */ }
+    actModuleWriteLocal(remote.data);
+    syncSetLastUp('_act', (remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0);
+    return { action: 'download' };
+  }
+
   // 完全上传：本机 → 云端（单向覆盖）。返回 { ok, skipped, failed }
   async function doForceUploadAll() {
     settleLocalSave();
@@ -455,6 +734,13 @@
       } catch (err) {
         summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
       }
+    }
+    try {
+      const ares = await forceUploadAct();
+      if (ares.action === 'upload') summary.ok.push('_act');
+      else summary.skipped.push('_act');
+    } catch (err) {
+      summary.failed.push('行动模块：' + (err && err.message ? err.message : '未知错误'));
     }
     recordForceSummary('upload', summary);
     for (const sid of sids) { await pruneArchives(sid); }
@@ -474,6 +760,13 @@
       } catch (err) {
         summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
       }
+    }
+    try {
+      const ares = await forceDownloadAct();
+      if (ares.action === 'download') summary.ok.push('_act');
+      else summary.skipped.push('_act');
+    } catch (err) {
+      summary.failed.push('行动模块：' + (err && err.message ? err.message : '未知错误'));
     }
     recordForceSummary('download', summary);
     // 当前学科被云端覆盖：重载内存 DB、重建学习队列并刷新界面（与 doRunSync 一致）
@@ -515,4 +808,4 @@
     }).catch(function () {});
   }
 
-export { b64encodeUtf8, b64decodeUtf8, mergeDb, runSync, forceUploadAll, forceDownloadAll, syncReady, syncConfigured, syncCfg, saveSyncCfg, syncValidate, autoSyncOnLaunch };
+export { b64encodeUtf8, b64decodeUtf8, mergeDb, mergeActModule, mergeNodesByIdUpdatedAt, runSync, forceUploadAll, forceDownloadAll, syncReady, syncConfigured, syncCfg, saveSyncCfg, syncValidate, autoSyncOnLaunch };

@@ -186,8 +186,104 @@
     }).catch(function () {});
   }
 
+  // ===== BEGIN TESTABLE pref scope helpers =====
+  // 学习偏好作用域：可重叠项支持「本课 | 全局」二选一。
+  // 全局值存 athena_global_prefs_v1（跨科共享）；本课值存各科 DB.settings。
+  // 作用域标记存 DB.settings.prefScope（每科独立选择跟全局还是用本课值）。
+  const GLOBAL_PREFS_KEY = 'athena_global_prefs_v1';
+  const PREF_OVERLAP_KEYS = ['goalTitle', 'examDate', 'dailyNew', 'fdr', 'bareRecall', 'targetS', 'targetLinkExam'];
+
+  function prefDefaults() {
+    return {
+      goalTitle: GOAL_DEFAULT,
+      examDate: '',
+      dailyNew: 10,
+      fdr: 0.9,
+      bareRecall: false,
+      targetS: TARGET_S_DEFAULT,
+      targetLinkExam: true
+    };
+  }
+
+  function prefSanitizeGlobal(raw) {
+    const d = prefDefaults();
+    const r = (raw && typeof raw === 'object') ? raw : {};
+    return {
+      goalTitle: (typeof r.goalTitle === 'string' && r.goalTitle.trim()) ? r.goalTitle.trim().slice(0, 10) : d.goalTitle,
+      examDate: (typeof r.examDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.examDate)) ? r.examDate : '',
+      dailyNew: (typeof r.dailyNew === 'number' && isFinite(r.dailyNew)) ? Math.max(0, Math.min(99, Math.round(r.dailyNew))) : d.dailyNew,
+      fdr: (typeof r.fdr === 'number' && r.fdr >= 0.8 && r.fdr <= 0.98) ? r.fdr : d.fdr,
+      bareRecall: r.bareRecall == null ? d.bareRecall : !!r.bareRecall,
+      targetS: (typeof r.targetS === 'number' && isFinite(r.targetS)) ? Math.max(7, Math.min(730, Math.round(r.targetS))) : d.targetS,
+      targetLinkExam: r.targetLinkExam == null ? d.targetLinkExam : !!r.targetLinkExam
+    };
+  }
+
+  // 作用域：global = 用全局值；subject/缺省 = 用本课值
+  function prefResolveScope(scopeMap, key) {
+    return (scopeMap && scopeMap[key] === 'global') ? 'global' : 'subject';
+  }
+
+  // 有效值：global 取全局；subject 取本课（本课缺失时回退全局再回退默认，便于新科继承）
+  function prefResolveValue(key, subjectVal, globalVal, scopeMap) {
+    const d = prefDefaults();
+    const scope = prefResolveScope(scopeMap, key);
+    const g = (globalVal == null) ? d[key] : globalVal;
+    if (scope === 'global') return g;
+    if (subjectVal == null) return g;
+    return subjectVal;
+  }
+  // ===== END TESTABLE pref scope helpers =====
+
+  function loadGlobalPrefs() {
+    if (typeof window !== 'undefined' && window.__globalPrefs) {
+      return prefSanitizeGlobal(window.__globalPrefs);
+    }
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(GLOBAL_PREFS_KEY)); } catch (e) {}
+    const p = prefSanitizeGlobal(raw);
+    if (typeof window !== 'undefined') window.__globalPrefs = p;
+    return p;
+  }
+
+  function saveGlobalPrefs(patch) {
+    const next = prefSanitizeGlobal(Object.assign({}, loadGlobalPrefs(), patch || {}));
+    if (typeof window !== 'undefined') window.__globalPrefs = next;
+    try { localStorage.setItem(GLOBAL_PREFS_KEY, JSON.stringify(next)); } catch (e) {}
+    return next;
+  }
+
+  function prefScope(key) {
+    return prefResolveScope(DB && DB.settings && DB.settings.prefScope, key);
+  }
+
+  function prefGet(key) {
+    const g = loadGlobalPrefs();
+    const s = DB && DB.settings ? DB.settings[key] : null;
+    return prefResolveValue(key, s, g[key], DB && DB.settings && DB.settings.prefScope);
+  }
+
+  // scope: 'global' | 'subject'；写入对应位置并更新本课作用域标记
+  function prefSet(key, value, scope) {
+    if (PREF_OVERLAP_KEYS.indexOf(key) < 0) return null;
+    const sc = scope === 'global' ? 'global' : 'subject';
+    if (!DB || !DB.settings) return null;
+    if (!DB.settings.prefScope || typeof DB.settings.prefScope !== 'object') DB.settings.prefScope = {};
+    DB.settings.prefScope[key] = sc;
+    if (sc === 'global') {
+      saveGlobalPrefs((function () { const o = {}; o[key] = value; return o; })());
+    } else {
+      DB.settings[key] = value;
+    }
+    return prefGet(key);
+  }
+
   function normalizeDB(raw) {
     DB = (raw && typeof raw === 'object') ? raw : { cards: {}, settings: {}, log: {} };
+    // 防污染：行动/专注/组配置/行动设置键绝不进学习库（见 ARCHITECTURE 存储表；组/专注/设置键独立）
+    ['habits', 'ifThen', 'woops', 'envAudit', 'habitGroups', 'groups', 'chains', 'precedents', 'focusState', 'act', 'focus', 'actSettings'].forEach(function (k) {
+      if (DB[k] != null) delete DB[k];
+    });
     // 整体 schema 版本号：为将来大迁移留钩子（旧数据无此字段，一律补为当前版本 1）
     if (DB.schemaVersion == null) DB.schemaVersion = 1;
     if (!DB.cards) DB.cards = {};
@@ -201,6 +297,7 @@
     if (DB.settings.fdr == null) DB.settings.fdr = 0.9; // 期望保留率（FSRS 间隔目标，设置可调 0.80–0.98）
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
+    if (!DB.settings.prefScope || typeof DB.settings.prefScope !== 'object') DB.settings.prefScope = {};
     // 初学者模式自愈：cats 必须与当前科 CATS 对齐——
     // 教材化整科重置改过 catKey、或 cats 混入他科/旧键时，过滤集合会全挡或全放。
     // 解析时丢弃非法键并回退推荐起步章；写回 sid 供下次切科识别跨科残留。

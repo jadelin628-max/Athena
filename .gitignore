@@ -9,6 +9,7 @@ desktop.ini
 
 # AI 助手会话目录
 .zcode/
+.agent-teams/
 
 # 临时与备份文件（含 app.js.bak.xxx、data/xxx.js.bak.xxx 等）
 *.bak

@@ -222,11 +222,12 @@
     return (j.private === true) ? '验证成功：私有仓库 ✓' : '验证成功，但这是公开仓库——学习数据对外可见，强烈建议改用私有仓库！';
   }
 
-  // —— 行动模块合并（H4）：athena_act_v1 / athena_habit_groups_v1 / athena_focus_v1 ——
+  // —— 行动模块合并（H4）：athena_act_v1 / athena_habit_groups_v1 / athena_focus_v1 / athena_mile_v1 ——
   // 规则：节点 id+updatedAt 取新；习惯 doneDates（日志）与专注判例并集；组并集冲突本地优先；
-  // 设置本地优先。绝不写入 *_formula_srs_v1，也不刷新其 updatedAt。
+  // 里程碑 Hit 并集（defId 去重、同 defId 取 at 较新）；设置本地优先。
+  // 绝不写入 *_formula_srs_v1，也不刷新其 updatedAt。
   const ACT_SYNC_PATH = SYNC_DIR + '/data/_act.json';
-  const ACT_DATA_KEYS = ['athena_act_v1', 'athena_habit_groups_v1', 'athena_focus_v1'];
+  const ACT_DATA_KEYS = ['athena_act_v1', 'athena_habit_groups_v1', 'athena_focus_v1', 'athena_mile_v1'];
 
   function mergeNodesByIdUpdatedAt(a, b, extra) {
     const map = {};
@@ -261,6 +262,70 @@
     });
     out.sort();
     return out;
+  }
+
+  // —— 里程碑（athena_mile_v1）——
+  // Hit 形状照 mile.mjs 的 mileNormalize 输出：{ id, defId, at, note }；Def 是代码常量（含谓词），不进云端。
+  // 本文件在 app.js 里与 mile.mjs 同作用域（拼接进同一 IIFE），运行时优先复用 mile.mjs 的
+  // mileLoad / mileSave / mileNormalizeHit（含 defId 白名单校验）；`tests/sync.test.mjs` 单独 import
+  // 本文件时这些函数不在作用域，故用等价的最小形状校验兜底——不臆造字段。
+  function mileSyncKey() {
+    return (typeof MILE_KEY === 'string' && MILE_KEY) ? MILE_KEY : 'athena_mile_v1';
+  }
+
+  function mileHitShape(raw) {
+    if (typeof mileNormalizeHit === 'function') {
+      try { return mileNormalizeHit(raw); } catch (e) { /* 回退到本地最小形状校验 */ }
+    }
+    if (!raw || typeof raw !== 'object') return null;
+    const defId = String(raw.defId == null ? '' : raw.defId);
+    const at = Number(raw.at) || 0;
+    if (!defId || !at) return null;
+    return {
+      id: String(raw.id || ('milehit_' + at + '_' + defId)),
+      defId: defId,
+      at: at,
+      note: String(raw.note == null ? '' : raw.note)
+    };
+  }
+
+  // 两条 Hit 列表并集：按 defId 去重（与 mileNormalize 口径一致），同 defId 取 at 较新一方，
+  // 平手保留本地侧（复用 mergeNodesByIdUpdatedAt 的 id+updatedAt 取新规则）。返回按 at 升序。
+  // 绝不由规则凭空生成 Hit：解锁只能来自两端已有的记录——不会凭空解锁未达成项。
+  function mergeMileHits(a, b) {
+    const keyed = function (arr) {
+      return (Array.isArray(arr) ? arr : []).map(function (raw) {
+        const hit = mileHitShape(raw);
+        return hit ? { id: hit.defId, updatedAt: hit.at, hit: hit } : null;
+      });
+    };
+    const merged = mergeNodesByIdUpdatedAt(keyed(a), keyed(b), function (prev, cur, winner) {
+      const other = winner === prev ? cur : prev;
+      // note 任一侧非空即保留（里程碑笔记是用户内容，不因取新而丢）
+      return { id: winner.id, updatedAt: winner.updatedAt, hit: Object.assign({}, winner.hit, { note: winner.hit.note || other.hit.note || '' }) };
+    });
+    return merged.map(function (w) { return w.hit; }).sort(function (x, y) { return x.at - y.at; });
+  }
+
+  // 本机里程碑状态（形状同 mileNormalize 输出）。老数据/坏 JSON 一律回落 { hits: [] }，不抛错。
+  function mileLocalState() {
+    if (typeof mileLoad === 'function') {
+      try { return mileLoad(); } catch (e) { /* 回退直读 localStorage */ }
+    }
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(mileSyncKey())); } catch (e) { raw = null; }
+    return { hits: mergeMileHits(raw && raw.hits, []) };
+  }
+
+  // 写回本机里程碑键；payload 缺 mile（老云端载荷）→ 空结构默认值。
+  function mileWriteLocal(payload) {
+    const st = { hits: mergeMileHits((payload && payload.hits) || [], []) };
+    if (typeof mileSave === 'function') {
+      try { return mileSave(st); } catch (e) { /* 回退直写 */ }
+    }
+    try { localStorage.setItem(mileSyncKey(), JSON.stringify(st)); } catch (e) {}
+    if (typeof window !== 'undefined') window.__mileData = st;
+    return st;
   }
 
   function mergeActModule(local, remote) {
@@ -354,6 +419,22 @@
     const settings = (L.settings && typeof L.settings === 'object') ? L.settings
       : ((R.settings && typeof R.settings === 'object') ? R.settings : null);
 
+    // 里程碑：Def 为代码常量（不参与合并）；Hit 并集（defId 去重、同 defId 取 at 较新）。
+    // 老云端载荷没有 mile 字段 → 走空结构 { hits: [] } 默认值，不抛错。
+    // changed 口径与 WOOP/习惯/链节点一致：仅「云端独有的命中 defId」算云端新内容。
+    const lm = (L.mile && typeof L.mile === 'object') ? L.mile : {};
+    const rm = (R.mile && typeof R.mile === 'object') ? R.mile : {};
+    const mileHits = mergeMileHits(lm.hits, rm.hits);
+    const localHitDefs = {};
+    (Array.isArray(lm.hits) ? lm.hits : []).forEach(function (raw) {
+      const hit = mileHitShape(raw);
+      if (hit) localHitDefs[hit.defId] = 1;
+    });
+    (Array.isArray(rm.hits) ? rm.hits : []).forEach(function (raw) {
+      const hit = mileHitShape(raw);
+      if (hit && !localHitDefs[hit.defId]) changed = true;
+    });
+
     const out = {
       updatedAt: Math.max(Number(L.updatedAt) || 0, Number(R.updatedAt) || 0),
       act: { woops: woops, habits: habits },
@@ -367,6 +448,7 @@
         plans: plans,
         seq: seq
       },
+      mile: { hits: mileHits },
       settings: settings
     };
     Object.defineProperty(out, '__changedFromRemote', { value: changed, enumerable: false });
@@ -382,6 +464,7 @@
       act: read('athena_act_v1') || { woops: [], habits: [] },
       habitGroups: read('athena_habit_groups_v1') || [],
       focus: read('athena_focus_v1') || { chains: [], precedents: [], activeId: null },
+      mile: mileLocalState(),
       settings: read('athena_act_cfg_v1') || null
     };
   }
@@ -398,6 +481,8 @@
     write('athena_act_v1', p.act || { woops: [], habits: [] });
     write('athena_habit_groups_v1', Array.isArray(p.habitGroups) ? p.habitGroups : []);
     write('athena_focus_v1', p.focus || { chains: [], precedents: [], activeId: null });
+    // 里程碑：老云端载荷无 mile 字段 → 空结构默认值（完全下载即单向覆盖，与其他行动键同语义）
+    mileWriteLocal(p.mile || { hits: [] });
     if (p.settings && typeof p.settings === 'object') write('athena_act_cfg_v1', p.settings);
     if (typeof window !== 'undefined') {
       window.__actData = p.act || { woops: [], habits: [] };
@@ -808,4 +893,4 @@
     }).catch(function () {});
   }
 
-export { b64encodeUtf8, b64decodeUtf8, mergeDb, mergeActModule, mergeNodesByIdUpdatedAt, runSync, forceUploadAll, forceDownloadAll, syncReady, syncConfigured, syncCfg, saveSyncCfg, syncValidate, autoSyncOnLaunch };
+export { b64encodeUtf8, b64decodeUtf8, mergeDb, mergeActModule, mergeNodesByIdUpdatedAt, mergeMileHits, actModuleLocalPayload, actModuleWriteLocal, runSync, forceUploadAll, forceDownloadAll, syncReady, syncConfigured, syncCfg, saveSyncCfg, syncValidate, autoSyncOnLaunch };

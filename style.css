@@ -1626,7 +1626,6 @@ body.immersive #immersiveExit { display: block; }
   overflow-x: auto;
   max-width: 100%;
 }
-}
 .focus-heat-cell {
   width: 12px; height: 12px; border-radius: 3px;
   background: var(--bg-sunken);

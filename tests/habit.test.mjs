@@ -16,6 +16,7 @@ import {
   habitMapLayout,
   habitDescendantIds,
   habitCanSetParent,
+  habitCanDrop,
   habitDayStats,
   habitDots,
   habitTagGroups,
@@ -528,6 +529,102 @@ test('habitCanSetParent：禁自挂/挂子孙，允许合法父', () => {
   const r2 = habitSetParent(nodes, 'c', null, NOW);
   assert.equal(r2.ok, true);
   assert.equal(habitFind(r2.nodes, 'c').parentId, null);
+});
+
+// ---------- 拖拽改父级：habitCanDrop（纯函数，UI drop 与单测共用） ----------
+
+test('habitCanDrop：合法改父级 → { ok: true, reason: "ok" }', () => {
+  const nodes = [
+    node({ id: 'p', createdAt: 1 }),
+    node({ id: 'c', parentId: 'p', createdAt: 2 }),
+    node({ id: 'g', parentId: 'c', createdAt: 3 }),
+    node({ id: 'x', createdAt: 4 }),
+    node({ id: 'y', createdAt: 5 })
+  ];
+  const r = habitCanDrop(nodes, 'x', 'c'); // 根节点 → 挂到子树里
+  assert.deepEqual(r, { ok: true, reason: 'ok' });
+  assert.deepEqual(habitCanDrop(nodes, 'g', 'y'), { ok: true, reason: 'ok' }); // 跨子树搬家
+  assert.deepEqual(habitCanDrop(nodes, 'c', 'x'), { ok: true, reason: 'ok' }); // 连子树一起挂走
+});
+
+test('habitCanDrop：拒绝自身', () => {
+  const nodes = [node({ id: 'a' }), node({ id: 'b', parentId: 'a' })];
+  assert.deepEqual(habitCanDrop(nodes, 'a', 'a'), { ok: false, reason: 'self' });
+  assert.deepEqual(habitCanDrop(nodes, 'b', 'b'), { ok: false, reason: 'self' });
+});
+
+test('habitCanDrop：拒绝自身子孙（跨层级非法：子 / 孙 / 重孙）', () => {
+  const nodes = [
+    node({ id: 'a', createdAt: 1 }),
+    node({ id: 'b', parentId: 'a', createdAt: 2 }),
+    node({ id: 'c', parentId: 'b', createdAt: 3 }),
+    node({ id: 'd', parentId: 'c', createdAt: 4 }),
+    node({ id: 'z', createdAt: 5 })
+  ];
+  ['b', 'c', 'd'].forEach((t) => {
+    assert.deepEqual(habitCanDrop(nodes, 'a', t), { ok: false, reason: 'descendant' });
+  });
+  // 子树的中间节点：子孙里含孙/重孙
+  assert.equal(habitCanDrop(nodes, 'b', 'd').reason, 'descendant');
+  assert.equal(habitCanDrop(nodes, 'b', 'c').reason, 'descendant');
+  // 反向（子孙 → 祖先）合法：只改父级，不产生环
+  assert.deepEqual(habitCanDrop(nodes, 'd', 'a'), { ok: true, reason: 'ok' });
+  assert.deepEqual(habitCanDrop(nodes, 'z', 'd'), { ok: true, reason: 'ok' });
+});
+
+test('habitCanDrop：目标不存在 / 源不存在 / 任一已移除', () => {
+  const nodes = [
+    node({ id: 'a', createdAt: 1 }),
+    node({ id: 'gone', removedAt: NOW, createdAt: 2 })
+  ];
+  assert.deepEqual(habitCanDrop(nodes, 'a', 'nope'), { ok: false, reason: 'unknown-target' });
+  assert.deepEqual(habitCanDrop(nodes, 'a', null), { ok: false, reason: 'unknown-target' });
+  assert.deepEqual(habitCanDrop(nodes, 'nope', 'a'), { ok: false, reason: 'missing' });
+  assert.deepEqual(habitCanDrop(nodes, null, 'a'), { ok: false, reason: 'missing' });
+  assert.deepEqual(habitCanDrop(nodes, 'a', 'gone'), { ok: false, reason: 'unknown-target' });
+  assert.deepEqual(habitCanDrop(nodes, 'gone', 'a'), { ok: false, reason: 'missing' });
+});
+
+test('habitCanDrop：同父 = 合法但无需落盘 → same-parent；底层 habitCanSetParent 仍判可设', () => {
+  const nodes = [
+    node({ id: 'p', createdAt: 1 }),
+    node({ id: 'c', parentId: 'p', createdAt: 2 }),
+    node({ id: 'r', parentId: null, createdAt: 3 })
+  ];
+  assert.deepEqual(habitCanDrop(nodes, 'c', 'p'), { ok: false, reason: 'same-parent' });
+  assert.equal(habitCanSetParent(nodes, 'c', 'p'), true); // 规则未变：只是幂等无变化
+  assert.deepEqual(habitCanDrop(nodes, 'r', 'r'), { ok: false, reason: 'self' }); // 根不能挂自己
+});
+
+test('habitCanDrop 与 habitSetParent 一致：drop 成功后父级/深度落盘；环路两处都拒', () => {
+  const nodes = [
+    node({ id: 'a', createdAt: 1 }),
+    node({ id: 'b', parentId: 'a', createdAt: 2 }),
+    node({ id: 'c', createdAt: 3 })
+  ];
+  assert.equal(habitCanDrop(nodes, 'c', 'b').ok, true);
+  const r = habitSetParent(nodes, 'c', 'b', NOW);
+  assert.equal(r.ok, true);
+  assert.equal(habitFind(r.nodes, 'c').parentId, 'b');
+  assert.equal(habitNodeDepth(r.nodes, 'c'), 2);
+  // 现在 c 是 a 的子孙：a → c 必须被两边一致拒绝
+  assert.deepEqual(habitCanDrop(r.nodes, 'a', 'c'), { ok: false, reason: 'descendant' });
+  assert.equal(habitCanSetParent(r.nodes, 'a', 'c'), false);
+  const bad = habitSetParent(r.nodes, 'a', 'c', NOW);
+  assert.equal(bad.ok, false);
+  assert.equal(bad.reason, 'cycle');
+  assert.equal(habitFind(bad.nodes, 'a').parentId, null); // 数据未被改动
+});
+
+test('habitCanDrop：不断链/不影响 removed 判定之外的字段（纯函数无副作用）', () => {
+  const nodes = [
+    node({ id: 'a', createdAt: 1, level: 3, internalize: 40, toleranceDays: 2, doneDates: ['2026-03-01'] }),
+    node({ id: 'b', parentId: 'a', createdAt: 2 })
+  ];
+  const snapshot = JSON.stringify(nodes);
+  habitCanDrop(nodes, 'a', 'b');
+  habitCanDrop(nodes, 'b', 'a');
+  assert.equal(JSON.stringify(nodes), snapshot);
 });
 
 test('habitAddNode 默认进习惯库；habitUpdateNode 可改难度/强化', () => {

@@ -460,6 +460,33 @@
     return true;
   }
 
+  /**
+   * 拖拽改父级：把 dragId 拖到 targetId 上的合法性判定（纯函数，UI 与单测共用）。
+   * habitCanDrop(nodes, dragId, targetId) → { ok, reason }
+   * - ok=true  reason='ok'：targetId 可成为 dragId 的新父级（drop 后走 habitSetParent）。
+   * - ok=false reason：
+   *     'missing'        拖拽源不存在或已移除
+   *     'unknown-target' 目标节点不存在或已移除
+   *     'self'           拖到自己
+   *     'descendant'     拖到自己的子孙（跨层级非法，会成环）
+   *     'cycle'          habitCanSetParent 兜底拒绝（异常数据自环等）
+   *     'same-parent'    目标已是当前父级：合法但无变化，UI 不落盘
+   * 层级说明：树深度无上限（docs/ACT.md §5.1 未约束深度），故「层次不合法」= 自己/子孙这两种环；
+   * 强化 level（HABIT_LEVEL_MAX）与树深度无关，不参与判定。规则语义与 habitCanSetParent 一致。
+   */
+  function habitCanDrop(nodes, dragId, targetId) {
+    const src = habitFind(nodes, dragId);
+    if (!src || src.removedAt) return { ok: false, reason: 'missing' };
+    const dst = habitFind(nodes, targetId);
+    if (!dst || dst.removedAt) return { ok: false, reason: 'unknown-target' };
+    if (dst.id === src.id) return { ok: false, reason: 'self' };
+    if (habitIsAncestorOf(nodes, src.id, dst.id)) return { ok: false, reason: 'descendant' };
+    if (!habitCanSetParent(nodes, src.id, dst.id)) return { ok: false, reason: 'cycle' };
+    const cur = src.parentId == null || src.parentId === '' ? null : String(src.parentId);
+    if (cur === dst.id) return { ok: false, reason: 'same-parent' };
+    return { ok: true, reason: 'ok' };
+  }
+
   function habitUid(prefix) {
     return (prefix || 'hab') + '_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
   }
@@ -1382,6 +1409,145 @@
     return panel;
   }
 
+  // ---------------- 拖拽改父级（仅加交互；层级/内化/结算/容忍天数规则语义不动） ----------------
+  // 为什么不用 HTML5 DnD（focus 树那套 draggable/dragstart）：导图节点是 SVG <g>，Chromium
+  // 不派发 SVG 元素上的 dragstart（focus 树是 div 行才行）；Pointer Events 对鼠标/手写笔一致可用。
+  // 触屏刻意不启动拖拽（会抢页面滚动）：移动端与无障碍沿用 Inspector 里既有的「改父级」下拉。
+  // 临时高亮一律 inline style（禁改 style.css）：合法目标 = accent 虚框，非法目标 = danger 虚框。
+  const HABIT_DRAG_THRESHOLD = 5;
+  const habitDrag = {
+    srcId: null, active: false, x0: 0, y0: 0,
+    targetId: null, targetRect: null, sourceEl: null
+  };
+  let habitDragEndedAt = 0; // 拖拽结束后 400ms 内屏蔽 click，避免拖完误改「选中」
+  let habitDragIgnoreMouse = false; // 触屏 pointerdown 之后的兼容 mousedown：吃掉，别起拖拽
+
+  function habitDragMsg(reason) {
+    if (reason === 'self') return '不能把节点挂到自己下';
+    if (reason === 'descendant') return '不能把节点挂到自己的子孙下（会成环）';
+    if (reason === 'unknown-target') return '目标节点不存在';
+    if (reason === 'same-parent') return '它已经是该父级的子节点';
+    return '不能把节点挂到自己或子孙下';
+  }
+
+  function habitDragClearTarget() {
+    if (habitDrag.targetRect && habitDrag.targetRect.style) {
+      habitDrag.targetRect.style.removeProperty('stroke');
+      habitDrag.targetRect.style.removeProperty('stroke-width');
+      habitDrag.targetRect.style.removeProperty('stroke-dasharray');
+    }
+    habitDrag.targetRect = null;
+    habitDrag.targetId = null;
+  }
+
+  function habitDragDetach() {
+    document.removeEventListener('pointermove', habitDragOnMove);
+    document.removeEventListener('mousemove', habitDragOnMove);
+    document.removeEventListener('pointerup', habitDragOnUp);
+    document.removeEventListener('mouseup', habitDragOnUp);
+    document.removeEventListener('pointercancel', habitDragOnCancel);
+  }
+
+  // 收尾：apply=false（pointercancel）只清理不改数据
+  function habitDragFinish(apply) {
+    if (!habitDrag.srcId) { habitDragDetach(); return; }
+    const src = habitDrag.srcId;
+    const moved = habitDrag.active;
+    const targetId = habitDrag.targetId;
+    if (habitDrag.sourceEl && habitDrag.sourceEl.style) {
+      habitDrag.sourceEl.style.removeProperty('opacity');
+      habitDrag.sourceEl.style.removeProperty('user-select');
+      habitDrag.sourceEl.style.removeProperty('-webkit-user-select');
+    }
+    document.body.style.cursor = '';
+    habitDragClearTarget();
+    habitDragDetach();
+    habitDrag.srcId = null;
+    habitDrag.active = false;
+    habitDrag.sourceEl = null;
+    if (!moved || !apply) return; // 未超阈值＝点击，交给原 click 选中逻辑
+    habitDragEndedAt = Date.now();
+    if (!targetId) return; // 丢在空白处：静默，不改父级
+    const chk = habitCanDrop(habitLoadNodes(), src, targetId);
+    if (!chk.ok) { toast(habitDragMsg(chk.reason)); return; }
+    const r = habitSetParent(habitLoadNodes(), src, targetId, Date.now());
+    if (!r.ok) {
+      toast(r.reason === 'cycle' ? '不能把节点挂到自己或子孙下' : '父节点不存在');
+      renderApp();
+      return;
+    }
+    habitSaveNodes(r.nodes);
+    habitSelectedId = src;
+    const dst = habitFind(r.nodes, targetId);
+    toast('已调整父级 → ' + habitTruncate((dst && dst.title) || targetId, 12));
+    renderApp();
+  }
+
+  function habitDragStart(id, ev) {
+    if (!id || !ev) return;
+    if (ev.button) return; // 仅主键/主指针
+    if (ev.target && ev.target.closest && ev.target.closest('.habit-map-fold')) return; // 折叠钮不拖
+    // 触屏不启动拖拽：不抢页面滚动（不动 touch-action），移动端沿用既有「改父级」下拉兜底。
+    // 触屏序列随后还会派发兼容 mousedown，用标记位吃掉它，避免又起一次拖拽。
+    if (ev.type === 'pointerdown') {
+      if (ev.pointerType && ev.pointerType !== 'mouse' && ev.pointerType !== 'pen') { habitDragIgnoreMouse = true; return; }
+      habitDragIgnoreMouse = false;
+    } else if (ev.type === 'mousedown' && habitDragIgnoreMouse) {
+      return;
+    }
+    // 关键：在 mousedown 上阻止默认行为，否则「按下 + 移动」会起手原生文本选择/拖放，
+    // 浏览器随即发 pointercancel 把我们的拖拽静默打断（headless 实测踩到过：cancel=1、无高亮无 toast）。
+    // 只对 mousedown preventDefault（不对 pointerdown：取消 pointerdown 可能连 click 一起吞掉，
+    // 会破坏「未拖动＝点击选中」这条既有路径）；也不 stopPropagation，click 照常派发。
+    if (ev.type === 'mousedown') ev.preventDefault();
+    habitDrag.srcId = id;
+    habitDrag.active = false;
+    habitDrag.x0 = Number(ev.clientX) || 0;
+    habitDrag.y0 = Number(ev.clientY) || 0;
+    habitDrag.sourceEl = ev.currentTarget || null;
+    if (habitDrag.sourceEl && habitDrag.sourceEl.style) {
+      habitDrag.sourceEl.style.setProperty('user-select', 'none'); // 双保险：拖拽期间禁选中（inline，不动 style.css）
+      habitDrag.sourceEl.style.setProperty('-webkit-user-select', 'none');
+    }
+    document.addEventListener('pointermove', habitDragOnMove);
+    document.addEventListener('mousemove', habitDragOnMove);
+    document.addEventListener('pointerup', habitDragOnUp);
+    document.addEventListener('mouseup', habitDragOnUp);
+    document.addEventListener('pointercancel', habitDragOnCancel);
+  }
+
+  function habitDragOnMove(ev) {
+    if (!habitDrag.srcId || !ev) return;
+    if (!habitDrag.active) {
+      const dx = Number(ev.clientX) - habitDrag.x0;
+      const dy = Number(ev.clientY) - habitDrag.y0;
+      if (Math.abs(dx) + Math.abs(dy) < HABIT_DRAG_THRESHOLD) return;
+      habitDrag.active = true;
+      if (habitDrag.sourceEl && habitDrag.sourceEl.style) habitDrag.sourceEl.style.opacity = '0.45';
+      document.body.style.cursor = 'grabbing';
+    }
+    let g = null;
+    try {
+      const under = document.elementFromPoint(ev.clientX, ev.clientY);
+      g = under && under.closest ? under.closest('.habit-map-node') : null;
+    } catch (e) { g = null; }
+    const tid = g ? g.getAttribute('data-id') : null;
+    if (tid === habitDrag.targetId) return; // 同一目标不必重画
+    habitDragClearTarget();
+    if (!g) return;
+    const rect = g.querySelector ? g.querySelector('.habit-map-node-bg') : null;
+    if (!rect || !rect.style) return;
+    const ok = habitCanDrop(habitLoadNodes(), habitDrag.srcId, tid).ok;
+    rect.style.stroke = ok ? 'var(--accent)' : 'var(--danger)';
+    rect.style.strokeWidth = '2.5';
+    rect.style.strokeDasharray = ok ? '5 3' : '2 4';
+    habitDrag.targetRect = rect;
+    habitDrag.targetId = tid;
+  }
+
+  function habitDragOnUp() { habitDragFinish(true); }
+  function habitDragOnCancel() { habitDragFinish(false); }
+
   function habitRenderSvgMap(nodes) {
     const layout = habitMapLayout(nodes, { collapsed: habitCollapsed });
     const svg = habitSvgEl('svg', {
@@ -1489,12 +1655,19 @@
       }
 
       g.addEventListener('click', function () {
+        if (Date.now() - habitDragEndedAt < 400) return; // 刚拖拽过：不当作选中点击
         habitSelectedId = it.id;
         renderApp();
       });
 
+      // 拖拽改父级：把本节点拖到另一节点上 → 目标成为新父级（非法目标 drop 时 toast 拒绝）
+      // 鼠标/手写笔拖拽；触屏不抢滚动，走 Inspector 里既有的「改父级」下拉兜底（无障碍同路径）。
+      g.addEventListener('pointerdown', function (ev) { habitDragStart(it.id, ev); });
+      g.addEventListener('mousedown', function (ev) { habitDragStart(it.id, ev); });
+
       const tip = habitSvgEl('title', {});
-      tip.textContent = (it.title || '') + ' · 内化 ' + it.internalize + '% · 强化 +' + it.level + (it.childCount ? ' · 子项 ' + it.childCount : '');
+      tip.textContent = (it.title || '') + ' · 内化 ' + it.internalize + '% · 强化 +' + it.level +
+        (it.childCount ? ' · 子项 ' + it.childCount : '') + ' · 拖动可改父级';
       g.appendChild(tip);
 
       svg.appendChild(g);
@@ -1604,6 +1777,7 @@
       renderApp();
     });
     parentRow.appendChild(parentSel);
+    parentRow.appendChild(el('span', 'muted', '或把导图里的节点拖到目标节点上'));
     panel.appendChild(parentRow);
 
     // 单习惯：已完成 / 未完成 + 编辑 / 删除（不单独结算）
@@ -2006,6 +2180,7 @@
   habitMapLayout,
   habitDescendantIds,
   habitCanSetParent,
+  habitCanDrop,
   habitDayStats,
   habitDots,
   habitTagGroups,

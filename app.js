@@ -6814,11 +6814,12 @@
     return (j.private === true) ? '验证成功：私有仓库 ✓' : '验证成功，但这是公开仓库——学习数据对外可见，强烈建议改用私有仓库！';
   }
 
-  // —— 行动模块合并（H4）：athena_act_v1 / athena_habit_groups_v1 / athena_focus_v1 ——
+  // —— 行动模块合并（H4）：athena_act_v1 / athena_habit_groups_v1 / athena_focus_v1 / athena_mile_v1 ——
   // 规则：节点 id+updatedAt 取新；习惯 doneDates（日志）与专注判例并集；组并集冲突本地优先；
-  // 设置本地优先。绝不写入 *_formula_srs_v1，也不刷新其 updatedAt。
+  // 里程碑 Hit 并集（defId 去重、同 defId 取 at 较新）；设置本地优先。
+  // 绝不写入 *_formula_srs_v1，也不刷新其 updatedAt。
   const ACT_SYNC_PATH = SYNC_DIR + '/data/_act.json';
-  const ACT_DATA_KEYS = ['athena_act_v1', 'athena_habit_groups_v1', 'athena_focus_v1'];
+  const ACT_DATA_KEYS = ['athena_act_v1', 'athena_habit_groups_v1', 'athena_focus_v1', 'athena_mile_v1'];
 
   function mergeNodesByIdUpdatedAt(a, b, extra) {
     const map = {};
@@ -6853,6 +6854,70 @@
     });
     out.sort();
     return out;
+  }
+
+  // —— 里程碑（athena_mile_v1）——
+  // Hit 形状照 mile.mjs 的 mileNormalize 输出：{ id, defId, at, note }；Def 是代码常量（含谓词），不进云端。
+  // 本文件在 app.js 里与 mile.mjs 同作用域（拼接进同一 IIFE），运行时优先复用 mile.mjs 的
+  // mileLoad / mileSave / mileNormalizeHit（含 defId 白名单校验）；`tests/sync.test.mjs` 单独 import
+  // 本文件时这些函数不在作用域，故用等价的最小形状校验兜底——不臆造字段。
+  function mileSyncKey() {
+    return (typeof MILE_KEY === 'string' && MILE_KEY) ? MILE_KEY : 'athena_mile_v1';
+  }
+
+  function mileHitShape(raw) {
+    if (typeof mileNormalizeHit === 'function') {
+      try { return mileNormalizeHit(raw); } catch (e) { /* 回退到本地最小形状校验 */ }
+    }
+    if (!raw || typeof raw !== 'object') return null;
+    const defId = String(raw.defId == null ? '' : raw.defId);
+    const at = Number(raw.at) || 0;
+    if (!defId || !at) return null;
+    return {
+      id: String(raw.id || ('milehit_' + at + '_' + defId)),
+      defId: defId,
+      at: at,
+      note: String(raw.note == null ? '' : raw.note)
+    };
+  }
+
+  // 两条 Hit 列表并集：按 defId 去重（与 mileNormalize 口径一致），同 defId 取 at 较新一方，
+  // 平手保留本地侧（复用 mergeNodesByIdUpdatedAt 的 id+updatedAt 取新规则）。返回按 at 升序。
+  // 绝不由规则凭空生成 Hit：解锁只能来自两端已有的记录——不会凭空解锁未达成项。
+  function mergeMileHits(a, b) {
+    const keyed = function (arr) {
+      return (Array.isArray(arr) ? arr : []).map(function (raw) {
+        const hit = mileHitShape(raw);
+        return hit ? { id: hit.defId, updatedAt: hit.at, hit: hit } : null;
+      });
+    };
+    const merged = mergeNodesByIdUpdatedAt(keyed(a), keyed(b), function (prev, cur, winner) {
+      const other = winner === prev ? cur : prev;
+      // note 任一侧非空即保留（里程碑笔记是用户内容，不因取新而丢）
+      return { id: winner.id, updatedAt: winner.updatedAt, hit: Object.assign({}, winner.hit, { note: winner.hit.note || other.hit.note || '' }) };
+    });
+    return merged.map(function (w) { return w.hit; }).sort(function (x, y) { return x.at - y.at; });
+  }
+
+  // 本机里程碑状态（形状同 mileNormalize 输出）。老数据/坏 JSON 一律回落 { hits: [] }，不抛错。
+  function mileLocalState() {
+    if (typeof mileLoad === 'function') {
+      try { return mileLoad(); } catch (e) { /* 回退直读 localStorage */ }
+    }
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(mileSyncKey())); } catch (e) { raw = null; }
+    return { hits: mergeMileHits(raw && raw.hits, []) };
+  }
+
+  // 写回本机里程碑键；payload 缺 mile（老云端载荷）→ 空结构默认值。
+  function mileWriteLocal(payload) {
+    const st = { hits: mergeMileHits((payload && payload.hits) || [], []) };
+    if (typeof mileSave === 'function') {
+      try { return mileSave(st); } catch (e) { /* 回退直写 */ }
+    }
+    try { localStorage.setItem(mileSyncKey(), JSON.stringify(st)); } catch (e) {}
+    if (typeof window !== 'undefined') window.__mileData = st;
+    return st;
   }
 
   function mergeActModule(local, remote) {
@@ -6946,6 +7011,22 @@
     const settings = (L.settings && typeof L.settings === 'object') ? L.settings
       : ((R.settings && typeof R.settings === 'object') ? R.settings : null);
 
+    // 里程碑：Def 为代码常量（不参与合并）；Hit 并集（defId 去重、同 defId 取 at 较新）。
+    // 老云端载荷没有 mile 字段 → 走空结构 { hits: [] } 默认值，不抛错。
+    // changed 口径与 WOOP/习惯/链节点一致：仅「云端独有的命中 defId」算云端新内容。
+    const lm = (L.mile && typeof L.mile === 'object') ? L.mile : {};
+    const rm = (R.mile && typeof R.mile === 'object') ? R.mile : {};
+    const mileHits = mergeMileHits(lm.hits, rm.hits);
+    const localHitDefs = {};
+    (Array.isArray(lm.hits) ? lm.hits : []).forEach(function (raw) {
+      const hit = mileHitShape(raw);
+      if (hit) localHitDefs[hit.defId] = 1;
+    });
+    (Array.isArray(rm.hits) ? rm.hits : []).forEach(function (raw) {
+      const hit = mileHitShape(raw);
+      if (hit && !localHitDefs[hit.defId]) changed = true;
+    });
+
     const out = {
       updatedAt: Math.max(Number(L.updatedAt) || 0, Number(R.updatedAt) || 0),
       act: { woops: woops, habits: habits },
@@ -6959,6 +7040,7 @@
         plans: plans,
         seq: seq
       },
+      mile: { hits: mileHits },
       settings: settings
     };
     Object.defineProperty(out, '__changedFromRemote', { value: changed, enumerable: false });
@@ -6974,6 +7056,7 @@
       act: read('athena_act_v1') || { woops: [], habits: [] },
       habitGroups: read('athena_habit_groups_v1') || [],
       focus: read('athena_focus_v1') || { chains: [], precedents: [], activeId: null },
+      mile: mileLocalState(),
       settings: read('athena_act_cfg_v1') || null
     };
   }
@@ -6990,6 +7073,8 @@
     write('athena_act_v1', p.act || { woops: [], habits: [] });
     write('athena_habit_groups_v1', Array.isArray(p.habitGroups) ? p.habitGroups : []);
     write('athena_focus_v1', p.focus || { chains: [], precedents: [], activeId: null });
+    // 里程碑：老云端载荷无 mile 字段 → 空结构默认值（完全下载即单向覆盖，与其他行动键同语义）
+    mileWriteLocal(p.mile || { hits: [] });
     if (p.settings && typeof p.settings === 'object') write('athena_act_cfg_v1', p.settings);
     if (typeof window !== 'undefined') {
       window.__actData = p.act || { woops: [], habits: [] };
@@ -8594,6 +8679,33 @@
     return true;
   }
 
+  /**
+   * 拖拽改父级：把 dragId 拖到 targetId 上的合法性判定（纯函数，UI 与单测共用）。
+   * habitCanDrop(nodes, dragId, targetId) → { ok, reason }
+   * - ok=true  reason='ok'：targetId 可成为 dragId 的新父级（drop 后走 habitSetParent）。
+   * - ok=false reason：
+   *     'missing'        拖拽源不存在或已移除
+   *     'unknown-target' 目标节点不存在或已移除
+   *     'self'           拖到自己
+   *     'descendant'     拖到自己的子孙（跨层级非法，会成环）
+   *     'cycle'          habitCanSetParent 兜底拒绝（异常数据自环等）
+   *     'same-parent'    目标已是当前父级：合法但无变化，UI 不落盘
+   * 层级说明：树深度无上限（docs/ACT.md §5.1 未约束深度），故「层次不合法」= 自己/子孙这两种环；
+   * 强化 level（HABIT_LEVEL_MAX）与树深度无关，不参与判定。规则语义与 habitCanSetParent 一致。
+   */
+  function habitCanDrop(nodes, dragId, targetId) {
+    const src = habitFind(nodes, dragId);
+    if (!src || src.removedAt) return { ok: false, reason: 'missing' };
+    const dst = habitFind(nodes, targetId);
+    if (!dst || dst.removedAt) return { ok: false, reason: 'unknown-target' };
+    if (dst.id === src.id) return { ok: false, reason: 'self' };
+    if (habitIsAncestorOf(nodes, src.id, dst.id)) return { ok: false, reason: 'descendant' };
+    if (!habitCanSetParent(nodes, src.id, dst.id)) return { ok: false, reason: 'cycle' };
+    const cur = src.parentId == null || src.parentId === '' ? null : String(src.parentId);
+    if (cur === dst.id) return { ok: false, reason: 'same-parent' };
+    return { ok: true, reason: 'ok' };
+  }
+
   function habitUid(prefix) {
     return (prefix || 'hab') + '_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
   }
@@ -9516,6 +9628,145 @@
     return panel;
   }
 
+  // ---------------- 拖拽改父级（仅加交互；层级/内化/结算/容忍天数规则语义不动） ----------------
+  // 为什么不用 HTML5 DnD（focus 树那套 draggable/dragstart）：导图节点是 SVG <g>，Chromium
+  // 不派发 SVG 元素上的 dragstart（focus 树是 div 行才行）；Pointer Events 对鼠标/手写笔一致可用。
+  // 触屏刻意不启动拖拽（会抢页面滚动）：移动端与无障碍沿用 Inspector 里既有的「改父级」下拉。
+  // 临时高亮一律 inline style（禁改 style.css）：合法目标 = accent 虚框，非法目标 = danger 虚框。
+  const HABIT_DRAG_THRESHOLD = 5;
+  const habitDrag = {
+    srcId: null, active: false, x0: 0, y0: 0,
+    targetId: null, targetRect: null, sourceEl: null
+  };
+  let habitDragEndedAt = 0; // 拖拽结束后 400ms 内屏蔽 click，避免拖完误改「选中」
+  let habitDragIgnoreMouse = false; // 触屏 pointerdown 之后的兼容 mousedown：吃掉，别起拖拽
+
+  function habitDragMsg(reason) {
+    if (reason === 'self') return '不能把节点挂到自己下';
+    if (reason === 'descendant') return '不能把节点挂到自己的子孙下（会成环）';
+    if (reason === 'unknown-target') return '目标节点不存在';
+    if (reason === 'same-parent') return '它已经是该父级的子节点';
+    return '不能把节点挂到自己或子孙下';
+  }
+
+  function habitDragClearTarget() {
+    if (habitDrag.targetRect && habitDrag.targetRect.style) {
+      habitDrag.targetRect.style.removeProperty('stroke');
+      habitDrag.targetRect.style.removeProperty('stroke-width');
+      habitDrag.targetRect.style.removeProperty('stroke-dasharray');
+    }
+    habitDrag.targetRect = null;
+    habitDrag.targetId = null;
+  }
+
+  function habitDragDetach() {
+    document.removeEventListener('pointermove', habitDragOnMove);
+    document.removeEventListener('mousemove', habitDragOnMove);
+    document.removeEventListener('pointerup', habitDragOnUp);
+    document.removeEventListener('mouseup', habitDragOnUp);
+    document.removeEventListener('pointercancel', habitDragOnCancel);
+  }
+
+  // 收尾：apply=false（pointercancel）只清理不改数据
+  function habitDragFinish(apply) {
+    if (!habitDrag.srcId) { habitDragDetach(); return; }
+    const src = habitDrag.srcId;
+    const moved = habitDrag.active;
+    const targetId = habitDrag.targetId;
+    if (habitDrag.sourceEl && habitDrag.sourceEl.style) {
+      habitDrag.sourceEl.style.removeProperty('opacity');
+      habitDrag.sourceEl.style.removeProperty('user-select');
+      habitDrag.sourceEl.style.removeProperty('-webkit-user-select');
+    }
+    document.body.style.cursor = '';
+    habitDragClearTarget();
+    habitDragDetach();
+    habitDrag.srcId = null;
+    habitDrag.active = false;
+    habitDrag.sourceEl = null;
+    if (!moved || !apply) return; // 未超阈值＝点击，交给原 click 选中逻辑
+    habitDragEndedAt = Date.now();
+    if (!targetId) return; // 丢在空白处：静默，不改父级
+    const chk = habitCanDrop(habitLoadNodes(), src, targetId);
+    if (!chk.ok) { toast(habitDragMsg(chk.reason)); return; }
+    const r = habitSetParent(habitLoadNodes(), src, targetId, Date.now());
+    if (!r.ok) {
+      toast(r.reason === 'cycle' ? '不能把节点挂到自己或子孙下' : '父节点不存在');
+      renderApp();
+      return;
+    }
+    habitSaveNodes(r.nodes);
+    habitSelectedId = src;
+    const dst = habitFind(r.nodes, targetId);
+    toast('已调整父级 → ' + habitTruncate((dst && dst.title) || targetId, 12));
+    renderApp();
+  }
+
+  function habitDragStart(id, ev) {
+    if (!id || !ev) return;
+    if (ev.button) return; // 仅主键/主指针
+    if (ev.target && ev.target.closest && ev.target.closest('.habit-map-fold')) return; // 折叠钮不拖
+    // 触屏不启动拖拽：不抢页面滚动（不动 touch-action），移动端沿用既有「改父级」下拉兜底。
+    // 触屏序列随后还会派发兼容 mousedown，用标记位吃掉它，避免又起一次拖拽。
+    if (ev.type === 'pointerdown') {
+      if (ev.pointerType && ev.pointerType !== 'mouse' && ev.pointerType !== 'pen') { habitDragIgnoreMouse = true; return; }
+      habitDragIgnoreMouse = false;
+    } else if (ev.type === 'mousedown' && habitDragIgnoreMouse) {
+      return;
+    }
+    // 关键：在 mousedown 上阻止默认行为，否则「按下 + 移动」会起手原生文本选择/拖放，
+    // 浏览器随即发 pointercancel 把我们的拖拽静默打断（headless 实测踩到过：cancel=1、无高亮无 toast）。
+    // 只对 mousedown preventDefault（不对 pointerdown：取消 pointerdown 可能连 click 一起吞掉，
+    // 会破坏「未拖动＝点击选中」这条既有路径）；也不 stopPropagation，click 照常派发。
+    if (ev.type === 'mousedown') ev.preventDefault();
+    habitDrag.srcId = id;
+    habitDrag.active = false;
+    habitDrag.x0 = Number(ev.clientX) || 0;
+    habitDrag.y0 = Number(ev.clientY) || 0;
+    habitDrag.sourceEl = ev.currentTarget || null;
+    if (habitDrag.sourceEl && habitDrag.sourceEl.style) {
+      habitDrag.sourceEl.style.setProperty('user-select', 'none'); // 双保险：拖拽期间禁选中（inline，不动 style.css）
+      habitDrag.sourceEl.style.setProperty('-webkit-user-select', 'none');
+    }
+    document.addEventListener('pointermove', habitDragOnMove);
+    document.addEventListener('mousemove', habitDragOnMove);
+    document.addEventListener('pointerup', habitDragOnUp);
+    document.addEventListener('mouseup', habitDragOnUp);
+    document.addEventListener('pointercancel', habitDragOnCancel);
+  }
+
+  function habitDragOnMove(ev) {
+    if (!habitDrag.srcId || !ev) return;
+    if (!habitDrag.active) {
+      const dx = Number(ev.clientX) - habitDrag.x0;
+      const dy = Number(ev.clientY) - habitDrag.y0;
+      if (Math.abs(dx) + Math.abs(dy) < HABIT_DRAG_THRESHOLD) return;
+      habitDrag.active = true;
+      if (habitDrag.sourceEl && habitDrag.sourceEl.style) habitDrag.sourceEl.style.opacity = '0.45';
+      document.body.style.cursor = 'grabbing';
+    }
+    let g = null;
+    try {
+      const under = document.elementFromPoint(ev.clientX, ev.clientY);
+      g = under && under.closest ? under.closest('.habit-map-node') : null;
+    } catch (e) { g = null; }
+    const tid = g ? g.getAttribute('data-id') : null;
+    if (tid === habitDrag.targetId) return; // 同一目标不必重画
+    habitDragClearTarget();
+    if (!g) return;
+    const rect = g.querySelector ? g.querySelector('.habit-map-node-bg') : null;
+    if (!rect || !rect.style) return;
+    const ok = habitCanDrop(habitLoadNodes(), habitDrag.srcId, tid).ok;
+    rect.style.stroke = ok ? 'var(--accent)' : 'var(--danger)';
+    rect.style.strokeWidth = '2.5';
+    rect.style.strokeDasharray = ok ? '5 3' : '2 4';
+    habitDrag.targetRect = rect;
+    habitDrag.targetId = tid;
+  }
+
+  function habitDragOnUp() { habitDragFinish(true); }
+  function habitDragOnCancel() { habitDragFinish(false); }
+
   function habitRenderSvgMap(nodes) {
     const layout = habitMapLayout(nodes, { collapsed: habitCollapsed });
     const svg = habitSvgEl('svg', {
@@ -9623,12 +9874,19 @@
       }
 
       g.addEventListener('click', function () {
+        if (Date.now() - habitDragEndedAt < 400) return; // 刚拖拽过：不当作选中点击
         habitSelectedId = it.id;
         renderApp();
       });
 
+      // 拖拽改父级：把本节点拖到另一节点上 → 目标成为新父级（非法目标 drop 时 toast 拒绝）
+      // 鼠标/手写笔拖拽；触屏不抢滚动，走 Inspector 里既有的「改父级」下拉兜底（无障碍同路径）。
+      g.addEventListener('pointerdown', function (ev) { habitDragStart(it.id, ev); });
+      g.addEventListener('mousedown', function (ev) { habitDragStart(it.id, ev); });
+
       const tip = habitSvgEl('title', {});
-      tip.textContent = (it.title || '') + ' · 内化 ' + it.internalize + '% · 强化 +' + it.level + (it.childCount ? ' · 子项 ' + it.childCount : '');
+      tip.textContent = (it.title || '') + ' · 内化 ' + it.internalize + '% · 强化 +' + it.level +
+        (it.childCount ? ' · 子项 ' + it.childCount : '') + ' · 拖动可改父级';
       g.appendChild(tip);
 
       svg.appendChild(g);
@@ -9738,6 +9996,7 @@
       renderApp();
     });
     parentRow.appendChild(parentSel);
+    parentRow.appendChild(el('span', 'muted', '或把导图里的节点拖到目标节点上'));
     panel.appendChild(parentRow);
 
     // 单习惯：已完成 / 未完成 + 编辑 / 删除（不单独结算）
@@ -11600,6 +11859,51 @@
     }
   }
 
+  // 到期提示的「一次性」标记：记录已提示过的单元身份（chain.id:startedAt:阶段）。
+  // 旧实现的 bug：到期分支只 focusClearTick + renderApp，而此时 chain.status 仍是
+  // running/scouting、current 仍在 → renderFocusSection 重新装表 → 下一秒又进到期分支
+  // → 每秒一次 renderApp + 每秒 appendChild 一个新完成度弹窗（弹窗挂在 body 上，
+  // renderApp 只清 #app，不会清掉旧的），叠成一摞后输入被新弹窗盖住、页面持续重渲染。
+  // 修法：同一单元只处理一次（见 focusTickPlan 的 prompt），不再重复渲染/弹窗。
+  let focusCompletePromptKey = null;
+
+  // 单元身份：同一条链上同一 startedAt + 同一阶段（侦查 / 正式）视为同一个单元。
+  // 侦查到期后「转正」会换阶段 → 允许再提示一次（转正后才是完成度询问）。
+  function focusUnitKey(chain) {
+    if (!chain || !chain.current) return null;
+    const cur = chain.current;
+    const phase = (cur.typeKey === 'scout' && !cur.promotedFromScout) ? 'scout' : 'formal';
+    return chain.id + ':' + (Number(cur.startedAt) || 0) + ':' + phase;
+  }
+
+  // 每秒 tick 的纯决策（不碰 DOM，便于单测）：调用处按 action 施加副作用
+  function focusTickPlan(chain, now, promptedKey) {
+    if (!chain) return { action: 'none' };
+    if (chain.status === 'running' || chain.status === 'scouting') {
+      if (!chain.current) return { action: 'none' };
+      const remain = focusUnitRemainingMs(chain.current, now);
+      if (remain > 0) return { action: 'countdown', remainMs: remain };
+      const cur = chain.current;
+      const scoutPhase = cur.typeKey === 'scout' && !cur.promotedFromScout;
+      const key = focusUnitKey(chain);
+      const prompt = key !== promptedKey;
+      return {
+        action: 'expired',
+        remainMs: 0,
+        key: key,
+        prompt: prompt,
+        scoutPhase: scoutPhase,
+        openModal: prompt && !scoutPhase
+      };
+    }
+    if (chain.status === 'reserved' && chain.reservation) {
+      const remain = focusReservationRemainingMs(chain.reservation, now);
+      if (remain > 0) return { action: 'countdown', remainMs: remain };
+      return { action: 'reservation_expired', remainMs: 0 };
+    }
+    return { action: 'none' };
+  }
+
   function focusFmtClock(ms) {
     const s = Math.max(0, Math.ceil(ms / 1000));
     const m = Math.floor(s / 60);
@@ -11848,42 +12152,44 @@
 
     // 倒计时 + 时间到自动弹出完成度询问
     if (chain.status === 'running' || chain.status === 'scouting' || chain.status === 'reserved') {
+      // 装表前先清（renderFocusSection 入口已清一次，这里再保一道，防 tick 泄漏）
+      focusClearTick();
       focusTickTimer = setInterval(function () {
         if (currentView !== 'actFocus') { focusClearTick(); return; }
         const clock = document.getElementById('focusClock');
         if (!clock) { focusClearTick(); return; }
         const s = loadFocus();
         const ch = focusActiveChain(s);
-        if (!ch) return;
         const t = Date.now();
-        if (ch.status === 'running' || ch.status === 'scouting') {
-          if (!ch.current) return;
-          const remain = focusUnitRemainingMs(ch.current, t);
-          if (remain <= 0) {
-            clock.textContent = '时间到';
-            clock.classList.add('done');
-            focusClearTick();
-            renderApp();
-            // 计时结束：自动询问完成度（正式单元）
-            if (ch.current && ch.current.typeKey !== 'scout') {
-              setTimeout(function () { focusOpenCompleteModal(ch, loadFocus()); }, 80);
-            }
-          } else {
-            clock.textContent = focusFmtClock(remain);
+        const plan = focusTickPlan(ch, t, focusCompletePromptKey);
+        if (plan.action === 'none') { focusClearTick(); return; }
+        if (plan.action === 'countdown') {
+          clock.textContent = focusFmtClock(plan.remainMs);
+          return;
+        }
+        if (plan.action === 'expired') {
+          clock.textContent = '时间到';
+          clock.classList.add('done');
+          focusClearTick();
+          // 同一单元只处理一次：已提示过就直接收表，不再 renderApp、不再叠弹窗
+          if (!plan.prompt) return;
+          focusCompletePromptKey = plan.key;
+          renderApp();
+          // 计时结束：自动询问完成度（正式单元）
+          if (plan.openModal) {
+            setTimeout(function () { focusOpenCompleteModal(ch, loadFocus()); }, 80);
           }
-        } else if (ch.status === 'reserved' && ch.reservation) {
-          const remain = focusReservationRemainingMs(ch.reservation, t);
-          clock.textContent = focusFmtClock(remain);
-          if (remain <= 0) {
-            focusClearTick();
-            const er = focusExpireReservations(s, t);
-            if (er && er.state) saveFocus(er.state);
-            renderApp();
-            if (er && er.expired && er.expired.length) {
-              toast('预约违规 · 预约链计数已从零开始');
-            } else {
-              toast('预约已超时');
-            }
+          return;
+        }
+        if (plan.action === 'reservation_expired') {
+          focusClearTick();
+          const er = focusExpireReservations(s, t);
+          if (er && er.state) saveFocus(er.state);
+          renderApp();
+          if (er && er.expired && er.expired.length) {
+            toast('预约违规 · 预约链计数已从零开始');
+          } else {
+            toast('预约已超时');
           }
         }
       }, 1000);
@@ -12197,19 +12503,42 @@
 
   // ---------------- UI：统计 ----------------
   let focusHeatExpanded = false; // 热力图：预览 8 周 ↔ 展开 26 周
+  // 热力图数据：可见窗口内逐日实际完成分钟 + 色阶档位
+  // 色阶锚点必须取「可见窗口内」最高日（对齐 src/stats.mjs 学习日历的惯例）：
+  // 若锚定全史峰值，一个历史大日就会把可见期整片压成同一档 → 色阶失效（看上去“全部同色”）
+  function focusHeatData(state, now, weeks) {
+    const map = focusDailyMinutes(state);
+    const today = focusYmd(now);
+    const end = new Date(now);
+    end.setHours(12, 0, 0, 0);
+    const days = Math.max(1, Math.floor(Number(weeks) || 0)) * 7;
+    const startTs = end.getTime() - (days - 1) * 86400000;
+    const cells = [];
+    let maxMin = 0, activeDays = 0, totalMin = 0, peakMin = 0;
+    for (let i = 0; i < days; i++) {
+      const day = focusYmd(startTs + i * 86400000);
+      const minutes = map[day] || 0;
+      if (minutes > 0) { activeDays++; totalMin += minutes; if (minutes > peakMin) peakMin = minutes; }
+      if (minutes > maxMin) maxMin = minutes;
+      cells.push({ day: day, minutes: minutes, lv: 0, isToday: day === today });
+    }
+    const scale = maxMin > 0 ? maxMin : 1;
+    cells.forEach(function (c) {
+      c.lv = c.minutes <= 0 ? 0 : Math.min(4, Math.ceil((c.minutes / scale) * 4));
+    });
+    return {
+      cells: cells, maxMin: maxMin, activeDays: activeDays, totalMin: totalMin,
+      peakMin: peakMin, today: today, todayMinutes: map[today] || 0
+    };
+  }
+
   function focusRenderStats(wrap, st, now) {
     wrap.appendChild(el('h3', null, '统计 · 实际完成分钟'));
 
     const heat = el('div', 'act-panel focus-heat chart-card');
-    const map = focusDailyMinutes(st);
-    const today = focusYmd(now);
-    const end = new Date(now);
-    end.setHours(12, 0, 0, 0);
     const weeks = focusHeatExpanded ? 26 : 8;
-    const days = weeks * 7;
-    const startTs = end.getTime() - (days - 1) * 86400000;
-    let maxMin = 1, activeDays = 0, totalMin = 0, peakMin = 0;
-    Object.keys(map).forEach(function (k) { if (map[k] > maxMin) maxMin = map[k]; });
+    const hd = focusHeatData(st, now, weeks);
+    const today = hd.today;
 
     const head = el('div', 'chart-head');
     head.appendChild(el('span', 'chart-title', '热力图 · 日实际完成分钟'));
@@ -12224,29 +12553,24 @@
       focusHeatExpanded ? '完整视图 · 近 ' + weeks + ' 周' : '预览 · 近 ' + weeks + ' 周（可展开更完整）'));
 
     const grid = el('div', 'focus-heat-grid');
-    for (let i = 0; i < days; i++) {
-      const ts = startTs + i * 86400000;
-      const day = focusYmd(ts);
-      const v = map[day] || 0;
-      if (v > 0) { activeDays++; totalMin += v; if (v > peakMin) peakMin = v; }
+    hd.cells.forEach(function (c) {
       const cell = el('div', 'focus-heat-cell');
-      const lv = v <= 0 ? 0 : Math.min(4, Math.ceil((v / maxMin) * 4));
-      cell.setAttribute('data-lv', String(lv));
-      cell.title = day + ' · ' + v + ' 分';
-      if (day === today) cell.classList.add('today');
+      cell.setAttribute('data-lv', String(c.lv));
+      cell.title = c.day + ' · ' + c.minutes + ' 分';
+      if (c.isToday) cell.classList.add('today');
       grid.appendChild(cell);
-    }
+    });
     heat.appendChild(grid);
     if (focusHeatExpanded) {
       const sum = el('div', 'heat-summary');
       sum.appendChild(el('span', null, '有专注'));
-      sum.appendChild(el('b', null, activeDays + ' 天'));
+      sum.appendChild(el('b', null, hd.activeDays + ' 天'));
       sum.appendChild(el('span', null, '· 合计'));
-      sum.appendChild(el('b', null, totalMin + ' 分'));
+      sum.appendChild(el('b', null, hd.totalMin + ' 分'));
       sum.appendChild(el('span', null, '· 日均有记录日'));
-      sum.appendChild(el('b', null, activeDays ? Math.round(totalMin / activeDays) + ' 分' : '—'));
+      sum.appendChild(el('b', null, hd.activeDays ? Math.round(hd.totalMin / hd.activeDays) + ' 分' : '—'));
       sum.appendChild(el('span', null, '· 峰值日'));
-      sum.appendChild(el('b', null, peakMin + ' 分'));
+      sum.appendChild(el('b', null, hd.peakMin + ' 分'));
       heat.appendChild(sum);
     }
     wrap.appendChild(heat);
@@ -12264,7 +12588,7 @@
     hMin.appendChild(el('span', 'chart-title', '专注时间 · 近 30 天'));
     hMin.appendChild(el('span', 'chart-pill', sumMin + ' 分'));
     tMin.appendChild(hMin);
-    tMin.appendChild(el('div', 'chart-label muted', '柱高 = 当日实际完成分钟 · 今日 ' + (map[today] || 0) + ' 分'));
+    tMin.appendChild(el('div', 'chart-label muted', '柱高 = 当日实际完成分钟 · 今日 ' + hd.todayMinutes + ' 分'));
     const maxV = Math.max(1, series.reduce(function (a, x) { return Math.max(a, x.minutes); }, 0));
     const bars = el('div', 'focus-trend-bars');
     series.forEach(function (x) {
@@ -12497,7 +12821,10 @@
 
   // 完成度询问（计时结束自动弹出 / 点完成也会弹）
   function focusOpenCompleteModal(chain, st) {
-    const modal = el('div', 'map-modal habit-modal');
+    // 同一时刻最多一个完成度弹窗：先移除既有的（防重复叠加、防旧弹窗盖住输入）
+    const dup = document.querySelector('.map-modal.focus-complete-modal');
+    if (dup) dup.remove();
+    const modal = el('div', 'map-modal habit-modal focus-complete-modal');
     const backdrop = el('div', 'map-modal-backdrop');
     backdrop.addEventListener('click', function () { modal.remove(); });
     modal.appendChild(backdrop);

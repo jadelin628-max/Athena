@@ -207,13 +207,15 @@
 
 ## 行动侧其它键（与学习库隔离）
 
-| 键 | 内容 |
-|---|---|
-| thena_habit_groups_v1 | 习惯组 minK 等 |
-| thena_habit_state_v1 | 每日检查/结算状态 |
-| thena_focus_v1 | 专注链 · 单元 · 判例 · 编制 |
-| thena_mile_v1 | 里程碑 Def + Hit |
-| thena_act_cfg_v1 | 行动设置 |
-| thena_global_prefs_v1 | 全局偏好（可重叠项） |
+| 键 | 内容 | 云同步 |
+|---|---|---|
+| `athena_habit_groups_v1` | 习惯组 minK 等 | ✅ 载荷 `habitGroups` |
+| `athena_habit_state_v1` | 每日检查/结算状态 | ❌ 不参与（打卡日志在 `habits[].doneDates` 内随行动键同步） |
+| `athena_focus_v1` | 专注链 · 单元 · 判例 · 编制 | ✅ 载荷 `focus` |
+| `athena_mile_v1` | 里程碑 Hit 记录 | ✅ **已接入云同步**：载荷 `mile.hits`，按 `defId` 去重、同 `defId` 取 `at` 较新并集；Def 是代码常量 `MILESTONE_DEFS`，不入云 |
+| `athena_act_cfg_v1` | 行动设置 | ✅ 载荷 `settings`（设置本地优先） |
+| `athena_global_prefs_v1` | 全局偏好（可重叠项） | ❌ 不参与 |
+
+行动侧同步载荷字段：`act`（`athena_act_v1`）/ `habitGroups` / `focus` / `mile` / `settings`；`updatedAt` 为组装时刻（`Date.now()`），合并取两端 max。老云端载荷缺少 `mile` 字段时按空结构 `{ hits: [] }` 处理（不抛错），完全下载时与其他行动键同语义单向覆盖。
 
 详见 ACT.md。

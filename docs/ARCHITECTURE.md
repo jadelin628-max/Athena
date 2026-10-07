@@ -102,6 +102,7 @@ IndexedDB `kv` 作为同 key 备份；加载时 `localStorage` 优先，缺失�
 - 通道：用户 GitHub 私仓 `athena-sync/` 目录，明文 JSON。
 - 启动拉取；评分落盘约 30s 后防抖上传；回前台超 5 分钟自动同步。
 - **合并**：卡片/错题并集，同卡比 `lastR` 等选边；日志逐日取大/取或；自定义内容冲突本地优先；设置本地优先；覆盖前只在「对侧有本机未见变化」时归档（`archive/` 每科保留最近 10 份）。
+- **行动模块**（`athena-sync/data/_act.json`）：载荷 `{ act, habitGroups, focus, mile, settings }` 一并同步（`runSync` / `forceUploadAll` / `forceDownloadAll` 三条路径共用同一组装/写回漏斗）；里程碑只同步 Hit 记录（`defId` 去重、同 `defId` 取 `at` 较新并集），Def 是代码常量不入云；老云端载荷无 `mile` 字段按空结构 `{ hits: [] }` 处理。
 - 同一设备同步请求串行；PUT 遇 409 自动重拉合并重试。
 
 ## 调度（勿与 FSRS 公式层混淆）

@@ -52,6 +52,8 @@
 
 <!-- ↓↓↓ 新任务加在此行之下；按 T 编号递增 ↓↓↓ -->
 
+<!-- 已归档：T39–T44 专注链两 bug + 里程碑云同步 + 习惯树拖拽 → backup/docs-archive/board/2026-10-07-T39-T44.md -->
+
 <!-- 已归档：T1 js 教材化 → backup/docs-archive/board/2026-09-28-T1-js-textbook.md -->
 <!-- 已归档：T2 clang K&R → backup/docs-archive/board/2026-09-28-T2-clang-kr.md -->
 <!-- 已归档：T3 math3 线代笔记 → backup/docs-archive/board/2026-09-28-T3-math3-linalg.md -->

@@ -1474,6 +1474,51 @@
     }
   }
 
+  // 到期提示的「一次性」标记：记录已提示过的单元身份（chain.id:startedAt:阶段）。
+  // 旧实现的 bug：到期分支只 focusClearTick + renderApp，而此时 chain.status 仍是
+  // running/scouting、current 仍在 → renderFocusSection 重新装表 → 下一秒又进到期分支
+  // → 每秒一次 renderApp + 每秒 appendChild 一个新完成度弹窗（弹窗挂在 body 上，
+  // renderApp 只清 #app，不会清掉旧的），叠成一摞后输入被新弹窗盖住、页面持续重渲染。
+  // 修法：同一单元只处理一次（见 focusTickPlan 的 prompt），不再重复渲染/弹窗。
+  let focusCompletePromptKey = null;
+
+  // 单元身份：同一条链上同一 startedAt + 同一阶段（侦查 / 正式）视为同一个单元。
+  // 侦查到期后「转正」会换阶段 → 允许再提示一次（转正后才是完成度询问）。
+  function focusUnitKey(chain) {
+    if (!chain || !chain.current) return null;
+    const cur = chain.current;
+    const phase = (cur.typeKey === 'scout' && !cur.promotedFromScout) ? 'scout' : 'formal';
+    return chain.id + ':' + (Number(cur.startedAt) || 0) + ':' + phase;
+  }
+
+  // 每秒 tick 的纯决策（不碰 DOM，便于单测）：调用处按 action 施加副作用
+  function focusTickPlan(chain, now, promptedKey) {
+    if (!chain) return { action: 'none' };
+    if (chain.status === 'running' || chain.status === 'scouting') {
+      if (!chain.current) return { action: 'none' };
+      const remain = focusUnitRemainingMs(chain.current, now);
+      if (remain > 0) return { action: 'countdown', remainMs: remain };
+      const cur = chain.current;
+      const scoutPhase = cur.typeKey === 'scout' && !cur.promotedFromScout;
+      const key = focusUnitKey(chain);
+      const prompt = key !== promptedKey;
+      return {
+        action: 'expired',
+        remainMs: 0,
+        key: key,
+        prompt: prompt,
+        scoutPhase: scoutPhase,
+        openModal: prompt && !scoutPhase
+      };
+    }
+    if (chain.status === 'reserved' && chain.reservation) {
+      const remain = focusReservationRemainingMs(chain.reservation, now);
+      if (remain > 0) return { action: 'countdown', remainMs: remain };
+      return { action: 'reservation_expired', remainMs: 0 };
+    }
+    return { action: 'none' };
+  }
+
   function focusFmtClock(ms) {
     const s = Math.max(0, Math.ceil(ms / 1000));
     const m = Math.floor(s / 60);
@@ -1722,42 +1767,44 @@
 
     // 倒计时 + 时间到自动弹出完成度询问
     if (chain.status === 'running' || chain.status === 'scouting' || chain.status === 'reserved') {
+      // 装表前先清（renderFocusSection 入口已清一次，这里再保一道，防 tick 泄漏）
+      focusClearTick();
       focusTickTimer = setInterval(function () {
         if (currentView !== 'actFocus') { focusClearTick(); return; }
         const clock = document.getElementById('focusClock');
         if (!clock) { focusClearTick(); return; }
         const s = loadFocus();
         const ch = focusActiveChain(s);
-        if (!ch) return;
         const t = Date.now();
-        if (ch.status === 'running' || ch.status === 'scouting') {
-          if (!ch.current) return;
-          const remain = focusUnitRemainingMs(ch.current, t);
-          if (remain <= 0) {
-            clock.textContent = '时间到';
-            clock.classList.add('done');
-            focusClearTick();
-            renderApp();
-            // 计时结束：自动询问完成度（正式单元）
-            if (ch.current && ch.current.typeKey !== 'scout') {
-              setTimeout(function () { focusOpenCompleteModal(ch, loadFocus()); }, 80);
-            }
-          } else {
-            clock.textContent = focusFmtClock(remain);
+        const plan = focusTickPlan(ch, t, focusCompletePromptKey);
+        if (plan.action === 'none') { focusClearTick(); return; }
+        if (plan.action === 'countdown') {
+          clock.textContent = focusFmtClock(plan.remainMs);
+          return;
+        }
+        if (plan.action === 'expired') {
+          clock.textContent = '时间到';
+          clock.classList.add('done');
+          focusClearTick();
+          // 同一单元只处理一次：已提示过就直接收表，不再 renderApp、不再叠弹窗
+          if (!plan.prompt) return;
+          focusCompletePromptKey = plan.key;
+          renderApp();
+          // 计时结束：自动询问完成度（正式单元）
+          if (plan.openModal) {
+            setTimeout(function () { focusOpenCompleteModal(ch, loadFocus()); }, 80);
           }
-        } else if (ch.status === 'reserved' && ch.reservation) {
-          const remain = focusReservationRemainingMs(ch.reservation, t);
-          clock.textContent = focusFmtClock(remain);
-          if (remain <= 0) {
-            focusClearTick();
-            const er = focusExpireReservations(s, t);
-            if (er && er.state) saveFocus(er.state);
-            renderApp();
-            if (er && er.expired && er.expired.length) {
-              toast('预约违规 · 预约链计数已从零开始');
-            } else {
-              toast('预约已超时');
-            }
+          return;
+        }
+        if (plan.action === 'reservation_expired') {
+          focusClearTick();
+          const er = focusExpireReservations(s, t);
+          if (er && er.state) saveFocus(er.state);
+          renderApp();
+          if (er && er.expired && er.expired.length) {
+            toast('预约违规 · 预约链计数已从零开始');
+          } else {
+            toast('预约已超时');
           }
         }
       }, 1000);
@@ -2071,19 +2118,42 @@
 
   // ---------------- UI：统计 ----------------
   let focusHeatExpanded = false; // 热力图：预览 8 周 ↔ 展开 26 周
+  // 热力图数据：可见窗口内逐日实际完成分钟 + 色阶档位
+  // 色阶锚点必须取「可见窗口内」最高日（对齐 src/stats.mjs 学习日历的惯例）：
+  // 若锚定全史峰值，一个历史大日就会把可见期整片压成同一档 → 色阶失效（看上去“全部同色”）
+  function focusHeatData(state, now, weeks) {
+    const map = focusDailyMinutes(state);
+    const today = focusYmd(now);
+    const end = new Date(now);
+    end.setHours(12, 0, 0, 0);
+    const days = Math.max(1, Math.floor(Number(weeks) || 0)) * 7;
+    const startTs = end.getTime() - (days - 1) * 86400000;
+    const cells = [];
+    let maxMin = 0, activeDays = 0, totalMin = 0, peakMin = 0;
+    for (let i = 0; i < days; i++) {
+      const day = focusYmd(startTs + i * 86400000);
+      const minutes = map[day] || 0;
+      if (minutes > 0) { activeDays++; totalMin += minutes; if (minutes > peakMin) peakMin = minutes; }
+      if (minutes > maxMin) maxMin = minutes;
+      cells.push({ day: day, minutes: minutes, lv: 0, isToday: day === today });
+    }
+    const scale = maxMin > 0 ? maxMin : 1;
+    cells.forEach(function (c) {
+      c.lv = c.minutes <= 0 ? 0 : Math.min(4, Math.ceil((c.minutes / scale) * 4));
+    });
+    return {
+      cells: cells, maxMin: maxMin, activeDays: activeDays, totalMin: totalMin,
+      peakMin: peakMin, today: today, todayMinutes: map[today] || 0
+    };
+  }
+
   function focusRenderStats(wrap, st, now) {
     wrap.appendChild(el('h3', null, '统计 · 实际完成分钟'));
 
     const heat = el('div', 'act-panel focus-heat chart-card');
-    const map = focusDailyMinutes(st);
-    const today = focusYmd(now);
-    const end = new Date(now);
-    end.setHours(12, 0, 0, 0);
     const weeks = focusHeatExpanded ? 26 : 8;
-    const days = weeks * 7;
-    const startTs = end.getTime() - (days - 1) * 86400000;
-    let maxMin = 1, activeDays = 0, totalMin = 0, peakMin = 0;
-    Object.keys(map).forEach(function (k) { if (map[k] > maxMin) maxMin = map[k]; });
+    const hd = focusHeatData(st, now, weeks);
+    const today = hd.today;
 
     const head = el('div', 'chart-head');
     head.appendChild(el('span', 'chart-title', '热力图 · 日实际完成分钟'));
@@ -2098,29 +2168,24 @@
       focusHeatExpanded ? '完整视图 · 近 ' + weeks + ' 周' : '预览 · 近 ' + weeks + ' 周（可展开更完整）'));
 
     const grid = el('div', 'focus-heat-grid');
-    for (let i = 0; i < days; i++) {
-      const ts = startTs + i * 86400000;
-      const day = focusYmd(ts);
-      const v = map[day] || 0;
-      if (v > 0) { activeDays++; totalMin += v; if (v > peakMin) peakMin = v; }
+    hd.cells.forEach(function (c) {
       const cell = el('div', 'focus-heat-cell');
-      const lv = v <= 0 ? 0 : Math.min(4, Math.ceil((v / maxMin) * 4));
-      cell.setAttribute('data-lv', String(lv));
-      cell.title = day + ' · ' + v + ' 分';
-      if (day === today) cell.classList.add('today');
+      cell.setAttribute('data-lv', String(c.lv));
+      cell.title = c.day + ' · ' + c.minutes + ' 分';
+      if (c.isToday) cell.classList.add('today');
       grid.appendChild(cell);
-    }
+    });
     heat.appendChild(grid);
     if (focusHeatExpanded) {
       const sum = el('div', 'heat-summary');
       sum.appendChild(el('span', null, '有专注'));
-      sum.appendChild(el('b', null, activeDays + ' 天'));
+      sum.appendChild(el('b', null, hd.activeDays + ' 天'));
       sum.appendChild(el('span', null, '· 合计'));
-      sum.appendChild(el('b', null, totalMin + ' 分'));
+      sum.appendChild(el('b', null, hd.totalMin + ' 分'));
       sum.appendChild(el('span', null, '· 日均有记录日'));
-      sum.appendChild(el('b', null, activeDays ? Math.round(totalMin / activeDays) + ' 分' : '—'));
+      sum.appendChild(el('b', null, hd.activeDays ? Math.round(hd.totalMin / hd.activeDays) + ' 分' : '—'));
       sum.appendChild(el('span', null, '· 峰值日'));
-      sum.appendChild(el('b', null, peakMin + ' 分'));
+      sum.appendChild(el('b', null, hd.peakMin + ' 分'));
       heat.appendChild(sum);
     }
     wrap.appendChild(heat);
@@ -2138,7 +2203,7 @@
     hMin.appendChild(el('span', 'chart-title', '专注时间 · 近 30 天'));
     hMin.appendChild(el('span', 'chart-pill', sumMin + ' 分'));
     tMin.appendChild(hMin);
-    tMin.appendChild(el('div', 'chart-label muted', '柱高 = 当日实际完成分钟 · 今日 ' + (map[today] || 0) + ' 分'));
+    tMin.appendChild(el('div', 'chart-label muted', '柱高 = 当日实际完成分钟 · 今日 ' + hd.todayMinutes + ' 分'));
     const maxV = Math.max(1, series.reduce(function (a, x) { return Math.max(a, x.minutes); }, 0));
     const bars = el('div', 'focus-trend-bars');
     series.forEach(function (x) {
@@ -2371,7 +2436,10 @@
 
   // 完成度询问（计时结束自动弹出 / 点完成也会弹）
   function focusOpenCompleteModal(chain, st) {
-    const modal = el('div', 'map-modal habit-modal');
+    // 同一时刻最多一个完成度弹窗：先移除既有的（防重复叠加、防旧弹窗盖住输入）
+    const dup = document.querySelector('.map-modal.focus-complete-modal');
+    if (dup) dup.remove();
+    const modal = el('div', 'map-modal habit-modal focus-complete-modal');
     const backdrop = el('div', 'map-modal-backdrop');
     backdrop.addEventListener('click', function () { modal.remove(); });
     modal.appendChild(backdrop);
@@ -2849,6 +2917,8 @@ export {
   focusIsReservationOpen,
   focusUnitRemainingMs,
   focusCanComplete,
+  focusUnitKey,
+  focusTickPlan,
   focusIsTypeKey,
   focusSetTypeName,
   focusSetLevelName,
@@ -2877,6 +2947,7 @@ export {
   focusSuccession,
   focusDailyMinutes,
   focusDailyAvgCompletion,
+  focusHeatData,
   focusTrendSeries,
   focusCreateOrg,
   focusRenameOrg,

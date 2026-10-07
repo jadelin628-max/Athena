@@ -32,6 +32,8 @@ import {
   focusReservationRemainingMs,
   focusUnitRemainingMs,
   focusCanComplete,
+  focusUnitKey,
+  focusTickPlan,
   focusMainChain,
   focusSetTypeName,
   focusSetLevelName,
@@ -58,6 +60,7 @@ import {
   focusStrongestNormal,
   focusDailyMinutes,
   focusDailyAvgCompletion,
+  focusHeatData,
   focusTrendSeries,
   focusCreateOrg,
   focusRenameOrg,
@@ -641,4 +644,230 @@ test('sanitizeOrg：dueAt / minChildCount 规整', () => {
   });
   assert.equal(o2.dueAt, null);
   assert.equal(o2.minChildCount, 5);
+});
+
+// ---------- 到期 tick：纯决策（回归：计时结束后每秒 renderApp + 每秒叠完成度弹窗） ----------
+
+// 真实 tick 循环的等价模拟：到期 → focusClearTick() → renderApp()（renderFocusSection 会重新装表）
+// → 下一秒再决策。旧实现没有「同单元只处理一次」的标记，于是每秒重复一次。
+function runTickSeconds(chain, startMs, seconds, promptedKeyIn) {
+  let promptedKey = promptedKeyIn || null;
+  let renders = 0;
+  let modals = 0;
+  let tickAlive = true;
+  let countdowns = 0;
+  for (let i = 0; i < seconds; i++) {
+    const now = startMs + i * 1000;
+    if (!tickAlive) continue; // 表已收且无 renderApp → 不再有 tick
+    const plan = focusTickPlan(chain, now, promptedKey);
+    if (plan.action === 'none') { tickAlive = false; continue; }
+    if (plan.action === 'countdown') { countdowns += 1; continue; }
+    if (plan.action === 'expired') {
+      tickAlive = false; // focusClearTick()
+      if (!plan.prompt) continue; // 同一单元已处理过 → 收起表，不再 renderApp / 不再开弹窗
+      promptedKey = plan.key;
+      renders += 1; // renderApp()
+      tickAlive = true; // 重渲染后 renderFocusSection 重新装表
+      if (plan.openModal) modals += 1;
+      continue;
+    }
+    if (plan.action === 'reservation_expired') {
+      tickAlive = false;
+      renders += 1;
+    }
+  }
+  return { renders: renders, modals: modals, promptedKey: promptedKey, tickAlive: tickAlive, countdowns: countdowns };
+}
+
+function runningChain(taskText, minutes, typeKey) {
+  const r = focusSitDown(makeState(), 'n1', NOW, { taskText: taskText || '复现：计时结束弹窗', minutes: minutes });
+  assert.equal(r.ok, true, 'sitDown should ok');
+  assert.equal(r.chain.status, 'running');
+  return { st: r.state, chain: r.chain };
+}
+
+test('focusUnitKey：同链同 startedAt + 同阶段才有同一身份', () => {
+  const { chain } = runningChain();
+  assert.equal(focusUnitKey(chain), 'n1:' + NOW + ':formal');
+  assert.equal(focusUnitKey(chain), focusUnitKey(chain));
+  assert.equal(focusUnitKey({ id: 'n1', current: null }), null);
+  assert.equal(focusUnitKey(null), null);
+  // 同链不同 startedAt → 不同单元
+  const other = Object.assign({}, chain, { current: Object.assign({}, chain.current, { startedAt: NOW + 1 }) });
+  assert.notEqual(focusUnitKey(other), focusUnitKey(chain));
+});
+
+test('focusTickPlan：计时中 countdown，到期 expired（正式单元要弹完成度）', () => {
+  const { chain } = runningChain(null, 25);
+  const mid = focusTickPlan(chain, NOW + 10 * MIN, null);
+  assert.equal(mid.action, 'countdown');
+  assert.equal(mid.remainMs, 15 * MIN);
+  const due = focusTickPlan(chain, NOW + 25 * MIN, null);
+  assert.equal(due.action, 'expired');
+  assert.equal(due.remainMs, 0);
+  assert.equal(due.prompt, true);
+  assert.equal(due.scoutPhase, false);
+  assert.equal(due.openModal, true);
+  // 已提示过同一单元 → 不再提示
+  const again = focusTickPlan(chain, NOW + 25 * MIN + 5000, due.key);
+  assert.equal(again.action, 'expired');
+  assert.equal(again.prompt, false);
+  assert.equal(again.openModal, false);
+  // 非 running/reserved 状态 / 无 current → 无动作
+  assert.equal(focusTickPlan(null, NOW, null).action, 'none');
+  assert.equal(focusTickPlan(Object.assign({}, chain, { current: null }), NOW, null).action, 'none');
+  assert.equal(focusTickPlan(Object.assign({}, chain, { status: 'idle' }), NOW, null).action, 'none');
+});
+
+test('到期推进：30 秒观察窗只 renderApp 一次、只开一个完成度弹窗（旧实现每秒各一次）', () => {
+  const { chain } = runningChain(null, 25);
+  // 计时中：不渲染、不弹窗
+  const during = runTickSeconds(chain, NOW, 60, null);
+  assert.equal(during.renders, 0);
+  assert.equal(during.modals, 0);
+  assert.equal(during.countdowns, 60);
+  // 到期后 30 秒
+  const after = runTickSeconds(chain, NOW + 25 * MIN, 30, null);
+  assert.equal(after.renders, 1, '到期后只 renderApp 一次');
+  assert.equal(after.modals, 1, '最多一个完成度弹窗');
+  assert.equal(after.promptedKey, focusUnitKey(chain));
+  // 继续观察 30 秒：同一单元不再有任何渲染 / 弹窗
+  const later = runTickSeconds(chain, NOW + 25 * MIN + 30 * 1000, 30, after.promptedKey);
+  assert.equal(later.renders, 0);
+  assert.equal(later.modals, 0);
+});
+
+test('取消不自动重开：已提示过的单元再 tick 也不开弹窗；完成后的新单元才再提示', () => {
+  const first = runningChain(null, 25);
+  const due = focusTickPlan(first.chain, NOW + 25 * MIN, null);
+  assert.equal(due.openModal, true);
+  // 用户点「取消」（只关弹窗）→ 标记保留 → 不再自动重开
+  const afterCancel = runTickSeconds(first.chain, NOW + 26 * MIN, 30, due.key);
+  assert.equal(afterCancel.modals, 0);
+  assert.equal(afterCancel.renders, 0);
+  // 用户点「记录完成」→ 单元入流水，链回到 idle
+  const done = focusCompleteUnit(first.st, 'n1', NOW + 26 * MIN, { achieved: true, completion: 80, name: '' });
+  assert.equal(done.ok, true);
+  assert.equal(done.unit.achieved, true);
+  assert.equal(done.unit.completion, 80);
+  assert.equal(done.unit.name, '复现：计时结束弹窗');
+  assert.equal(focusFindChain(done.state, 'n1').status, 'idle');
+  // 再坐一次（新 startedAt）→ 到期重新提示
+  const second = focusSitDown(done.state, 'n1', NOW + 40 * MIN, { taskText: '第二单元' });
+  assert.equal(second.ok, true);
+  const due2 = focusTickPlan(second.chain, NOW + 65 * MIN, due.key);
+  assert.equal(due2.prompt, true);
+  assert.equal(due2.openModal, true);
+});
+
+test('侦查到期：只自渲染一次、不开完成度弹窗；转正后再提示一次', () => {
+  const r = focusScoutStart(makeState(), 'n1', NOW, { taskText: '侦查任务' });
+  assert.equal(r.ok, true);
+  assert.equal(r.chain.status, 'scouting');
+  const dueMs = NOW + (r.chain.current.plannedMin || 0) * MIN;
+  const due = focusTickPlan(r.chain, dueMs, null);
+  assert.equal(due.action, 'expired');
+  assert.equal(due.scoutPhase, true);
+  assert.equal(due.openModal, false, '侦查到期不弹完成度');
+  const after = runTickSeconds(r.chain, dueMs, 30, null);
+  assert.equal(after.renders, 1);
+  assert.equal(after.modals, 0);
+  // 转正：阶段 scout → formal，允许再提示一次（此时才弹完成度）
+  const promoted = focusScoutPromote(r.state, 'n1', 'focus', dueMs + MIN);
+  assert.equal(promoted.ok, true);
+  assert.equal(promoted.chain.status, 'running');
+  const dueAfterPromote = focusTickPlan(promoted.chain, dueMs + MIN, after.promptedKey);
+  assert.equal(dueAfterPromote.prompt, true, '转正后是新阶段 → 再提示一次');
+  assert.equal(dueAfterPromote.openModal, true);
+});
+
+test('预约到期：窗口内 countdown，超时 reservation_expired（一次）', () => {
+  const reserved = focusReserve(makeState(), 'n1', NOW);
+  assert.equal(reserved.ok, true);
+  assert.equal(reserved.chain.status, 'reserved');
+  const plan = focusTickPlan(reserved.chain, NOW + 60000, null);
+  assert.equal(plan.action, 'countdown');
+  const expired = focusTickPlan(reserved.chain, NOW + FOCUS_RESERVE_WINDOW_MS, null);
+  assert.equal(expired.action, 'reservation_expired');
+  const after = runTickSeconds(reserved.chain, NOW + FOCUS_RESERVE_WINDOW_MS, 30, null);
+  assert.equal(after.renders, 1);
+  assert.equal(after.modals, 0);
+});
+
+// ---------- 统计页热力图：可见窗口色阶（回归：历史峰值把可见期压成同一档） ----------
+
+const DAY = 86400000;
+
+// 直接铺 units（endedAt = NOW - k 天，actualMin 指定），绕开每一步 CTDP 流程
+function heatState(plan) {
+  const st = makeState();
+  st.units = plan.map(function (p, i) {
+    const endedAt = NOW - p[0] * DAY;
+    return {
+      id: 'u' + i, seq: i + 1, typeKey: 'focus', name: '单元' + (i + 1), taskText: '注入任务' + (i + 1),
+      chainId: 'n1', orgId: null, planId: null,
+      startedAt: endedAt - p[1] * MIN, endedAt: endedAt,
+      plannedMin: 25, actualMin: p[1], achieved: true, completion: 80, promotedFromScout: false
+    };
+  });
+  return st;
+}
+
+test('focusHeatData：默认 8 周 = 56 格、展开 26 周 = 182 格，末格是今天', () => {
+  const st = heatState([[0, 90], [3, 200]]);
+  const hd = focusHeatData(st, NOW, 8);
+  assert.equal(hd.cells.length, 56);
+  assert.equal(focusHeatData(st, NOW, 26).cells.length, 182);
+  const last = hd.cells[hd.cells.length - 1];
+  assert.equal(last.isToday, true);
+  assert.equal(last.day, focusYmd(NOW));
+  assert.equal(last.minutes, 90);
+  assert.equal(hd.today, focusYmd(NOW));
+  assert.equal(hd.todayMinutes, 90);
+  assert.equal(hd.activeDays, 2);
+  assert.equal(hd.totalMin, 290);
+  assert.equal(hd.peakMin, 200);
+  assert.equal(hd.maxMin, 200);
+  // 窗口首格 = 今天往前 55 天（含当天共 56 天）
+  assert.equal(hd.cells[0].day, focusYmd(NOW - 55 * DAY));
+  assert.equal(focusHeatData(st, NOW, 26).cells[0].day, focusYmd(NOW - 181 * DAY));
+});
+
+test('focusHeatData：色阶锚定可见窗口最高日（窗口外的历史大日不影响档位）', () => {
+  const st = heatState([[70, 999], [3, 200], [10, 100], [0, 50]]);
+  const hd = focusHeatData(st, NOW, 8);
+  assert.equal(hd.maxMin, 200, '窗口外的 999 分不参与色阶锚点');
+  assert.equal(hd.activeDays, 3, '窗口外的日子不计入汇总');
+  const byDay = {};
+  hd.cells.forEach(function (c) { byDay[c.day] = c; });
+  assert.equal(byDay[focusYmd(NOW - 3 * DAY)].lv, 4, '窗口内峰值日 → 最深档');
+  assert.equal(byDay[focusYmd(NOW - 10 * DAY)].lv, 2); // 100/200*4
+  assert.equal(byDay[focusYmd(NOW)].lv, 1);            // 50/200*4
+  // 若按全史锚定（旧实现），以上三档全部塌成 1 → 有数据日看起来“全部同色”
+  const lvs = hd.cells.filter(function (c) { return c.lv > 0; }).map(function (c) { return c.lv; });
+  assert.deepEqual(Array.from(new Set(lvs)).sort(), [1, 2, 4]);
+});
+
+test('focusHeatData：无数据 / 只有窗口外数据 → 全部 0 档（无 NaN）', () => {
+  const empty = focusHeatData(heatState([]), NOW, 8);
+  assert.equal(empty.cells.length, 56);
+  assert.equal(empty.cells.every(function (c) { return c.lv === 0 && c.minutes === 0; }), true);
+  assert.equal(empty.maxMin, 0);
+  assert.equal(empty.activeDays, 0);
+  assert.equal(empty.peakMin, 0);
+  assert.equal(empty.todayMinutes, 0);
+
+  const outside = focusHeatData(heatState([[70, 999]]), NOW, 8);
+  assert.equal(outside.activeDays, 0);
+  assert.equal(outside.cells.every(function (c) { return c.lv === 0; }), true);
+});
+
+test('focusHeatData：同一天多个单元按 actualMin 汇总后再定档', () => {
+  const st = heatState([[0, 40], [0, 60], [1, 500]]);
+  const hd = focusHeatData(st, NOW, 8);
+  const byDay = {};
+  hd.cells.forEach(function (c) { byDay[c.day] = c; });
+  assert.equal(byDay[focusYmd(NOW)].minutes, 100);
+  assert.equal(byDay[focusYmd(NOW)].lv, 1); // ceil(100/500*4)
+  assert.equal(byDay[focusYmd(NOW - DAY)].lv, 4);
 });

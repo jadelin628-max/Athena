@@ -255,7 +255,7 @@
       evidence: [
         { g: '🟢', ref: 'Posner & Petersen 1990 · Annual Review of Neuroscience' }
       ],
-      features: [{ label: '专注链', nav: 'actPlan' }]
+      features: [{ label: '专注链', nav: 'actFocus' }]
     },
     {
       id: 'mindfulness', cat: 'cog', icon: '🧘', title: '正念：小而真实',
@@ -342,7 +342,7 @@
       evidence: [
         { g: '⚠️', ref: '社区技术文《链式时延协议》（CTDP）原文思想——非同行评议，方法论参考' }
       ],
-      features: [{ label: '专注链', nav: 'actPlan' }, { label: '计划', nav: 'actPlan' }]
+      features: [{ label: '专注链', nav: 'actFocus' }, { label: '计划', nav: 'actPlan' }]
     },
     {
       id: 'process-fb', cat: 'act', icon: '✅', title: '过程反馈（非奖励）',
@@ -495,7 +495,7 @@
       evidence: [
         { g: '🟢', ref: '映射关系；各条出处见对应条目' }
       ],
-      features: [{ label: '习惯树', nav: 'actHabit' }, { label: '专注链', nav: 'actPlan' }, { label: '计划', nav: 'actPlan' }]
+      features: [{ label: '习惯树', nav: 'actHabit' }, { label: '专注链', nav: 'actFocus' }, { label: '计划', nav: 'actPlan' }]
     }
   ];
 

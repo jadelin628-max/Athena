@@ -474,11 +474,44 @@
     return row;
   }
 
+  // 帮助页入口按钮：指向对应视图（专注链已升为行动默认视图 → 帮助页入口一律指 actFocus）
+  function actHelpNavChip(label, view) {
+    const b = el('button', 'btn small', label);
+    b.setAttribute('data-action', 'nav');
+    b.setAttribute('data-arg', view);
+    return b;
+  }
+
   function renderActHelp(wrap) {
     wrap.appendChild(el('h2', null, '📖 RSIP · 设计手册'));
-    wrap.appendChild(el('p', 'muted', '习惯设计四攻略 + 习惯树规则 + 计划/专注链速查。科学依据见知识库，这里只给可执行要点。'));
+    wrap.appendChild(el('p', 'muted', '按二级导航顺序速查：专注链 → 计划 → 习惯树（含规则）+ 设计四攻略。科学依据见知识库，这里只给可执行要点。'));
+
+    // 目录：点按跳到对应小节；锚点 = 各小节面板 id
+    const toc = el('div', 'act-panel act-help-toc');
+    toc.appendChild(el('div', 'mini-label', '目录'));
+    const tocRow = el('div', 'chips');
+    [
+      ['专注链', '#act-help-focus'],
+      ['计划', '#act-help-plan'],
+      ['习惯树 · 攻略', '#act-help-habit'],
+      ['习惯树 · 规则', '#act-help-habit-rules'],
+      ['详见知识库', '#act-help-kb']
+    ].forEach(function (pair) {
+      const b = el('button', 'chip', pair[0]);
+      b.setAttribute('data-anchor', pair[1]);
+      b.addEventListener('click', function () {
+        const target = document.querySelector(pair[1]);
+        if (target && target.scrollIntoView) target.scrollIntoView({ block: 'start' });
+      });
+      tocRow.appendChild(b);
+    });
+    toc.appendChild(tocRow);
+    wrap.appendChild(toc);
+
+    const panels = [];
 
     const sec1 = el('div', 'act-panel act-help-page');
+    sec1.id = 'act-help-habit';
     sec1.appendChild(el('h3', null, '设计四攻略（习惯树 · RSIP）'));
     sec1.appendChild(actHelpStrategy(
       '① 零敲牛皮糖',
@@ -500,9 +533,11 @@
       '坏习惯是替换不是消灭；在 WOOP 障碍步列外部提示并移除/改造。',
       '失败回习惯库、内化保留，可再入树——破了还能立。'
     ));
-    wrap.appendChild(sec1);
+    sec1.appendChild(actHelpNavChip('去习惯树 →', 'actHabit'));
+    panels.push(sec1);
 
     const sec2 = el('div', 'act-panel act-help-page');
+    sec2.id = 'act-help-focus';
     sec2.appendChild(el('h3', null, '专注链 · CTDP 简述'));
     const ul2 = el('ul');
     [
@@ -515,9 +550,11 @@
     const ctdpLink = el('button', 'btn small', '知识库 · 专注链 CTDP →');
     ctdpLink.addEventListener('click', function () { actOpenKb('ctdp'); });
     sec2.appendChild(ctdpLink);
-    wrap.appendChild(sec2);
+    sec2.appendChild(actHelpNavChip('去专注链 →', 'actFocus'));
+    panels.push(sec2);
 
     const sec3 = el('div', 'act-panel act-help-page');
+    sec3.id = 'act-help-plan';
     sec3.appendChild(el('h3', null, '计划 · WOOP 速查'));
     const ul3 = el('ul');
     [
@@ -531,9 +568,11 @@
     const woopLink = el('button', 'btn small', '知识库 · WOOP →');
     woopLink.addEventListener('click', function () { actOpenKb('woop'); });
     sec3.appendChild(woopLink);
-    wrap.appendChild(sec3);
+    sec3.appendChild(actHelpNavChip('去计划 →', 'actPlan'));
+    panels.push(sec3);
 
     const sec4 = el('div', 'act-panel act-help-page');
+    sec4.id = 'act-help-habit-rules';
     sec4.appendChild(el('h3', null, '习惯树 · 规则简述'));
     const ul4 = el('ul');
     [
@@ -550,17 +589,18 @@
     const rsipLink = el('button', 'btn small', '知识库 · 习惯树 RSIP →');
     rsipLink.addEventListener('click', function () { actOpenKb('rsip'); });
     sec4.appendChild(rsipLink);
-    wrap.appendChild(sec4);
+    panels.push(sec4);
 
     const sec5 = el('div', 'act-panel act-help-page');
+    sec5.id = 'act-help-kb';
     sec5.appendChild(el('h3', null, '详见知识库'));
     const links = el('div', 'act-help-kb-links');
     [
-      ['rsip', '习惯树 · RSIP'],
       ['ctdp', '专注链 · CTDP'],
       ['woop', 'WOOP'],
       ['if-then', '执行意图'],
       ['env', '提示与替换'],
+      ['rsip', '习惯树 · RSIP'],
       ['process-fb', '过程反馈']
     ].forEach(function (pair) {
       const b = el('button', 'chip', pair[1]);
@@ -568,7 +608,10 @@
       links.appendChild(b);
     });
     sec5.appendChild(links);
-    wrap.appendChild(sec5);
+    panels.push(sec5);
+
+    // 页面顺序 = 二级导航顺序：专注链 → 计划 → 习惯树（攻略 + 规则）→ 详见知识库
+    [sec2, sec3, sec1, sec4, sec5].forEach(function (p) { wrap.appendChild(p); });
   }
 
   // ---------------- 渲染：行动壳 / 计划区 ----------------

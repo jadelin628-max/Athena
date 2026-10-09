@@ -80,8 +80,14 @@
   // 错题失败（不会/思路错）→ 关联知识卡降级，提前重现补漏。
   // 降级是一次真实的调度事件：必须更新 lastR——否则跨端合并（按 lastR 选边）时，
   // 另一端仍持较旧但 lastR 相同的复习态副本，降级会被静默丢弃、行为在两端间反复。
-  function demoteLinked(linkedIds) {
+  // v2.1.0：联动仅对「知识卡错题」（手动录入 + 自行关联知识点）生效；
+  //   例题标入错题（linkedMastery === 0，见 markAsWrong）只走自身重做调度，绝不改动关联知识点卡。
+  //   旧数据缺 linkedMastery → 视为 1，保留历史得降级行为（历史影响不回滚，新评分按新规则）。
+  function demoteLinked(w, rating) {
+    if (!w || w.linkedMastery === 0) return; // 「例题入错题→知识点掌握度」联动已下线
+    const linkedIds = w.linked;
     if (!linkedIds || !linkedIds.length) return;
+    if (rating != null && rating > 1) return; // 仅「不会/思路错」触发降级（与评分调用点同口径）
     const now = Date.now();
     linkedIds.forEach(function (id) {
       const c = card(id);
@@ -135,6 +141,19 @@
     wrongPos = 0;
   }
 
+  // 错题自测入口：复用自测视图（quiz.mjs），来源模式由 currentModule === 'wrong' 派生——
+  // 配置面板、出题队列、报告与入队逻辑整体复用，错题版只是换一套候选（错题）与题面方向。
+  function wrongQuizEntry() {
+    const b = el('button', 'btn small', '📝 错题自测');
+    b.addEventListener('click', function () {
+      currentModule = 'wrong';
+      currentView = 'quiz';
+      quiz = null;
+      renderApp();
+    });
+    return b;
+  }
+
   function renderWrongLearn() {
     const app = document.getElementById('app');
     const total = Object.keys(DB.wrongs || {}).length;
@@ -143,6 +162,7 @@
     const add = el('button', 'btn small primary', '➕ 手动录入');
     add.addEventListener('click', openWrongInput);
     tb.appendChild(add);
+    tb.appendChild(wrongQuizEntry());
     app.appendChild(tb);
     // 统计行（与知识卡学习页 statsBar 同构）：待重做 / 今日已重做 / 掌握分布
     if (total > 0) app.appendChild(wrongStatsBar());
@@ -320,7 +340,7 @@
     const stateBefore = w.state; // 评分前状态（评分日志用）
     applyRatingToWrongCard(w, r);
     pushRevlog(wid, r, stateBefore, w.ivl, 'w'); // 评分日志：错题重做同样计入（FSRS 训练数据地基）
-    if (r <= 1) demoteLinked(w.linked); // 不会/思路错 → 关联知识卡降级
+    if (r <= 1) demoteLinked(w, r); // 不会/思路错 → 关联知识卡降级（仅 linkedMastery !== 0 的知识卡错题；例题错题为 0 时内部直接返回）
     w.lastSolveMs = Date.now();
     if (!Array.isArray(w.hist)) w.hist = [];
     w.hist.push({ t: Date.now(), m: wrongMastery(wid).pct });
@@ -335,6 +355,8 @@
   }
 
   // 把一道真题/例题标记为错题（linked 为关联知识点 id）
+  // v2.1.0：例题 = 只入错题本、只按错题卡自身调度复习；linkedMastery = 0 关闭「改关联知识点掌握度」的联动
+  //（知识点标签仍保留展示与跳转，只是不再随例题评分变化）。
   function markAsWrong(ex, linkedId) {
     if (!ex || !ex.q) return;
     // 查重：已有相同题目的错题则跳转，不重复添加
@@ -354,6 +376,7 @@
     w.kind = '错题';
     w.q = ex.q; w.a = ex.a; w.a2 = ex.a2 || ''; w.src = ex.src || '';
     if (linkedId) w.linked = [linkedId];
+    w.linkedMastery = 0; // 例题来源：关联知识点不随本错题评分变化（只删联动，例题仍照常入错题本）
     initWrongAsLapsed(w); // 视为当天已忘记，次日进入重做队列
     DB.wrongs[id] = w;
     saveDB();
@@ -384,6 +407,7 @@
     const add = el('button', 'btn small primary', '➕ 手动录入');
     add.addEventListener('click', openWrongInput);
     tb.appendChild(add);
+    tb.appendChild(wrongQuizEntry());
     app.appendChild(tb);
 
     if (!ids.length) {
@@ -482,6 +506,10 @@
       app.appendChild(wrap);
       return;
     }
+    const tb = el('div', 'learn-top');
+    tb.appendChild(el('span', 'muted', '共 ' + ids.length + ' 道'));
+    tb.appendChild(wrongQuizEntry());
+    wrap.appendChild(tb);
 
     let due = 0, fresh = 0, review = 0, grad = 0, pctSum = 0, lapses = 0;
     ids.forEach(function (wid) {
@@ -537,6 +565,31 @@
       dd.appendChild(row);
     });
     wrap.appendChild(dd);
+
+    // —— 自测统计（错题自测，记录来自 DB.log.quiz，见 docs/DATA_SCHEMA）——
+    const recs = (DB.log && Array.isArray(DB.log.quiz) ? DB.log.quiz : []).filter(function (r) { return r && r.mode === 'wrong'; });
+    const qs = quizLogStats(recs, 0);
+    wrap.appendChild(el('h3', null, '📝 自测统计'));
+    const qb = el('div', 'stat-card');
+    if (!qs.n) {
+      qb.appendChild(el('p', 'muted', '还没有错题自测记录——点上方「📝 错题自测」按范围抽题，做完给出成绩、章节表现、用时与预测差距。'));
+    } else {
+      qb.appendChild(el('p', null, '共 ' + qs.n + ' 次 · ' + qs.totalQ + ' 题 · 平均正确率 ' + qs.acc + '% · 平均每题 ' + Math.round(qs.msAvg / 1000) + ' 秒'));
+      qb.appendChild(el('p', 'muted', '表现差提前入队 ' + qs.queued + ' 张（只把到期时间提前到现在，不改记忆历史）'));
+      qs.list.slice(-5).reverse().forEach(function (r) {
+        const row = el('div', 'cat-bar-row quiz-log-row');
+        row.appendChild(el('span', 'cat-bar-name', fmtDate(new Date(r.t))));
+        const bar = el('div', 'cat-bar');
+        const fill = el('div', 'cat-bar-fill');
+        fill.style.width = r.pct + '%';
+        fill.style.background = masteryColor(r.pct);
+        bar.appendChild(fill);
+        row.appendChild(bar);
+        row.appendChild(el('span', 'cat-bar-val', r.correct + '/' + r.total + ' · ' + r.pct + '%'));
+        qb.appendChild(row);
+      });
+    }
+    wrap.appendChild(qb);
 
     app.appendChild(wrap);
   }
@@ -629,6 +682,7 @@
     w.kind = '错题';
     w.q = q.trim(); w.a = a.trim(); w.a2 = a2.trim(); w.src = src.trim();
     w.linked = wrongInput.linked.slice();
+    // 手动录入的知识卡错题：linkedMastery 保持 defaultWrongCard 的 1 —— 关联知识点联动行为与既往一致
     initWrongAsLapsed(w); // 视为当天已忘记，次日进入重做队列
     DB.wrongs[id] = w;
     saveDB();
@@ -644,4 +698,7 @@
     wrongInput = null;
   }
 
-export { initWrongAsLapsed, applyRatingToWrongCard };
+  // ===== BEGIN TESTABLE wrong linkage helpers =====
+  // 单测（tests/wrong.test.mjs）直接调用：联动开关语义与例题/知识卡两类来源的区分在此封闭可验。
+  export { initWrongAsLapsed, applyRatingToWrongCard, demoteLinked };
+  // ===== END TESTABLE wrong linkage helpers =====

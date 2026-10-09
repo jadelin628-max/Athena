@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '2.0.0';
+  const VERSION = '2.1.0';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '2.1.0', date: '2026-10', items: ['题库模块（新）：数学三 / 微观 / 统计真题共 55 道（math3 24 · econ 15 · stats 16），知识点标签 × 题型双体系并列筛选 + 难度五星 + 题型出现频率五星（由库内题数实时统计），每题含题干 / 答案解析 / 难度 / 题型 / 知识点标签 / 陷阱与提示，可一键纳入错题本并按题干查重；跟随全局学科选择器，科目总量与筛选命中数分列显示、筛选 chip 可再点取消；数据 window.BANK.<subj> 与学习库完全隔离', '自测重构：开始前按数量 / 章节范围 / 难度范围 / 掌握度范围四维配置队列（含边界夹取），表现差的卡自动提前纳入重学队列（保留 FSRS 历史、不改算法），完成后出报告（得分、章节表现、用时、与预测掌握度的差距）并在统计页留档；错题模块提供同款自测；自测记录与配置随导入导出与云同步往返（上限 200 条）', '专注链：任务层次严格划分（任务单元 → 任务组 → 任务群 → 任务集团，逐级归属、组合自动升一级、混层组合明确拒绝）；计划任务（顶层与「＋子级」）均可设「最低下一级任务数」与截止日期，非法日期被拒；删除编制后番号复用最小空缺号（已有号不变）；四级层级出现可区分的视觉层级与番号符号，归属关系一眼可见', '专注链与全局：专注 / 预约计时在任意视图都有剩余时间悬浮提醒（可收起，与既有风格一致）；浏览界面未到期卡片可一键「⏰ 立即重学」提前复习，不重置 FSRS 历史也不改动调度算法；错题本中由例题标记的错题不再联动知识点掌握度（手动录入的错题仍联动，历史影响不回滚）', '修复：专注链统计页热力图不显示；完成专注后的完成度弹窗每秒重复弹出、内容无法编辑并持续报错（现已单次弹出且可正常编辑）；题库「已在错题本」状态恒不亮；云同步在 log / revlogs / quiz 数据畸形时抛 TypeError 中断同步；并订正题库与自测若干文案、口径与易碎断言'] },
     { v: '2.0.0', date: '2026-10', items: ['产品升格为综合自我提升平台：记忆内核（FSRS）+ 行动系统（习惯树 RSIP · 专注链 CTDP）+ 知识库式原理。亮色默认蓝粉双色 UI，桌面侧栏 / iOS 底栏与安全区适配', '习惯树（RSIP）：今日结算（无 miss、全员检完确认、零点自动）、每日最多 1 个新节点入树、失败级联回习惯库且内化进度不丢、SVG 思维导图、组容错名额 minK 可编辑、强化可自动或手动（每日 1 次）', '专注链（CTDP）：任务单元（计时结束才算完成、内容/达成/完成度）、神圣座位 #N、下必为例判例、预约 15 分钟、侦查转正、精锐崩溃继位；编制竖列树番号 # ● ▲ ◆ 与计划模式（未填满整链清空）', '原理页知识库化：五分类可检索，条目含研究者/年份/出处与 🟢/🟡/⚠️；CTDP/RSIP 标社区方法论。计划模块以 WOOP 为主干（P 步=如果-那么，外部提示并入障碍）；设置·行动可调并支持重置/云同步；Today 双栏 + ⌘K 命令面板'] },
     { v: '1.52.0', date: '2026-10', items: ['修复习惯树「新建习惯无效」：编辑弹窗表单变量作用域导致保存回调 ReferenceError，现已可正常新建/落盘；树内支持＋子项/编辑/改父级/删除/今日完成、行内改名与容忍天数', '行动模块「帮助」升为与计划/习惯树并列的二层入口；界面去掉科普长注释；计划卡可删除；主页计划三栏（如果-那么/WOOP/环境审计）可折叠展示 + 习惯树独立入口（待检/今日/活跃）', '移除应用顶部 AIGC「AI生成」水印'] },
     { v: '1.51.0', date: '2026-10', items: ['新增「行动」模块（自我提升平台）：如果-那么（执行意图，软校验外部情境+具体动作）、WOOP 四步（障碍→自动生成如果-那么）、环境审计向导（提示→移除/改造）；数据 athena_act_v1 与学习库隔离；一级导航 + 主页次级入口', '习惯树：层级增删/改父级（删除级联子孙）、每日检查、可编辑容忍天数、同标签组「有维持成员则本检不移除、全部超标才整组移除」；evaluateHabitDay 纯函数 + 单测；过程反馈仅次数/点阵，无连击惩罚（对齐 Lally 66 天、Graybiel 替换非消灭）', '原理页增补认知科学八章（多巴胺 RPE/想要vs喜欢、习惯回路、SDT 与过度辩护、情绪重评、Posner 注意、学习机制、执行意图 WOOP、证伪清单），证据分级 🟢/🟡/⚠️；文档新增 docs/ACT.md 规格'] },
@@ -522,6 +523,28 @@
     c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
   }
 
+  // ---------------- 提前复习：把「未到期」的调度中卡片立即到期（纯调度，不重置记忆历史） ----------------
+  // 场景：用户浏览卡片时发现某张还没到期的卡其实已经忘了，想立刻复习（见浏览界面「立即重学」入口，
+  // 自测重构「表现差 → 重学队列」也复用这里，不新增任何算法）。
+  // 语义 = 提前复习、不重置历史：只把 due 落到当前时刻——
+  //   stability / difficulty / 学习阶段(state/step/grad) / reps / lapses / ivl / lastR 一律不动，
+  //   评分日志(revlog)也不写：这次点击不是一次复习记录。
+  // 影响面只有「到期时刻」这一个纯调度字段：卡片随后由既有队列逻辑（buildSession / surfaceDue）
+  // 自动收进复习队列；真正评分时仍由 applySchedRating 按原 stability/difficulty 与 lastR 计算保留率
+  // 与下一个间隔（间隔与到期时间始终由既有 FSRS 算法产出，见 src/fsrs-core.mjs）。
+  // 返回：true = 本次确实把未到期卡提前到期；false = 未到期条件不成立（新卡未进调度 / 已到期 / 缺 due）
+  //       —— false 分支不改动任何字段，因此重复调用是幂等的。
+  function markCardDueNow(c, now) {
+    if (!c || typeof c !== 'object') return false;
+    // 只有已进入调度状态的卡才有「到期/未到期」语义；新卡由新学队列引入，不在此处提前
+    if (c.state !== 'review' && c.state !== 'learning' && c.state !== 'relearning') return false;
+    if (typeof c.due !== 'number' || !isFinite(c.due)) return false; // 排期缺失/损坏：不猜测，交给 normalizeDB 自愈
+    const t = (typeof now === 'number' && isFinite(now)) ? now : Date.now();
+    if (c.due <= t) return false; // 已到期：幂等，一个字段都不写
+    c.due = t;
+    return true;
+  }
+
   // ---------------- 交错练习 · 辨析聚类 ----------------
   // 原理：把「相关需辨析」的卡（REL 中 tag=同类/对比/类比）聚成簇、簇内相邻出现，
   //       簇与无关联的单卡再按章节轮转——只让「真有关系」的卡在一起，无关联的卡不硬凑。
@@ -734,7 +757,11 @@
   function defaultCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, notes: '', hist: [], lastR: 0, ivlR: 0 }; }
 
   // 错题卡（独立于知识卡，复用 FSRS 调度状态 + 题目字段）
-  function defaultWrongCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, kind: '错题', q: '', a: '', a2: '', src: '', linked: [], errType: '', lastSolveMs: 0, hist: [], lastR: 0, ivlR: 0 }; }
+  // linkedMastery：关联知识点联动开关（1 开 / 0 关）。
+  //   仅「手动录入 + 自行关联知识点」的知识卡错题开启；「例题标入错题」一律为 0——
+  //   例题评分只影响错题卡自身，不再改动关联知识点卡的记忆状态（v2.1.0 依据用户决定下线该联动）。
+  //   旧数据无此字段 → sanitizeWrongCard 补 1，保持历史行为不被静默改写。
+  function defaultWrongCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, kind: '错题', q: '', a: '', a2: '', src: '', linked: [], errType: '', lastSolveMs: 0, hist: [], lastR: 0, ivlR: 0, linkedMastery: 1 }; }
   function sanitizeWrongCard(w) {
     const out = defaultWrongCard();
     if (w && typeof w === 'object') {
@@ -746,12 +773,18 @@
       if (typeof w.a2 === 'string') out.a2 = w.a2;
       if (typeof w.src === 'string') out.src = w.src;
       if (Array.isArray(w.linked)) out.linked = w.linked.filter(function (x) { return typeof x === 'string'; });
+      // 联动开关：仅显式 0（例题来源）关闭；缺失/非法（旧数据、NaN）一律补 1 —— 历史行为不被静默改写
+      out.linkedMastery = (w.linkedMastery === 0) ? 0 : 1;
       if (typeof w.errType === 'string') out.errType = w.errType;
       if (Array.isArray(w.hist)) out.hist = w.hist.map(function (h) { return { t: h.t, m: h.m }; });
       if (w.state === 'new' || w.state === 'learning' || w.state === 'relearning' || w.state === 'review') out.state = w.state;
     }
     return out;
   }
+  // ===== BEGIN TESTABLE wrong card helpers =====
+  // 单测（tests/wrong.test.mjs）直接调用：联动开关在导入/同步净化后是否保真，在此封闭可验。
+
+  // ===== END TESTABLE wrong card helpers =====
 
   // IndexedDB（作为更持久的数据备份；localStorage 仍为主存储）
   function idbOpen() {
@@ -833,6 +866,88 @@
   }
   // ===== END TESTABLE pref scope helpers =====
 
+  // ===== BEGIN TESTABLE quiz persistence helpers =====
+  // 自测数据的存储侧净化器：导入/加载两条路径共用（云同步合并见 sync.mjs 的 mergeDb）。
+  // 常量前缀 STORED_ 是刻意的——store.mjs 与 quiz.mjs 会被 tools/build.mjs 拼进同一 IIFE
+  // 作用域，quiz.mjs 已声明 QUIZ_* 系列，同名 const 会整包语法错误。
+  const STORED_QUIZ_MAX_RECORDS = 200;   // 与 quiz.mjs 的 QUIZ_MAX_RECORDS 同口径：只留最新 200 条
+  const STORED_QUIZ_MIN_COUNT = 1;       // 与 quiz.mjs 的 QUIZ_MIN_COUNT / QUIZ_MAX_COUNT 同口径
+  const STORED_QUIZ_MAX_COUNT = 50;
+  const STORED_QUIZ_DIFF_MIN = 1;        // 与 quiz.mjs 的 QUIZ_DIFF_MIN / QUIZ_DIFF_MAX 同口径
+  const STORED_QUIZ_DIFF_MAX = 10;
+  const STORED_QUIZ_MASTERY_MIN = 0;     // 与 quiz.mjs 的 QUIZ_MASTERY_MIN / QUIZ_MASTERY_MAX 同口径
+  const STORED_QUIZ_MASTERY_MAX = 100;
+  const STORED_QUIZ_MODES = ['cards', 'wrong'];   // 自测的两个来源（知识卡 / 错题）
+
+  // 单条自测记录合法判定：普通对象且 t 为有限数（时间戳是去重键，缺它无法与云同步对齐）。
+  // 其余字段一律不解释、原样保留——记录形状由 quiz.mjs 的 quizSaveRecord 定义（含 byCat/weak/queued
+  // 等嵌套字段），存储层二次解释只会在未来加字段时静默丢数据。
+  function storedQuizRecordValid(e) {
+    return !!e && typeof e === 'object' && !Array.isArray(e) && typeof e.t === 'number' && isFinite(e.t);
+  }
+
+  // 记录数组净化：非法元素单独丢弃（不整块清空）、逐条深拷贝（导入后不与来源共享引用）、
+  // 超上限只保留最新 200 条（与写入侧 splice(0, len - MAX) 同语义）。
+  function storeQuizRecords(list) {
+    if (!Array.isArray(list)) return [];
+    const out = [];
+    list.forEach(function (e) {
+      if (!storedQuizRecordValid(e)) return;
+      let copy = null;
+      try { copy = JSON.parse(JSON.stringify(e)); } catch (err) { copy = null; }
+      if (!copy || typeof copy !== 'object' || Array.isArray(copy)) return; // 不可序列化（循环引用等）→ 丢弃
+      out.push(copy);
+    });
+    if (out.length > STORED_QUIZ_MAX_RECORDS) out.splice(0, out.length - STORED_QUIZ_MAX_RECORDS);
+    return out;
+  }
+
+  // 与 quiz.mjs 的 quizClampNum 同口径（含「数字字符串也认」这条宽容度）——
+  // 两侧净化器对同一份数据必须给出同一结果，否则「导入时被夹坏、读取时又变回来」的诡异差异会误导排查。
+  function storedQuizClampNum(v, lo, hi, dflt) {
+    const n = (typeof v === 'number') ? v : parseFloat(v);
+    if (!isFinite(n)) return dflt;
+    if (n < lo) return lo;
+    if (n > hi) return hi;
+    return n;
+  }
+  // 区间夹取 + 下限大于上限自动交换（与 quiz.mjs 的 quizSanitizeRange 同口径）
+  function storedQuizRange(pair, lo, hi, dflt) {
+    if (!Array.isArray(pair) || pair.length < 2) return dflt.slice();
+    const a = storedQuizClampNum(pair[0], lo, hi, dflt[0]);
+    const b = storedQuizClampNum(pair[1], lo, hi, dflt[1]);
+    return a <= b ? [a, b] : [b, a];
+  }
+  // 单来源自测配置：缺省与非法一律回退默认，绝不抛错。
+  // 章节键只做「非空字符串 + 去重」——分类白名单（CATS）是学科层知识，store 层学科无关；
+  // 读取侧 quiz.mjs 的 quizSanitizeConfig 会用当前科真实分类再净化一次（本函数输出是它的不动点）。
+  function storeQuizCfgOne(raw) {
+    const r = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+    const out = {
+      count: Math.round(storedQuizClampNum(r.count, STORED_QUIZ_MIN_COUNT, STORED_QUIZ_MAX_COUNT, 10)),
+      cats: [],
+      diff: storedQuizRange(r.diff, STORED_QUIZ_DIFF_MIN, STORED_QUIZ_DIFF_MAX, [1, 10]),
+      mastery: storedQuizRange(r.mastery, STORED_QUIZ_MASTERY_MIN, STORED_QUIZ_MASTERY_MAX, [0, 100])
+    };
+    if (Array.isArray(r.cats)) {
+      const seen = {};
+      r.cats.forEach(function (c) {
+        if (typeof c !== 'string' || !c || seen[c]) return;
+        seen[c] = true;
+        out.cats.push(c);
+      });
+    }
+    return out;
+  }
+  // 两来源配置容器：DB.settings.quizCfg = { cards: {...}, wrong: {...} }
+  function storeQuizCfg(raw) {
+    const r = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+    const out = {};
+    STORED_QUIZ_MODES.forEach(function (m) { out[m] = storeQuizCfgOne(r[m]); });
+    return out;
+  }
+  // ===== END TESTABLE quiz persistence helpers =====
+
   function loadGlobalPrefs() {
     if (typeof window !== 'undefined' && window.__globalPrefs) {
       return prefSanitizeGlobal(window.__globalPrefs);
@@ -896,6 +1011,8 @@
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.settings.prefScope || typeof DB.settings.prefScope !== 'object') DB.settings.prefScope = {};
+    // 自测范围配置（v2.1.0 起）：缺省/非法一律回退默认并夹取（不抛错），老库（无此键）加载后照常自测
+    DB.settings.quizCfg = storeQuizCfg(DB.settings.quizCfg);
     // 初学者模式自愈：cats 必须与当前科 CATS 对齐——
     // 教材化整科重置改过 catKey、或 cats 混入他科/旧键时，过滤集合会全挡或全放。
     // 解析时丢弃非法键并回退推荐起步章；写回 sid 供下次切科识别跨科残留。
@@ -907,6 +1024,7 @@
     if (!DB.log) DB.log = {};
     if (!DB.log.counts) DB.log.counts = {}; // 每日完成量分类计数（n 新学 / r 复习 / w 错题重做）
     if (!Array.isArray(DB.log.revlogs)) DB.log.revlogs = []; // 评分日志（FSRS 训练数据地基，v1.44.0 起）
+    DB.log.quiz = storeQuizRecords(DB.log.quiz); // 自测记录（v2.1.0 起）：清非法元素 + 只留最新 200 条
     if (!DB.wrongs) DB.wrongs = {};
     if (!DB.custom) DB.custom = {};
     if (!DB.cardOverrides) DB.cardOverrides = {};
@@ -1186,6 +1304,8 @@
       const r = resolveBeginner(b, BASE_SUBJ, currentSubjectId);
       fresh.settings.beginner = { on: !!(b && b.on), cats: r.cats, sid: currentSubjectId };
     }
+    // 自测范围配置（v2.1.0 起）：此前整块丢弃，表现为「导出→导入后自测范围回到默认」
+    fresh.settings.quizCfg = storeQuizCfg(payload.settings && payload.settings.quizCfg);
     if (payload.log && payload.log.checkins && typeof payload.log.checkins === 'object') {
       fresh.log.checkins = {};
       Object.keys(payload.log.checkins).forEach(function (k) { fresh.log.checkins[k] = true; });
@@ -1221,6 +1341,9 @@
           if (typeof payload.log.studyTime[dk] === 'number' && isFinite(payload.log.studyTime[dk])) fresh.log.studyTime[dk] = payload.log.studyTime[dk];
         });
       }
+      // 自测记录（v2.1.0 起）：合法记录逐字段保留（含 byCat/weak/queued/diff/mastery 等嵌套字段），
+      // 非法元素单独丢弃、只留最新 200 条（此前整块不在白名单里 → 导出→导入静默丢自测历史）
+      fresh.log.quiz = storeQuizRecords(payload.log.quiz);
     }
     if (payload.wrongs && typeof payload.wrongs === 'object') {
       Object.keys(payload.wrongs).forEach(function (wid) {
@@ -1985,6 +2108,16 @@
   let mapScale = 1;
   let mapTx = 0, mapTy = 0;
   let mapDragMoved = false;
+  // 题库（bank.mjs）会话状态：题型/知识点/难度/搜索/详情/只看未入错题。
+  // 科目范围不在这里——t17 起题库恒等于全局学科选择器（currentSubjectId）；
+  // 频率维度（bankTypeStar）与页内科目（bankSubject）已随页内科目卡/频率筛选一起下线。
+  // ⚠️ 所有 src/*.mjs 拼在同一个 IIFE 里，bank.mjs 内不得重复声明这些变量。
+  let bankType = 'all';
+  let bankTag = 'all';
+  let bankStar = 'all';
+  let bankQuery = '';
+  let bankOpen = null;
+  let bankOnlyWrong = false;
 
   // 会话级状态一键重置（切换学科 / 导入数据时调用）。
   // ⚠️ 新增会话级可变量时必须在这里同步补上——此前 switchSubject 与 importDB 各自维护
@@ -1995,6 +2128,9 @@
     mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; mapDragMoved = false; heatSel = null;
     browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
     wrongDeck = []; wrongFrontier = 0; wrongPos = 0; wrongExpanded = {}; wrongJumpId = null;
+    // 题库（bank.mjs）：题型/知识点/难度/搜索/详情状态（科目范围随全局学科选择器，无需复位）
+    bankType = 'all'; bankTag = 'all'; bankStar = 'all';
+    bankQuery = ''; bankOpen = null; bankOnlyWrong = false;
   }
 
   // ---------------- 通用 DOM ----------------
@@ -2050,6 +2186,7 @@
     if (currentView === 'statistics') return 'stats';
     if (currentView === 'principle') return 'principle';
     if (currentView === 'mile') return 'mile';
+    if (currentView === 'bank') return 'cards';
     if (currentModule === 'wrong') return 'wrong';
     if (currentModule === 'act') return 'act';
     return 'cards';
@@ -2073,20 +2210,24 @@
       sub.style.top = '0px';
       document.documentElement.style.setProperty('--chrome-h', '0px');
       highlightShell();
+      syncFocusReminder();
       return;
     }
     const items = currentModule === 'wrong'
       ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
       : currentModule === 'act'
-        ? [['actPlan', '计划'], ['actHabit', '习惯树'], ['actFocus', '专注链'], ['actHelp', '帮助']]
-        : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计'], ['help', '帮助']];
+        ? [['actFocus', '专注链'], ['actPlan', '计划'], ['actHabit', '习惯树'], ['actHelp', '帮助']]
+        : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['bank', '题库'], ['statistics', '统计'], ['help', '帮助']];
     const icons = currentModule === 'wrong'
       ? { wrong: 'wrong', wrongBrowse: 'search', wrongStats: 'chart' }
       : currentModule === 'act'
         ? { actPlan: 'act', actHabit: 'habit', actFocus: 'act', actHelp: 'help' }
-        : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart', help: 'help' };
+        : { learn: 'deck', browse: 'search', quiz: 'pencil', bank: 'bank', statistics: 'chart', help: 'help' };
+    // 「错题自测」复用自测视图（currentModule='wrong' + currentView='quiz'，见 src/wrong.mjs 的 wrongQuizEntry），
+    // 高亮必须映射回「重做」项——否则三项（重做/浏览/统计）会全部不高亮。
+    const activeKey = (currentModule === 'wrong' && currentView === 'quiz') ? 'wrong' : currentView;
     items.forEach(function (it) {
-      const b = el('button', 'nav-btn sub-btn' + (currentView === it[0] ? ' active' : ''));
+      const b = el('button', 'nav-btn sub-btn' + (activeKey === it[0] ? ' active' : ''));
       b.appendChild(icon(icons[it[0]]));
       b.appendChild(document.createTextNode(' ' + it[1]));
       b.setAttribute('data-action', 'nav');
@@ -2098,6 +2239,15 @@
     sub.style.top = headerH + 'px';
     document.documentElement.style.setProperty('--chrome-h', (headerH + sub.offsetHeight) + 'px');
     highlightShell();
+    // 悬浮提醒跟随壳层每次重渲染同步：专注/预约进行时，浏览、统计等任意视图都能看到剩余时间
+    // （focus.mjs 内的 1s 定时器负责走秒，这里负责即时增删，避免视图切换后残留/滞后）
+    syncFocusReminder();
+  }
+
+  function syncFocusReminder() {
+    if (typeof focusReminderSync === 'function') {
+      try { focusReminderSync(Date.now(), false); } catch (e) { /* 提醒失败不影响导航渲染 */ }
+    }
   }
 
   // 移动端底部 Dock：V2_PLAN 四项（主页/学习/错题/行动）；统计与设置在抽屉
@@ -2130,6 +2280,7 @@
     else if (currentView === 'learn') renderLearn();
     else if (currentView === 'browse') renderBrowse();
     else if (currentView === 'quiz') renderQuiz();
+    else if (currentView === 'bank') renderBank();
     else if (currentView === 'statistics') renderStatistics();
     else if (currentView === 'help') renderHelp();
     else if (currentView === 'wrong') renderWrongLearn();
@@ -2961,6 +3112,91 @@
   let browseMastery = 'all';
   let browseStars = 'all';
 
+  // ---------------- 未到期卡片：「立即重学」（提前复习，不重置记忆历史） ----------------
+  // 浏览时翻到一张还没到期、但其实已经忘了的卡：点一下就能立刻把它纳回复习队列。
+  // 调度只走 sched.mjs 的纯函数 markCardDueNow()——仅把 due 落到此刻，
+  // stability / difficulty / 学习阶段(step/state/grad) / reps / lapses / ivl / lastR 与评分日志全都不动；
+  // 之后的评分仍由既有 FSRS 算法按保留率算出新间隔（间隔与到期时间始终由算法产出）。
+  // 到期时刻的人话（未到期卡片专用）：小时级（学习/重学步进）说分钟，日级说月-日。
+  function browseDueLabel(ts) {
+    const ms = ts - Date.now();
+    if (ms < 60 * 60 * 1000) return Math.max(1, Math.round(ms / 60000)) + ' 分钟后';
+    const d = new Date(ts);
+    return (d.getMonth() + 1) + '-' + d.getDate();
+  }
+
+  // 入口资格：已进入调度、且下次到期时刻在未来（= 未到期）。authoritative 判定在 markCardDueNow 里。
+  function browseRelearnEligible(c) {
+    if (!c) return false;
+    if (c.state !== 'review' && c.state !== 'learning' && c.state !== 'relearning') return false;
+    return typeof c.due === 'number' && isFinite(c.due) && c.due > Date.now();
+  }
+
+  // 卡片标题（提示文案用纯文本：toast 是 textContent，去掉公式定界符避免出现裸 `$`）
+  function browseCardTitle(id) {
+    const f = DATA.filter(function (x) { return x.id === id; })[0];
+    const t = f ? f.title : id;
+    return String(t).replace(/\$/g, '');
+  }
+
+  // 点击「立即重学」：提前到期（幂等）→ 落盘 → 提示 → 重绘（入口随之消失，表示已进队列）
+  function relearnFromBrowse(id) {
+    const c = card(id);
+    if (!c) { toast('这张卡不存在，无法加入复习队列'); return; }
+    if (c.state === 'new') { toast('这张卡还没学过：首次学习后才会进入复习队列'); return; }
+    if (!browseRelearnEligible(c)) { toast('这张卡已经在复习队列里了，直接去「学习」页复习即可'); return; }
+    const dueBefore = browseDueLabel(c.due);
+    if (!markCardDueNow(c)) { toast('这张卡已经在复习队列里了，直接去「学习」页复习即可'); return; }
+    saveDB();
+    toast('「' + browseCardTitle(id) + '」已加入复习队列：立即复习（原定 ' + dueBefore + '，记忆历史保留）');
+    renderApp();
+  }
+
+  // 浏览列表装饰器：每张未到期卡片补一行「立即重学」入口。
+  // 浏览列表渲染在 src/quiz.mjs（本切片 inScope 之外，不改），这里包装同一作用域里的
+  // 函数声明 buildBrowseList（函数声明提升，browse.mjs 在 quiz.mjs 之前拼接也能安全取到原函数）；
+  // 初级视图与搜索局部重绘(renderBrowse 里的 replaceWith(buildBrowseList()))都走这条路径。
+  function decorateBrowseRelearn(list) {
+    if (!list || typeof list.querySelectorAll !== 'function') return list;
+    const items = list.querySelectorAll('.browse-item[data-card]');
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const id = item.getAttribute('data-card');
+      const c = card(id);
+      if (!browseRelearnEligible(c)) continue;
+      const dueLabel = browseDueLabel(c.due);
+      const row = el('div', 'browse-relearn');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 16px 12px;';
+      const btn = el('button', 'btn small browse-relearn-btn', '⏰ 立即重学');
+      btn.type = 'button';
+      btn.setAttribute('data-action', 'relearnnow');
+      btn.setAttribute('data-arg', id);
+      btn.setAttribute('data-relearn', id);
+      btn.title = '未到期（原定 ' + dueLabel + '）——立即纳入复习队列，提前复习不重置记忆历史';
+      btn.addEventListener('click', function (ev) {
+        if (ev && ev.stopPropagation) ev.stopPropagation(); // 不再冒泡给列表头与全局 data-action 委托
+        relearnFromBrowse(id);
+      });
+      row.appendChild(btn);
+      row.appendChild(el('span', 'muted browse-relearn-hint', '未到期 · 原定 ' + dueLabel + '，可提前复习'));
+      const head = item.querySelector('.browse-item-head');
+      if (head && head.nextSibling) item.insertBefore(row, head.nextSibling); else item.appendChild(row);
+    }
+    return list;
+  }
+
+  const buildBrowseListBase = buildBrowseList;
+  buildBrowseList = function () {
+    const list = buildBrowseListBase.apply(null, arguments);
+    try {
+      decorateBrowseRelearn(list);
+    } catch (e) {
+      // 装饰失败绝不能让浏览列表本身崩掉：入口缺失优于列表不可用
+      try { console.warn('Athena: 未到期卡片的「立即重学」入口渲染失败', e); } catch (e2) {}
+    }
+    return list;
+  };
+
 
   // ---------------- 错题模块 ----------------
   // 错题卡独立于知识卡：动手重做 → 看解析 → 按解题结果评分（不会/思路错/算错/会做对）。
@@ -3044,8 +3280,14 @@
   // 错题失败（不会/思路错）→ 关联知识卡降级，提前重现补漏。
   // 降级是一次真实的调度事件：必须更新 lastR——否则跨端合并（按 lastR 选边）时，
   // 另一端仍持较旧但 lastR 相同的复习态副本，降级会被静默丢弃、行为在两端间反复。
-  function demoteLinked(linkedIds) {
+  // v2.1.0：联动仅对「知识卡错题」（手动录入 + 自行关联知识点）生效；
+  //   例题标入错题（linkedMastery === 0，见 markAsWrong）只走自身重做调度，绝不改动关联知识点卡。
+  //   旧数据缺 linkedMastery → 视为 1，保留历史得降级行为（历史影响不回滚，新评分按新规则）。
+  function demoteLinked(w, rating) {
+    if (!w || w.linkedMastery === 0) return; // 「例题入错题→知识点掌握度」联动已下线
+    const linkedIds = w.linked;
     if (!linkedIds || !linkedIds.length) return;
+    if (rating != null && rating > 1) return; // 仅「不会/思路错」触发降级（与评分调用点同口径）
     const now = Date.now();
     linkedIds.forEach(function (id) {
       const c = card(id);
@@ -3099,6 +3341,19 @@
     wrongPos = 0;
   }
 
+  // 错题自测入口：复用自测视图（quiz.mjs），来源模式由 currentModule === 'wrong' 派生——
+  // 配置面板、出题队列、报告与入队逻辑整体复用，错题版只是换一套候选（错题）与题面方向。
+  function wrongQuizEntry() {
+    const b = el('button', 'btn small', '📝 错题自测');
+    b.addEventListener('click', function () {
+      currentModule = 'wrong';
+      currentView = 'quiz';
+      quiz = null;
+      renderApp();
+    });
+    return b;
+  }
+
   function renderWrongLearn() {
     const app = document.getElementById('app');
     const total = Object.keys(DB.wrongs || {}).length;
@@ -3107,6 +3362,7 @@
     const add = el('button', 'btn small primary', '➕ 手动录入');
     add.addEventListener('click', openWrongInput);
     tb.appendChild(add);
+    tb.appendChild(wrongQuizEntry());
     app.appendChild(tb);
     // 统计行（与知识卡学习页 statsBar 同构）：待重做 / 今日已重做 / 掌握分布
     if (total > 0) app.appendChild(wrongStatsBar());
@@ -3284,7 +3540,7 @@
     const stateBefore = w.state; // 评分前状态（评分日志用）
     applyRatingToWrongCard(w, r);
     pushRevlog(wid, r, stateBefore, w.ivl, 'w'); // 评分日志：错题重做同样计入（FSRS 训练数据地基）
-    if (r <= 1) demoteLinked(w.linked); // 不会/思路错 → 关联知识卡降级
+    if (r <= 1) demoteLinked(w, r); // 不会/思路错 → 关联知识卡降级（仅 linkedMastery !== 0 的知识卡错题；例题错题为 0 时内部直接返回）
     w.lastSolveMs = Date.now();
     if (!Array.isArray(w.hist)) w.hist = [];
     w.hist.push({ t: Date.now(), m: wrongMastery(wid).pct });
@@ -3299,6 +3555,8 @@
   }
 
   // 把一道真题/例题标记为错题（linked 为关联知识点 id）
+  // v2.1.0：例题 = 只入错题本、只按错题卡自身调度复习；linkedMastery = 0 关闭「改关联知识点掌握度」的联动
+  //（知识点标签仍保留展示与跳转，只是不再随例题评分变化）。
   function markAsWrong(ex, linkedId) {
     if (!ex || !ex.q) return;
     // 查重：已有相同题目的错题则跳转，不重复添加
@@ -3318,6 +3576,7 @@
     w.kind = '错题';
     w.q = ex.q; w.a = ex.a; w.a2 = ex.a2 || ''; w.src = ex.src || '';
     if (linkedId) w.linked = [linkedId];
+    w.linkedMastery = 0; // 例题来源：关联知识点不随本错题评分变化（只删联动，例题仍照常入错题本）
     initWrongAsLapsed(w); // 视为当天已忘记，次日进入重做队列
     DB.wrongs[id] = w;
     saveDB();
@@ -3348,6 +3607,7 @@
     const add = el('button', 'btn small primary', '➕ 手动录入');
     add.addEventListener('click', openWrongInput);
     tb.appendChild(add);
+    tb.appendChild(wrongQuizEntry());
     app.appendChild(tb);
 
     if (!ids.length) {
@@ -3446,6 +3706,10 @@
       app.appendChild(wrap);
       return;
     }
+    const tb = el('div', 'learn-top');
+    tb.appendChild(el('span', 'muted', '共 ' + ids.length + ' 道'));
+    tb.appendChild(wrongQuizEntry());
+    wrap.appendChild(tb);
 
     let due = 0, fresh = 0, review = 0, grad = 0, pctSum = 0, lapses = 0;
     ids.forEach(function (wid) {
@@ -3501,6 +3765,31 @@
       dd.appendChild(row);
     });
     wrap.appendChild(dd);
+
+    // —— 自测统计（错题自测，记录来自 DB.log.quiz，见 docs/DATA_SCHEMA）——
+    const recs = (DB.log && Array.isArray(DB.log.quiz) ? DB.log.quiz : []).filter(function (r) { return r && r.mode === 'wrong'; });
+    const qs = quizLogStats(recs, 0);
+    wrap.appendChild(el('h3', null, '📝 自测统计'));
+    const qb = el('div', 'stat-card');
+    if (!qs.n) {
+      qb.appendChild(el('p', 'muted', '还没有错题自测记录——点上方「📝 错题自测」按范围抽题，做完给出成绩、章节表现、用时与预测差距。'));
+    } else {
+      qb.appendChild(el('p', null, '共 ' + qs.n + ' 次 · ' + qs.totalQ + ' 题 · 平均正确率 ' + qs.acc + '% · 平均每题 ' + Math.round(qs.msAvg / 1000) + ' 秒'));
+      qb.appendChild(el('p', 'muted', '表现差提前入队 ' + qs.queued + ' 张（只把到期时间提前到现在，不改记忆历史）'));
+      qs.list.slice(-5).reverse().forEach(function (r) {
+        const row = el('div', 'cat-bar-row quiz-log-row');
+        row.appendChild(el('span', 'cat-bar-name', fmtDate(new Date(r.t))));
+        const bar = el('div', 'cat-bar');
+        const fill = el('div', 'cat-bar-fill');
+        fill.style.width = r.pct + '%';
+        fill.style.background = masteryColor(r.pct);
+        bar.appendChild(fill);
+        row.appendChild(bar);
+        row.appendChild(el('span', 'cat-bar-val', r.correct + '/' + r.total + ' · ' + r.pct + '%'));
+        qb.appendChild(row);
+      });
+    }
+    wrap.appendChild(qb);
 
     app.appendChild(wrap);
   }
@@ -3593,6 +3882,7 @@
     w.kind = '错题';
     w.q = q.trim(); w.a = a.trim(); w.a2 = a2.trim(); w.src = src.trim();
     w.linked = wrongInput.linked.slice();
+    // 手动录入的知识卡错题：linkedMastery 保持 defaultWrongCard 的 1 —— 关联知识点联动行为与既往一致
     initWrongAsLapsed(w); // 视为当天已忘记，次日进入重做队列
     DB.wrongs[id] = w;
     saveDB();
@@ -3607,6 +3897,11 @@
     if (m) m.remove();
     wrongInput = null;
   }
+
+  // ===== BEGIN TESTABLE wrong linkage helpers =====
+  // 单测（tests/wrong.test.mjs）直接调用：联动开关语义与例题/知识卡两类来源的区分在此封闭可验。
+
+  // ===== END TESTABLE wrong linkage helpers =====
 
   // ---------------- 帮助栏目：本科目的指导与答疑文章（检索用，不参与学习调度） ----------------
   let helpState = { open: {} };
@@ -3838,52 +4133,541 @@
     return item;
   }
 
-  // ---------------- 自测视图 ----------------
+  // ================== 自测（T51 重构：可配置队列 + 报告 + 表现差入重学） ==================
+  // 流程：配置（数量 / 章节范围 / 难度范围 / 掌握度范围）→ 出题队列 → 逐题作答
+  //       → 报告（成绩 / 章节表现 / 用时 / 与预测掌握度的差距）→ 表现差按既有
+  //       「提前复习」接口（sched.markCardDueNow）进入重学队列。
+  // 两种来源共用同一套流程与 UI：知识卡自测（默认）与错题自测（currentModule==='wrong'）。
+  // 口径：自测只做「检查」——不写评分日志（revlog）、不改 FSRS 参数；唯一的排期改动是
+  //       表现差的题把到期时间提前到现在（不重置记忆历史，不新增算法）。
+
+  // ===== BEGIN TESTABLE quiz core helpers =====
+  // 纯函数区（无 DOM / 无 DB 依赖）：tests/quiz.test.mjs 用标记块抽取到 vm 求值回归。
+  const QUIZ_MAX_COUNT = 50;       // 数量上限（配置面板边界校验）
+  const QUIZ_DEFAULT_COUNT = 10;
+  const QUIZ_WEAK_ACC = 60;        // 整场正确率 < 60% → 视为「表现差」（阈值明确可测）
+  const QUIZ_DIFF_MIN = 1;         // FSRS 记忆难度 D 的值域
+  const QUIZ_DIFF_MAX = 10;
+  const QUIZ_MASTERY_MIN = 0;      // 掌握度（%）值域
+  const QUIZ_MASTERY_MAX = 100;
+  const QUIZ_DEFAULT_DIFF = 5;     // 未进入排期的卡没有真实 D，按默认 5 计
+  const QUIZ_UNCATED = '未关联';    // 错题没有关联知识点时的章节桶
+  const QUIZ_MAX_RECORDS = 200;    // DB.log.quiz 保留条数上限
+
+  function quizDefaultConfig() {
+    return {
+      count: QUIZ_DEFAULT_COUNT,
+      cats: [],
+      diff: [QUIZ_DIFF_MIN, QUIZ_DIFF_MAX],
+      mastery: [QUIZ_MASTERY_MIN, QUIZ_MASTERY_MAX]
+    };
+  }
+
+  function quizShuffle(arr, rnd) {
+    const a = (Array.isArray(arr) ? arr : []).slice();
+    const rand = (typeof rnd === 'function') ? rnd : Math.random;
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1)) % (i + 1);
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function quizClampNum(v, lo, hi, dflt) {
+    const n = (typeof v === 'number') ? v : parseFloat(v);
+    if (!isFinite(n)) return dflt;
+    if (n < lo) return lo;
+    if (n > hi) return hi;
+    return n;
+  }
+
+  // 区间净化：夹取到 [lo,hi]；下限大于上限时自动交换
+  function quizSanitizeRange(pair, lo, hi, dflt) {
+    const a = Array.isArray(pair) ? pair : [];
+    const l = quizClampNum(a[0], lo, hi, dflt[0]);
+    const h = quizClampNum(a[1], lo, hi, dflt[1]);
+    return l <= h ? [l, h] : [h, l];
+  }
+
+  // 四维配置净化（配置面板的边界校验）：数量 1–50、难度 1–10、掌握度 0–100，
+  // 越界夹取、非法值回落默认、未知章节丢弃、重复章节去重。
+  function quizSanitizeConfig(raw, allCats) {
+    const r = (raw && typeof raw === 'object') ? raw : {};
+    const keys = Array.isArray(allCats) ? allCats : [];
+    const seen = {};
+    const cats = [];
+    if (Array.isArray(r.cats)) {
+      r.cats.forEach(function (k) {
+        if (typeof k !== 'string' || !k) return;
+        if (keys.length && keys.indexOf(k) === -1) return;
+        if (seen[k]) return;
+        seen[k] = true;
+        cats.push(k);
+      });
+    }
+    return {
+      count: Math.round(quizClampNum(r.count, 1, QUIZ_MAX_COUNT, QUIZ_DEFAULT_COUNT)),
+      cats: cats,
+      diff: quizSanitizeRange(r.diff, QUIZ_DIFF_MIN, QUIZ_DIFF_MAX, [QUIZ_DIFF_MIN, QUIZ_DIFF_MAX]),
+      mastery: quizSanitizeRange(r.mastery, QUIZ_MASTERY_MIN, QUIZ_MASTERY_MAX, [QUIZ_MASTERY_MIN, QUIZ_MASTERY_MAX])
+    };
+  }
+
+  // 候选筛选：章节范围（空数组=全部）+ 难度范围 + 掌握度范围，三段都命中才留在池子里
+  function quizFilterEntries(entries, cfg) {
+    const c = cfg || quizDefaultConfig();
+    const cats = c.cats || [];
+    const d = c.diff || [QUIZ_DIFF_MIN, QUIZ_DIFF_MAX];
+    const m = c.mastery || [QUIZ_MASTERY_MIN, QUIZ_MASTERY_MAX];
+    return (Array.isArray(entries) ? entries : []).filter(function (e) {
+      if (!e || !e.id) return false;
+      if (cats.length && cats.indexOf(e.cat) === -1) return false;
+      const diff = (typeof e.diff === 'number' && isFinite(e.diff)) ? e.diff : QUIZ_DEFAULT_DIFF;
+      const mast = (typeof e.mastery === 'number' && isFinite(e.mastery)) ? e.mastery : 0;
+      if (!(diff >= d[0] && diff <= d[1])) return false;
+      return mast >= m[0] && mast <= m[1];
+    });
+  }
+
+  // 「配置 → 出题队列」纯函数：池内随机取 count 张（池子不足则全取）；
+  // 每题配 3 个干扰项——优先取自同一筛选池，不足时从 fallback（全量）补，至少 2 个选项。
+  function quizBuildQueue(entries, cfg, rnd, fallback) {
+    const rand = (typeof rnd === 'function') ? rnd : Math.random;
+    const c = quizSanitizeConfig(cfg, []);
+    const pool = quizFilterEntries(entries, c);
+    const extra = Array.isArray(fallback) ? fallback : (Array.isArray(entries) ? entries : []);
+    const want = Math.min(c.count, pool.length);
+    const picked = quizShuffle(pool, rand).slice(0, want);
+    const qs = picked.map(function (e) {
+      const seen = {};
+      seen[e.id] = true;
+      const distract = [];
+      const take = function (list) {
+        quizShuffle(list, rand).forEach(function (x) {
+          if (distract.length >= 3 || !x || !x.id || seen[x.id]) return;
+          seen[x.id] = true;
+          distract.push(x);
+        });
+      };
+      take(pool.filter(function (x) { return x.id !== e.id; }));
+      if (distract.length < 3) take(extra.filter(function (x) { return x.id !== e.id; }));
+      return {
+        id: e.id,
+        label: e.label,
+        prompt: e.prompt,
+        cat: e.cat,
+        diff: (typeof e.diff === 'number' && isFinite(e.diff)) ? e.diff : QUIZ_DEFAULT_DIFF,
+        mastery: (typeof e.mastery === 'number' && isFinite(e.mastery)) ? e.mastery : 0,
+        predicted: (typeof e.predicted === 'number' && isFinite(e.predicted)) ? e.predicted : 0,
+        opts: quizShuffle([e].concat(distract), rand).map(function (x) { return { id: x.id, label: x.label }; })
+      };
+    });
+    return { qs: qs, poolSize: pool.length, totalSize: (Array.isArray(entries) ? entries.length : 0) };
+  }
+
+  // 表现差判定（阈值明确可测）：
+  //   ① 单题答错 → 该题进入重学队列；
+  //   ② 整场正确率 < QUIZ_WEAK_ACC（60%）→ 整场视为「表现差」，全部题目进入重学队列。
+  function quizWeakIds(answers, pct) {
+    const poor = (typeof pct === 'number' && isFinite(pct)) ? (pct < QUIZ_WEAK_ACC) : false;
+    const out = [];
+    (Array.isArray(answers) ? answers : []).forEach(function (a) {
+      if (!a || !a.id) return;
+      if (a.ok === false || poor) { if (out.indexOf(a.id) === -1) out.push(a.id); }
+    });
+    return out;
+  }
+
+  function quizVerdict(pct) {
+    if (typeof pct !== 'number' || !isFinite(pct)) return '—';
+    if (pct >= 90) return '优秀';
+    if (pct >= 75) return '良好';
+    if (pct >= QUIZ_WEAK_ACC) return '及格';
+    return '待加强';
+  }
+
+  // 报告：成绩 / 章节表现 / 用时 / 与预测掌握度的差距（+ 表现差清单）
+  function quizBuildReport(rec) {
+    const r = rec || {};
+    const answers = (Array.isArray(r.answers) ? r.answers : []).filter(function (a) { return a && a.id; });
+    const total = answers.length;
+    const correct = (typeof r.correct === 'number') ? r.correct : answers.filter(function (a) { return a.ok === true; }).length;
+    const pct = total ? Math.round(correct / total * 100) : 0;
+    const ms = (typeof r.ms === 'number' && isFinite(r.ms) && r.ms > 0) ? Math.round(r.ms) : 0;
+    const order = [];
+    const bucket = {};
+    answers.forEach(function (a) {
+      const k = a.cat || QUIZ_UNCATED;
+      if (!bucket[k]) { bucket[k] = { cat: k, n: 0, ok: 0 }; order.push(k); }
+      bucket[k].n++;
+      if (a.ok === true) bucket[k].ok++;
+    });
+    const byCat = order.map(function (k) {
+      const b = bucket[k];
+      return { cat: b.cat, n: b.n, ok: b.ok, pct: b.n ? Math.round(b.ok / b.n * 100) : 0 };
+    });
+    // 与预测掌握度的差距：预测＝本组题的平均掌握度（%），实际＝本次正确率（%）。
+    // 另附「算法预测可提取性 R」（复习中卡片的 FSRS 回忆概率），同量纲、口径不同。
+    const predSum = answers.reduce(function (s, a) {
+      return s + ((typeof a.mastery === 'number' && isFinite(a.mastery)) ? a.mastery : 0);
+    }, 0);
+    const rList = answers.filter(function (a) { return typeof a.predicted === 'number' && isFinite(a.predicted); });
+    const rSum = rList.reduce(function (s, a) { return s + a.predicted; }, 0);
+    const predicted = total ? Math.round(predSum / total) : 0;
+    return {
+      mode: r.mode === 'wrong' ? 'wrong' : 'cards',
+      total: total,
+      correct: correct,
+      pct: pct,
+      ms: ms,
+      msAvg: total ? Math.round(ms / total) : 0,
+      byCat: byCat,
+      predicted: predicted,
+      predictedR: rList.length ? Math.round(rSum / rList.length) : null,
+      gap: pct - predicted,
+      verdict: total ? quizVerdict(pct) : '—',
+      weakIds: quizWeakIds(answers, pct),
+      answers: answers
+    };
+  }
+
+  // 统计页聚合（纯）：自测次数 / 题数 / 正确率 / 用时 / 表现差入队张数
+  function quizLogStats(records, fromTs) {
+    const list = (Array.isArray(records) ? records : []).filter(function (r) {
+      return r && typeof r.t === 'number' && isFinite(r.t) && (!fromTs || r.t >= fromTs);
+    }).sort(function (a, b) { return a.t - b.t; });
+    let totalQ = 0, correctQ = 0, ms = 0, weak = 0, queued = 0;
+    const byMode = {
+      cards: { n: 0, total: 0, correct: 0, ms: 0 },
+      wrong: { n: 0, total: 0, correct: 0, ms: 0 }
+    };
+    list.forEach(function (r) {
+      const t = (typeof r.total === 'number') ? r.total : 0;
+      const c = (typeof r.correct === 'number') ? r.correct : 0;
+      const m = (typeof r.ms === 'number' && isFinite(r.ms)) ? r.ms : 0;
+      totalQ += t; correctQ += c; ms += m;
+      weak += (Array.isArray(r.weak) ? r.weak.length : 0);
+      queued += (Array.isArray(r.queued) ? r.queued.length : 0);
+      const k = r.mode === 'wrong' ? 'wrong' : 'cards';
+      byMode[k].n++; byMode[k].total += t; byMode[k].correct += c; byMode[k].ms += m;
+    });
+    return {
+      n: list.length,
+      totalQ: totalQ,
+      correctQ: correctQ,
+      ms: ms,
+      weak: weak,
+      queued: queued,
+      acc: totalQ ? Math.round(correctQ / totalQ * 100) : null,
+      msAvg: totalQ ? Math.round(ms / totalQ) : 0,
+      byMode: byMode,
+      last: list.length ? list[list.length - 1] : null,
+      list: list
+    };
+  }
+  // 知识卡候选（纯）：data 为知识点数组，cardOf(id)→排期卡、masteryOf(id)→掌握度%、
+  // rOf(id)→算法预测可提取性 R（null 表示无）。题面方向：给出内容（back），选它的名称（title）。
+  function quizCardCandidates(data, cardOf, masteryOf, rOf) {
+    return (Array.isArray(data) ? data : []).map(function (f) {
+      const c = (typeof cardOf === 'function') ? (cardOf(f.id) || {}) : {};
+      const r = (typeof rOf === 'function') ? rOf(f.id) : null;
+      return {
+        id: f.id,
+        label: f.title,
+        prompt: f.back,
+        cat: f.cat,
+        diff: (typeof c.diff === 'number' && isFinite(c.diff)) ? c.diff : QUIZ_DEFAULT_DIFF,
+        mastery: (typeof masteryOf === 'function') ? (masteryOf(f.id) || 0) : 0,
+        predicted: (r == null || !isFinite(r)) ? 0 : r
+      };
+    });
+  }
+
+  // 错题候选（纯）：wrongs 为错题表，data 为知识点数组（把关联知识点映射到章节）；
+  // masteryOf(wid)→掌握度%、predOf(w)→算法预测可提取性 R。题面方向：给出题目（q），选它的解析（a）。
+  // 没有关联知识点的错题单列 QUIZ_UNCATED 桶（不影响筛选：选「全部」时仍会被抽到）。
+  function quizWrongCandidates(wrongs, data, masteryOf, predOf) {
+    const list = Array.isArray(data) ? data : [];
+    return Object.keys(wrongs || {}).map(function (wid) {
+      const w = wrongs[wid] || {};
+      let cat = QUIZ_UNCATED;
+      if (w.linked && w.linked.length) {
+        const f = list.find(function (x) { return x.id === w.linked[0]; });
+        if (f) cat = f.cat;
+      }
+      return {
+        id: wid,
+        label: w.a || '（无解析）',
+        prompt: w.q,
+        cat: cat,
+        diff: (typeof w.diff === 'number' && isFinite(w.diff)) ? w.diff : QUIZ_DEFAULT_DIFF,
+        mastery: (typeof masteryOf === 'function') ? (masteryOf(wid) || 0) : 0,
+        predicted: (typeof predOf === 'function') ? (predOf(w) || 0) : 0
+      };
+    });
+  }
+  // 表现差 → 提前复习入队（纯）：ids 为表现差清单；retriever(id)→卡片对象；
+  // dueNow(card) 为既有「提前复习」接口（= sched.mjs 的 markCardDueNow，只提前到期时间，
+  // 不动记忆历史）。接口返回 true → 计入 queued（已提前到现在）；false（新卡/已到期，接口
+  // 一个字段都不写）或卡片不存在 → 计入 skipped（无需提前）。不新增任何排期算法。
+  function quizEnqueue(ids, retriever, dueNow) {
+    const queued = [], skipped = [];
+    (Array.isArray(ids) ? ids : []).forEach(function (id) {
+      const c = (typeof retriever === 'function') ? retriever(id) : null;
+      if (!c) { skipped.push(id); return; }
+      if (typeof dueNow === 'function' && dueNow(c)) queued.push(id);
+      else skipped.push(id);
+    });
+    return { queued: queued, skipped: skipped };
+  }
+  // ===== END TESTABLE quiz core helpers =====
+
+  // —— 自测会话/配置状态 ——
+  // 配置按来源分别持久化到 DB.settings.quizCfg（新存储键，见交付说明）；会话对象沿用 learn.mjs 的 quiz。
+  let quizCfg = null;
+
+  // 来源模式：错题模块进入时用 wrong，其余（一级导航「自测」）用知识卡
+  function quizMode() { return currentModule === 'wrong' ? 'wrong' : 'cards'; }
+
+  function quizCatLabel(k) { return (CATS && CATS[k]) || k; }
+
+  function quizCfgStore() {
+    if (!DB.settings || typeof DB.settings !== 'object') DB.settings = {};
+    if (!DB.settings.quizCfg || typeof DB.settings.quizCfg !== 'object') DB.settings.quizCfg = {};
+    return DB.settings.quizCfg;
+  }
+
+  // 知识卡候选（适配层）：给出内容（back），选它的名称（title）——与旧版自测同向
+  function quizCardEntries() {
+    return quizCardCandidates(
+      DATA,
+      function (id) { return card(id); },
+      function (id) { return mastery(id).pct; },
+      function (id) { return currentR(id); }
+    );
+  }
+
+  // 错题候选（适配层）：给出题目（q），选它的解析（a）；章节取关联知识点所属分类，未关联单列一桶
+  function quizWrongEntries() {
+    return quizWrongCandidates(
+      DB.wrongs,
+      DATA,
+      function (wid) { return wrongMastery(wid).pct; },
+      function (w) {
+        if (w.state === 'review' && w.stab > 0) {
+          const days = Math.max(0, (Date.now() - (w.lastR || Date.now())) / DAY);
+          return Math.round(fsrsRetention(days, w.stab) * 100);
+        }
+        return 0;
+      }
+    );
+  }
+
+  function quizEntries(mode) {
+    return ((mode || quizMode()) === 'wrong') ? quizWrongEntries() : quizCardEntries();
+  }
+
+  // 章节范围可选项＝当前来源实际出现过的分类（错题可含「未关联」桶）
+  function quizCatOptions(mode) {
+    const seen = {};
+    quizEntries(mode).forEach(function (e) { if (e.cat) seen[e.cat] = true; });
+    const keys = [];
+    catOrder().forEach(function (k) { if (seen[k]) { keys.push(k); delete seen[k]; } });
+    Object.keys(seen).forEach(function (k) { keys.push(k); });
+    return keys;
+  }
+
+  function quizGetCfg(mode) {
+    const m = mode || quizMode();
+    if (!quizCfg) quizCfg = quizCfgStore();
+    return quizSanitizeConfig(quizCfg[m], quizCatOptions(m));
+  }
+
+  function quizSetCfg(mode, next) {
+    const m = mode || quizMode();
+    const clean = quizSanitizeConfig(next, quizCatOptions(m));
+    quizCfgStore()[m] = clean;
+    if (typeof saveDB === 'function') saveDB();
+    return clean;
+  }
+
+  function quizItemLabel(mode, id) {
+    if (mode === 'wrong') {
+      const w = (DB.wrongs || {})[id];
+      return w ? w.q : id;
+    }
+    const f = (DATA || []).find(function (x) { return x.id === id; });
+    return f ? f.title : id;
+  }
+
+  // —— 配置面板控件 ——
+  function quizNumRow(label, lo, hi, step, value, onSet) {
+    const row = el('div', 'quiz-cfg-row');
+    row.appendChild(el('span', 'quiz-cfg-label', label));
+    const inp = el('input', 'quiz-cfg-num');
+    inp.type = 'number';
+    inp.min = String(lo);
+    inp.max = String(hi);
+    inp.step = String(step);
+    inp.value = String(value);
+    inp.addEventListener('change', function () {
+      const raw = parseFloat(inp.value);
+      const clean = quizClampNum(raw, lo, hi, value);
+      if (isFinite(raw) && Math.abs(raw - clean) > 1e-9) toast(label + ' 允许 ' + lo + '–' + hi + '，已调整为 ' + clean);
+      onSet(clean);
+    });
+    row.appendChild(inp);
+    return row;
+  }
+
+  function quizRangeRow(mode, label, hint, lo, hi, step, key, cfg) {
+    const row = el('div', 'quiz-cfg-row');
+    row.appendChild(el('span', 'quiz-cfg-label', label));
+    const box = el('div', 'quiz-cfg-inputs');
+    const commit = function (idx, raw) {
+      const clean = quizClampNum(raw, lo, hi, cfg[key][idx]);
+      const pair = (idx === 0) ? [clean, cfg[key][1]] : [cfg[key][0], clean];
+      if (isFinite(raw) && Math.abs(raw - clean) > 1e-9) toast(label + ' 允许 ' + lo + '–' + hi + '，已调整为 ' + clean);
+      if (pair[0] > pair[1]) toast(label + ' 下限大于上限，已自动交换');
+      const patch = {};
+      patch[key] = pair;
+      quizSetCfg(mode, Object.assign({}, cfg, patch));
+      renderApp();
+    };
+    for (let idx = 0; idx < 2; idx++) {
+      const inp = el('input', 'quiz-cfg-num');
+      inp.type = 'number';
+      inp.min = String(lo);
+      inp.max = String(hi);
+      inp.step = String(step);
+      inp.value = String(cfg[key][idx]);
+      (function (i, node) {
+        node.addEventListener('change', function () { commit(i, parseFloat(node.value)); });
+      })(idx, inp);
+      box.appendChild(inp);
+      if (idx === 0) box.appendChild(el('span', 'quiz-cfg-sep muted', '–'));
+    }
+    row.appendChild(box);
+    if (hint) row.appendChild(el('span', 'quiz-cfg-hint muted', hint));
+    return row;
+  }
+
+  function quizCatRow(mode, cfg) {
+    const row = el('div', 'quiz-cfg-row');
+    row.appendChild(el('span', 'quiz-cfg-label', '章节范围'));
+    const chips = el('div', 'chips quiz-cfg-chips');
+    const all = el('button', 'chip' + (cfg.cats.length ? '' : ' active'), '全部');
+    all.addEventListener('click', function () {
+      quizSetCfg(mode, Object.assign({}, cfg, { cats: [] }));
+      renderApp();
+    });
+    chips.appendChild(all);
+    quizCatOptions(mode).forEach(function (k) {
+      const on = cfg.cats.indexOf(k) !== -1;
+      const b = el('button', 'chip' + (on ? ' active' : ''), quizCatLabel(k));
+      b.addEventListener('click', function () {
+        const cats = on ? cfg.cats.filter(function (x) { return x !== k; }) : cfg.cats.concat([k]);
+        quizSetCfg(mode, Object.assign({}, cfg, { cats: cats }));
+        renderApp();
+      });
+      chips.appendChild(b);
+    });
+    row.appendChild(chips);
+    return row;
+  }
+
+  // ---------------- 自测视图：配置 → 出题 → 报告 ----------------
   function renderQuiz() {
-    const app = document.getElementById('app');
-    if (!quiz) {
-      const wrap = el('div', 'center-card');
-      wrap.appendChild(el('h2', null, '📝 随机自测'));
-      wrap.appendChild(el('p', 'muted', subjKind() === 'qa'
-        ? '每次随机抽取 10 道题：给出内容，选择它的名称。用来检验你是否真正「认得」这些知识点。'
-        : '每次随机抽取 10 道题：给出公式，选择它的名称。用来检验你是否真正「认得」公式。'));
-      const b = el('button', 'btn primary', '开始自测');
-      b.setAttribute('data-action', 'qstart');
-      wrap.appendChild(b);
-      app.appendChild(wrap);
-      return;
-    }
-    if (quiz.idx >= quiz.qs.length) {
-      renderQuizResult();
-      return;
-    }
+    if (!quiz) { renderQuizConfig(); return; }
+    if (quiz.idx >= quiz.qs.length) { renderQuizResult(); return; }
     renderQuizQuestion();
+  }
+
+  function renderQuizConfig() {
+    const app = document.getElementById('app');
+    const mode = quizMode();
+    const entries = quizEntries(mode);
+    const cfg = quizGetCfg(mode);
+    const wrap = el('div', 'quiz-wrap');
+
+    const top = el('div', 'learn-top');
+    top.appendChild(el('span', 'muted', mode === 'wrong' ? '📝 错题自测' : '📝 知识卡自测'));
+    if (mode === 'wrong') {
+      const back = el('button', 'btn small', '← 返回错题本');
+      back.addEventListener('click', function () { currentView = 'wrong'; renderApp(); });
+      top.appendChild(back);
+    }
+    wrap.appendChild(top);
+
+    const box = el('div', 'quiz-config');
+    box.appendChild(el('p', 'muted', mode === 'wrong'
+      ? '按范围抽题：给出题目，选出正确的解析。表现差的题按「提前复习」进入错题重做队列（不改记忆历史）。'
+      : (subjKind() === 'qa'
+        ? '按范围抽题：给出内容，选择它的名称。表现差的卡按「提前复习」进入重学队列（不改记忆历史）。'
+        : '按范围抽题：给出公式，选择它的名称。表现差的卡按「提前复习」进入重学队列（不改记忆历史）。')));
+
+    box.appendChild(quizNumRow('数量', 1, QUIZ_MAX_COUNT, 1, cfg.count, function (v) {
+      quizSetCfg(mode, Object.assign({}, cfg, { count: v }));
+      renderApp();
+    }));
+    box.appendChild(quizCatRow(mode, cfg));
+    box.appendChild(quizRangeRow(mode, '难度范围', 'FSRS 记忆难度 D（1–10）；未进入排期的卡按默认 D=' + QUIZ_DEFAULT_DIFF + ' 计', QUIZ_DIFF_MIN, QUIZ_DIFF_MAX, 0.5, 'diff', cfg));
+    box.appendChild(quizRangeRow(mode, '掌握度范围', '掌握度 %（0–100）；口径与「浏览」/「错题统计」一致', QUIZ_MASTERY_MIN, QUIZ_MASTERY_MAX, 1, 'mastery', cfg));
+    wrap.appendChild(box);
+
+    const pool = quizFilterEntries(entries, cfg);
+    const take = Math.min(cfg.count, pool.length);
+    const info = el('div', 'quiz-cfg-info');
+    info.appendChild(el('span', 'quiz-pool-count', '命中 ' + pool.length + ' / 共 ' + entries.length + ' 题'));
+    info.appendChild(el('span', 'muted', take
+      ? '本次将出 ' + take + ' 题' + (pool.length < cfg.count ? '（候选不足，按实际数量出题）' : '')
+      : '当前范围没有可用题目，请放宽章节 / 难度 / 掌握度范围'));
+    wrap.appendChild(info);
+
+    const acts = el('div', 'quiz-actions');
+    const start = el('button', 'btn primary', take ? '开始自测（' + take + ' 题）' : '开始自测');
+    start.setAttribute('data-action', 'qstart');
+    if (!take) start.disabled = true;
+    acts.appendChild(start);
+    const reset = el('button', 'btn small', '恢复默认范围');
+    reset.addEventListener('click', function () {
+      quizSetCfg(mode, quizDefaultConfig());
+      renderApp();
+    });
+    acts.appendChild(reset);
+    wrap.appendChild(acts);
+
+    app.appendChild(wrap);
   }
 
   function renderQuizQuestion() {
     const app = document.getElementById('app');
     const q = quiz.qs[quiz.idx];
+    if (quiz.qTimerIdx !== quiz.idx) { quiz.qTimerIdx = quiz.idx; quiz.qAt = Date.now(); }
+    const wrongMode = quiz.mode === 'wrong';
     const wrap = el('div', 'quiz-wrap');
 
     const top = el('div', 'learn-top');
     top.appendChild(el('span', 'muted', '第 ' + (quiz.idx + 1) + ' / ' + quiz.qs.length + ' 题'));
     top.appendChild(el('span', 'badge', '得分 ' + quiz.score));
+    top.appendChild(el('span', 'muted', 'D=' + (q.diff || QUIZ_DEFAULT_DIFF).toFixed(1) + ' · 掌握 ' + Math.round(q.mastery || 0) + '%'));
     wrap.appendChild(top);
 
     const cardEl = el('div', 'card');
-    const label = el('div', 'mini-label', subjKind() === 'qa' ? '这个知识点叫什么？' : '这个公式叫什么？');
+    const label = el('div', 'mini-label', wrongMode
+      ? '这道题的正确答案是？'
+      : (subjKind() === 'qa' ? '这个知识点叫什么？' : '这个公式叫什么？'));
     cardEl.appendChild(label);
     const fb = el('div', 'front');
-    renderTex(fb, q.card.back);
+    renderTex(fb, q.prompt);
     cardEl.appendChild(fb);
     wrap.appendChild(cardEl);
 
-    const opts = el('div', 'quiz-opts');
-    q.opts.forEach(function (oid) {
-      const of = DATA.find(function (x) { return x.id === oid; });
-      const b = texEl('button', 'btn quiz-opt', of.title);
+    const opts = el('div', 'quiz-opts' + (wrongMode ? ' quiz-opts-long' : ''));
+    q.opts.forEach(function (o) {
+      const b = texEl('button', 'btn quiz-opt' + (wrongMode ? ' quiz-opt-long' : ''), o.label);
       b.setAttribute('data-action', 'qanswer');
-      b.setAttribute('data-arg', oid);
+      b.setAttribute('data-arg', o.id);
       opts.appendChild(b);
     });
     wrap.appendChild(opts);
@@ -3893,50 +4677,980 @@
 
   function doQuizAnswer(oid) {
     const q = quiz.qs[quiz.idx];
-    const correct = oid === q.card.id;
+    if (q.done) return; // 幂等：同一次作答只记一次
+    q.done = true;
+    const correct = oid === q.id;
     if (correct) quiz.score++;
+    quiz.answers.push({
+      id: q.id,
+      cat: q.cat,
+      ok: correct,
+      mastery: q.mastery,
+      predicted: q.predicted,
+      ms: Math.max(0, Date.now() - (quiz.qAt || quiz.startedAt || Date.now())),
+      label: q.label,
+      picked: oid
+    });
     // 高亮反馈
     const opts = document.querySelectorAll('.quiz-opt');
     opts.forEach(function (b) {
       b.disabled = true;
-      if (b.getAttribute('data-arg') === q.card.id) b.classList.add('correct');
+      if (b.getAttribute('data-arg') === q.id) b.classList.add('correct');
       else if (b.getAttribute('data-arg') === oid) b.classList.add('wrong');
     });
+    const isLast = quiz.idx + 1 >= quiz.qs.length;
     const wrap = document.querySelector('.quiz-wrap');
-    const fb = el('div', 'quiz-fb' + (correct ? ' ok' : ' no'));
-    fb.textContent = correct ? '✅ 正确' : '❌ 错误';
-    wrap.appendChild(fb);
-    const next = el('button', 'btn primary', quiz.idx + 1 >= quiz.qs.length ? '查看结果' : '下一题');
-    next.setAttribute('data-action', 'qnext');
-    wrap.appendChild(next);
+    if (wrap) {
+      const fb = el('div', 'quiz-fb' + (correct ? ' ok' : ' no'));
+      fb.appendChild(el('span', null, correct ? '✅ 正确' : '❌ 错误'));
+      if (!correct) {
+        const ans = el('div', 'quiz-fb-ans');
+        ans.appendChild(el('span', 'muted', quiz.mode === 'wrong' ? '正确答案：' : '正确名称：'));
+        const tex = el('span', 'quiz-fb-tex');
+        renderTex(tex, q.label);
+        ans.appendChild(tex);
+        fb.appendChild(ans);
+      }
+      wrap.appendChild(fb);
+      const next = el('button', 'btn primary', isLast ? '查看报告' : '下一题');
+      next.setAttribute('data-action', 'qnext');
+      wrap.appendChild(next);
+    }
+    if (isLast) finishQuiz();
+  }
+
+  // 收尾（在最后一题作答时调用，只跑一次）：生成报告 → 表现差入重学队列 → 落盘记录。
+  // 入队复用 t3 的提前复习接口 markCardDueNow：只把到期时间移到现在，不动记忆历史；
+  // 新卡/已到期卡返回 false（它们本就按排期出现），计入「无需提前」。
+  function finishQuiz() {
+    if (!quiz || quiz.report) return;
+    const ms = Math.max(0, Date.now() - (quiz.startedAt || Date.now()));
+    const rep = quizBuildReport({ mode: quiz.mode, answers: quiz.answers, correct: quiz.score, ms: ms });
+    const enq = quizEnqueue(rep.weakIds, function (id) {
+      return (quiz.mode === 'wrong') ? (DB.wrongs || {})[id] : (DB.cards || {})[id];
+    }, markCardDueNow);
+    rep.queued = enq.queued;
+    rep.already = enq.skipped;
+    quiz.report = rep;
+    quizSaveRecord(rep);
+    if (typeof saveDB === 'function') saveDB();
+  }
+
+  // 落盘：DB.log.quiz（自测记录，新存储键）+ DB.log.counts[今日].q（每日自测题数）
+  function quizSaveRecord(rep) {
+    if (!DB.log || typeof DB.log !== 'object') DB.log = {};
+    if (!Array.isArray(DB.log.quiz)) DB.log.quiz = [];
+    DB.log.quiz.push({
+      t: Date.now(),
+      mode: rep.mode,
+      total: rep.total,
+      correct: rep.correct,
+      pct: rep.pct,
+      ms: rep.ms,
+      msAvg: rep.msAvg,
+      predicted: rep.predicted,
+      gap: rep.gap,
+      verdict: rep.verdict,
+      byCat: rep.byCat.map(function (c) { return { c: c.cat, n: c.n, ok: c.ok }; }),
+      weak: rep.weakIds,
+      queued: rep.queued,
+      diff: quiz.cfg ? quiz.cfg.diff : null,
+      mastery: quiz.cfg ? quiz.cfg.mastery : null,
+      cats: quiz.cfg ? quiz.cfg.cats : null
+    });
+    if (DB.log.quiz.length > QUIZ_MAX_RECORDS) DB.log.quiz.splice(0, DB.log.quiz.length - QUIZ_MAX_RECORDS);
+    const t = todayStr();
+    if (!DB.log.counts || typeof DB.log.counts !== 'object') DB.log.counts = {};
+    if (!DB.log.counts[t] || typeof DB.log.counts[t] !== 'object') DB.log.counts[t] = {};
+    DB.log.counts[t].q = (DB.log.counts[t].q || 0) + rep.total;
   }
 
   function renderQuizResult() {
     const app = document.getElementById('app');
-    const wrap = el('div', 'center-card');
-    wrap.appendChild(el('h2', null, '测验完成'));
-    wrap.appendChild(illus('learn-done'));
-    wrap.appendChild(el('p', 'big-score', quiz.score + ' / ' + quiz.qs.length));
+    const rep = quiz.report || quizBuildReport({ mode: quiz.mode, answers: quiz.answers, correct: quiz.score, ms: 0 });
+    const wrongMode = rep.mode === 'wrong';
+    const wrap = el('div', 'quiz-wrap quiz-report');
+
+    const top = el('div', 'learn-top');
+    top.appendChild(el('span', 'muted', wrongMode ? '📝 错题自测 · 报告' : '📝 知识卡自测 · 报告'));
+    wrap.appendChild(top);
+
+    // —— 成绩 ——
+    const head = el('div', 'stat-card quiz-report-head');
+    head.appendChild(el('h2', null, '测验完成'));
+    head.appendChild(el('p', 'big-score', rep.correct + ' / ' + rep.total));
+    head.appendChild(el('p', 'muted', '正确率 ' + rep.pct + '% · ' + rep.verdict + '（表现差线 ' + QUIZ_WEAK_ACC + '%）'));
+    wrap.appendChild(head);
+
+    const kpi = function (label, val) {
+      const c = el('div', 'stat-kpi');
+      c.appendChild(el('strong', null, String(val)));
+      c.appendChild(el('span', 'muted', label));
+      return c;
+    };
+    const ov = el('div', 'stat-overview');
+    ov.appendChild(kpi('正确率', rep.pct + '%'));
+    ov.appendChild(kpi('用时', fmtStudyMs(rep.ms)));
+    ov.appendChild(kpi('平均每题', rep.msAvg >= 60000 ? fmtStudyMs(rep.msAvg) : Math.round(rep.msAvg / 1000) + ' 秒'));
+    ov.appendChild(kpi('预测掌握度', rep.predicted + '%'));
+    ov.appendChild(kpi('差距', (rep.gap >= 0 ? '+' : '') + rep.gap + '%'));
+    wrap.appendChild(ov);
+
+    // —— 章节表现 ——
+    wrap.appendChild(el('h3', null, '📚 章节表现'));
+    const cb = el('div', 'stat-card');
+    if (!rep.byCat.length) cb.appendChild(el('p', 'muted', '本次没有可统计的章节数据。'));
+    rep.byCat.forEach(function (c) {
+      const row = el('div', 'cat-bar-row');
+      row.appendChild(el('span', 'cat-bar-name', c.cat === QUIZ_UNCATED ? c.cat : quizCatLabel(c.cat)));
+      const bar = el('div', 'cat-bar');
+      const fill = el('div', 'cat-bar-fill');
+      fill.style.width = c.pct + '%';
+      fill.style.background = masteryColor(c.pct);
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(el('span', 'cat-bar-val', c.ok + '/' + c.n + ' · ' + c.pct + '%'));
+      cb.appendChild(row);
+    });
+    wrap.appendChild(cb);
+
+    // —— 与预测掌握度的差距 ——
+    wrap.appendChild(el('h3', null, '🎯 与预测掌握度的差距'));
+    const pb = el('div', 'stat-card');
+    pb.appendChild(el('p', null, '预测掌握度（本组题平均）' + rep.predicted + '% · 实际正确率 ' + rep.pct + '% · 差距 ' + (rep.gap >= 0 ? '+' : '') + rep.gap + '%'));
+    if (rep.predictedR !== null) {
+      pb.appendChild(el('p', 'muted', '参考：算法预测可提取性 R（仅复习中的卡片）' + rep.predictedR + '%——R 是「今天回忆起来的概率」，与掌握度（记忆强度）口径不同。'));
+    }
+    pb.appendChild(el('p', 'muted', rep.gap >= 5
+      ? '实际高于预测：这些内容比算法估计的更熟，可以适当拉长间隔。'
+      : (rep.gap <= -5
+        ? '实际低于预测：比算法估计的更生疏，表现差的题已提前转入复习。'
+        : '实际与预测基本一致：算法对当前记忆强度的估计较准。')));
+    pb.appendChild(el('p', 'muted', '用时 ' + fmtStudyMs(rep.ms) + '（平均每题 ' + Math.round(rep.msAvg / 1000) + ' 秒）。自测只做检查——不写评分日志、不改 FSRS 参数。'));
+    wrap.appendChild(pb);
+
+    // —— 表现差 → 重学队列 ——
+    wrap.appendChild(el('h3', null, '🔁 表现差 → 重学队列'));
+    const wb = el('div', 'stat-card');
+    wb.appendChild(el('p', null, '表现差 ' + rep.weakIds.length + ' 题 · 已提前加入' + (wrongMode ? '重做' : '复习') + '队列 ' + rep.queued.length + ' 张'));
+    if (rep.weakIds.length) {
+      const list = el('div', 'quiz-weak-list');
+      rep.weakIds.forEach(function (id) {
+        list.appendChild(texEl('span', 'chip quiz-weak-item', quizItemLabel(rep.mode, id)));
+      });
+      wb.appendChild(list);
+    }
+    if (rep.already && rep.already.length) {
+      wb.appendChild(el('p', 'muted', rep.already.length + ' 张是新卡或已到期，无需提前——会按原排期出现。'));
+    }
+    wb.appendChild(el('p', 'muted', wrongMode
+      ? '「提前复习」只把错题的到期时间移到现在，不动记忆历史（稳定性/难度/遗忘次数/评分日志），重做后按原算法继续。'
+      : '「提前复习」只把到期时间移到现在，不动记忆历史（稳定性/难度/遗忘次数/评分日志），复习后按原算法继续。'));
+    wrap.appendChild(wb);
+
+    // —— 操作 ——
+    const acts = el('div', 'quiz-actions');
     const again = el('button', 'btn primary', '再来一组');
     again.setAttribute('data-action', 'qstart');
-    wrap.appendChild(again);
+    acts.appendChild(again);
+    const cfgBtn = el('button', 'btn', '调整配置');
+    cfgBtn.addEventListener('click', function () { quiz = null; renderApp(); });
+    acts.appendChild(cfgBtn);
+    const backBtn = el('button', 'btn', wrongMode ? '返回错题本' : '返回学习');
+    backBtn.addEventListener('click', function () {
+      quiz = null;
+      currentView = wrongMode ? 'wrong' : 'learn';
+      renderApp();
+    });
+    acts.appendChild(backBtn);
+    wrap.appendChild(acts);
+
     app.appendChild(wrap);
   }
 
+  // 开始自测（既有 action 名 qstart 复用，actions.mjs 无需改动）：
+  // 读当前模式的四维配置 → 纯函数出题 → 建立会话状态（记录起始时间，用于报告「用时」）
   function startQuiz() {
-    const picked = shuffle(DATA.slice()).slice(0, Math.min(10, DATA.length));
+    const mode = quizMode();
+    const cfg = quizGetCfg(mode);
+    const all = quizEntries(mode);
+    const built = quizBuildQueue(all, cfg, Math.random, all);
+    if (!built.qs.length) {
+      toast('没有符合条件的题目——请放宽章节 / 难度 / 掌握度范围');
+      return;
+    }
+    const now = Date.now();
     quiz = {
-      qs: picked.map(function (p) {
-        const others = shuffle(DATA.filter(function (f) { return f.id !== p.id; })).slice(0, 3);
-        return { card: p, opts: shuffle([p].concat(others)).map(function (o) { return o.id; }) };
-      }),
+      mode: mode,
+      cfg: cfg,
+      qs: built.qs,
       idx: 0,
-      score: 0
+      score: 0,
+      answers: [],
+      startedAt: now,
+      qAt: now,
+      qTimerIdx: 0,
+      poolSize: built.poolSize,
+      totalSize: built.totalSize,
+      report: null
     };
     renderApp();
   }
 
   // ---------------- 设置视图 ----------------
+
+// ===== 题库（Bank）模块 =====
+// POC：以「真题」为唯一题源，题型（自带五星出现频率，由库内实际频次统计）与
+// 知识点标签（复用现有 data/<subj>.js 的 id，自带五星难度）并列两套体系 + 难度五星筛选。
+// 数据来自 data/bank_math3.js / data/bank_econ.js / data/bank_stats.js（window.BANK.<subj>）。
+// 本文件由 tools/build.mjs 拼进 app.js（与其它 src/*.mjs 同处一个 IIFE），函数互相直接调用。
+//
+// 学科范围（t17）：题库不再自带页内学科选择，范围恒等于全局学科选择器当前学科
+// （src/app.mjs 的 currentSubjectId，三科 id 同名 math3/econ/stats）；三科之外渲染空状态。
+// 三组筛选（题型 / 知识点 / 难度≥）收进原生 <select>：原生控件无法携带随选择变化的
+// data-arg，因此 change 时直接派发既有 bankFilter 动作与既有参数名（type= / tag= / star=），
+// 不新增 action 名；状态改写与重渲染仍统一收口在 src/actions.mjs 的 case 'bankFilter'。
+
+// ---- 会话级状态 ----
+// ⚠️ 这些状态变量声明在 src/learn.mjs 的「视图状态」区（与 browse*/wrong* 同处），
+// 因为所有 src/*.mjs 会被 tools/build.mjs 拼进同一个 IIFE 作用域——同一作用域里
+// 重复声明（var 或 let）会直接抛语法错误。此处只使用，不再声明；新增状态必须
+// 同步补进 learn.mjs 的 resetSessionState()。
+
+var BANK_SUBJECT_META = {
+  math3: { label: '数学三', short: '数三', subject: 'math3' },
+  econ: { label: '微观经济学', short: '微观', subject: 'econ' },
+  stats: { label: '统计学', short: '统计', subject: 'stats' }
+};
+
+var BANK_SUBJECT_ORDER = ['math3', 'econ', 'stats'];
+
+// ---- 纯函数（可测）----
+// ===== BEGIN TESTABLE bank-helpers =====
+// 星级统计、题型频率、知识点标签解析、筛选谓词、扁平化题目列表。
+// 全部不读写 DOM，单测可直接 import（见 tests/bank.test.mjs）。
+
+// 题库数据范围＝全局学科选择器的当前学科（src/app.mjs 的 currentSubjectId）。
+// 三科 id 与全局学科 id 同名（math3 / econ / stats）；全库 25 科里另外 22 科没有题库数据
+// → 返回 null，由渲染层给空状态提示（不得抛错）。
+function bankCurrentSubjectId() {
+  var sid = (typeof currentSubjectId === 'undefined') ? null : currentSubjectId;
+  if (!sid) return null;
+  sid = String(sid);
+  return BANK_SUBJECT_ORDER.indexOf(sid) >= 0 ? sid : null;
+}
+
+function bankStarLevel(value) {
+  var n = Math.round(Number(value) || 0);
+  if (n < 1) n = 1;
+  if (n > 5) n = 5;
+  return n;
+}
+
+function bankStars(value) {
+  return '★'.repeat(bankStarLevel(value)) + '☆'.repeat(5 - bankStarLevel(value));
+}
+
+// 题型出现频率 → 五星：库内频次最高的一档 5★，其后按占比落档，最低 3★。
+// 频率全部来自库内真题实际统计，不由人工硬编码。
+function bankTypeStars(freq, total) {
+  var f = Number(freq) || 0;
+  var t = Number(total) || 0;
+  if (t <= 0 || f <= 0) return 3;
+  var p = f / t;
+  if (p >= 0.18) return 5;
+  if (p >= 0.13) return 4;
+  return 3;
+}
+
+// 题型频率表：[{ key, name, def, judge, sample, count, ratio, stars }]，按频次降序
+function bankTypeFrequency(subjectId) {
+  var bank = bankData(subjectId);
+  if (!bank) return [];
+  var total = bank.questions.length || 1;
+  var freq = {};
+  for (var i = 0; i < bank.questions.length; i++) {
+    var t = bank.questions[i].type;
+    freq[t] = (freq[t] || 0) + 1;
+  }
+  var rows = [];
+  for (var j = 0; j < bank.types.length; j++) {
+    var ty = bank.types[j];
+    var count = freq[ty.key] || 0;
+    rows.push({
+      key: ty.key,
+      name: ty.name || ty.key,
+      def: ty.def || '',
+      judge: ty.judge || '',
+      sample: ty.sample || '',
+      count: count,
+      ratio: count / total,
+      stars: bankTypeStars(count, total)
+    });
+  }
+  rows.sort(function (a, b) { return b.count - a.count || (a.key < b.key ? -1 : 1); });
+  return rows;
+}
+
+// 知识点标签 → 所属 cat 名（复用 data/<subj>.js 的 CATS）
+function bankTagCat(subjectId, tagId) {
+  var subj = bankSubjectData(subjectId);
+  if (!subj) return '';
+  var list = subj.DATA || subj.data || [];
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id === tagId) return (subj.CATS && subj.CATS[list[i].cat]) || list[i].cat || '';
+  }
+  return '';
+}
+
+// 知识点标签 → 卡片标题（题库详情里给标签加 tooltip）
+function bankTagTitle(subjectId, tagId) {
+  var subj = bankSubjectData(subjectId);
+  if (!subj) return '';
+  var list = subj.DATA || subj.data || [];
+  for (var i = 0; i < list.length; i++) if (list[i].id === tagId) return list[i].title || '';
+  return '';
+}
+
+// 题型筛选值的匹配规则：同科目内是题型 key（'regress'）。t15 的「全部科目」视图曾用合并
+// key（'stats:regress'）避免 math3 与 stats 的同名题型（都有 'estimate'）串味；t17 起范围恒为
+// 单一科目，已不再产生合并 key，这里保留解析以兼容历史会话值。
+function bankTypeSelected(q, sel) {
+  if (!sel || sel === 'all') return true;
+  var s = String(sel);
+  var colon = s.indexOf(':');
+  if (colon > 0) {
+    var sid = s.slice(0, colon);
+    var key = s.slice(colon + 1);
+    if (BANK_SUBJECT_ORDER.indexOf(sid) >= 0) return q.subject === sid && q.type === key;
+  }
+  return q.type === s;
+}
+
+// 历史遗留的合并题型 key（'sid:key'）在本科目的下拉里没有对应选项，会变成「看不见的筛选
+// 条件」（列表被筛掉一截而下拉显示全部）→ 渲染前回到全选态自愈。
+function bankNormalizeTypeFilter(subjectId) {
+  if (!bankType || bankType === 'all') return;
+  var rows = bankTypeFrequency(subjectId);
+  for (var i = 0; i < rows.length; i++) if (rows[i].key === bankType) return;
+  bankType = 'all';
+}
+
+// 单题是否满足当前筛选（纯函数，测试直接调用）。
+// 学科不在谓词里：范围由 bankFilteredQuestions() 按全局学科收敛（f.subject 仅作可选后置条件）。
+// t17 起已无「题型出现频率」维度（typeStar），故不再参与匹配。
+function bankMatch(q, f) {
+  if (f.subject && f.subject !== 'all' && q.subject !== f.subject) return false;
+  if (!bankTypeSelected(q, f.type)) return false;
+  if (f.tag && f.tag !== 'all' && (q.tags || []).indexOf(f.tag) < 0) return false;
+  if (f.star && f.star !== 'all' && bankStarLevel(q.star) < Number(f.star)) return false;
+  if (f.query) {
+    var needle = String(f.query).trim().toLowerCase();
+    if (needle) {
+      var hay = (String(q.stem || '') + ' ' + String(q.answer || '') + ' ' + String(q.hint || '') + ' ' + String(q.traps || '')).toLowerCase();
+      if (hay.indexOf(needle) < 0) return false;
+    }
+  }
+  return true;
+}
+
+// 三科题目扁平化（每题挂 subject 与由库内频次统计出的 typeStars）
+function bankAllQuestions() {
+  var out = [];
+  for (var i = 0; i < BANK_SUBJECT_ORDER.length; i++) {
+    var sid = BANK_SUBJECT_ORDER[i];
+    var bank = bankData(sid);
+    if (!bank) continue;
+    var rows = bankTypeFrequency(sid);
+    var starByType = {};
+    for (var j = 0; j < rows.length; j++) starByType[rows[j].key] = rows[j].stars;
+    for (var k = 0; k < bank.questions.length; k++) {
+      var q = bank.questions[k];
+      var copy = {};
+      for (var key in q) if (Object.prototype.hasOwnProperty.call(q, key)) copy[key] = q[key];
+      copy.subject = sid;
+      copy.subjectLabel = (BANK_SUBJECT_META[sid] && BANK_SUBJECT_META[sid].label) || sid;
+      copy.typeName = bankTypeName(sid, q.type);
+      copy.typeStars = starByType[q.type] || 3;
+      out.push(copy);
+    }
+  }
+  return out;
+}
+
+// 当前学科（全局学科选择器）下、满足当前会话筛选的题目。
+// 范围收敛在这里完成：先按学科过滤，再套题型/知识点/难度/关键词谓词。
+function bankFilteredQuestions() {
+  var sid = bankCurrentSubjectId();
+  if (!sid) return [];
+  var all = bankAllQuestions();
+  var f = bankCurrentFilter();
+  var out = [];
+  for (var i = 0; i < all.length; i++) {
+    if (all[i].subject !== sid) continue;
+    if (bankMatch(all[i], f)) out.push(all[i]);
+  }
+  out.sort(function (a, b) {
+    if (a.year !== b.year) return b.year - a.year;
+    return String(a.no).localeCompare(String(b.no));
+  });
+  return out;
+}
+
+// 当前会话筛选条件对象（与 src/learn.mjs 里声明的会话状态一一对应）
+// 学科不在此列——它属于全局学科选择器（bankCurrentSubjectId）；频率星级维度已移除。
+function bankCurrentFilter() {
+  return {
+    type: bankType,
+    tag: bankTag,
+    star: bankStar,
+    query: bankQuery
+  };
+}
+
+// 概览口径：各科**总量**（题数 / 题型数）——读全库，不接收筛选结果，因此恒不随筛选变化。
+// 曾经的缺陷：概览卡复用筛选命中的 rows，选「数学三」后另两科显示 0 题，像数据丢失。
+function bankSubjectTotals() {
+  var all = bankAllQuestions();
+  var out = { total: all.length, subjects: {} };
+  for (var i = 0; i < all.length; i++) {
+    var s = all[i].subject;
+    if (!out.subjects[s]) out.subjects[s] = { count: 0, types: {} };
+    out.subjects[s].count++;
+    out.subjects[s].types[all[i].type] = true;
+  }
+  return out;
+}
+
+function bankSubjectTotal(totals, subjectId) {
+  var st = (totals && totals.subjects && totals.subjects[subjectId]) || null;
+  return st ? st.count : 0;
+}
+
+function bankSubjectTypeCount(totals, subjectId) {
+  var st = (totals && totals.subjects && totals.subjects[subjectId]) || null;
+  return st ? Object.keys(st.types).length : 0;
+}
+
+// 概览区第二行文案：当前筛选命中 N 题（未筛选时 N = 总量，省掉「全部」后缀）
+function bankHitText(hits, total) {
+  var n = Number(hits) || 0;
+  var t = Number(total) || 0;
+  return '当前筛选命中 ' + n + ' 题' + (n === t ? '' : '（全部 ' + t + ' 题）');
+}
+
+// 工具条范围文案：科目范围 + 该范围总量（总量口径，不随筛选变化；活数在概览命中行）
+function bankScopeText(subjectId, totals) {
+  if (!subjectId || subjectId === 'all') return '全部三科 · 共 ' + (Number((totals && totals.total) || 0)) + ' 题';
+  var meta = BANK_SUBJECT_META[subjectId] || {};
+  return (meta.label || subjectId) + ' · 共 ' + bankSubjectTotal(totals, subjectId) + ' 题 · ' +
+    bankSubjectTypeCount(totals, subjectId) + ' 类题型';
+}
+
+// ---- 下拉筛选选项（纯函数，返回 [{ value, label }]）----
+// 原生 <select> 的选项构造与 DOM 无关，单测可直接断言内容/顺序/上限；
+// 题型星级与题数一律来自库内实际频次统计（bankTypeFrequency），不由人工硬编码。
+
+var BANK_TAG_OPTION_LIMIT = 60;
+
+// 题型：首项全选 + 按库内频次降序（bankTypeFrequency 已排序）→「名称 ★★★★☆ N 题」
+function bankTypeOptions(subjectId) {
+  var out = [{ value: 'all', label: '全部题型' }];
+  var sid = subjectId || bankCurrentSubjectId();
+  if (!sid) return out;
+  var rows = bankTypeFrequency(sid);
+  for (var i = 0; i < rows.length; i++) {
+    out.push({
+      value: rows[i].key,
+      label: rows[i].name + ' ' + bankStars(rows[i].stars) + ' ' + rows[i].count + ' 题'
+    });
+  }
+  return out;
+}
+
+// 知识点排名：按当前命中数降序（title/cat 复用现有知识点数据）
+function bankTagRanking(rows) {
+  var bag = {}, counts = {};
+  for (var i = 0; i < (rows || []).length; i++) {
+    var tags = rows[i].tags || [];
+    for (var j = 0; j < tags.length; j++) {
+      var id = tags[j];
+      counts[id] = (counts[id] || 0) + 1;
+      if (!bag[id]) bag[id] = { id: id, subject: rows[i].subject, star: 0 };
+      if (rows[i].star > bag[id].star) bag[id].star = rows[i].star;
+    }
+  }
+  var list = [];
+  for (var key in bag) if (Object.prototype.hasOwnProperty.call(bag, key)) {
+    list.push({
+      id: bag[key].id,
+      subject: bag[key].subject,
+      star: bag[key].star,
+      count: counts[key],
+      title: bankTagTitle(bag[key].subject, bag[key].id) || bag[key].id,
+      cat: bankTagCat(bag[key].subject, bag[key].id)
+    });
+  }
+  list.sort(function (a, b) { return b.count - a.count || (a.id < b.id ? -1 : 1); });
+  return list;
+}
+
+function bankTagOptionLabel(t) {
+  return t.title + (t.cat ? ' · ' + t.cat : '') + ' · ' + t.count + ' 题';
+}
+
+// 知识点选项：首项全选 + 按命中数降序、上限 BANK_TAG_OPTION_LIMIT。
+// 当前选中的知识点即使被上限截断也必须出现在选项里（否则下拉回填会跳到首项，
+// 用户看不到自己选了哪一个）；超限数量由 bankTagOptionHidden 给出提示。
+function bankTagOptions(rows, selectedId, limit) {
+  var out = [{ value: 'all', label: '全部知识点' }];
+  var lim = Number(limit) > 0 ? Math.floor(Number(limit)) : BANK_TAG_OPTION_LIMIT;
+  var ranked = bankTagRanking(rows);
+  var picked = ranked.slice(0, lim);
+  var sel = (selectedId && selectedId !== 'all') ? String(selectedId) : '';
+  if (sel) {
+    var has = false;
+    for (var i = 0; i < picked.length; i++) if (picked[i].id === sel) has = true;
+    if (!has) {
+      for (var j = 0; j < ranked.length; j++) {
+        if (ranked[j].id === sel) { picked.unshift(ranked[j]); break; }
+      }
+    }
+  }
+  for (var k = 0; k < picked.length && out.length - 1 < lim; k++) {
+    out.push({ value: picked[k].id, label: bankTagOptionLabel(picked[k]) });
+  }
+  return out;
+}
+
+// 被上限收进「其余 N 个知识点（缩小筛选后可见）」提示的数量
+function bankTagOptionHidden(rows, selectedId, limit) {
+  var lim = Number(limit) > 0 ? Math.floor(Number(limit)) : BANK_TAG_OPTION_LIMIT;
+  var shown = bankTagOptions(rows, selectedId, lim).length - 1; // 减去「全部知识点」
+  return Math.max(0, bankTagRanking(rows).length - shown);
+}
+
+// 难度（≥）：全部难度 + ★5…★1
+function bankStarOptions() {
+  var out = [{ value: 'all', label: '全部难度' }];
+  for (var s = 5; s >= 1; s--) out.push({ value: String(s), label: bankStars(s) });
+  return out;
+}
+
+// 下拉回填：当前值在选项里就选中它，否则回到首项（全选）
+function bankSelectValue(options, current) {
+  var v = String(current == null || current === '' ? 'all' : current);
+  for (var i = 0; i < options.length; i++) if (String(options[i].value) === v) return v;
+  return 'all';
+}
+
+// 来源徽标里的「院校」段：q.school 由数据侧补齐（t19），缺省回退科目名，
+// 保证 POC 数据尚未带 school 时徽标语义仍完整（不得为此改 data/bank_*.js）。
+function bankSchoolLabel(q) {
+  if (!q) return '';
+  var school = q.school ? String(q.school).trim() : '';
+  if (school) return school;
+  return q.subjectLabel ||
+    (BANK_SUBJECT_META[q.subject] && BANK_SUBJECT_META[q.subject].label) ||
+    q.subject || '';
+}
+
+// ---- 运行时小工具 ----
+
+function bankData(subjectId) {
+  var bank = (typeof window !== 'undefined' && window.BANK) || {};
+  return bank[subjectId] || null;
+}
+
+function bankSubjectData(subjectId) {
+  if (typeof window === 'undefined' || !window.SUBJECTS) return null;
+  var meta = BANK_SUBJECT_META[subjectId];
+  var sid = (meta && meta.subject) || subjectId;
+  return window.SUBJECTS[sid] || null;
+}
+// 错题本查重口径 —— 必须与 src/wrong.mjs 的 markAsWrong 入库查重完全一致：
+//   wrong.mjs:363-373  `(DB.wrongs[wid].q || '').trim() === (ex.q || '').trim()`
+// 即「题干原文去首尾空白后严格相等」：不折叠内部空白、不做全角/半角归一化、不比对解析。
+// bankAddToWrong 传的 ex.q 就是 q.stem（bank.mjs 的 ex.q = q.stem），两边输入同源。
+function bankSameQuestion(a, b) {
+  return String(a === null || a === undefined ? '' : a).trim() ===
+         String(b === null || b === undefined ? '' : b).trim();
+}
+
+// 在错题本里按题干查找已有条目（与 wrong.mjs:363-364 同一数据源 DB.wrongs 与同一比较）。
+// 读取走 wrong.mjs 已公开的 wrongCard(wid)；它不可用时退回同源直读，保证浏览器侧恒可用。
+function bankLookupWrongEntry(q) {
+  if (typeof DB === 'undefined' || !DB || !DB.wrongs) return null;
+  var ids = Object.keys(DB.wrongs);
+  var readWrong = (typeof wrongCard === 'function') ? wrongCard : function (wid) { return DB.wrongs[wid]; };
+  var stem = (q && q.stem) || '';
+  for (var i = 0; i < ids.length; i++) {
+    var w = readWrong(ids[i]);
+    if (w && bankSameQuestion(w.q, stem)) return { id: ids[i], entry: w };
+  }
+  return null;
+}
+
+// 某题是否已在错题本中（判定口径见上，与入库查重同源）
+function bankWrongState(q) {
+  var hit = bankLookupWrongEntry(q);
+  return { inBook: !!(hit && hit.entry), entry: (hit && hit.entry) || null };
+}
+// ===== END TESTABLE bank-helpers =====
+
+function bankAvailableSubjects() {
+  var out = [];
+  for (var i = 0; i < BANK_SUBJECT_ORDER.length; i++) {
+    if (bankData(BANK_SUBJECT_ORDER[i])) out.push(BANK_SUBJECT_ORDER[i]);
+  }
+  return out;
+}
+
+function bankTypeName(subjectId, typeKey) {
+  var bank = bankData(subjectId);
+  if (!bank) return typeKey;
+  for (var i = 0; i < bank.types.length; i++) if (bank.types[i].key === typeKey) return bank.types[i].name || typeKey;
+  return typeKey;
+}
+
+function bankQuestionById(id) {
+  var all = bankAllQuestions();
+  for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
+  return null;
+}
+
+function bankFindByStem(stem) {
+  var all = bankAllQuestions();
+  var needle = String(stem || '').replace(/\s+/g, '');
+  for (var i = 0; i < all.length; i++) {
+    var s = String(all[i].stem || '').replace(/\s+/g, '');
+    if (s && (s.indexOf(needle) === 0 || needle.indexOf(s) === 0)) return all[i];
+  }
+  return null;
+}
+
+// 题目「可纳入错题本」的载体：题型 + 钩子（wrongId 便于回跳定位）
+function bankBuildCard(q) {
+  var tagText = (q.tags || []).map(function (id) { return bankTagTitle(q.subject, id) || id; }).join(' · ');
+  return {
+    title: q.subjectLabel + ' ' + q.year + ' ' + q.no + ' · ' + q.typeName,
+    question: q.stem,
+    answer: q.answer,
+    questionHtml: q.stem,
+    answerHtml: q.answer,
+    tags: tagText,
+    source: (q.src && (q.src.file || '')) + (q.src && q.src.no ? (' · ' + q.src.no) : ''),
+    wrongId: 'bank_' + q.id
+  };
+}
+
+// 一键加入错题本（复用 wrong.mjs 的现有机制，不重复实现）
+function bankAddToWrong(q) {
+  if (typeof markAsWrong !== 'function') {
+    if (typeof toast === 'function') toast('错题本模块尚未就绪');
+    return;
+  }
+  var ex = {
+    q: q.stem,
+    a: q.answer,
+    src: (q.src && q.src.file) ? (q.src.file + (q.src.no ? ' ' + q.src.no : '')) : '',
+    id: 'bank_' + q.id,
+    subject: q.subject,
+    year: q.year,
+    no: q.no,
+    type: q.type,
+    tags: (q.tags || []).slice()
+  };
+  markAsWrong(ex, 'bank:' + q.id);
+}
+
+// 从错题本点回题库该题（wrong.mjs 的浏览页会调）。
+// 范围＝全局学科选择器：题目属于别的科目时先切全局学科（src/actions.mjs 的 switchSubject），
+// 它内部会 resetSessionState()（清 bankOpen）并异步重渲染，所以 bankOpen 必须在切换之后再写。
+function bankOpenFromWrong(q) {
+  var direct = q && q.id && bankQuestionById(q.id);
+  var hit = direct || bankFindByStem((q && (q.q || q.question)) || '');
+  if (hit) {
+    if (hit.subject !== bankCurrentSubjectId() && typeof switchSubject === 'function') {
+      switchSubject(hit.subject);
+    }
+    bankOpen = hit.id;
+    if (typeof currentView !== 'undefined') currentView = 'bank';
+    if (typeof currentModule !== 'undefined') currentModule = 'cards';
+    if (typeof renderApp === 'function') renderApp();
+    return true;
+  }
+  if (typeof toast === 'function') toast('题库中未找到该题');
+  return false;
+}
+
+// ---- 视图 ----
+
+// 全局学科不在三科内（全库 25 科里另外 22 科没有题库数据）时的空状态：
+// 题库没有页内学科选择器，切学科只能走顶部全局选择器，这里把它指出来。
+function bankSubjectEmpty() {
+  var labels = [];
+  var ids = bankAvailableSubjects();
+  for (var i = 0; i < ids.length; i++) {
+    labels.push((BANK_SUBJECT_META[ids[i]] || {}).label || ids[i]);
+  }
+  return el('div', 'bank-empty bank-empty-subject',
+    '当前学科暂无题库数据 · 用顶部学科选择器切到 ' + labels.join(' / '));
+}
+
+function renderBank() {
+  if (typeof document === 'undefined') return null;
+  var app = document.getElementById('app');
+  if (!app) return null;
+  app.innerHTML = '';
+  if (!bankAvailableSubjects().length) {
+    var empty = el('div', 'bank-empty', '题库数据未加载（data/bank_*.js）。');
+    app.appendChild(empty);
+    return app;
+  }
+  // 学科范围恒等于全局学科选择器：三科外不出筛选区，也不残留上一科的题目
+  if (!bankCurrentSubjectId()) {
+    app.appendChild(bankSubjectEmpty());
+    return app;
+  }
+  var q = bankOpen ? bankQuestionById(bankOpen) : null;
+  if (q) app.appendChild(bankDetailNode(q));
+  else app.appendChild(bankListPage());
+  return app;
+}
+
+function bankListPage() {
+  var sid = bankCurrentSubjectId();
+  var wrap = el('div', 'bank-view');
+  wrap.appendChild(bankHeader());
+
+  bankNormalizeTypeFilter(sid);
+  // 概览区恒为「本科目总量」口径（读全库，不随筛选变化）；筛选命中数是单独一行活数。
+  var totals = bankSubjectTotals();
+  var rows = bankFilteredQuestions();
+
+  wrap.appendChild(bankHitLine(rows.length, bankSubjectTotal(totals, sid)));
+  wrap.appendChild(bankFilters(rows));
+
+  var toolbar = el('div', 'bank-toolbar');
+  var scope = el('div', 'bank-count', bankScopeText(sid, totals));
+  scope.setAttribute('data-bank-scope', sid);
+  scope.setAttribute('data-bank-scope-total', String(bankSubjectTotal(totals, sid)));
+  toolbar.appendChild(scope);
+  var reset = el('button', 'bank-reset', '重置筛选');
+  reset.setAttribute('type', 'button');
+  reset.setAttribute('data-action', 'bankReset');
+  toolbar.appendChild(reset);
+  wrap.appendChild(toolbar);
+
+  if (!rows.length) {
+    wrap.appendChild(el('div', 'bank-empty', '没有满足当前筛选条件的题目。'));
+    return wrap;
+  }
+  var list = el('div', 'bank-list');
+  for (var i = 0; i < rows.length; i++) list.appendChild(bankItemNode(rows[i]));
+  wrap.appendChild(list);
+  return wrap;
+}
+
+// 概览区第二行：当前筛选命中数（活数）。与科目卡片的「总量」口径成对出现，两者语义分明。
+function bankHitLine(hits, total) {
+  var line = el('div', 'bank-hit' + (hits === total ? '' : ' is-filtered'));
+  line.setAttribute('data-bank-hits', String(hits));
+  line.setAttribute('data-bank-total', String(total));
+  line.appendChild(el('span', 'bank-hit-text', bankHitText(hits, total)));
+  return line;
+}
+
+// 标题行：图标 + 「题库 · 真题」+ 当前学科（学科由顶部全局学科选择器决定，页内不再重复选择）
+function bankHeader() {
+  var head = el('div', 'bank-head');
+  var title = el('div', 'bank-title');
+  if (typeof icon === 'function') title.appendChild(icon('bank'));
+  title.appendChild(el('span', 'bank-title-text', '题库 · 真题'));
+  head.appendChild(title);
+  var sid = bankCurrentSubjectId();
+  var meta = BANK_SUBJECT_META[sid] || {};
+  head.appendChild(el('div', 'bank-head-scope', ((meta.label || sid || '') + ' · 真题')));
+  return head;
+}
+
+// 三组并列筛选（题型 / 知识点 / 难度≥）——原生 <select>，各带可见 <label>。
+// 原生控件无法携带随选择变化的 data-arg，因此 change 时直接派发既有 bankFilter 动作与
+// 既有参数名（type= / tag= / star=）：不新增 action 名，状态改写与重渲染仍收口在 actions.mjs。
+function bankFilterField(labelText, key, options, current) {
+  var field = el('div', 'bank-filter bank-filter-' + key);
+  var id = 'bank-filter-' + key;
+  var lab = el('label', 'bank-filter-label', labelText);
+  lab.setAttribute('for', id);
+  field.appendChild(lab);
+
+  var sel = el('select', 'bank-select bank-select-' + key);
+  sel.setAttribute('id', id);
+  sel.setAttribute('data-bank-facet', key);
+  sel.setAttribute('aria-label', labelText);
+  var value = bankSelectValue(options, current);
+  sel.setAttribute('data-arg', key + '=' + value); // 供调试/测试观察当前筛选参数
+  for (var i = 0; i < options.length; i++) {
+    var o = el('option', 'bank-select-option' + (options[i].disabled ? ' bank-select-option-more' : ''), options[i].label);
+    o.setAttribute('value', options[i].value);
+    if (options[i].disabled) o.setAttribute('disabled', 'disabled');
+    if (String(options[i].value) === value) o.setAttribute('selected', 'selected');
+    sel.appendChild(o);
+  }
+  sel.value = value; // 回填当前筛选值（value 不在选项里时 bankSelectValue 已归到 all）
+  sel.addEventListener('change', function () {
+    var v = sel.value || 'all';
+    sel.setAttribute('data-arg', key + '=' + v);
+    if (typeof handleAction === 'function') handleAction('bankFilter', key + '=' + v);
+  });
+  field.appendChild(sel);
+  return field;
+}
+
+function bankFilters(rows) {
+  var box = el('div', 'bank-filters');
+  box.appendChild(bankFilterField('题型', 'type', bankTypeOptions(bankCurrentSubjectId()), bankType));
+  var tagOptions = bankTagOptions(rows, bankTag);
+  var hidden = bankTagOptionHidden(rows, bankTag);
+  if (hidden > 0) {
+    tagOptions = tagOptions.concat([
+      { value: '__more', label: '其余 ' + hidden + ' 个知识点（缩小筛选后可见）', disabled: true }
+    ]);
+  }
+  box.appendChild(bankFilterField('知识点', 'tag', tagOptions, bankTag));
+  box.appendChild(bankFilterField('难度（≥）', 'star', bankStarOptions(), bankStar));
+  return box;
+}
+
+function bankItemNode(q) {
+  var item = el('div', 'bank-item' + (bankOpen === q.id ? ' is-open' : ''));
+  item.setAttribute('data-bank-id', q.id);
+
+  var main = el('div', 'bank-item-main');
+  main.setAttribute('data-action', 'bankOpen');
+  main.setAttribute('data-arg', q.id);
+  main.setAttribute('role', 'button');
+  main.setAttribute('tabindex', '0');
+
+  var top = el('div', 'bank-item-top');
+  // 来源只留徽标：「院校 · 年度 · 题号」（院校取 q.school，数据侧尚未补时回退科目名）
+  top.appendChild(el('span', 'bank-badge bank-badge-school', bankSchoolLabel(q)));
+  top.appendChild(el('span', 'bank-badge bank-badge-year', q.year + ' · ' + q.no));
+  top.appendChild(el('span', 'bank-badge bank-badge-type', q.typeName));
+  var tstar = el('span', 'bank-badge bank-badge-freq bank-star' + q.typeStars, bankStars(q.typeStars));
+  tstar.setAttribute('title', '题型出现频率星级（库内统计）');
+  top.appendChild(tstar);
+  var dstar = el('span', 'bank-badge bank-badge-diff bank-star' + bankStarLevel(q.star), bankStars(q.star));
+  dstar.setAttribute('title', '题目难度星级');
+  top.appendChild(dstar);
+  main.appendChild(top);
+
+  var stem = texEl('div', 'bank-stem', q.stem);
+  main.appendChild(stem);
+
+  var tags = el('div', 'bank-tag-row');
+  var list = q.tags || [];
+  for (var i = 0; i < Math.min(4, list.length); i++) {
+    var tag = el('span', 'bank-tag', bankTagTitle(q.subject, list[i]) || list[i]);
+    tag.setAttribute('title', bankTagCat(q.subject, list[i]) + ' · ' + list[i]);
+    tags.appendChild(tag);
+  }
+  if (list.length > 4) tags.appendChild(el('span', 'bank-tag bank-tag-more', '+' + (list.length - 4)));
+  main.appendChild(tags);
+  item.appendChild(main);
+
+  var actions = el('div', 'bank-item-actions');
+  var st = bankWrongState(q);
+  var mark = el('button', 'bank-btn bank-btn-wrong' + (st.inBook ? ' is-in' : ''), st.inBook ? '已在错题本' : '加入错题本');
+  mark.setAttribute('type', 'button');
+  mark.setAttribute('data-action', 'bankAddWrong');
+  mark.setAttribute('data-arg', q.id);
+  actions.appendChild(mark);
+  var openBtn = el('button', 'bank-btn bank-btn-detail', '详情');
+  openBtn.setAttribute('type', 'button');
+  openBtn.setAttribute('data-action', 'bankOpen');
+  openBtn.setAttribute('data-arg', q.id);
+  actions.appendChild(openBtn);
+  item.appendChild(actions);
+  return item;
+}
+
+function bankDetailNode(q) {
+  var wrap = el('div', 'bank-view bank-detail');
+  wrap.appendChild(bankHeader());
+
+  var bar = el('div', 'bank-detail-bar');
+  var back = el('button', 'bank-back', '← 返回题库列表');
+  back.setAttribute('type', 'button');
+  back.setAttribute('data-action', 'bankBack');
+  bar.appendChild(back);
+  var prev = el('button', 'bank-btn bank-btn-nav', '上一题');
+  prev.setAttribute('type', 'button');
+  prev.setAttribute('data-action', 'bankStep');
+  prev.setAttribute('data-arg', '-1');
+  bar.appendChild(prev);
+  var next = el('button', 'bank-btn bank-btn-nav', '下一题');
+  next.setAttribute('type', 'button');
+  next.setAttribute('data-action', 'bankStep');
+  next.setAttribute('data-arg', '1');
+  bar.appendChild(next);
+  wrap.appendChild(bar);
+
+  var body = el('div', 'bank-detail-body');
+  var top = el('div', 'bank-item-top');
+  // 来源只留徽标：「院校 · 年度 · 题号」（院校取 q.school，数据侧尚未补时回退科目名）
+  top.appendChild(el('span', 'bank-badge bank-badge-school', bankSchoolLabel(q)));
+  top.appendChild(el('span', 'bank-badge bank-badge-year', q.year + ' · ' + q.no));
+  top.appendChild(el('span', 'bank-badge bank-badge-type', q.typeName));
+  top.appendChild(el('span', 'bank-badge bank-badge-freq bank-star' + q.typeStars, bankStars(q.typeStars) + ' 出现频率'));
+  top.appendChild(el('span', 'bank-badge bank-badge-diff bank-star' + bankStarLevel(q.star), bankStars(q.star) + ' 难度'));
+  body.appendChild(top);
+
+  body.appendChild(texEl('div', 'bank-stem bank-stem-detail', q.stem));
+
+  var opt = q.options;
+  if (opt && opt.length) {
+    var ol = el('div', 'bank-options');
+    for (var i = 0; i < opt.length; i++) ol.appendChild(texEl('div', 'bank-option', opt[i]));
+    body.appendChild(ol);
+  }
+
+  body.appendChild(el('div', 'bank-sec-title', '答案与解析'));
+  body.appendChild(texEl('div', 'bank-answer', q.answer));
+
+  body.appendChild(el('div', 'bank-sec-title', '陷阱'));
+  body.appendChild(texEl('div', 'bank-traps', q.traps));
+
+  body.appendChild(el('div', 'bank-sec-title', '提示'));
+  body.appendChild(texEl('div', 'bank-hint', q.hint));
+
+  var tagBox = el('div', 'bank-tag-row bank-tag-row-detail');
+  var tags = q.tags || [];
+  for (var j = 0; j < tags.length; j++) {
+    var tag = el('span', 'bank-tag', bankTagTitle(q.subject, tags[j]) || tags[j]);
+    tag.setAttribute('title', bankTagCat(q.subject, tags[j]) + ' · ' + tags[j]);
+    tagBox.appendChild(tag);
+  }
+  body.appendChild(tagBox);
+
+  // 来源区已移除（t17）：来源只留在顶部徽标（院校 · 年度 · 题号）里。
+  // 数据里的 q.src（文件/页码/题号/note）保留不动，供数据侧审计（t19）与 2.2.0 全量入库使用。
+
+  var actions = el('div', 'bank-detail-actions');
+  var st = bankWrongState(q);
+  var mark = el('button', 'bank-btn bank-btn-wrong' + (st.inBook ? ' is-in' : ''), st.inBook ? '已在错题本（点按定位）' : '加入错题本');
+  mark.setAttribute('type', 'button');
+  mark.setAttribute('data-action', 'bankAddWrong');
+  mark.setAttribute('data-arg', q.id);
+  actions.appendChild(mark);
+  body.appendChild(actions);
+
+  wrap.appendChild(body);
+  return wrap;
+}
+
+// 单测导出（tools/build.mjs 的 STRIP 会剥离，浏览器端 app.js 不含此行）
 
   // ---------------- 行动设置（H4 · 与学习库隔离） ----------------
   // 与 H1–H3 同 schema 同键：
@@ -3946,6 +5660,36 @@
   // ===== BEGIN TESTABLE act settings helpers =====
   // 键名与 habit.mjs 的 ACT_CFG_KEY 同值；此处不重复声明（构建拼接同作用域）
   const ACT_SETTINGS_CFG_KEY = 'athena_act_cfg_v1';
+
+  // 编制层次键严格划分（单元 unit / 组 group / 群 corps / 集团 army）：
+  // 顺序单一来源 = focus.mjs 的 FOCUS_LEVEL_KEYS；被 tests 抽取求值（无 focus.mjs）时回退本地字面量。
+  // 未知层次键一律不落库（actSanitizeFocusSettings 只遍历已知键）。
+  const ACT_FOCUS_LEVEL_KEYS = ['unit', 'group', 'corps', 'army'];
+  const ACT_FOCUS_LEVEL_DEFAULT_NAMES = {
+    unit: '任务单元',
+    group: '任务组',
+    corps: '任务群',
+    army: '任务集团'
+  };
+
+  function actFocusLevelOrder() {
+    if (typeof FOCUS_LEVEL_KEYS !== 'undefined' && Array.isArray(FOCUS_LEVEL_KEYS) && FOCUS_LEVEL_KEYS.length) {
+      return FOCUS_LEVEL_KEYS.slice();
+    }
+    return ACT_FOCUS_LEVEL_KEYS.slice();
+  }
+
+  function actIsFocusLevelKey(key) {
+    return actFocusLevelOrder().indexOf(String(key)) >= 0;
+  }
+
+  function actDefaultLevelNames() {
+    const out = {};
+    actFocusLevelOrder().forEach(function (k) {
+      out[k] = ACT_FOCUS_LEVEL_DEFAULT_NAMES[k] || k;
+    });
+    return out;
+  }
 
   function actDefaultHabitCfg() {
     return {
@@ -3967,7 +5711,7 @@
       structure: 'free', // 'free' | 'triad'
       flavor: false,
       typeNames: { focus: '专注', assault: '突击', life: '生活', plan: '计划', scout: '侦查' },
-      levelNames: { unit: '任务单元', group: '任务组', corps: '任务群', army: '任务集团' }
+      levelNames: actDefaultLevelNames()
     };
   }
 
@@ -4491,7 +6235,8 @@
     rFlavor.appendChild(flavorLab);
     wrap.appendChild(rFlavor);
 
-    const LEVEL_ORDER = ['unit', 'group', 'corps', 'army'];
+    // 层次顺序单一来源：严格四级 unit/group/corps/army（见 focus.mjs FOCUS_LEVEL_KEYS）
+    const LEVEL_ORDER = actFocusLevelOrder();
     const rLevels = actRow('层次名');
     const levelWrap = el('div', 'beg-cats');
     LEVEL_ORDER.forEach(function (key) {
@@ -4502,8 +6247,10 @@
       input.value = focusCfg.levelNames[key] || key;
       input.title = '编制层次名称';
       input.addEventListener('change', function () {
+        // 严格类型：非法层次键不写入
+        if (!actIsFocusLevelKey(key)) { input.value = focusCfg.levelNames[key] || key; return; }
         const patch = {};
-        patch[key] = input.value.trim() || actDefaultFocusSettings().levelNames[key];
+        patch[key] = input.value.trim() || actDefaultLevelNames()[key] || key;
         saveActSettings({ focus: { levelNames: Object.assign({}, loadActSettings().focus.levelNames, patch) } });
         input.value = patch[key];
         toast('层次名已更新');
@@ -4534,7 +6281,7 @@
     });
     rTypes.appendChild(typeWrap);
     wrap.appendChild(rTypes);
-    wrap.appendChild(el('p', 'muted', '层次：任务单元 → 组 → 群 → 集团（番号 # ● ▲ ◆）；类型：专注 / 突击 / 生活 / 计划 / 侦查。名称可改，番号不变。三三制为创建向导建议模板（每组 3 子），不强制。'));
+    wrap.appendChild(el('p', 'muted', '层次（严格逐级归属）：' + actFocusLevelOrder().map(function (k) { return focusCfg.levelNames[k] || k; }).join(' → ') + '（番号 # ● ▲ ◆）；类型：专注 / 突击 / 生活 / 计划 / 侦查。名称可改，番号不变。三三制为创建向导建议模板（每组 3 子），不强制。'));
 
     wrap.appendChild(el('h3', null, '重置'));
     const rReset = el('div', 'setting-row danger-row');
@@ -5022,6 +6769,32 @@
     wrap.appendChild(el('h3', null, '📋 学习报告'));
     wrap.appendChild(renderStudyReport());
 
+    // —— 自测统计（T51：可配置队列 + 表现差入重学；记录见 DB.log.quiz）——
+    // 聚合窗口跟随上方「学习报告」周期 chips（日报/周报/月报/年报）
+    wrap.appendChild(el('h3', null, '📝 自测统计'));
+    const qDays = REPORT_DAYS[reportPeriod];
+    const qAll = quizLogStats(DB.log && DB.log.quiz, 0);
+    const qWin = quizLogStats(DB.log && DB.log.quiz, Date.now() - qDays * DAY);
+    const qCard = el('div', 'stat-card');
+    if (!qAll.n) {
+      qCard.appendChild(el('p', 'muted', '还没有自测记录——一级导航「自测」或错题本里的「📝 错题自测」都可先配置数量 / 章节 / 难度 / 掌握度范围，再抽题；做完给出成绩、章节表现、用时与预测差距。'));
+    } else {
+      const qkpi = function (label, val) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label)); return c; };
+      const qov = el('div', 'stat-overview');
+      qov.appendChild(qkpi('自测次数（近 ' + qDays + ' 天）', qWin.n));
+      qov.appendChild(qkpi('自测题数', qWin.totalQ + ' 题'));
+      qov.appendChild(qkpi('平均正确率', (qWin.acc == null ? '—' : qWin.acc + '%')));
+      qov.appendChild(qkpi('平均每题', qWin.totalQ ? Math.round(qWin.msAvg / 1000) + ' 秒' : '—'));
+      qov.appendChild(qkpi('表现差提前入队', qWin.queued + ' 张'));
+      qCard.appendChild(qov);
+      qCard.appendChild(el('p', 'muted', '全部历史：' + qAll.n + ' 次 · ' + qAll.totalQ + ' 题 · 正确率 ' + (qAll.acc == null ? '—' : qAll.acc + '%') + '（知识卡 ' + qAll.byMode.cards.n + ' 次 / 错题 ' + qAll.byMode.wrong.n + ' 次）'));
+      qCard.appendChild(el('p', 'muted', '「表现差」＝单题答错，或整场正确率 < ' + QUIZ_WEAK_ACC + '%：这些题按「提前复习」进入重学队列——只把到期时间移到现在，不动记忆历史。'));
+    }
+    wrap.appendChild(qCard);
+    if (qAll.n) {
+      wrap.appendChild(sparkTrend('自测正确率（%）', qAll.list.map(function (r) { return { label: fmtDate(new Date(r.t)), value: r.pct }; }), '#7C5CD6', '%', 100));
+    }
+
     // —— 未来负载预测 ——
     wrap.appendChild(el('h3', null, '📅 未来负载预测（14 天）'));
     wrap.appendChild(renderForecastCard());
@@ -5435,7 +7208,7 @@
       evidence: [
         { g: '🟢', ref: 'Posner & Petersen 1990 · Annual Review of Neuroscience' }
       ],
-      features: [{ label: '专注链', nav: 'actPlan' }]
+      features: [{ label: '专注链', nav: 'actFocus' }]
     },
     {
       id: 'mindfulness', cat: 'cog', icon: '🧘', title: '正念：小而真实',
@@ -5522,7 +7295,7 @@
       evidence: [
         { g: '⚠️', ref: '社区技术文《链式时延协议》（CTDP）原文思想——非同行评议，方法论参考' }
       ],
-      features: [{ label: '专注链', nav: 'actPlan' }, { label: '计划', nav: 'actPlan' }]
+      features: [{ label: '专注链', nav: 'actFocus' }, { label: '计划', nav: 'actPlan' }]
     },
     {
       id: 'process-fb', cat: 'act', icon: '✅', title: '过程反馈（非奖励）',
@@ -5675,7 +7448,7 @@
       evidence: [
         { g: '🟢', ref: '映射关系；各条出处见对应条目' }
       ],
-      features: [{ label: '习惯树', nav: 'actHabit' }, { label: '专注链', nav: 'actPlan' }, { label: '计划', nav: 'actPlan' }]
+      features: [{ label: '习惯树', nav: 'actHabit' }, { label: '专注链', nav: 'actFocus' }, { label: '计划', nav: 'actPlan' }]
     }
   ];
 
@@ -6250,7 +8023,9 @@
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6 a2.4 2.4 0 1 1 3.9 1.9 c-.9.7-1.5 1.2-1.5 2.3"/><path d="M12 16.6 v.5"/>',
     act: '<rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4 V3 H15 V4"/><path d="M9 10 H15 M9 14 H13"/>',
     habit: '<path d="M12 20 V11"/><path d="M12 11 C12 11 8 9.5 8 6.5 C8 6.5 12 7.5 12 11"/><path d="M12 13 C12 13 16 11.5 16 8.5 C16 8.5 12 9.5 12 13"/>',
-    mile: '<path d="M7 20 V4"/><path d="M7 5 H18 L15 9 L18 13 H7"/><path d="M5 20 H12"/>'
+    mile: '<path d="M7 20 V4"/><path d="M7 5 H18 L15 9 L18 13 H7"/><path d="M5 20 H12"/>',
+    // bank（题库/真题集）：合上的卡册 + 书脊 + 题签，与 deck（叠放的卡片）区分
+    bank: '<rect x="4.5" y="4" width="15" height="16" rx="2"/><path d="M9 4 V20"/><path d="M15.5 13.5 H18.5 V20 L17 18.6 L15.5 20 Z"/>'
   };
   function icon(name) {
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -6601,6 +8376,7 @@
   const SYNC_CFG_KEY = 'athena_sync';
   const SYNC_DIR = 'athena-sync';
   const SYNC_TOLERANCE_MS = 2000; // 时间戳容差：2 秒内的两端写入视为一致
+  const SYNC_QUIZ_MAX = 200; // 自测记录合并上限（与 quiz.mjs 的 QUIZ_MAX_RECORDS / store.mjs 的 STORED_QUIZ_MAX_RECORDS 同口径）
 
   function syncCfg() {
     try { return JSON.parse(localStorage.getItem(SYNC_CFG_KEY)) || {}; } catch (e) { return {}; }
@@ -6638,11 +8414,18 @@
     return winner;
   }
 
+  // —— 合并时的畸形输入安全取值（云同步负载可能来自旧版本 / 手工编辑 / 损坏文件）——
+  // 合法形态（普通对象 / 数组）原样返回；undefined / null / 非对象 / 非数组一律降级为空对象 / 空数组：
+  // 合并按「该侧没有这段数据」继续，坏数据按既有净化精神丢弃，绝不因 TypeError 中断整条同步链路。
+  function syncSafeMap(v) { return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {}; }
+  function syncSafeList(v) { return Array.isArray(v) ? v : []; }
+
   // —— 合并两侧 DB（纯函数，供单测）——
   // 卡片/错题：并集，同卡按上述规则选边；仅一侧存在的卡整卡采用。
   // 日志：daily/studyTime/counts/detail 逐日（逐字段）取大——同时段两端学习时计数取 max 而非相加，
   //       只影响统计展示精度，不影响任何学习数据；checkins 取「或」；mastery/metrics 取当日专注较长一侧。
   // 自定义内容（custom/cardOverrides/customRel）：并集，冲突本地优先（低频，archive 兜底）。
+  // 自测记录（log.quiz）：按 t 去重并集、升序、只留最新 200 条（同端同一场自测不重复；不推进 updatedAt）。
   // 设置：本地优先（正在使用的设备）。updatedAt/schemaVersion 取大。
   function mergeDb(local, remote) {
     const out = {};
@@ -6668,17 +8451,17 @@
       out[key] = Object.assign({}, remote[key] || {}, local[key] || {});
     });
 
-    const lg = Object.assign({}, local.log || {});
-    const rlog = remote.log || {};
+    const lg = Object.assign({}, syncSafeMap(local.log));
+    const rlog = syncSafeMap(remote.log);
     ['daily', 'studyTime'].forEach(function (k) {
-      const a = (local.log && local.log[k]) || {}, b = (rlog && rlog[k]) || {};
+      const a = syncSafeMap(local.log && local.log[k]), b = syncSafeMap(rlog && rlog[k]);
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) { m[d] = Math.max(a[d] || 0, b[d] || 0); });
       Object.keys(b).forEach(function (d) { if ((b[d] || 0) > (a[d] || 0)) changed = true; });
       lg[k] = m;
     });
     (function () { // counts：每日逐字段取大（n/r/w/a，按并集遍历——新增计数字段自动兼容）
-      const a = (local.log && local.log.counts) || {}, b = (rlog && rlog.counts) || {};
+      const a = syncSafeMap(local.log && local.log.counts), b = syncSafeMap(rlog && rlog.counts);
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) {
         const day = Object.assign({}, b[d] || {});
@@ -6689,18 +8472,18 @@
       lg.counts = m;
     })();
     (function () { // detail：逐日逐卡取大
-      const a = (local.log && local.log.detail) || {}, b = (rlog && rlog.detail) || {};
+      const a = syncSafeMap(local.log && local.log.detail), b = syncSafeMap(rlog && rlog.detail);
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) {
         const day = Object.assign({}, b[d] || {});
-        Object.keys(a[d]).forEach(function (id) { day[id] = Math.max(a[d][id] || 0, (b[d] && b[d][id]) || 0); });
+        Object.keys(a[d] || {}).forEach(function (id) { day[id] = Math.max(a[d][id] || 0, (b[d] && b[d][id]) || 0); });
         Object.keys(b[d] || {}).forEach(function (id) { if ((b[d][id] || 0) > ((a[d] && a[d][id]) || 0)) changed = true; });
         m[d] = day;
       });
       lg.detail = m;
     })();
     (function () { // checkins：取或
-      const a = (local.log && local.log.checkins) || {}, b = (rlog && rlog.checkins) || {};
+      const a = syncSafeMap(local.log && local.log.checkins), b = syncSafeMap(rlog && rlog.checkins);
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) { if (a[d]) m[d] = true; });
       Object.keys(b).forEach(function (d) { if (b[d] && !a[d]) changed = true; });
@@ -6709,7 +8492,7 @@
     (function () { // mastery/metrics：取当日专注较长一侧的快照
       const st = lg.studyTime || {};
       ['mastery', 'metrics'].forEach(function (k) {
-        const a = (local.log && local.log[k]) || {}, b = (rlog && rlog[k]) || {};
+        const a = syncSafeMap(local.log && local.log[k]), b = syncSafeMap(rlog && rlog[k]);
         const m = Object.assign({}, b);
         Object.keys(a).forEach(function (d) {
           const aSt = (local.log && local.log.studyTime && local.log.studyTime[d]) || 0;
@@ -6722,16 +8505,15 @@
       });
     })();
     (function () { // newIntro：已引入新卡并集（本地在前）
-      const ai = (local.log && local.log.newIntro && local.log.newIntro.ids) || [];
-      const bi = (rlog && rlog.newIntro && rlog.newIntro.ids) || [];
+      const ai = syncSafeList(local.log && local.log.newIntro && local.log.newIntro.ids);
+      const bi = syncSafeList(rlog && rlog.newIntro && rlog.newIntro.ids);
       const extra = bi.filter(function (id) { return ai.indexOf(id) === -1; });
       if (extra.length) changed = true;
       lg.newIntro = { ids: ai.concat(extra) };
     })();
     (function () { // revlogs：评分日志去重并集（键 t|cid|r——同端同一次评分不重复产生）
-      const ar = (local.log && local.log.revlogs) || [];
-      const br = (rlog && rlog.revlogs) || [];
-      if (!Array.isArray(ar) && !Array.isArray(br)) return;
+      const ar = syncSafeList(local.log && local.log.revlogs);   // 非数组（旧载荷/损坏数据）按空处理
+      const br = syncSafeList(rlog && rlog.revlogs);
       const seen = {};
       const merged = [];
       ar.concat(br).forEach(function (e) {
@@ -6747,10 +8529,33 @@
       br.forEach(function (e) {
         if (!e || typeof e !== 'object' || typeof e.cid !== 'string' || !e.cid) return;
         const k = (e.t || 0) + '|' + e.cid + '|' + (e.r || 0);
-        if (!ar.some(function (a) { return (a.t || 0) + '|' + a.cid + '|' + (a.r || 0) === k; })) remoteNew++;
+        if (!ar.some(function (a) { return a && typeof a === 'object' && ((a.t || 0) + '|' + a.cid + '|' + (a.r || 0)) === k; })) remoteNew++;
       });
       if (remoteNew) changed = true;
       lg.revlogs = merged;
+    })();
+    (function () { // quiz：自测记录按 t 去重并集（t 即该场自测的开始时刻，同端同一次自测不重复产生）
+      const aq = syncSafeList(local.log && local.log.quiz);   // 非数组（旧载荷/损坏数据）按空处理
+      const bq = syncSafeList(rlog && rlog.quiz);
+      const isValid = function (e) {
+        return !!e && typeof e === 'object' && !Array.isArray(e) && typeof e.t === 'number' && isFinite(e.t);
+      };
+      const seen = {};
+      const merged = [];
+      aq.concat(bq).forEach(function (e) { // 本地在前 → 同 t 以本地记录为准（内容一致时不产生差异）
+        if (!isValid(e)) return;
+        const k = String(e.t);
+        if (seen[k]) return;
+        seen[k] = 1;
+        merged.push(e);
+      });
+      merged.sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
+      if (merged.length > SYNC_QUIZ_MAX) merged.splice(0, merged.length - SYNC_QUIZ_MAX); // 与应用端上限一致（只留最新）
+      const remoteNew = bq.filter(function (e) {
+        return isValid(e) && aq.every(function (a) { return !isValid(a) || String(a.t) !== String(e.t); });
+      }).length;
+      if (remoteNew) changed = true;
+      lg.quiz = merged;
     })();
     out.log = lg;
     // 供同步层判断是否需要写回本地；enumerable=false 使 JSON 序列化自动跳过
@@ -7961,11 +9766,44 @@
     return row;
   }
 
+  // 帮助页入口按钮：指向对应视图（专注链已升为行动默认视图 → 帮助页入口一律指 actFocus）
+  function actHelpNavChip(label, view) {
+    const b = el('button', 'btn small', label);
+    b.setAttribute('data-action', 'nav');
+    b.setAttribute('data-arg', view);
+    return b;
+  }
+
   function renderActHelp(wrap) {
     wrap.appendChild(el('h2', null, '📖 RSIP · 设计手册'));
-    wrap.appendChild(el('p', 'muted', '习惯设计四攻略 + 习惯树规则 + 计划/专注链速查。科学依据见知识库，这里只给可执行要点。'));
+    wrap.appendChild(el('p', 'muted', '按二级导航顺序速查：专注链 → 计划 → 习惯树（含规则）+ 设计四攻略。科学依据见知识库，这里只给可执行要点。'));
+
+    // 目录：点按跳到对应小节；锚点 = 各小节面板 id
+    const toc = el('div', 'act-panel act-help-toc');
+    toc.appendChild(el('div', 'mini-label', '目录'));
+    const tocRow = el('div', 'chips');
+    [
+      ['专注链', '#act-help-focus'],
+      ['计划', '#act-help-plan'],
+      ['习惯树 · 攻略', '#act-help-habit'],
+      ['习惯树 · 规则', '#act-help-habit-rules'],
+      ['详见知识库', '#act-help-kb']
+    ].forEach(function (pair) {
+      const b = el('button', 'chip', pair[0]);
+      b.setAttribute('data-anchor', pair[1]);
+      b.addEventListener('click', function () {
+        const target = document.querySelector(pair[1]);
+        if (target && target.scrollIntoView) target.scrollIntoView({ block: 'start' });
+      });
+      tocRow.appendChild(b);
+    });
+    toc.appendChild(tocRow);
+    wrap.appendChild(toc);
+
+    const panels = [];
 
     const sec1 = el('div', 'act-panel act-help-page');
+    sec1.id = 'act-help-habit';
     sec1.appendChild(el('h3', null, '设计四攻略（习惯树 · RSIP）'));
     sec1.appendChild(actHelpStrategy(
       '① 零敲牛皮糖',
@@ -7987,9 +9825,11 @@
       '坏习惯是替换不是消灭；在 WOOP 障碍步列外部提示并移除/改造。',
       '失败回习惯库、内化保留，可再入树——破了还能立。'
     ));
-    wrap.appendChild(sec1);
+    sec1.appendChild(actHelpNavChip('去习惯树 →', 'actHabit'));
+    panels.push(sec1);
 
     const sec2 = el('div', 'act-panel act-help-page');
+    sec2.id = 'act-help-focus';
     sec2.appendChild(el('h3', null, '专注链 · CTDP 简述'));
     const ul2 = el('ul');
     [
@@ -8002,9 +9842,11 @@
     const ctdpLink = el('button', 'btn small', '知识库 · 专注链 CTDP →');
     ctdpLink.addEventListener('click', function () { actOpenKb('ctdp'); });
     sec2.appendChild(ctdpLink);
-    wrap.appendChild(sec2);
+    sec2.appendChild(actHelpNavChip('去专注链 →', 'actFocus'));
+    panels.push(sec2);
 
     const sec3 = el('div', 'act-panel act-help-page');
+    sec3.id = 'act-help-plan';
     sec3.appendChild(el('h3', null, '计划 · WOOP 速查'));
     const ul3 = el('ul');
     [
@@ -8018,9 +9860,11 @@
     const woopLink = el('button', 'btn small', '知识库 · WOOP →');
     woopLink.addEventListener('click', function () { actOpenKb('woop'); });
     sec3.appendChild(woopLink);
-    wrap.appendChild(sec3);
+    sec3.appendChild(actHelpNavChip('去计划 →', 'actPlan'));
+    panels.push(sec3);
 
     const sec4 = el('div', 'act-panel act-help-page');
+    sec4.id = 'act-help-habit-rules';
     sec4.appendChild(el('h3', null, '习惯树 · 规则简述'));
     const ul4 = el('ul');
     [
@@ -8037,17 +9881,18 @@
     const rsipLink = el('button', 'btn small', '知识库 · 习惯树 RSIP →');
     rsipLink.addEventListener('click', function () { actOpenKb('rsip'); });
     sec4.appendChild(rsipLink);
-    wrap.appendChild(sec4);
+    panels.push(sec4);
 
     const sec5 = el('div', 'act-panel act-help-page');
+    sec5.id = 'act-help-kb';
     sec5.appendChild(el('h3', null, '详见知识库'));
     const links = el('div', 'act-help-kb-links');
     [
-      ['rsip', '习惯树 · RSIP'],
       ['ctdp', '专注链 · CTDP'],
       ['woop', 'WOOP'],
       ['if-then', '执行意图'],
       ['env', '提示与替换'],
+      ['rsip', '习惯树 · RSIP'],
       ['process-fb', '过程反馈']
     ].forEach(function (pair) {
       const b = el('button', 'chip', pair[1]);
@@ -8055,7 +9900,10 @@
       links.appendChild(b);
     });
     sec5.appendChild(links);
-    wrap.appendChild(sec5);
+    panels.push(sec5);
+
+    // 页面顺序 = 二级导航顺序：专注链 → 计划 → 习惯树（攻略 + 规则）→ 详见知识库
+    [sec2, sec3, sec1, sec4, sec5].forEach(function (p) { wrap.appendChild(p); });
   }
 
   // ---------------- 渲染：行动壳 / 计划区 ----------------
@@ -10401,6 +12249,11 @@
   const FOCUS_LEVEL_KEYS = ['unit', 'group', 'corps', 'army'];
   const FOCUS_ORG_LEVELS = ['group', 'corps', 'army'];
   const FOCUS_SEQ_KEYS = { unit: '#', group: '●', corps: '▲', army: '◆' };
+  // 层次严格划分：单元的 rank=0，其上依次为组/群/集团；父级层次恒为该节点 rank+1。
+  const FOCUS_LEVEL_RANK = { unit: 0, group: 1, corps: 2, army: 3 };
+  // 计划参数边界（新建顶层任务 / 添加子级 两个入口共用）
+  const FOCUS_MIN_CHILD_MIN = 1;
+  const FOCUS_MIN_CHILD_MAX = 99;
   // 主链 tier（原「精锐」）；同一时间仅一条
   const FOCUS_TIER_MAIN = 'main';
   const FOCUS_TIER_NORMAL = 'normal';
@@ -10596,7 +12449,7 @@
       fromPlan: !!raw.fromPlan,
       formalized: raw.formalized == null ? !raw.fromPlan : !!raw.formalized,
       dueAt: raw.dueAt == null ? null : (Number(raw.dueAt) || null),
-      minChildCount: Number.isFinite(minChild) && minChild > 0 ? Math.min(99, Math.floor(minChild)) : 1,
+      minChildCount: focusNormalizeMinChildCount(Number.isFinite(minChild) ? minChild : null, 1),
       createdAt: Number(raw.createdAt) || 0,
       updatedAt: Number(raw.updatedAt) || 0
     };
@@ -10767,15 +12620,25 @@
       if (u.planId && !plseen[u.planId]) u.planId = null;
     });
     const sq = raw.seq && typeof raw.seq === 'object' ? raw.seq : {};
-    ['unit', 'group', 'corps', 'army'].forEach(function (k) {
+    FOCUS_LEVEL_KEYS.forEach(function (k) {
       const n = Number(sq[k]);
       out.seq[k] = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
     });
-    out.units.forEach(function (u) { if (u.seq > out.seq.unit) out.seq.unit = u.seq; });
-    out.orgs.forEach(function (o) {
-      if (o.level === 'group' && o.seq > out.seq.group) out.seq.group = o.seq;
-      if (o.level === 'corps' && o.seq > out.seq.corps) out.seq.corps = o.seq;
-      if (o.level === 'army' && o.seq > out.seq.army) out.seq.army = o.seq;
+    // 计数器与现存节点取齐：同层最小空缺由 focusNextSeq 现场计算，
+    // 历史状态里虚高的 seq 归位到实际最大番号（删除过的旧数据不再跳号）。
+    let maxUnit = 0;
+    out.units.forEach(function (u) {
+      const n = Number(u && u.seq);
+      if (Number.isFinite(n) && n > maxUnit) maxUnit = Math.floor(n);
+    });
+    out.seq.unit = maxUnit;
+    FOCUS_ORG_LEVELS.forEach(function (lv) {
+      let max = 0;
+      out.orgs.forEach(function (o) {
+        const n = Number(o && o.seq);
+        if (o && o.level === lv && Number.isFinite(n) && n > max) max = Math.floor(n);
+      });
+      out.seq[lv] = max;
     });
     const aid = raw.activeId == null ? null : String(raw.activeId);
     out.activeId = aid && seen[aid] ? aid : (out.chains[0] ? out.chains[0].id : null);
@@ -10874,6 +12737,344 @@
 
   function focusIsTypeKey(k) {
     return FOCUS_TYPE_KEYS.indexOf(String(k)) >= 0;
+  }
+
+  // ---------------- 纯函数：层次类型（严格四级） ----------------
+
+  // 层次由节点自身的显式类型决定：单元看 units（恒为 unit），其余看 org.level ∈ group/corps/army。
+  // 归属关系恒为「子级 rank + 1 = 父级 rank」，不再靠父级槽位（如「挂在组下所以是单元」）推断。
+  function focusIsLevelKey(level) {
+    return FOCUS_LEVEL_KEYS.indexOf(String(level)) >= 0;
+  }
+
+  function focusIsOrgLevel(level) {
+    return FOCUS_ORG_LEVELS.indexOf(String(level)) >= 0;
+  }
+
+  function focusLevelRank(level) {
+    const r = FOCUS_LEVEL_RANK[String(level)];
+    return r == null ? -1 : r;
+  }
+
+  function focusLevelAtRank(rank) {
+    const r = Math.floor(Number(rank));
+    if (!Number.isFinite(r) || r < 0 || r >= FOCUS_LEVEL_KEYS.length) return null;
+    return FOCUS_LEVEL_KEYS[r];
+  }
+
+  // 上一级 / 下一级（四级之外或无可上升层次 → null）
+  function focusParentLevelOf(level) {
+    const r = focusLevelRank(level);
+    return r < 0 ? null : focusLevelAtRank(r + 1);
+  }
+
+  function focusChildLevelOf(level) {
+    const r = focusLevelRank(level);
+    return r <= 0 ? null : focusLevelAtRank(r - 1);
+  }
+
+  // 能否把 childLevel 的节点编入 parentLevel 的节点：须恰为上一级（单元→组、组→群、群→集团）
+  function focusCanAttach(childLevel, parentLevel) {
+    const c = focusLevelRank(childLevel);
+    const p = focusLevelRank(parentLevel);
+    return c >= 0 && p >= 1 && p === c + 1;
+  }
+
+  // 节点显式层次：单元 → 'unit'；org → 其 level；不存在 → null
+  function focusNodeLevel(state, id) {
+    if (focusFindUnit(state, id)) return 'unit';
+    const org = focusFindOrg(state, id);
+    return org ? org.level : null;
+  }
+
+  // 组合产物的层次 = 成员最高层 + 1（单元→组、组→群、群→集团）；已是集团 → null
+  function focusCombineLevelOf(state, ids) {
+    let max = -1;
+    (Array.isArray(ids) ? ids : []).forEach(function (id) {
+      const r = focusLevelRank(focusNodeLevel(state, id));
+      if (r > max) max = r;
+    });
+    return max < 0 ? null : focusLevelAtRank(max + 1);
+  }
+
+  // 同层级最小空缺番号：删除编制后复用；已有节点番号不变、同层不重号
+  function focusNextSeq(state, level) {
+    const lv = String(level);
+    const used = {};
+    if (lv === 'unit') {
+      ((state && state.units) || []).forEach(function (u) {
+        const n = Number(u && u.seq);
+        if (Number.isFinite(n) && n > 0) used[Math.floor(n)] = 1;
+      });
+    } else if (focusIsOrgLevel(lv)) {
+      ((state && state.orgs) || []).forEach(function (o) {
+        if (!o || o.level !== lv) return;
+        const n = Number(o.seq);
+        if (Number.isFinite(n) && n > 0) used[Math.floor(n)] = 1;
+      });
+    } else return 0;
+    let n = 1;
+    while (used[n]) n += 1;
+    return n;
+  }
+
+  // 现存同层最大番号（删除后同步计数器）
+  function focusMaxSeq(state, level) {
+    const lv = String(level);
+    let max = 0;
+    function take(n) {
+      const v = Math.floor(Number(n));
+      if (Number.isFinite(v) && v > max) max = v;
+    }
+    if (lv === 'unit') {
+      ((state && state.units) || []).forEach(function (u) { if (u) take(u.seq); });
+    } else {
+      ((state && state.orgs) || []).forEach(function (o) { if (o && o.level === lv) take(o.seq); });
+    }
+    return max;
+  }
+
+  // ---------------- 纯函数：计划参数（新建顶层任务 / 添加子级 共用同一校验） ----------------
+
+  // 最小下级数：仅接受 1..99 整数；越界收敛、非法回退默认
+  function focusNormalizeMinChildCount(v, dflt) {
+    const d = Number(dflt);
+    const def = Number.isFinite(d)
+      ? Math.min(FOCUS_MIN_CHILD_MAX, Math.max(FOCUS_MIN_CHILD_MIN, Math.floor(d)))
+      : FOCUS_MIN_CHILD_MIN;
+    if (v == null || String(v).trim() === '') return def;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return def;
+    return Math.min(FOCUS_MIN_CHILD_MAX, Math.max(FOCUS_MIN_CHILD_MIN, Math.floor(n)));
+  }
+
+  function focusMinChildCountValid(v) {
+    if (v == null || String(v).trim() === '') return false;
+    const n = Number(v);
+    return Number.isFinite(n) && Math.floor(n) === n && n >= FOCUS_MIN_CHILD_MIN && n <= FOCUS_MIN_CHILD_MAX;
+  }
+
+  // 截止日期：接受毫秒时间戳（number / ≥10 位数字串）、Date、'YYYY-MM-DD'（当日 23:59:59 本地）。
+  // 非法一律 → null（'2024-02-31'、'abc'、0、负数均视为非法）。
+  function focusNormalizeDueAt(v) {
+    if (v == null || v === '') return null;
+    if (v instanceof Date) {
+      const t = v.getTime();
+      return Number.isFinite(t) ? Math.floor(t) : null;
+    }
+    if (typeof v === 'number') return Number.isFinite(v) && v > 0 ? Math.floor(v) : null;
+    const s = String(v).trim();
+    if (/^\d{10,}$/.test(s)) {
+      const n = Number(s);
+      return Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
+    }
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return null;
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = Number(m[3]);
+    const dt = new Date(y, mo - 1, d, 23, 59, 59, 0);
+    if (!Number.isFinite(dt.getTime())) return null;
+    // 拒绝 2 月 31 日这类被 Date 顺延的假日期
+    if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+    return dt.getTime();
+  }
+
+  function focusDueDateValid(v) {
+    if (v == null || v === '') return true;   // 截止日期可选
+    return focusNormalizeDueAt(v) !== null;
+  }
+
+  // 计划新建表单字段：新建计划任务、添加子级两个入口共用；非法日期 → ok:false（不落库）
+  function focusPlanNodeFields(raw, dfltMinChildCount) {
+    const f = raw || {};
+    const dueRaw = f.dueAt == null ? '' : f.dueAt;
+    if (!focusDueDateValid(dueRaw)) return { ok: false, reason: 'bad_due' };
+    return {
+      ok: true,
+      name: String(f.name == null ? '' : f.name).trim(),
+      dueAt: focusNormalizeDueAt(dueRaw),
+      minChildCount: focusNormalizeMinChildCount(f.minChildCount, dfltMinChildCount)
+    };
+  }
+
+  // 统一「编入 / 改父」：层次由节点显式类型判定，父级须恰为上一级。
+  // 单元 → 任务组；组 → 群；群 → 集团；集团不可再向上。根级（无父级）始终允许。
+  function focusAttachNodes(state, nodeIds, parentId, now) {
+    const next = focusCloneState(state);
+    const ids = Array.isArray(nodeIds) ? nodeIds.map(String) : [];
+    if (!ids.length) return { ok: false, reason: 'empty_selection', state: next };
+    let parent = null;
+    if (parentId != null && parentId !== '') {
+      parent = focusFindOrg(next, parentId);
+      if (!parent) return { ok: false, reason: 'bad_parent', state: next };
+    }
+    const t = Number(now) || 0;
+    const touched = [];
+    const skipped = [];
+    ids.forEach(function (id) {
+      const level = focusNodeLevel(next, id);
+      if (!level) { skipped.push(id); return; }
+      if (parent) {
+        if (!focusCanAttach(level, parent.level)) { skipped.push(id); return; }
+        if (id === parent.id || focusIsAncestorOrg(next, id, parent.id)) { skipped.push(id); return; }
+      }
+      const unit = focusFindUnit(next, id);
+      if (unit) {
+        unit.orgId = parent ? parent.id : null;
+        touched.push(unit.id);
+        return;
+      }
+      const org = focusFindOrg(next, id);
+      org.parentId = parent ? parent.id : null;
+      org.updatedAt = t;
+      touched.push(org.id);
+    });
+    if (!touched.length) return { ok: false, reason: 'bad_parent', state: next, skipped: skipped };
+    return { ok: true, state: next, touched: touched, skipped: skipped };
+  }
+
+  // ---------------- 纯函数：层级视觉 / 归属 ----------------
+
+  // 四级层次的视觉规范：符号 / 字号 / 字重 / 左边框四项逐级不同（任意两层至少两项不同）。
+  // 颜色取设计令牌（--accent / --accent-2 / --warn / --text-muted，均带字面回退），
+  // 是「层次可辨认」的单一事实源：渲染层只读它，测试直接断言它；t9 在 style.css 落地时可比对这套数值。
+  const FOCUS_LEVEL_VISUAL_KEYS = ['symbol', 'fontSize', 'fontWeight', 'borderWidth'];
+
+  const FOCUS_LEVEL_VISUALS = {
+    unit: {
+      level: 'unit', rank: 0, symbol: '#', name: '任务单元',
+      fontSize: 12.5, fontWeight: 400, borderWidth: 2,
+      borderColor: 'var(--text-muted, #9AA3B2)', tint: 'rgba(148, 163, 184, 0.08)'
+    },
+    group: {
+      level: 'group', rank: 1, symbol: '●', name: '任务组',
+      fontSize: 14, fontWeight: 600, borderWidth: 3,
+      borderColor: 'var(--accent, #3B82F6)', tint: 'rgba(59, 130, 246, 0.10)'
+    },
+    corps: {
+      level: 'corps', rank: 2, symbol: '▲', name: '任务群',
+      fontSize: 15.5, fontWeight: 700, borderWidth: 4,
+      borderColor: 'var(--accent-2, #D4537E)', tint: 'rgba(212, 83, 126, 0.10)'
+    },
+    army: {
+      level: 'army', rank: 3, symbol: '◆', name: '任务集团',
+      fontSize: 17, fontWeight: 800, borderWidth: 5,
+      borderColor: 'var(--warn, #F59E0B)', tint: 'rgba(245, 158, 11, 0.10)'
+    }
+  };
+
+  function focusLevelVisual(level) {
+    return FOCUS_LEVEL_VISUALS[String(level)] || null;
+  }
+
+  // 两层视觉差异项数（验收：任意两层 ≥ 2 项不同）；未知层次返回 -1
+  function focusLevelVisualDelta(a, b) {
+    const va = focusLevelVisual(a);
+    const vb = focusLevelVisual(b);
+    if (!va || !vb) return -1;
+    if (va === vb) return 0;
+    let n = 0;
+    FOCUS_LEVEL_VISUAL_KEYS.forEach(function (k) { if (va[k] !== vb[k]) n += 1; });
+    return n;
+  }
+
+  // 层级徽标：符号 + 层次名（+ 可选计数），名可取设置里的自定义层次名
+  function focusLevelBadge(level, settings, count) {
+    const v = focusLevelVisual(level);
+    if (!v) return null;
+    const names = (settings || {}).levelNames || {};
+    const nm = String(names[v.level] || v.name);
+    const n = Math.max(0, Math.floor(Number(count) || 0));
+    return { level: v.level, symbol: v.symbol, name: nm, count: n, text: v.symbol + ' ' + nm + (n > 0 ? ' ' + n : '') };
+  }
+
+  // 归属可见性：子项挂在哪个父级下（父级层次符号 + 番号 + 名称）；未编入也返回一条 attached:false。
+  // 归属恒由节点自身的显式类型 + parentId/orgId 决定，跨层级编入后立即反映（纯函数无缓存）。
+  function focusParentAttribution(state, nodeId) {
+    const st = state || {};
+    const id = String(nodeId == null ? '' : nodeId);
+    const unit = focusFindUnit(st, id);
+    const org = unit ? null : focusFindOrg(st, id);
+    if (!unit && !org) return null;
+    const selfLevel = unit ? 'unit' : String(org.level);
+    const parentId = unit ? (unit.orgId || null) : (org.parentId || null);
+    const parent = parentId ? focusFindOrg(st, parentId) : null;
+    if (!parent) {
+      return {
+        level: selfLevel, attached: false, parentId: null, parentLevel: null,
+        parentSymbol: '·', parentSeq: 0, parentName: '', parentLabel: '', text: '未编入'
+      };
+    }
+    const pv = focusLevelVisual(parent.level);
+    const label = focusOrgLabel(parent, st.settings);
+    return {
+      level: selfLevel, attached: true, parentId: parent.id, parentLevel: String(parent.level),
+      parentSymbol: pv ? pv.symbol : '', parentSeq: Number(parent.seq) || 0,
+      parentName: String(parent.name == null ? '' : parent.name),
+      parentLabel: label, text: '归属 ' + label
+    };
+  }
+
+  // ---------------- 纯函数：悬浮提醒（任意视图可见的剩余时间） ----------------
+
+  // 当前应显示的悬浮提醒：专注/侦查进行中优先，其次预约保留中；都没有则 visible:false。
+  // 与 focusTickPlan 同源取数（focusUnitRemainingMs / focusReservationRemainingMs），
+  // 但不读 currentView，因此任何视图下都能显示；DOM 落地见 focusReminderSync。
+  function focusReminderInfo(state, now) {
+    const st = state || {};
+    const t = Number(now) || 0;
+    const settings = st.settings || {};
+    const chains = Array.isArray(st.chains) ? st.chains : [];
+    const active = chains.filter(function (c) {
+      return c && (c.status === 'running' || c.status === 'scouting') && c.current;
+    })[0] || null;
+    if (active) {
+      const cur = active.current;
+      const remain = focusUnitRemainingMs(cur, t);
+      const isScout = String(cur.typeKey) === 'scout' && !cur.promotedFromScout;
+      const planned = Number(cur.plannedMin) || 0;
+      const elapsed = Math.max(0, planned * 60000 - remain);
+      const typeNames = settings.typeNames || {};
+      return {
+        visible: true,
+        mode: isScout ? 'scout' : 'focus',
+        chainId: String(active.id),
+        nodeId: focusUnitKey(active),
+        key: focusUnitKey(active),
+        level: 'unit',
+        symbol: (focusLevelVisual('unit') || {}).symbol || '#',
+        title: isScout ? '侦查进行中' : String(typeNames[cur.typeKey] || '专注中'),
+        subtitle: focusWorkLabel(focusNextSeq(st, 'unit')) +
+          (cur.taskText ? ' · ' + String(cur.taskText) : ''),
+        remainMs: remain,
+        expired: remain <= 0,
+        clock: focusFmtClock(remain),
+        startedAt: Number(cur.startedAt) || 0,
+        plannedMin: planned,
+        elapsedMin: Math.floor(elapsed / 60000),
+        progressPct: planned > 0 ? Math.min(100, Math.round(elapsed / (planned * 60000) * 100)) : 0,
+        workCount: 0
+      };
+    }
+    const reserved = chains.filter(function (c) { return c && c.status === 'reserved' && c.reservation; })[0] || null;
+    if (reserved) {
+      const remain = focusReservationRemainingMs(reserved.reservation, t);
+      const dl = Number(reserved.reservation.deadline) || 0;
+      return {
+        visible: true, mode: 'reserve', chainId: String(reserved.id), nodeId: String(reserved.id),
+        key: 'reserve:' + String(reserved.id) + ':' + dl, level: 'reserve', symbol: '⏳',
+        title: '预约待就座', subtitle: '座位保留' + (dl ? '至 ' + focusFmtTs(dl) : ''),
+        remainMs: remain, expired: remain <= 0, clock: focusFmtClock(remain),
+        startedAt: 0, plannedMin: 0, elapsedMin: 0, progressPct: 0,
+        workCount: Number(reserved.workCount) || 0
+      };
+    }
+    return {
+      visible: false, mode: null, chainId: null, nodeId: null, key: null, level: null, symbol: '',
+      title: '', subtitle: '', remainMs: 0, expired: false, clock: '',
+      startedAt: 0, plannedMin: 0, elapsedMin: 0, progressPct: 0, workCount: 0
+    };
   }
 
   // ---------------- 设置（纯；风味/三三制只在设置里改） ----------------
@@ -11168,12 +13369,14 @@
 
     const achieved = o.achieved == null ? true : !!o.achieved;
     const completion = focusClampPct(o.completion == null ? (achieved ? 100 : 0) : o.completion);
-    next.seq.unit += 1;
+    // 番号：同层最小空缺号（单元不删除，等价于递增流水）
+    const unitSeq = focusNextSeq(next, 'unit');
+    next.seq.unit = Math.max(Number(next.seq.unit) || 0, unitSeq);
     const actualMin = Math.max(0, Math.round((t - cur.startedAt) / 60000));
     const name = String(o.name == null ? '' : o.name).trim() || cur.taskText;
     const unit = {
       id: focusUid('unit'),
-      seq: next.seq.unit,
+      seq: unitSeq,
       typeKey: typeKey,
       name: name,
       taskText: cur.taskText,
@@ -11415,25 +13618,25 @@
     const next = focusCloneState(state);
     const f = fields || {};
     const level = String(f.level || 'group');
-    if (FOCUS_ORG_LEVELS.indexOf(level) < 0) return { ok: false, reason: 'bad_level', state: next };
+    if (!focusIsOrgLevel(level)) return { ok: false, reason: 'bad_level', state: next };
     // 高层次任务创建须计划模式
     if (!next.planMode && !f.force) return { ok: false, reason: 'need_plan_mode', state: next };
     const t = Number(now) || 0;
-    next.seq[level] += 1;
     const fromPlan = f.fromPlan == null ? next.planMode : !!f.fromPlan;
-    const minChild = Number(f.minChildCount);
-    const dueRaw = f.dueAt;
+    // 计划参数：最小下级数 1..99 + 合法截止日期（与「添加子级」入口共用同一校验）
+    const plan = focusPlanNodeFields(f, 1);
+    if (!plan.ok) return { ok: false, reason: plan.reason, state: next, org: null };
     const org = {
       id: String(f.id || focusUid('org')),
       level: level,
-      seq: next.seq[level],
-      name: String(f.name == null ? '' : f.name),
+      seq: 0,
+      name: plan.name,
       parentId: f.parentId == null || f.parentId === '' ? null : String(f.parentId),
       planId: f.planId == null ? null : String(f.planId),
       fromPlan: fromPlan,
       formalized: !fromPlan,
-      dueAt: dueRaw == null ? null : (Number(dueRaw) || null),
-      minChildCount: Number.isFinite(minChild) && minChild > 0 ? Math.min(99, Math.floor(minChild)) : 1,
+      dueAt: plan.dueAt,
+      minChildCount: plan.minChildCount,
       createdAt: t,
       updatedAt: t
     };
@@ -11441,9 +13644,12 @@
     if (org.parentId) {
       const parent = focusFindOrg(next, org.parentId);
       if (!parent) return { ok: false, reason: 'bad_parent', state: next, org: null };
-      const rank = { army: 3, corps: 2, group: 1 };
-      if (rank[parent.level] !== rank[level] + 1) return { ok: false, reason: 'bad_parent', state: next, org: null };
+      // 层次严格：父级须恰为上一级（显式 level 判定，不看父级槽位）
+      if (!focusCanAttach(level, parent.level)) return { ok: false, reason: 'bad_parent', state: next, org: null };
     }
+    // 番号：同层级最小空缺号（删除后复用）；已有节点番号不变、同层不重号
+    org.seq = focusNextSeq(next, level);
+    next.seq[level] = Math.max(Number(next.seq[level]) || 0, org.seq);
     next.orgs.push(org);
     return { ok: true, state: next, org: org };
   }
@@ -11477,68 +13683,79 @@
     next.units.forEach(function (u) {
       if (u && u.orgId && kill[u.orgId]) u.orgId = null;
     });
+    // 番号回收：同层新节点复用最小空缺号（只有现存节点占号）
+    FOCUS_ORG_LEVELS.forEach(function (lv) {
+      next.seq[lv] = focusMaxSeq(next, lv);
+    });
     return { ok: true, state: next, removed: removed };
   }
 
+  // 单个单元编入 / 移出任务组
   function focusAssignUnit(state, unitId, orgId, now) {
-    const next = focusCloneState(state);
-    const u = focusFindUnit(next, unitId);
-    if (!u) return { ok: false, reason: 'not_found', state: next };
-    if (orgId == null || orgId === '') {
-      u.orgId = null;
-      return { ok: true, state: next, unit: u };
+    if (!focusFindUnit(state, unitId)) {
+      const next = focusCloneState(state);
+      return { ok: false, reason: 'not_found', state: next };
     }
-    const org = focusFindOrg(next, orgId);
-    if (!org || org.level !== 'group') return { ok: false, reason: 'bad_org', state: next };
-    u.orgId = org.id;
-    return { ok: true, state: next, unit: u };
+    const r = focusAttachNodes(state, [unitId], orgId, now);
+    if (!r.ok) return { ok: false, reason: 'bad_org', state: r.state };
+    return { ok: true, state: r.state, unit: focusFindUnit(r.state, unitId) };
   }
 
-  // 批量编入 / 移动（树内多选组合）
+  // 批量编入 / 移动（树内多选组合）；单元只能进任务组
   function focusAssignUnits(state, unitIds, orgId, now) {
-    const next = focusCloneState(state);
-    const ids = Array.isArray(unitIds) ? unitIds.map(String) : [];
-    if (!ids.length) return { ok: false, reason: 'empty_selection', state: next };
-    if (orgId) {
-      const org = focusFindOrg(next, orgId);
-      if (!org || org.level !== 'group') return { ok: false, reason: 'bad_org', state: next };
+    const r = focusAttachNodes(state, unitIds, orgId, now);
+    if (!r.ok) {
+      return { ok: false, reason: r.reason === 'empty_selection' ? 'empty_selection' : 'bad_org', state: r.state };
     }
-    const touched = [];
-    ids.forEach(function (id) {
-      const u = focusFindUnit(next, id);
-      if (!u) return;
-      u.orgId = orgId ? String(orgId) : null;
-      touched.push(u.id);
-    });
-    return { ok: true, state: next, touched: touched };
+    return { ok: true, state: r.state, touched: r.touched, skipped: r.skipped };
   }
 
-  // 批量改父（树内多选组合到已有节点）
+  // 批量改父（树内多选组合到已有节点）：组→群、群→集团，逐级严格
   function focusReparentOrgs(state, orgIds, parentId, now) {
+    const r = focusAttachNodes(state, orgIds, parentId, now);
+    if (!r.ok) return { ok: false, reason: r.reason, state: r.state };
+    return { ok: true, state: r.state, touched: r.touched, skipped: r.skipped };
+  }
+
+  // 组合：多选节点合成一个新节点。产物层次 = 成员最高层 + 1（单元→组、组→群、群→集团）；
+  // 成员层次须一致且都能编入产物层次，否则整单失败（不留半个产物）。
+  function focusCombineNodes(state, fields, now) {
     const next = focusCloneState(state);
-    const ids = Array.isArray(orgIds) ? orgIds.map(String) : [];
+    const f = fields || {};
+    const rawIds = Array.isArray(f.ids) ? f.ids : (Array.isArray(f.nodeIds) ? f.nodeIds : []);
+    const ids = rawIds.map(String);
     if (!ids.length) return { ok: false, reason: 'empty_selection', state: next };
-    const rank = { army: 3, corps: 2, group: 1 };
-    let parent = null;
+    const levels = ids.map(function (id) { return focusNodeLevel(next, id); });
+    if (levels.filter(Boolean).length !== ids.length) return { ok: false, reason: 'not_found', state: next };
+    const derived = focusCombineLevelOf(next, ids);
+    const level = f.level == null || f.level === '' ? derived : String(f.level);
+    if (!level) return { ok: false, reason: 'no_level_up', state: next };
+    if (!focusIsOrgLevel(level)) return { ok: false, reason: 'bad_level', state: next };
+    const mismatch = ids.filter(function (id, i) { return !focusCanAttach(levels[i], level); });
+    if (mismatch.length) return { ok: false, reason: 'member_level_mismatch', state: next };
+    const parentId = f.parentId == null || f.parentId === '' ? null : String(f.parentId);
     if (parentId) {
-      parent = focusFindOrg(next, parentId);
+      const parent = focusFindOrg(next, parentId);
       if (!parent) return { ok: false, reason: 'bad_parent', state: next };
+      if (!focusCanAttach(level, parent.level)) return { ok: false, reason: 'bad_parent', state: next };
     }
     const t = Number(now) || 0;
-    const touched = [];
-    ids.forEach(function (id) {
-      const o = focusFindOrg(next, id);
-      if (!o) return;
-      if (parent) {
-        if (rank[parent.level] !== rank[o.level] + 1) return;
-        if (focusIsAncestorOrg(next, o.id, parent.id)) return;
-      }
-      o.parentId = parent ? parent.id : null;
-      o.updatedAt = t;
-      touched.push(o.id);
-    });
-    if (!touched.length) return { ok: false, reason: 'bad_parent', state: next };
-    return { ok: true, state: next, touched: touched };
+    const plan = focusPlanNodeFields(f, 1);
+    if (!plan.ok) return { ok: false, reason: plan.reason, state: next };
+    const cr = focusCreateOrg(next, {
+      level: level,
+      name: plan.name,
+      parentId: parentId,
+      planId: f.planId,
+      fromPlan: f.fromPlan,
+      force: f.force,
+      dueAt: plan.dueAt,
+      minChildCount: plan.minChildCount
+    }, t);
+    if (!cr.ok) return { ok: false, reason: cr.reason, state: next };
+    const ar = focusAttachNodes(cr.state, ids, cr.org.id, t);
+    if (!ar.ok) return { ok: false, reason: 'member_level_mismatch', state: next };
+    return { ok: true, state: ar.state, org: cr.org, level: level, touched: ar.touched };
   }
 
   function focusIsAncestorOrg(state, maybeAncestorId, nodeId) {
@@ -11554,6 +13771,19 @@
 
   function focusUnassignedUnits(state) {
     return ((state && state.units) || []).filter(function (u) { return u && !u.orgId; });
+  }
+
+  // 直接下一级任务数：下一级由节点的显式层次决定（组 → 单元；群 → 组；集团 → 群），
+  // 不看「哪个槽位有内容」——与 focusOrgCanFormalize / 树内展示同一口径。
+  function focusNextLevelCount(state, orgId) {
+    const org = focusFindOrg(state, orgId);
+    if (!org) return 0;
+    const childLevel = focusChildLevelOf(org.level);
+    const childOrgs = ((state && state.orgs) || []).filter(function (o) { return o && o.parentId === orgId; });
+    const childUnits = ((state && state.units) || []).filter(function (u) { return u && u.orgId === orgId; });
+    if (childLevel === 'unit') return childUnits.length;
+    if (childLevel) return childOrgs.filter(function (o) { return o.level === childLevel; }).length;
+    return childOrgs.length || childUnits.length;
   }
 
   // 子树单元（含自身直接挂的 + 孙级）
@@ -11619,10 +13849,8 @@
     if (!org.fromPlan) return { ok: false, reason: 'not_plan' };
     if (org.formalized) return { ok: false, reason: 'already_formal' };
     const need = Math.max(1, Number(org.minChildCount) || 1);
-    // 下一级：子 org 数；组下无子 org 时看直接挂靠单元数
-    const childOrgs = ((state && state.orgs) || []).filter(function (o) { return o && o.parentId === org.id; });
-    const childUnits = ((state && state.units) || []).filter(function (u) { return u && u.orgId === org.id; });
-    const nextLevelCount = childOrgs.length > 0 ? childOrgs.length : childUnits.length;
+    // 下一级由显式层次决定：组看单元、群看组、集团看群（与树内展示同一口径）
+    const nextLevelCount = focusNextLevelCount(state, org.id);
     if (nextLevelCount < need) {
       return { ok: false, reason: 'need_fill', need: need, childCount: nextLevelCount };
     }
@@ -11649,24 +13877,32 @@
     if (parentId) {
       const parent = focusFindOrg(next, parentId);
       if (!parent) return { ok: false, reason: 'bad_parent', state: next, created: [] };
-      if (parent.level === 'army') level = 'corps';
-      else if (parent.level === 'corps') level = 'group';
-      else return { ok: false, reason: 'bad_parent', state: next, created: [] };
+      // 下一级由父级显式层次决定；组之下是单元，不能在此批量创建
+      const childLevel = focusChildLevelOf(parent.level);
+      if (!childLevel || !focusIsOrgLevel(childLevel)) return { ok: false, reason: 'bad_parent', state: next, created: [] };
+      level = childLevel;
     }
     const created = [];
     const t = Number(now) || 0;
     const fromPlan = f.fromPlan == null ? next.planMode : !!f.fromPlan;
+    // 批量创建同样共用计划参数校验（最小下级数 1..99、合法截止日期）
+    if (!focusDueDateValid(f.dueAt)) return { ok: false, reason: 'bad_due', state: next, created: [] };
+    const triadDueAt = focusNormalizeDueAt(f.dueAt);
+    const triadMinChild = focusNormalizeMinChildCount(f.minChildCount, 1);
     for (let i = 0; i < count; i++) {
-      next.seq[level] += 1;
+      const seq = focusNextSeq(next, level);
+      next.seq[level] = Math.max(Number(next.seq[level]) || 0, seq);
       const org = {
         id: focusUid('org'),
         level: level,
-        seq: next.seq[level],
+        seq: seq,
         name: '',
         parentId: parentId,
         planId: f.planId == null ? null : String(f.planId),
         fromPlan: fromPlan,
         formalized: !fromPlan,
+        dueAt: triadDueAt,
+        minChildCount: triadMinChild,
         createdAt: t,
         updatedAt: t
       };
@@ -11699,6 +13935,9 @@
       rows.push({
         kind: 'unit', depth: depth, id: u.id, unit: u,
         label: focusUnitLabel(u, state.settings),
+        level: 'unit',
+        visual: focusLevelVisual('unit'),
+        parent: focusParentAttribution(state, u.id),
         aggregates: null
       });
     }
@@ -11709,6 +13948,8 @@
         kind: 'org', depth: depth, id: org.id, org: org,
         label: focusOrgLabel(org, state.settings),
         level: org.level,
+        visual: focusLevelVisual(org.level),
+        parent: focusParentAttribution(state, org.id),
         collapsed: !!collapsed[org.id],
         aggregates: agg
       });
@@ -11957,6 +14198,10 @@
         bad_level: '无效层次',
         bad_parent: '父级层次不匹配',
         bad_org: '只能编入任务组',
+        bad_due: '截止日期不合法',
+        member_level_mismatch: '所选层次不一致，须逐级组合',
+        no_level_up: '已是最高层次，无法再组合',
+        bad_min_child: '最低下级数须为 1..99',
         need_plan_mode: '请先开启计划模式',
         need_fill: '须至少填充一个下级层次',
         not_plan: '不是计划创建的节点',
@@ -12231,7 +14476,7 @@
       });
       runBtns.appendChild(bQuit);
     } else {
-      const bDone = el('button', 'btn primary', '完成 · 记 ' + focusWorkLabel(st.seq.unit + 1));
+      const bDone = el('button', 'btn primary', '完成 · 记 ' + focusWorkLabel(focusNextSeq(st, 'unit')));
       if (canDone) {
         bDone.addEventListener('click', function () { focusOpenCompleteModal(chain, st); });
       } else {
@@ -12244,6 +14489,249 @@
     bSus.addEventListener('click', function () { focusOpenSuspiciousModal(chain); });
     runBtns.appendChild(bSus);
     statusBox.appendChild(runBtns);
+  }
+
+  // ---------------- UI：层级徽标 / 归属徽标 ----------------
+
+  // 该选择器是否已由样式表接管：t9 在 style.css 落地后，本文件的 inline 兜底自动让位。
+  function focusCssDeclared(selector) {
+    if (typeof document === 'undefined' || !document.styleSheets) return false;
+    const want = String(selector);
+    for (let i = 0; i < document.styleSheets.length; i++) {
+      let rules = null;
+      try { rules = document.styleSheets[i].cssRules; } catch (e) { rules = null; }
+      if (!rules) continue;
+      for (let j = 0; j < rules.length; j++) {
+        const rule = rules[j];
+        if (rule && rule.selectorText && String(rule.selectorText).replace(/\s+/g, ' ').indexOf(want) >= 0) return true;
+      }
+    }
+    return false;
+  }
+
+  // 层级徽标：符号 + 层次名 +（下级计数）
+  function focusLevelBadgeEl(level, settings, count) {
+    const b = focusLevelBadge(level, settings, count);
+    if (!b) return null;
+    const v = focusLevelVisual(b.level);
+    const chip = el('span', 'focus-level-badge', b.text);
+    chip.setAttribute('data-level', b.level);
+    if (v && !focusCssDeclared('.focus-level-badge[data-level="' + b.level + '"]')) {
+      chip.style.display = 'inline-block';
+      chip.style.fontSize = v.fontSize + 'px';
+      chip.style.fontWeight = String(v.fontWeight);
+      chip.style.padding = '0 7px';
+      chip.style.marginBottom = '2px';
+      chip.style.borderRadius = '999px';
+      chip.style.border = v.borderWidth + 'px solid ' + v.borderColor;
+      chip.style.background = v.tint;
+    }
+    return chip;
+  }
+
+  // 归属徽标：父级层级符号 + 番号 + 名称（未编入时高亮提示）
+  function focusParentChipEl(attr) {
+    const a = attr || {};
+    const chip = el('span', 'focus-parent-chip' + (a.attached ? '' : ' is-free'), String(a.text || ''));
+    chip.setAttribute('data-parent-level', a.attached ? String(a.parentLevel || '') : 'none');
+    chip.setAttribute('data-parent-id', a.parentId ? String(a.parentId) : '');
+    chip.title = String(a.text || '');
+    if (!focusCssDeclared('.focus-parent-chip')) {
+      chip.style.display = 'inline-block';
+      chip.style.fontSize = '11.5px';
+      chip.style.fontWeight = '400';
+      chip.style.padding = '0 6px';
+      chip.style.marginTop = '2px';
+      chip.style.borderRadius = '999px';
+      chip.style.border = '1px solid var(--border, #E5E7EB)';
+      chip.style.background = 'var(--bg-elevated, #FFFFFF)';
+      chip.style.color = a.attached ? 'var(--text-muted, #6B7280)' : 'var(--warn, #F59E0B)';
+    }
+    return chip;
+  }
+
+  // ---------------- UI：悬浮提醒（任意视图可见的剩余时间） ----------------
+
+  const FOCUS_REMINDER_UI_KEY = 'athena_focus_reminder_ui_v1';
+  let focusReminderEl = null;
+  let focusReminderTimer = null;
+  let focusReminderUi = null; // { collapsed, closedKey }
+
+  function focusReminderUiState() {
+    if (focusReminderUi) return focusReminderUi;
+    focusReminderUi = { collapsed: false, closedKey: null };
+    try {
+      const raw = (typeof localStorage === 'undefined') ? null : localStorage.getItem(FOCUS_REMINDER_UI_KEY);
+      if (raw) {
+        const o = JSON.parse(raw) || {};
+        focusReminderUi.collapsed = !!o.collapsed;
+      }
+    } catch (e) { /* 本地偏好损坏时用默认值 */ }
+    return focusReminderUi;
+  }
+
+  function focusReminderSaveUi() {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(FOCUS_REMINDER_UI_KEY, JSON.stringify({ collapsed: !!focusReminderUiState().collapsed }));
+    } catch (e) { /* 存储不可用时仅内存生效 */ }
+  }
+
+  function focusReminderEnsure() {
+    if (typeof document === 'undefined' || !document.body) return null;
+    if (focusReminderEl && focusReminderEl.parentNode) return focusReminderEl;
+    const box = el('div', 'focus-reminder');
+    box.id = 'focusReminder';
+    if (!focusCssDeclared('.focus-reminder')) {
+      box.style.position = 'fixed';
+      box.style.right = '14px';
+      box.style.bottom = 'calc(14px + var(--dock-h, 0px))';
+      box.style.zIndex = '90';
+      box.style.minWidth = '164px';
+      box.style.padding = '8px 10px';
+      box.style.borderRadius = 'var(--radius, 12px)';
+      box.style.border = '1px solid var(--border, #E5E7EB)';
+      box.style.background = 'var(--bg-elevated, #FFFFFF)';
+      box.style.boxShadow = 'var(--shadow, 0 1px 3px rgba(27,28,31,.06))';
+    }
+    const head = el('div', 'focus-reminder-head');
+    const mark = el('span', 'focus-reminder-level', '');
+    const title = el('span', 'focus-reminder-title', '');
+    if (!focusCssDeclared('.focus-reminder-head')) {
+      head.style.display = 'flex';
+      head.style.alignItems = 'center';
+      head.style.gap = '6px';
+    }
+    if (!focusCssDeclared('.focus-reminder-level')) {
+      mark.style.fontWeight = '700';
+      mark.style.color = 'var(--accent, #3B82F6)';
+    }
+    if (!focusCssDeclared('.focus-reminder-title')) {
+      title.style.fontSize = 'var(--text-xs, 12px)';
+      title.style.flex = '1';
+      title.style.whiteSpace = 'nowrap';
+    }
+    const fold = el('button', 'focus-reminder-fold', '–');
+    fold.type = 'button';
+    fold.title = '折叠 / 展开';
+    fold.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const ui = focusReminderUiState();
+      ui.collapsed = !ui.collapsed;
+      focusReminderSaveUi();
+      focusReminderSync(Date.now(), true);
+    });
+    const close = el('button', 'focus-reminder-close', '×');
+    close.type = 'button';
+    close.title = '本次不显示（下一个专注单元自动恢复）';
+    close.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const ui = focusReminderUiState();
+      ui.closedKey = focusReminderEl ? String(focusReminderEl.getAttribute('data-key') || '') : '';
+      focusReminderSync(Date.now(), true);
+    });
+    if (!focusCssDeclared('.focus-reminder-fold') && !focusCssDeclared('.focus-reminder-close')) {
+      [fold, close].forEach(function (b) {
+        b.style.border = '0';
+        b.style.background = 'transparent';
+        b.style.cursor = 'pointer';
+        b.style.color = 'var(--text-muted, #6B7280)';
+        b.style.fontSize = 'var(--text-sm, 13px)';
+        b.style.lineHeight = '1';
+        b.style.padding = '0 2px';
+      });
+    }
+    head.appendChild(mark);
+    head.appendChild(title);
+    head.appendChild(fold);
+    head.appendChild(close);
+    const clock = el('div', 'focus-reminder-clock', '');
+    if (!focusCssDeclared('.focus-reminder-clock')) {
+      clock.style.fontFamily = 'var(--font-mono, ui-monospace)';
+      clock.style.fontSize = 'var(--text-xl, 20px)';
+      clock.style.fontWeight = '700';
+      clock.style.fontVariantNumeric = 'tabular-nums';
+      clock.style.marginTop = '2px';
+    }
+    const meta = el('div', 'focus-reminder-meta', '');
+    if (!focusCssDeclared('.focus-reminder-meta')) {
+      meta.style.fontSize = 'var(--text-2xs, 11px)';
+      meta.style.color = 'var(--text-muted, #6B7280)';
+      meta.style.maxWidth = '210px';
+    }
+    box.appendChild(head);
+    box.appendChild(clock);
+    box.appendChild(meta);
+    document.body.appendChild(box);
+    focusReminderEl = box;
+    return box;
+  }
+
+  // 同步悬浮提醒：任意视图可见；折叠/关闭为即时生效的会话态（折叠持久化）。
+  function focusReminderSync(now, force) {
+    if (typeof document === 'undefined' || !document.body) return { visible: false, rendered: false, info: null };
+    const t = Number(now) || Date.now();
+    const info = focusReminderInfo(loadFocus(), t);
+    const ui = focusReminderUiState();
+    const show = !!(info.visible && (!ui.closedKey || ui.closedKey !== info.key));
+    if (!show) {
+      if (focusReminderEl && focusReminderEl.parentNode) focusReminderEl.parentNode.removeChild(focusReminderEl);
+      focusReminderEl = null;
+      return { visible: false, rendered: false, info: info };
+    }
+    const box = focusReminderEnsure();
+    if (!box) return { visible: true, rendered: false, info: info };
+    box.setAttribute('data-mode', String(info.mode || ''));
+    box.setAttribute('data-level', String(info.level || ''));
+    box.setAttribute('data-key', String(info.key || ''));
+    box.setAttribute('data-collapsed', ui.collapsed ? '1' : '0');
+    box.classList.toggle('is-collapsed', !!ui.collapsed);
+    box.classList.toggle('is-expired', !!info.expired);
+    const mark = box.querySelector('.focus-reminder-level');
+    const title = box.querySelector('.focus-reminder-title');
+    const clock = box.querySelector('.focus-reminder-clock');
+    const meta = box.querySelector('.focus-reminder-meta');
+    if (mark) mark.textContent = String(info.symbol || '#');
+    if (title) title.textContent = String(info.title || '');
+    if (clock) {
+      clock.textContent = String(info.clock || '');
+      clock.style.display = ui.collapsed ? 'none' : '';
+    }
+    if (meta) {
+      const parts = [String(info.subtitle || '')];
+      if (info.mode === 'focus' && info.plannedMin > 0) {
+        parts.push('已过 ' + info.elapsedMin + ' 分 / 共 ' + info.plannedMin + ' 分');
+      }
+      if (info.mode === 'reserve' && info.workCount > 0) parts.push('已备 ' + info.workCount + ' 次');
+      if (info.expired) parts.push('已到点，可完成');
+      meta.textContent = parts.filter(function (x) { return !!x; }).join(' · ');
+      meta.style.display = ui.collapsed ? 'none' : '';
+    }
+    return { visible: true, rendered: true, info: info };
+  }
+
+  function focusReminderClear() {
+    if (focusReminderTimer) {
+      clearInterval(focusReminderTimer);
+      focusReminderTimer = null;
+    }
+  }
+
+  // 独立于专注视图的定时器：既有的 focusTickTimer 在离开 actFocus 时会停表，
+  // 悬浮提醒必须在「浏览 / 统计」等任意视图下继续走秒，故自己起一个 1s 表。
+  function focusReminderStart() {
+    if (typeof document === 'undefined') return false;
+    focusReminderSync(Date.now(), true);
+    if (focusReminderTimer) return true;
+    focusReminderTimer = setInterval(function () {
+      try { focusReminderSync(Date.now(), false); } catch (e) { /* 提醒渲染失败不影响主流程 */ }
+    }, 1000);
+    return true;
+  }
+
+  if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+    if (document.body) focusReminderStart();
+    else document.addEventListener('DOMContentLoaded', function () { focusReminderStart(); });
   }
 
   // ---------------- UI：状态树（编制 + 计划合并） ----------------
@@ -12284,7 +14772,7 @@
     }
     if (selIds.length && !viewReserve) {
       tools.appendChild(el('span', 'muted', '已选 ' + selIds.length + ' 项'));
-      const combine = el('button', 'btn small', '组合到新组');
+      const combine = el('button', 'btn small', '组合到新上级');
       combine.addEventListener('click', function () { focusOpenCombineModal(st); });
       tools.appendChild(combine);
       const moveBtn = el('button', 'btn small', '移动到…');
@@ -12352,6 +14840,41 @@
       row.setAttribute('data-id', r.id);
       row.setAttribute('data-kind', r.kind);
 
+      // 层级：由显式类型（unit/group/corps/army）决定 → data-level + 可测视觉差异（符号/字号/字重/左边框/底色）
+      const nodeLevel = r.level || (r.kind === 'unit' ? 'unit' : null);
+      const vis = r.visual || focusLevelVisual(nodeLevel);
+      if (nodeLevel) {
+        row.setAttribute('data-level', nodeLevel);
+        row.classList.add('focus-level-' + nodeLevel);
+        if (vis && !focusCssDeclared('.focus-tree-row[data-level="' + nodeLevel + '"]')) {
+          row.style.fontSize = vis.fontSize + 'px';
+          row.style.fontWeight = String(vis.fontWeight);
+          row.style.borderLeft = vis.borderWidth + 'px solid ' + vis.borderColor;
+          row.style.background = vis.tint;
+        }
+      }
+
+      // 层级标记（# / ● / ▲ / ◆）+ 缩进连接线：竖列树里层次与归属一眼可读
+      if (nodeLevel) {
+        const mark = el('span', 'focus-level-mark', vis ? vis.symbol : '');
+        mark.setAttribute('data-level', nodeLevel);
+        if (!focusCssDeclared('.focus-level-mark')) {
+          mark.style.display = 'inline-block';
+          mark.style.minWidth = '16px';
+          mark.style.marginRight = '4px';
+          mark.style.fontWeight = '700';
+          mark.style.color = vis ? vis.borderColor : 'inherit';
+        }
+        row.appendChild(mark);
+      } else {
+        const guide = el('span', 'focus-tree-guide', r.depth > 0 ? '└' : '·');
+        if (!focusCssDeclared('.focus-tree-guide')) {
+          guide.style.marginRight = '4px';
+          guide.style.color = 'var(--text-faint, #9CA3AF)';
+        }
+        row.appendChild(guide);
+      }
+
       // 多选
       if (r.kind === 'unit' || r.kind === 'org') {
         const cb = el('input', 'focus-tree-check');
@@ -12375,20 +14898,12 @@
           const ids = focusSelectedIds();
           const src = focusUiState.dragId;
           const targetId = r.id;
-          if (!ids.length && !src) return;
+          const list = ids.length ? ids : (src ? [src] : []);
+          if (!list.length) return;
           focusApply(function (s) {
-            if (ids.length) {
-              const unitIds = ids.filter(function (id) { return focusFindUnit(s, id); });
-              const orgIds = ids.filter(function (id) { return focusFindOrg(s, id); });
-              let rr = { ok: true, state: s };
-              if (unitIds.length) rr = focusAssignUnits(rr.state, unitIds, targetId, Date.now());
-              if (orgIds.length) rr = focusReparentOrgs(rr.state, orgIds, targetId, Date.now());
-              return rr;
-            }
-            if (src && focusFindUnit(s, src)) return focusAssignUnits(s, [src], targetId, Date.now());
-            if (src && focusFindOrg(s, src)) return focusReparentOrgs(s, [src], targetId, Date.now());
-            return { ok: false, reason: 'empty_selection', state: s };
-          }, '已组合到 ' + r.label);
+            // 拖放同样受层次约束：节点只能编入其上一级
+            return focusAttachNodes(s, list, targetId, Date.now());
+          }, '已编入 ' + r.label);
         });
       }
 
@@ -12405,13 +14920,14 @@
         const main = el('div', 'focus-tree-main');
         const tag = r.org.fromPlan && !r.org.formalized ? ' · 计划中' : '';
         const dueTxt = r.org.dueAt ? ' · 截止 ' + focusFmtTs(r.org.dueAt) : '';
-        main.appendChild(el('div', 'focus-tree-label', r.label + tag + dueTxt));
-        const agg = r.aggregates;
         const needN = Math.max(1, Number(r.org.minChildCount) || 1);
-        const nextCount = (function () {
-          const kids = st.orgs.filter(function (o) { return o && o.parentId === r.id; });
-          return kids.length > 0 ? kids.length : (st.units.filter(function (u) { return u && u.orgId === r.id; }).length);
-        })();
+        const nextCount = focusNextLevelCount(st, r.id);
+        const badge = focusLevelBadgeEl(r.org.level, st.settings, nextCount);
+        if (badge) main.appendChild(badge);
+        main.appendChild(el('div', 'focus-tree-label', r.label + tag + dueTxt));
+        // 归属：子项显示父级的层级符号 + 番号 + 名称（跨层级编入后下一次渲染即更新）
+        if (r.parent) main.appendChild(focusParentChipEl(r.parent));
+        const agg = r.aggregates;
         if (agg && agg.unitCount) {
           main.appendChild(el('div', 'focus-tree-meta',
             agg.unitCount + ' 单元 · ' + focusFmtTs(agg.startAt) + ' → ' + focusFmtTs(agg.endAt) +
@@ -12479,6 +14995,7 @@
 
         const main = el('div', 'focus-tree-main');
         main.appendChild(el('div', 'focus-tree-label', r.label));
+        if (r.parent) main.appendChild(focusParentChipEl(r.parent));
         const u = r.unit;
         main.appendChild(el('div', 'focus-tree-meta',
           '完成 ' + u.completion + '% · ' + focusFmtDur(u.actualMin) +
@@ -12864,7 +15381,7 @@
           completion: completion,
           name: name
         });
-      }, '已记 ' + focusWorkLabel(st.seq.unit + 1) + ' · 完成度 ' + (Number.isFinite(completion) ? completion : 0) + '%');
+      }, '已记 ' + focusWorkLabel(focusNextSeq(st, 'unit')) + ' · 完成度 ' + (Number.isFinite(completion) ? completion : 0) + '%');
     });
     const cancel = el('button', 'btn', '取消');
     cancel.addEventListener('click', function () { modal.remove(); });
@@ -12969,7 +15486,7 @@
     modal.appendChild(backdrop);
     const card = el('div', 'map-modal-card wrong-input-card');
     card.appendChild(el('h3', null, '新建计划任务'));
-    card.appendChild(el('p', 'muted', '创建高层次任务；须填充至少一个下级后，才能「转正」为正式层次。'));
+    card.appendChild(el('p', 'muted', '层次严格逐级归属：组 → 群 → 集团；须填充至少一个下级后才能「转正」为正式层次。'));
 
     card.appendChild(el('div', 'muted', '层次'));
     const levelSel = el('select', 'wrong-input');
@@ -12992,12 +15509,12 @@
     card.appendChild(el('div', 'muted', '可转正最低下一级任务数'));
     const minChild = el('input', 'wrong-input');
     minChild.type = 'number';
-    minChild.min = '1';
-    minChild.max = '99';
+    minChild.min = String(FOCUS_MIN_CHILD_MIN);
+    minChild.max = String(FOCUS_MIN_CHILD_MAX);
     minChild.value = '1';
     card.appendChild(minChild);
 
-    // 父级：按层次约束过滤
+    // 父级：按层次约束过滤（父级须恰为上一级）
     card.appendChild(el('div', 'muted', '上级（可选）'));
     const parentSel = el('select', 'wrong-input');
     function fillParents() {
@@ -13005,8 +15522,7 @@
       const none = el('option', null, '（根级）');
       none.value = '';
       parentSel.appendChild(none);
-      const lv = levelSel.value;
-      const wantParent = lv === 'group' ? 'corps' : (lv === 'corps' ? 'army' : null);
+      const wantParent = focusParentLevelOf(levelSel.value);
       if (wantParent) {
         st.orgs.filter(function (o) { return o && o.level === wantParent; }).forEach(function (o) {
           const opt = el('option', null, focusOrgLabel(o, st.settings));
@@ -13024,18 +15540,18 @@
     ok.addEventListener('click', function () {
       const level = levelSel.value;
       const parentId = parentSel.value || null;
-      const nm = name.value;
-      const dueAt = dueInp.value ? new Date(dueInp.value + 'T23:59:59').getTime() : null;
-      const minN = Math.max(1, Math.floor(Number(minChild.value) || 1));
+      // 与「添加子级」共用同一校验：最小下级数 1..99、合法日期
+      const nf = focusPlanNodeFields({ name: name.value, dueAt: dueInp.value, minChildCount: minChild.value }, 1);
+      if (!nf.ok) { toast('截止日期不合法'); return; }
       modal.remove();
       const r = focusApply(function (s) {
         return focusCreateOrg(s, {
           level: level,
-          name: nm,
+          name: nf.name,
           parentId: parentId,
           fromPlan: true,
-          dueAt: dueAt,
-          minChildCount: minN
+          dueAt: nf.dueAt,
+          minChildCount: nf.minChildCount
         }, Date.now());
       }, '已创建计划任务');
       if (r && r.ok && r.org) {
@@ -13052,17 +15568,16 @@
     setTimeout(function () { try { name.focus(); } catch (e) {} }, 50);
   }
 
-  // 树内：给某节点加子级（计划模式）
+  // 树内：给某节点加子级（计划模式）；子级层次由父级显式层次决定，可设最小下级数与截止日期
   function focusOpenInlineChildModal(parentOrg, st) {
-    const rank = { army: 3, corps: 2, group: 1 };
-    const childLevel = parentOrg.level === 'army' ? 'corps' : (parentOrg.level === 'corps' ? 'group' : null);
+    const childLevel = focusChildLevelOf(parentOrg.level);   // 组→单元、群→组、集团→群
     const modal = el('div', 'map-modal habit-modal');
     const backdrop = el('div', 'map-modal-backdrop');
     backdrop.addEventListener('click', function () { modal.remove(); });
     modal.appendChild(backdrop);
     const card = el('div', 'map-modal-card wrong-input-card');
     card.appendChild(el('h3', null, '添加子级 · ' + focusOrgLabel(parentOrg, st.settings)));
-    if (!childLevel) {
+    if (!childLevel || !focusIsOrgLevel(childLevel)) {
       card.appendChild(el('p', 'muted', '任务组之下是单元，由专注完成生成，不在此创建。'));
       const close = el('button', 'btn', '知道了');
       close.addEventListener('click', function () { modal.remove(); });
@@ -13074,16 +15589,35 @@
     card.appendChild(el('div', 'muted', '名称（可选）'));
     const name = el('input', 'wrong-input');
     card.appendChild(name);
+
+    card.appendChild(el('div', 'muted', '截止日期（可选）'));
+    const dueInp = el('input', 'wrong-input');
+    dueInp.type = 'date';
+    card.appendChild(dueInp);
+
+    card.appendChild(el('div', 'muted', '可转正最低下一级任务数'));
+    const minChild = el('input', 'wrong-input');
+    minChild.type = 'number';
+    minChild.min = String(FOCUS_MIN_CHILD_MIN);
+    minChild.max = String(FOCUS_MIN_CHILD_MAX);
+    minChild.value = '1';
+    card.appendChild(minChild);
+
     const btns = el('div', 'wrong-input-btns');
     const ok = el('button', 'btn primary', '创建 ' + (st.settings.levelNames[childLevel] || childLevel));
     ok.addEventListener('click', function () {
+      // 与「新建计划任务」共用同一校验：最小下级数 1..99、合法日期
+      const nf = focusPlanNodeFields({ name: name.value, dueAt: dueInp.value, minChildCount: minChild.value }, 1);
+      if (!nf.ok) { toast('截止日期不合法'); return; }
       modal.remove();
       focusApply(function (s) {
         return focusCreateOrg(s, {
           level: childLevel,
-          name: name.value,
+          name: nf.name,
           parentId: parentOrg.id,
-          fromPlan: true
+          fromPlan: true,
+          dueAt: nf.dueAt,
+          minChildCount: nf.minChildCount
         }, Date.now());
       }, '已添加子级');
     });
@@ -13097,60 +15631,86 @@
     setTimeout(function () { try { name.focus(); } catch (e) {} }, 50);
   }
 
-  // 多选 → 组合到新组
+  // 多选 → 组合到新节点：产物层次 = 成员最高层 + 1（单元→组、组→群、群→集团），可继续向上编入
   function focusOpenCombineModal(st) {
     const ids = focusSelectedIds();
-    const unitIds = ids.filter(function (id) { return focusFindUnit(st, id); });
-    const orgIds = ids.filter(function (id) { return focusFindOrg(st, id); });
-    if (!unitIds.length && !orgIds.length) { toast('请先选择单元或下级'); return; }
+    if (!ids.length) { toast('请先选择单元或下级'); return; }
+    const units = ids.filter(function (id) { return focusFindUnit(st, id); });
+    const orgs = ids.filter(function (id) { return focusFindOrg(st, id); });
+    if (!units.length && !orgs.length) { toast('请先选择单元或下级'); return; }
+    const level = focusCombineLevelOf(st, ids);
+    if (!level) {
+      toast('所选已是最高层次，无法再组合');
+      return;
+    }
+    // 成员层次必须一致：混层无法落在同一产物层次下
+    const mixed = ids.filter(function (id) { return !focusCanAttach(focusNodeLevel(st, id), level); });
+    if (mixed.length) {
+      toast('所选层次不一致：' + (st.settings.levelNames[level] || level) + '只能由' +
+        (st.settings.levelNames[focusChildLevelOf(level)] || '下一级') + '组合');
+      return;
+    }
+    const levelName = st.settings.levelNames[level] || level;
     const modal = el('div', 'map-modal habit-modal');
     const backdrop = el('div', 'map-modal-backdrop');
     backdrop.addEventListener('click', function () { modal.remove(); });
     modal.appendChild(backdrop);
     const card = el('div', 'map-modal-card wrong-input-card');
-    card.appendChild(el('h3', null, '组合到新组'));
-    card.appendChild(el('p', 'muted', '将 ' + unitIds.length + ' 个单元、' + orgIds.length + ' 个下级节点组合为新任务组。'));
+    card.appendChild(el('h3', null, '组合到新' + levelName));
+    card.appendChild(el('p', 'muted', '将 ' + units.length + ' 个单元、' + orgs.length + ' 个下级节点组合为新' + levelName + '。'));
     if (!st.planMode) {
       card.appendChild(el('div', 'focus-await-title', '需开启计划模式'));
     }
-    card.appendChild(el('div', 'muted', '新组名称（可选）'));
+    card.appendChild(el('div', 'muted', '名称（可选）'));
     const name = el('input', 'wrong-input');
     card.appendChild(name);
+
+    card.appendChild(el('div', 'muted', '截止日期（可选）'));
+    const dueInp = el('input', 'wrong-input');
+    dueInp.type = 'date';
+    card.appendChild(dueInp);
+
+    card.appendChild(el('div', 'muted', '可转正最低下一级任务数'));
+    const minChild = el('input', 'wrong-input');
+    minChild.type = 'number';
+    minChild.min = String(FOCUS_MIN_CHILD_MIN);
+    minChild.max = String(FOCUS_MIN_CHILD_MAX);
+    minChild.value = '1';
+    card.appendChild(minChild);
+
     card.appendChild(el('div', 'muted', '挂在（可选）'));
     const parentSel = el('select', 'wrong-input');
     const none = el('option', null, '（根级）');
     none.value = '';
     parentSel.appendChild(none);
-    st.orgs.filter(function (o) { return o && o.level === 'corps'; }).forEach(function (o) {
-      const opt = el('option', null, focusOrgLabel(o, st.settings));
-      opt.value = o.id;
-      parentSel.appendChild(opt);
-    });
+    const wantParent = focusParentLevelOf(level);
+    if (wantParent) {
+      st.orgs.filter(function (o) { return o && o.level === wantParent; }).forEach(function (o) {
+        const opt = el('option', null, focusOrgLabel(o, st.settings));
+        opt.value = o.id;
+        parentSel.appendChild(opt);
+      });
+    }
     card.appendChild(parentSel);
 
     const btns = el('div', 'wrong-input-btns');
     const ok = el('button', 'btn primary', '组合');
     ok.addEventListener('click', function () {
       const parentId = parentSel.value || null;
+      const nf = focusPlanNodeFields({ name: name.value, dueAt: dueInp.value, minChildCount: minChild.value }, 1);
+      if (!nf.ok) { toast('截止日期不合法'); return; }
       modal.remove();
       focusApply(function (s) {
-        if (!s.planMode) return { ok: false, reason: 'need_plan_mode', state: s };
-        const cr = focusCreateOrg(s, {
-          level: 'group',
-          name: name.value,
+        return focusCombineNodes(s, {
+          ids: ids,
+          level: level,
+          name: nf.name,
           parentId: parentId,
-          fromPlan: true
+          fromPlan: true,
+          dueAt: nf.dueAt,
+          minChildCount: nf.minChildCount
         }, Date.now());
-        if (!cr.ok) return cr;
-        const gid = cr.org.id;
-        let st2 = cr.state;
-        if (unitIds.length) {
-          const ar = focusAssignUnits(st2, unitIds, gid, Date.now());
-          if (ar.ok) st2 = ar.state;
-        }
-        // 子级 orgs 若是 group 则挂到新 group 不合法——仅 unit 编入；orgs 改父到新 group 仅当是 unit 级
-        return { ok: true, state: st2, org: cr.org };
-      }, '已组合到新组');
+      }, '已组合到新' + levelName);
       focusUiState.selected = {};
     });
     const cancel = el('button', 'btn', '取消');
@@ -13162,36 +15722,47 @@
     document.body.appendChild(modal);
   }
 
+  // 多选 → 移动到…：目标层次 = 所选层次 + 1（单元→组、组→群、群→集团）
   function focusOpenMoveModal(st, ids) {
+    const list = (Array.isArray(ids) ? ids : []).map(String);
+    const levels = {};
+    list.forEach(function (id) {
+      const lv = focusNodeLevel(st, id);
+      if (lv) levels[lv] = 1;
+    });
+    const keys = Object.keys(levels);
+    if (!keys.length) { toast('请先选择单元或下级'); return; }
+    if (keys.length > 1) { toast('所选层次不一致，请分别移动'); return; }
+    const level = keys[0];
+    const wantParent = focusParentLevelOf(level);
     const modal = el('div', 'map-modal habit-modal');
     const backdrop = el('div', 'map-modal-backdrop');
     backdrop.addEventListener('click', function () { modal.remove(); });
     modal.appendChild(backdrop);
     const card = el('div', 'map-modal-card wrong-input-card');
     card.appendChild(el('h3', null, '移动到…'));
+    card.appendChild(el('p', 'muted',
+      '所选 ' + (st.settings.levelNames[level] || level) + ' 只能编入' +
+      (wantParent ? (st.settings.levelNames[wantParent] || wantParent) : '（无可上升层次）') + '或回到根级。'));
     const sel = el('select', 'wrong-input');
-    const none = el('option', null, '未编入');
+    const none = el('option', null, '未编入（根级）');
     none.value = '';
     sel.appendChild(none);
-    st.orgs.filter(function (o) { return o && o.level === 'group'; }).forEach(function (o) {
-      const opt = el('option', null, focusOrgLabel(o, st.settings));
-      opt.value = o.id;
-      sel.appendChild(opt);
-    });
+    if (wantParent) {
+      st.orgs.filter(function (o) { return o && o.level === wantParent; }).forEach(function (o) {
+        const opt = el('option', null, focusOrgLabel(o, st.settings));
+        opt.value = o.id;
+        sel.appendChild(opt);
+      });
+    }
     card.appendChild(sel);
     const btns = el('div', 'wrong-input-btns');
     const ok = el('button', 'btn primary', '移动');
     ok.addEventListener('click', function () {
       const target = sel.value || null;
       modal.remove();
-      const unitIds = ids.filter(function (id) { return focusFindUnit(loadFocus(), id); });
-      const orgIds = ids.filter(function (id) { return focusFindOrg(loadFocus(), id); });
       focusApply(function (s) {
-        let rr = { ok: true, state: s };
-        if (unitIds.length) rr = focusAssignUnits(rr.state, unitIds, target, Date.now());
-        if (orgIds.length && target) rr = focusReparentOrgs(rr.state, orgIds, target, Date.now());
-        else if (orgIds.length && !target) rr = focusReparentOrgs(rr.state, orgIds, null, Date.now());
-        return rr;
+        return focusAttachNodes(s, list, target, Date.now());
       }, '已移动');
       focusUiState.selected = {};
     });
@@ -14288,7 +16859,7 @@
         closeDrawer();
         currentView = arg;
         if (arg === 'wrong' || arg === 'wrongBrowse' || arg === 'wrongStats') currentModule = 'wrong';
-        else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics') currentModule = 'cards';
+        else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics' || arg === 'bank') currentModule = 'cards';
         else if (arg === 'actPlan' || arg === 'actHabit' || arg === 'actFocus' || arg === 'actHelp') currentModule = 'act';
         else if (arg === 'mile') currentModule = 'cards';
         renderApp();
@@ -14296,7 +16867,7 @@
       case 'module':
         closeDrawer();
         currentModule = arg;
-        currentView = (arg === 'wrong') ? 'wrong' : (arg === 'act') ? 'actPlan' : 'learn';
+        currentView = (arg === 'wrong') ? 'wrong' : (arg === 'act') ? 'actFocus' : 'learn';
         renderApp();
         break;
       case 'menuclose':
@@ -14401,6 +16972,70 @@
       case 'qnext':
         quiz.idx++;
         renderApp();
+        break;
+      // ---- 题库（POC）：筛选 / 开题 / 加错题 / 上一题下一题 / 返回 / 重置 ----
+      // bank.mjs 只负责渲染与 data-action 标记，状态改写与重渲染统一收口在这里。
+      case 'bankFilter': {
+        // data-arg 只剩 type= / tag= / star=（页内科目选择与频率维度已下线：
+        // 历史遗留的 subject= / typeStar= 静默忽略，不再有分支）
+        const eq = String(arg == null ? '' : arg).indexOf('=');
+        if (eq < 0) break;
+        const key = String(arg).slice(0, eq);
+        const value = String(arg).slice(eq + 1);
+        if (key === 'type') bankType = value;
+        else if (key === 'tag') bankTag = value;
+        else if (key === 'star') bankStar = value;
+        else if (key === 'query') bankQuery = value;
+        else break;
+        bankOpen = null; // 改筛选即回到列表，避免详情页与筛选条件不一致
+        renderApp();
+        break;
+      }
+      case 'bankOpen': {
+        const q = bankQuestionById(arg);
+        if (!q) break;
+        bankOpen = q.id;
+        renderApp();
+        break;
+      }
+      case 'bankStep': {
+        // 优先在当前筛选结果里走动；若该题不在筛选结果中（从错题本等入口进来），退化为全库顺序
+        const step = parseInt(arg, 10) < 0 ? -1 : 1;
+        const rowIndex = function (list, id) {
+          for (let i = 0; i < list.length; i++) if (list[i].id === id) return i;
+          return -1;
+        };
+        let rows = bankFilteredQuestions();
+        let idx = rowIndex(rows, bankOpen);
+        if (idx < 0) {
+          rows = bankAllQuestions();
+          idx = rowIndex(rows, bankOpen);
+        }
+        const next = idx + step;
+        if (idx < 0 || next < 0 || next >= rows.length) break;
+        bankOpen = rows[next].id;
+        renderApp();
+        break;
+      }
+      case 'bankBack':
+        bankOpen = null;
+        renderApp();
+        break;
+      case 'bankAddWrong': {
+        const q = bankQuestionById(arg);
+        if (!q) break;
+        bankAddToWrong(q); // 内部走 markAsWrong：命中查重会自行跳转错题本并 renderApp
+        renderApp(); // 新增路径不自带重渲染 → 这里刷新「已在错题本」按钮态
+        break;
+      }
+      case 'bankReset':
+        bankType = 'all';
+        bankTag = 'all';
+        bankStar = 'all';
+        bankQuery = '';
+        bankOpen = null;
+        renderApp();
+        toast('已重置题库筛选');
         break;
       case 'export': {
         const subj = subjectList()[currentSubjectId];
@@ -14711,13 +17346,15 @@
   function switchSubject(id) {
     if (id === currentSubjectId || !setSubject(id)) return;
     const target = id;
+    // 题库跟随全局学科（t17）：切学科前记住是否正停留在题库，加载完成后原样回到题库看新学科题目
+    const wasBank = (typeof currentView !== 'undefined' && currentView === 'bank');
     resetSessionState(); // 统一会话重置（deck/浏览过滤/导图/错题队列一次清干净）
     currentModule = 'cards';
     loadDBAsync().then(function () {
       // 竞态防护：等待期间用户又切到了别的学科时，放弃这次过期的加载结果
       if (currentSubjectId !== target) return;
       if (!loadSession()) buildSession(0);
-      currentView = 'learn';
+      currentView = wasBank ? 'bank' : 'learn';
       renderApp();
     });
   }
@@ -14849,9 +17486,9 @@
       { label: '主页', hint: 'Today', run: function () { currentModule = 'cards'; currentView = 'home'; renderApp(); } },
       { label: '学习 · 知识卡', hint: 'learn', run: function () { currentModule = 'cards'; currentView = 'learn'; renderApp(); } },
       { label: '错题本', hint: 'wrong', run: function () { currentModule = 'wrong'; currentView = 'wrong'; renderApp(); } },
+      { label: '行动 · 专注链', hint: 'actFocus', run: function () { currentModule = 'act'; currentView = 'actFocus'; renderApp(); } },
       { label: '行动 · 计划', hint: 'actPlan', run: function () { currentModule = 'act'; currentView = 'actPlan'; renderApp(); } },
       { label: '行动 · 习惯树', hint: 'actHabit', run: function () { currentModule = 'act'; currentView = 'actHabit'; renderApp(); } },
-      { label: '行动 · 专注链', hint: 'actFocus', run: function () { currentModule = 'act'; currentView = 'actFocus'; renderApp(); } },
       { label: '行动 · 帮助', hint: 'actHelp', run: function () { currentModule = 'act'; currentView = 'actHelp'; renderApp(); } },
       { label: '里程碑', hint: 'mile', run: function () { currentView = 'mile'; renderApp(); } },
       { label: '统计', hint: 'statistics', run: function () { currentModule = 'cards'; currentView = 'statistics'; renderApp(); } },

@@ -16,6 +16,11 @@
   const FOCUS_LEVEL_KEYS = ['unit', 'group', 'corps', 'army'];
   const FOCUS_ORG_LEVELS = ['group', 'corps', 'army'];
   const FOCUS_SEQ_KEYS = { unit: '#', group: '●', corps: '▲', army: '◆' };
+  // 层次严格划分：单元的 rank=0，其上依次为组/群/集团；父级层次恒为该节点 rank+1。
+  const FOCUS_LEVEL_RANK = { unit: 0, group: 1, corps: 2, army: 3 };
+  // 计划参数边界（新建顶层任务 / 添加子级 两个入口共用）
+  const FOCUS_MIN_CHILD_MIN = 1;
+  const FOCUS_MIN_CHILD_MAX = 99;
   // 主链 tier（原「精锐」）；同一时间仅一条
   const FOCUS_TIER_MAIN = 'main';
   const FOCUS_TIER_NORMAL = 'normal';
@@ -211,7 +216,7 @@
       fromPlan: !!raw.fromPlan,
       formalized: raw.formalized == null ? !raw.fromPlan : !!raw.formalized,
       dueAt: raw.dueAt == null ? null : (Number(raw.dueAt) || null),
-      minChildCount: Number.isFinite(minChild) && minChild > 0 ? Math.min(99, Math.floor(minChild)) : 1,
+      minChildCount: focusNormalizeMinChildCount(Number.isFinite(minChild) ? minChild : null, 1),
       createdAt: Number(raw.createdAt) || 0,
       updatedAt: Number(raw.updatedAt) || 0
     };
@@ -382,15 +387,25 @@
       if (u.planId && !plseen[u.planId]) u.planId = null;
     });
     const sq = raw.seq && typeof raw.seq === 'object' ? raw.seq : {};
-    ['unit', 'group', 'corps', 'army'].forEach(function (k) {
+    FOCUS_LEVEL_KEYS.forEach(function (k) {
       const n = Number(sq[k]);
       out.seq[k] = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
     });
-    out.units.forEach(function (u) { if (u.seq > out.seq.unit) out.seq.unit = u.seq; });
-    out.orgs.forEach(function (o) {
-      if (o.level === 'group' && o.seq > out.seq.group) out.seq.group = o.seq;
-      if (o.level === 'corps' && o.seq > out.seq.corps) out.seq.corps = o.seq;
-      if (o.level === 'army' && o.seq > out.seq.army) out.seq.army = o.seq;
+    // 计数器与现存节点取齐：同层最小空缺由 focusNextSeq 现场计算，
+    // 历史状态里虚高的 seq 归位到实际最大番号（删除过的旧数据不再跳号）。
+    let maxUnit = 0;
+    out.units.forEach(function (u) {
+      const n = Number(u && u.seq);
+      if (Number.isFinite(n) && n > maxUnit) maxUnit = Math.floor(n);
+    });
+    out.seq.unit = maxUnit;
+    FOCUS_ORG_LEVELS.forEach(function (lv) {
+      let max = 0;
+      out.orgs.forEach(function (o) {
+        const n = Number(o && o.seq);
+        if (o && o.level === lv && Number.isFinite(n) && n > max) max = Math.floor(n);
+      });
+      out.seq[lv] = max;
     });
     const aid = raw.activeId == null ? null : String(raw.activeId);
     out.activeId = aid && seen[aid] ? aid : (out.chains[0] ? out.chains[0].id : null);
@@ -489,6 +504,344 @@
 
   function focusIsTypeKey(k) {
     return FOCUS_TYPE_KEYS.indexOf(String(k)) >= 0;
+  }
+
+  // ---------------- 纯函数：层次类型（严格四级） ----------------
+
+  // 层次由节点自身的显式类型决定：单元看 units（恒为 unit），其余看 org.level ∈ group/corps/army。
+  // 归属关系恒为「子级 rank + 1 = 父级 rank」，不再靠父级槽位（如「挂在组下所以是单元」）推断。
+  function focusIsLevelKey(level) {
+    return FOCUS_LEVEL_KEYS.indexOf(String(level)) >= 0;
+  }
+
+  function focusIsOrgLevel(level) {
+    return FOCUS_ORG_LEVELS.indexOf(String(level)) >= 0;
+  }
+
+  function focusLevelRank(level) {
+    const r = FOCUS_LEVEL_RANK[String(level)];
+    return r == null ? -1 : r;
+  }
+
+  function focusLevelAtRank(rank) {
+    const r = Math.floor(Number(rank));
+    if (!Number.isFinite(r) || r < 0 || r >= FOCUS_LEVEL_KEYS.length) return null;
+    return FOCUS_LEVEL_KEYS[r];
+  }
+
+  // 上一级 / 下一级（四级之外或无可上升层次 → null）
+  function focusParentLevelOf(level) {
+    const r = focusLevelRank(level);
+    return r < 0 ? null : focusLevelAtRank(r + 1);
+  }
+
+  function focusChildLevelOf(level) {
+    const r = focusLevelRank(level);
+    return r <= 0 ? null : focusLevelAtRank(r - 1);
+  }
+
+  // 能否把 childLevel 的节点编入 parentLevel 的节点：须恰为上一级（单元→组、组→群、群→集团）
+  function focusCanAttach(childLevel, parentLevel) {
+    const c = focusLevelRank(childLevel);
+    const p = focusLevelRank(parentLevel);
+    return c >= 0 && p >= 1 && p === c + 1;
+  }
+
+  // 节点显式层次：单元 → 'unit'；org → 其 level；不存在 → null
+  function focusNodeLevel(state, id) {
+    if (focusFindUnit(state, id)) return 'unit';
+    const org = focusFindOrg(state, id);
+    return org ? org.level : null;
+  }
+
+  // 组合产物的层次 = 成员最高层 + 1（单元→组、组→群、群→集团）；已是集团 → null
+  function focusCombineLevelOf(state, ids) {
+    let max = -1;
+    (Array.isArray(ids) ? ids : []).forEach(function (id) {
+      const r = focusLevelRank(focusNodeLevel(state, id));
+      if (r > max) max = r;
+    });
+    return max < 0 ? null : focusLevelAtRank(max + 1);
+  }
+
+  // 同层级最小空缺番号：删除编制后复用；已有节点番号不变、同层不重号
+  function focusNextSeq(state, level) {
+    const lv = String(level);
+    const used = {};
+    if (lv === 'unit') {
+      ((state && state.units) || []).forEach(function (u) {
+        const n = Number(u && u.seq);
+        if (Number.isFinite(n) && n > 0) used[Math.floor(n)] = 1;
+      });
+    } else if (focusIsOrgLevel(lv)) {
+      ((state && state.orgs) || []).forEach(function (o) {
+        if (!o || o.level !== lv) return;
+        const n = Number(o.seq);
+        if (Number.isFinite(n) && n > 0) used[Math.floor(n)] = 1;
+      });
+    } else return 0;
+    let n = 1;
+    while (used[n]) n += 1;
+    return n;
+  }
+
+  // 现存同层最大番号（删除后同步计数器）
+  function focusMaxSeq(state, level) {
+    const lv = String(level);
+    let max = 0;
+    function take(n) {
+      const v = Math.floor(Number(n));
+      if (Number.isFinite(v) && v > max) max = v;
+    }
+    if (lv === 'unit') {
+      ((state && state.units) || []).forEach(function (u) { if (u) take(u.seq); });
+    } else {
+      ((state && state.orgs) || []).forEach(function (o) { if (o && o.level === lv) take(o.seq); });
+    }
+    return max;
+  }
+
+  // ---------------- 纯函数：计划参数（新建顶层任务 / 添加子级 共用同一校验） ----------------
+
+  // 最小下级数：仅接受 1..99 整数；越界收敛、非法回退默认
+  function focusNormalizeMinChildCount(v, dflt) {
+    const d = Number(dflt);
+    const def = Number.isFinite(d)
+      ? Math.min(FOCUS_MIN_CHILD_MAX, Math.max(FOCUS_MIN_CHILD_MIN, Math.floor(d)))
+      : FOCUS_MIN_CHILD_MIN;
+    if (v == null || String(v).trim() === '') return def;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return def;
+    return Math.min(FOCUS_MIN_CHILD_MAX, Math.max(FOCUS_MIN_CHILD_MIN, Math.floor(n)));
+  }
+
+  function focusMinChildCountValid(v) {
+    if (v == null || String(v).trim() === '') return false;
+    const n = Number(v);
+    return Number.isFinite(n) && Math.floor(n) === n && n >= FOCUS_MIN_CHILD_MIN && n <= FOCUS_MIN_CHILD_MAX;
+  }
+
+  // 截止日期：接受毫秒时间戳（number / ≥10 位数字串）、Date、'YYYY-MM-DD'（当日 23:59:59 本地）。
+  // 非法一律 → null（'2024-02-31'、'abc'、0、负数均视为非法）。
+  function focusNormalizeDueAt(v) {
+    if (v == null || v === '') return null;
+    if (v instanceof Date) {
+      const t = v.getTime();
+      return Number.isFinite(t) ? Math.floor(t) : null;
+    }
+    if (typeof v === 'number') return Number.isFinite(v) && v > 0 ? Math.floor(v) : null;
+    const s = String(v).trim();
+    if (/^\d{10,}$/.test(s)) {
+      const n = Number(s);
+      return Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
+    }
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return null;
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = Number(m[3]);
+    const dt = new Date(y, mo - 1, d, 23, 59, 59, 0);
+    if (!Number.isFinite(dt.getTime())) return null;
+    // 拒绝 2 月 31 日这类被 Date 顺延的假日期
+    if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+    return dt.getTime();
+  }
+
+  function focusDueDateValid(v) {
+    if (v == null || v === '') return true;   // 截止日期可选
+    return focusNormalizeDueAt(v) !== null;
+  }
+
+  // 计划新建表单字段：新建计划任务、添加子级两个入口共用；非法日期 → ok:false（不落库）
+  function focusPlanNodeFields(raw, dfltMinChildCount) {
+    const f = raw || {};
+    const dueRaw = f.dueAt == null ? '' : f.dueAt;
+    if (!focusDueDateValid(dueRaw)) return { ok: false, reason: 'bad_due' };
+    return {
+      ok: true,
+      name: String(f.name == null ? '' : f.name).trim(),
+      dueAt: focusNormalizeDueAt(dueRaw),
+      minChildCount: focusNormalizeMinChildCount(f.minChildCount, dfltMinChildCount)
+    };
+  }
+
+  // 统一「编入 / 改父」：层次由节点显式类型判定，父级须恰为上一级。
+  // 单元 → 任务组；组 → 群；群 → 集团；集团不可再向上。根级（无父级）始终允许。
+  function focusAttachNodes(state, nodeIds, parentId, now) {
+    const next = focusCloneState(state);
+    const ids = Array.isArray(nodeIds) ? nodeIds.map(String) : [];
+    if (!ids.length) return { ok: false, reason: 'empty_selection', state: next };
+    let parent = null;
+    if (parentId != null && parentId !== '') {
+      parent = focusFindOrg(next, parentId);
+      if (!parent) return { ok: false, reason: 'bad_parent', state: next };
+    }
+    const t = Number(now) || 0;
+    const touched = [];
+    const skipped = [];
+    ids.forEach(function (id) {
+      const level = focusNodeLevel(next, id);
+      if (!level) { skipped.push(id); return; }
+      if (parent) {
+        if (!focusCanAttach(level, parent.level)) { skipped.push(id); return; }
+        if (id === parent.id || focusIsAncestorOrg(next, id, parent.id)) { skipped.push(id); return; }
+      }
+      const unit = focusFindUnit(next, id);
+      if (unit) {
+        unit.orgId = parent ? parent.id : null;
+        touched.push(unit.id);
+        return;
+      }
+      const org = focusFindOrg(next, id);
+      org.parentId = parent ? parent.id : null;
+      org.updatedAt = t;
+      touched.push(org.id);
+    });
+    if (!touched.length) return { ok: false, reason: 'bad_parent', state: next, skipped: skipped };
+    return { ok: true, state: next, touched: touched, skipped: skipped };
+  }
+
+  // ---------------- 纯函数：层级视觉 / 归属 ----------------
+
+  // 四级层次的视觉规范：符号 / 字号 / 字重 / 左边框四项逐级不同（任意两层至少两项不同）。
+  // 颜色取设计令牌（--accent / --accent-2 / --warn / --text-muted，均带字面回退），
+  // 是「层次可辨认」的单一事实源：渲染层只读它，测试直接断言它；t9 在 style.css 落地时可比对这套数值。
+  const FOCUS_LEVEL_VISUAL_KEYS = ['symbol', 'fontSize', 'fontWeight', 'borderWidth'];
+
+  const FOCUS_LEVEL_VISUALS = {
+    unit: {
+      level: 'unit', rank: 0, symbol: '#', name: '任务单元',
+      fontSize: 12.5, fontWeight: 400, borderWidth: 2,
+      borderColor: 'var(--text-muted, #9AA3B2)', tint: 'rgba(148, 163, 184, 0.08)'
+    },
+    group: {
+      level: 'group', rank: 1, symbol: '●', name: '任务组',
+      fontSize: 14, fontWeight: 600, borderWidth: 3,
+      borderColor: 'var(--accent, #3B82F6)', tint: 'rgba(59, 130, 246, 0.10)'
+    },
+    corps: {
+      level: 'corps', rank: 2, symbol: '▲', name: '任务群',
+      fontSize: 15.5, fontWeight: 700, borderWidth: 4,
+      borderColor: 'var(--accent-2, #D4537E)', tint: 'rgba(212, 83, 126, 0.10)'
+    },
+    army: {
+      level: 'army', rank: 3, symbol: '◆', name: '任务集团',
+      fontSize: 17, fontWeight: 800, borderWidth: 5,
+      borderColor: 'var(--warn, #F59E0B)', tint: 'rgba(245, 158, 11, 0.10)'
+    }
+  };
+
+  function focusLevelVisual(level) {
+    return FOCUS_LEVEL_VISUALS[String(level)] || null;
+  }
+
+  // 两层视觉差异项数（验收：任意两层 ≥ 2 项不同）；未知层次返回 -1
+  function focusLevelVisualDelta(a, b) {
+    const va = focusLevelVisual(a);
+    const vb = focusLevelVisual(b);
+    if (!va || !vb) return -1;
+    if (va === vb) return 0;
+    let n = 0;
+    FOCUS_LEVEL_VISUAL_KEYS.forEach(function (k) { if (va[k] !== vb[k]) n += 1; });
+    return n;
+  }
+
+  // 层级徽标：符号 + 层次名（+ 可选计数），名可取设置里的自定义层次名
+  function focusLevelBadge(level, settings, count) {
+    const v = focusLevelVisual(level);
+    if (!v) return null;
+    const names = (settings || {}).levelNames || {};
+    const nm = String(names[v.level] || v.name);
+    const n = Math.max(0, Math.floor(Number(count) || 0));
+    return { level: v.level, symbol: v.symbol, name: nm, count: n, text: v.symbol + ' ' + nm + (n > 0 ? ' ' + n : '') };
+  }
+
+  // 归属可见性：子项挂在哪个父级下（父级层次符号 + 番号 + 名称）；未编入也返回一条 attached:false。
+  // 归属恒由节点自身的显式类型 + parentId/orgId 决定，跨层级编入后立即反映（纯函数无缓存）。
+  function focusParentAttribution(state, nodeId) {
+    const st = state || {};
+    const id = String(nodeId == null ? '' : nodeId);
+    const unit = focusFindUnit(st, id);
+    const org = unit ? null : focusFindOrg(st, id);
+    if (!unit && !org) return null;
+    const selfLevel = unit ? 'unit' : String(org.level);
+    const parentId = unit ? (unit.orgId || null) : (org.parentId || null);
+    const parent = parentId ? focusFindOrg(st, parentId) : null;
+    if (!parent) {
+      return {
+        level: selfLevel, attached: false, parentId: null, parentLevel: null,
+        parentSymbol: '·', parentSeq: 0, parentName: '', parentLabel: '', text: '未编入'
+      };
+    }
+    const pv = focusLevelVisual(parent.level);
+    const label = focusOrgLabel(parent, st.settings);
+    return {
+      level: selfLevel, attached: true, parentId: parent.id, parentLevel: String(parent.level),
+      parentSymbol: pv ? pv.symbol : '', parentSeq: Number(parent.seq) || 0,
+      parentName: String(parent.name == null ? '' : parent.name),
+      parentLabel: label, text: '归属 ' + label
+    };
+  }
+
+  // ---------------- 纯函数：悬浮提醒（任意视图可见的剩余时间） ----------------
+
+  // 当前应显示的悬浮提醒：专注/侦查进行中优先，其次预约保留中；都没有则 visible:false。
+  // 与 focusTickPlan 同源取数（focusUnitRemainingMs / focusReservationRemainingMs），
+  // 但不读 currentView，因此任何视图下都能显示；DOM 落地见 focusReminderSync。
+  function focusReminderInfo(state, now) {
+    const st = state || {};
+    const t = Number(now) || 0;
+    const settings = st.settings || {};
+    const chains = Array.isArray(st.chains) ? st.chains : [];
+    const active = chains.filter(function (c) {
+      return c && (c.status === 'running' || c.status === 'scouting') && c.current;
+    })[0] || null;
+    if (active) {
+      const cur = active.current;
+      const remain = focusUnitRemainingMs(cur, t);
+      const isScout = String(cur.typeKey) === 'scout' && !cur.promotedFromScout;
+      const planned = Number(cur.plannedMin) || 0;
+      const elapsed = Math.max(0, planned * 60000 - remain);
+      const typeNames = settings.typeNames || {};
+      return {
+        visible: true,
+        mode: isScout ? 'scout' : 'focus',
+        chainId: String(active.id),
+        nodeId: focusUnitKey(active),
+        key: focusUnitKey(active),
+        level: 'unit',
+        symbol: (focusLevelVisual('unit') || {}).symbol || '#',
+        title: isScout ? '侦查进行中' : String(typeNames[cur.typeKey] || '专注中'),
+        subtitle: focusWorkLabel(focusNextSeq(st, 'unit')) +
+          (cur.taskText ? ' · ' + String(cur.taskText) : ''),
+        remainMs: remain,
+        expired: remain <= 0,
+        clock: focusFmtClock(remain),
+        startedAt: Number(cur.startedAt) || 0,
+        plannedMin: planned,
+        elapsedMin: Math.floor(elapsed / 60000),
+        progressPct: planned > 0 ? Math.min(100, Math.round(elapsed / (planned * 60000) * 100)) : 0,
+        workCount: 0
+      };
+    }
+    const reserved = chains.filter(function (c) { return c && c.status === 'reserved' && c.reservation; })[0] || null;
+    if (reserved) {
+      const remain = focusReservationRemainingMs(reserved.reservation, t);
+      const dl = Number(reserved.reservation.deadline) || 0;
+      return {
+        visible: true, mode: 'reserve', chainId: String(reserved.id), nodeId: String(reserved.id),
+        key: 'reserve:' + String(reserved.id) + ':' + dl, level: 'reserve', symbol: '⏳',
+        title: '预约待就座', subtitle: '座位保留' + (dl ? '至 ' + focusFmtTs(dl) : ''),
+        remainMs: remain, expired: remain <= 0, clock: focusFmtClock(remain),
+        startedAt: 0, plannedMin: 0, elapsedMin: 0, progressPct: 0,
+        workCount: Number(reserved.workCount) || 0
+      };
+    }
+    return {
+      visible: false, mode: null, chainId: null, nodeId: null, key: null, level: null, symbol: '',
+      title: '', subtitle: '', remainMs: 0, expired: false, clock: '',
+      startedAt: 0, plannedMin: 0, elapsedMin: 0, progressPct: 0, workCount: 0
+    };
   }
 
   // ---------------- 设置（纯；风味/三三制只在设置里改） ----------------
@@ -783,12 +1136,14 @@
 
     const achieved = o.achieved == null ? true : !!o.achieved;
     const completion = focusClampPct(o.completion == null ? (achieved ? 100 : 0) : o.completion);
-    next.seq.unit += 1;
+    // 番号：同层最小空缺号（单元不删除，等价于递增流水）
+    const unitSeq = focusNextSeq(next, 'unit');
+    next.seq.unit = Math.max(Number(next.seq.unit) || 0, unitSeq);
     const actualMin = Math.max(0, Math.round((t - cur.startedAt) / 60000));
     const name = String(o.name == null ? '' : o.name).trim() || cur.taskText;
     const unit = {
       id: focusUid('unit'),
-      seq: next.seq.unit,
+      seq: unitSeq,
       typeKey: typeKey,
       name: name,
       taskText: cur.taskText,
@@ -1030,25 +1385,25 @@
     const next = focusCloneState(state);
     const f = fields || {};
     const level = String(f.level || 'group');
-    if (FOCUS_ORG_LEVELS.indexOf(level) < 0) return { ok: false, reason: 'bad_level', state: next };
+    if (!focusIsOrgLevel(level)) return { ok: false, reason: 'bad_level', state: next };
     // 高层次任务创建须计划模式
     if (!next.planMode && !f.force) return { ok: false, reason: 'need_plan_mode', state: next };
     const t = Number(now) || 0;
-    next.seq[level] += 1;
     const fromPlan = f.fromPlan == null ? next.planMode : !!f.fromPlan;
-    const minChild = Number(f.minChildCount);
-    const dueRaw = f.dueAt;
+    // 计划参数：最小下级数 1..99 + 合法截止日期（与「添加子级」入口共用同一校验）
+    const plan = focusPlanNodeFields(f, 1);
+    if (!plan.ok) return { ok: false, reason: plan.reason, state: next, org: null };
     const org = {
       id: String(f.id || focusUid('org')),
       level: level,
-      seq: next.seq[level],
-      name: String(f.name == null ? '' : f.name),
+      seq: 0,
+      name: plan.name,
       parentId: f.parentId == null || f.parentId === '' ? null : String(f.parentId),
       planId: f.planId == null ? null : String(f.planId),
       fromPlan: fromPlan,
       formalized: !fromPlan,
-      dueAt: dueRaw == null ? null : (Number(dueRaw) || null),
-      minChildCount: Number.isFinite(minChild) && minChild > 0 ? Math.min(99, Math.floor(minChild)) : 1,
+      dueAt: plan.dueAt,
+      minChildCount: plan.minChildCount,
       createdAt: t,
       updatedAt: t
     };
@@ -1056,9 +1411,12 @@
     if (org.parentId) {
       const parent = focusFindOrg(next, org.parentId);
       if (!parent) return { ok: false, reason: 'bad_parent', state: next, org: null };
-      const rank = { army: 3, corps: 2, group: 1 };
-      if (rank[parent.level] !== rank[level] + 1) return { ok: false, reason: 'bad_parent', state: next, org: null };
+      // 层次严格：父级须恰为上一级（显式 level 判定，不看父级槽位）
+      if (!focusCanAttach(level, parent.level)) return { ok: false, reason: 'bad_parent', state: next, org: null };
     }
+    // 番号：同层级最小空缺号（删除后复用）；已有节点番号不变、同层不重号
+    org.seq = focusNextSeq(next, level);
+    next.seq[level] = Math.max(Number(next.seq[level]) || 0, org.seq);
     next.orgs.push(org);
     return { ok: true, state: next, org: org };
   }
@@ -1092,68 +1450,79 @@
     next.units.forEach(function (u) {
       if (u && u.orgId && kill[u.orgId]) u.orgId = null;
     });
+    // 番号回收：同层新节点复用最小空缺号（只有现存节点占号）
+    FOCUS_ORG_LEVELS.forEach(function (lv) {
+      next.seq[lv] = focusMaxSeq(next, lv);
+    });
     return { ok: true, state: next, removed: removed };
   }
 
+  // 单个单元编入 / 移出任务组
   function focusAssignUnit(state, unitId, orgId, now) {
-    const next = focusCloneState(state);
-    const u = focusFindUnit(next, unitId);
-    if (!u) return { ok: false, reason: 'not_found', state: next };
-    if (orgId == null || orgId === '') {
-      u.orgId = null;
-      return { ok: true, state: next, unit: u };
+    if (!focusFindUnit(state, unitId)) {
+      const next = focusCloneState(state);
+      return { ok: false, reason: 'not_found', state: next };
     }
-    const org = focusFindOrg(next, orgId);
-    if (!org || org.level !== 'group') return { ok: false, reason: 'bad_org', state: next };
-    u.orgId = org.id;
-    return { ok: true, state: next, unit: u };
+    const r = focusAttachNodes(state, [unitId], orgId, now);
+    if (!r.ok) return { ok: false, reason: 'bad_org', state: r.state };
+    return { ok: true, state: r.state, unit: focusFindUnit(r.state, unitId) };
   }
 
-  // 批量编入 / 移动（树内多选组合）
+  // 批量编入 / 移动（树内多选组合）；单元只能进任务组
   function focusAssignUnits(state, unitIds, orgId, now) {
-    const next = focusCloneState(state);
-    const ids = Array.isArray(unitIds) ? unitIds.map(String) : [];
-    if (!ids.length) return { ok: false, reason: 'empty_selection', state: next };
-    if (orgId) {
-      const org = focusFindOrg(next, orgId);
-      if (!org || org.level !== 'group') return { ok: false, reason: 'bad_org', state: next };
+    const r = focusAttachNodes(state, unitIds, orgId, now);
+    if (!r.ok) {
+      return { ok: false, reason: r.reason === 'empty_selection' ? 'empty_selection' : 'bad_org', state: r.state };
     }
-    const touched = [];
-    ids.forEach(function (id) {
-      const u = focusFindUnit(next, id);
-      if (!u) return;
-      u.orgId = orgId ? String(orgId) : null;
-      touched.push(u.id);
-    });
-    return { ok: true, state: next, touched: touched };
+    return { ok: true, state: r.state, touched: r.touched, skipped: r.skipped };
   }
 
-  // 批量改父（树内多选组合到已有节点）
+  // 批量改父（树内多选组合到已有节点）：组→群、群→集团，逐级严格
   function focusReparentOrgs(state, orgIds, parentId, now) {
+    const r = focusAttachNodes(state, orgIds, parentId, now);
+    if (!r.ok) return { ok: false, reason: r.reason, state: r.state };
+    return { ok: true, state: r.state, touched: r.touched, skipped: r.skipped };
+  }
+
+  // 组合：多选节点合成一个新节点。产物层次 = 成员最高层 + 1（单元→组、组→群、群→集团）；
+  // 成员层次须一致且都能编入产物层次，否则整单失败（不留半个产物）。
+  function focusCombineNodes(state, fields, now) {
     const next = focusCloneState(state);
-    const ids = Array.isArray(orgIds) ? orgIds.map(String) : [];
+    const f = fields || {};
+    const rawIds = Array.isArray(f.ids) ? f.ids : (Array.isArray(f.nodeIds) ? f.nodeIds : []);
+    const ids = rawIds.map(String);
     if (!ids.length) return { ok: false, reason: 'empty_selection', state: next };
-    const rank = { army: 3, corps: 2, group: 1 };
-    let parent = null;
+    const levels = ids.map(function (id) { return focusNodeLevel(next, id); });
+    if (levels.filter(Boolean).length !== ids.length) return { ok: false, reason: 'not_found', state: next };
+    const derived = focusCombineLevelOf(next, ids);
+    const level = f.level == null || f.level === '' ? derived : String(f.level);
+    if (!level) return { ok: false, reason: 'no_level_up', state: next };
+    if (!focusIsOrgLevel(level)) return { ok: false, reason: 'bad_level', state: next };
+    const mismatch = ids.filter(function (id, i) { return !focusCanAttach(levels[i], level); });
+    if (mismatch.length) return { ok: false, reason: 'member_level_mismatch', state: next };
+    const parentId = f.parentId == null || f.parentId === '' ? null : String(f.parentId);
     if (parentId) {
-      parent = focusFindOrg(next, parentId);
+      const parent = focusFindOrg(next, parentId);
       if (!parent) return { ok: false, reason: 'bad_parent', state: next };
+      if (!focusCanAttach(level, parent.level)) return { ok: false, reason: 'bad_parent', state: next };
     }
     const t = Number(now) || 0;
-    const touched = [];
-    ids.forEach(function (id) {
-      const o = focusFindOrg(next, id);
-      if (!o) return;
-      if (parent) {
-        if (rank[parent.level] !== rank[o.level] + 1) return;
-        if (focusIsAncestorOrg(next, o.id, parent.id)) return;
-      }
-      o.parentId = parent ? parent.id : null;
-      o.updatedAt = t;
-      touched.push(o.id);
-    });
-    if (!touched.length) return { ok: false, reason: 'bad_parent', state: next };
-    return { ok: true, state: next, touched: touched };
+    const plan = focusPlanNodeFields(f, 1);
+    if (!plan.ok) return { ok: false, reason: plan.reason, state: next };
+    const cr = focusCreateOrg(next, {
+      level: level,
+      name: plan.name,
+      parentId: parentId,
+      planId: f.planId,
+      fromPlan: f.fromPlan,
+      force: f.force,
+      dueAt: plan.dueAt,
+      minChildCount: plan.minChildCount
+    }, t);
+    if (!cr.ok) return { ok: false, reason: cr.reason, state: next };
+    const ar = focusAttachNodes(cr.state, ids, cr.org.id, t);
+    if (!ar.ok) return { ok: false, reason: 'member_level_mismatch', state: next };
+    return { ok: true, state: ar.state, org: cr.org, level: level, touched: ar.touched };
   }
 
   function focusIsAncestorOrg(state, maybeAncestorId, nodeId) {
@@ -1169,6 +1538,19 @@
 
   function focusUnassignedUnits(state) {
     return ((state && state.units) || []).filter(function (u) { return u && !u.orgId; });
+  }
+
+  // 直接下一级任务数：下一级由节点的显式层次决定（组 → 单元；群 → 组；集团 → 群），
+  // 不看「哪个槽位有内容」——与 focusOrgCanFormalize / 树内展示同一口径。
+  function focusNextLevelCount(state, orgId) {
+    const org = focusFindOrg(state, orgId);
+    if (!org) return 0;
+    const childLevel = focusChildLevelOf(org.level);
+    const childOrgs = ((state && state.orgs) || []).filter(function (o) { return o && o.parentId === orgId; });
+    const childUnits = ((state && state.units) || []).filter(function (u) { return u && u.orgId === orgId; });
+    if (childLevel === 'unit') return childUnits.length;
+    if (childLevel) return childOrgs.filter(function (o) { return o.level === childLevel; }).length;
+    return childOrgs.length || childUnits.length;
   }
 
   // 子树单元（含自身直接挂的 + 孙级）
@@ -1234,10 +1616,8 @@
     if (!org.fromPlan) return { ok: false, reason: 'not_plan' };
     if (org.formalized) return { ok: false, reason: 'already_formal' };
     const need = Math.max(1, Number(org.minChildCount) || 1);
-    // 下一级：子 org 数；组下无子 org 时看直接挂靠单元数
-    const childOrgs = ((state && state.orgs) || []).filter(function (o) { return o && o.parentId === org.id; });
-    const childUnits = ((state && state.units) || []).filter(function (u) { return u && u.orgId === org.id; });
-    const nextLevelCount = childOrgs.length > 0 ? childOrgs.length : childUnits.length;
+    // 下一级由显式层次决定：组看单元、群看组、集团看群（与树内展示同一口径）
+    const nextLevelCount = focusNextLevelCount(state, org.id);
     if (nextLevelCount < need) {
       return { ok: false, reason: 'need_fill', need: need, childCount: nextLevelCount };
     }
@@ -1264,24 +1644,32 @@
     if (parentId) {
       const parent = focusFindOrg(next, parentId);
       if (!parent) return { ok: false, reason: 'bad_parent', state: next, created: [] };
-      if (parent.level === 'army') level = 'corps';
-      else if (parent.level === 'corps') level = 'group';
-      else return { ok: false, reason: 'bad_parent', state: next, created: [] };
+      // 下一级由父级显式层次决定；组之下是单元，不能在此批量创建
+      const childLevel = focusChildLevelOf(parent.level);
+      if (!childLevel || !focusIsOrgLevel(childLevel)) return { ok: false, reason: 'bad_parent', state: next, created: [] };
+      level = childLevel;
     }
     const created = [];
     const t = Number(now) || 0;
     const fromPlan = f.fromPlan == null ? next.planMode : !!f.fromPlan;
+    // 批量创建同样共用计划参数校验（最小下级数 1..99、合法截止日期）
+    if (!focusDueDateValid(f.dueAt)) return { ok: false, reason: 'bad_due', state: next, created: [] };
+    const triadDueAt = focusNormalizeDueAt(f.dueAt);
+    const triadMinChild = focusNormalizeMinChildCount(f.minChildCount, 1);
     for (let i = 0; i < count; i++) {
-      next.seq[level] += 1;
+      const seq = focusNextSeq(next, level);
+      next.seq[level] = Math.max(Number(next.seq[level]) || 0, seq);
       const org = {
         id: focusUid('org'),
         level: level,
-        seq: next.seq[level],
+        seq: seq,
         name: '',
         parentId: parentId,
         planId: f.planId == null ? null : String(f.planId),
         fromPlan: fromPlan,
         formalized: !fromPlan,
+        dueAt: triadDueAt,
+        minChildCount: triadMinChild,
         createdAt: t,
         updatedAt: t
       };
@@ -1314,6 +1702,9 @@
       rows.push({
         kind: 'unit', depth: depth, id: u.id, unit: u,
         label: focusUnitLabel(u, state.settings),
+        level: 'unit',
+        visual: focusLevelVisual('unit'),
+        parent: focusParentAttribution(state, u.id),
         aggregates: null
       });
     }
@@ -1324,6 +1715,8 @@
         kind: 'org', depth: depth, id: org.id, org: org,
         label: focusOrgLabel(org, state.settings),
         level: org.level,
+        visual: focusLevelVisual(org.level),
+        parent: focusParentAttribution(state, org.id),
         collapsed: !!collapsed[org.id],
         aggregates: agg
       });
@@ -1572,6 +1965,10 @@
         bad_level: '无效层次',
         bad_parent: '父级层次不匹配',
         bad_org: '只能编入任务组',
+        bad_due: '截止日期不合法',
+        member_level_mismatch: '所选层次不一致，须逐级组合',
+        no_level_up: '已是最高层次，无法再组合',
+        bad_min_child: '最低下级数须为 1..99',
         need_plan_mode: '请先开启计划模式',
         need_fill: '须至少填充一个下级层次',
         not_plan: '不是计划创建的节点',
@@ -1846,7 +2243,7 @@
       });
       runBtns.appendChild(bQuit);
     } else {
-      const bDone = el('button', 'btn primary', '完成 · 记 ' + focusWorkLabel(st.seq.unit + 1));
+      const bDone = el('button', 'btn primary', '完成 · 记 ' + focusWorkLabel(focusNextSeq(st, 'unit')));
       if (canDone) {
         bDone.addEventListener('click', function () { focusOpenCompleteModal(chain, st); });
       } else {
@@ -1859,6 +2256,249 @@
     bSus.addEventListener('click', function () { focusOpenSuspiciousModal(chain); });
     runBtns.appendChild(bSus);
     statusBox.appendChild(runBtns);
+  }
+
+  // ---------------- UI：层级徽标 / 归属徽标 ----------------
+
+  // 该选择器是否已由样式表接管：t9 在 style.css 落地后，本文件的 inline 兜底自动让位。
+  function focusCssDeclared(selector) {
+    if (typeof document === 'undefined' || !document.styleSheets) return false;
+    const want = String(selector);
+    for (let i = 0; i < document.styleSheets.length; i++) {
+      let rules = null;
+      try { rules = document.styleSheets[i].cssRules; } catch (e) { rules = null; }
+      if (!rules) continue;
+      for (let j = 0; j < rules.length; j++) {
+        const rule = rules[j];
+        if (rule && rule.selectorText && String(rule.selectorText).replace(/\s+/g, ' ').indexOf(want) >= 0) return true;
+      }
+    }
+    return false;
+  }
+
+  // 层级徽标：符号 + 层次名 +（下级计数）
+  function focusLevelBadgeEl(level, settings, count) {
+    const b = focusLevelBadge(level, settings, count);
+    if (!b) return null;
+    const v = focusLevelVisual(b.level);
+    const chip = el('span', 'focus-level-badge', b.text);
+    chip.setAttribute('data-level', b.level);
+    if (v && !focusCssDeclared('.focus-level-badge[data-level="' + b.level + '"]')) {
+      chip.style.display = 'inline-block';
+      chip.style.fontSize = v.fontSize + 'px';
+      chip.style.fontWeight = String(v.fontWeight);
+      chip.style.padding = '0 7px';
+      chip.style.marginBottom = '2px';
+      chip.style.borderRadius = '999px';
+      chip.style.border = v.borderWidth + 'px solid ' + v.borderColor;
+      chip.style.background = v.tint;
+    }
+    return chip;
+  }
+
+  // 归属徽标：父级层级符号 + 番号 + 名称（未编入时高亮提示）
+  function focusParentChipEl(attr) {
+    const a = attr || {};
+    const chip = el('span', 'focus-parent-chip' + (a.attached ? '' : ' is-free'), String(a.text || ''));
+    chip.setAttribute('data-parent-level', a.attached ? String(a.parentLevel || '') : 'none');
+    chip.setAttribute('data-parent-id', a.parentId ? String(a.parentId) : '');
+    chip.title = String(a.text || '');
+    if (!focusCssDeclared('.focus-parent-chip')) {
+      chip.style.display = 'inline-block';
+      chip.style.fontSize = '11.5px';
+      chip.style.fontWeight = '400';
+      chip.style.padding = '0 6px';
+      chip.style.marginTop = '2px';
+      chip.style.borderRadius = '999px';
+      chip.style.border = '1px solid var(--border, #E5E7EB)';
+      chip.style.background = 'var(--bg-elevated, #FFFFFF)';
+      chip.style.color = a.attached ? 'var(--text-muted, #6B7280)' : 'var(--warn, #F59E0B)';
+    }
+    return chip;
+  }
+
+  // ---------------- UI：悬浮提醒（任意视图可见的剩余时间） ----------------
+
+  const FOCUS_REMINDER_UI_KEY = 'athena_focus_reminder_ui_v1';
+  let focusReminderEl = null;
+  let focusReminderTimer = null;
+  let focusReminderUi = null; // { collapsed, closedKey }
+
+  function focusReminderUiState() {
+    if (focusReminderUi) return focusReminderUi;
+    focusReminderUi = { collapsed: false, closedKey: null };
+    try {
+      const raw = (typeof localStorage === 'undefined') ? null : localStorage.getItem(FOCUS_REMINDER_UI_KEY);
+      if (raw) {
+        const o = JSON.parse(raw) || {};
+        focusReminderUi.collapsed = !!o.collapsed;
+      }
+    } catch (e) { /* 本地偏好损坏时用默认值 */ }
+    return focusReminderUi;
+  }
+
+  function focusReminderSaveUi() {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(FOCUS_REMINDER_UI_KEY, JSON.stringify({ collapsed: !!focusReminderUiState().collapsed }));
+    } catch (e) { /* 存储不可用时仅内存生效 */ }
+  }
+
+  function focusReminderEnsure() {
+    if (typeof document === 'undefined' || !document.body) return null;
+    if (focusReminderEl && focusReminderEl.parentNode) return focusReminderEl;
+    const box = el('div', 'focus-reminder');
+    box.id = 'focusReminder';
+    if (!focusCssDeclared('.focus-reminder')) {
+      box.style.position = 'fixed';
+      box.style.right = '14px';
+      box.style.bottom = 'calc(14px + var(--dock-h, 0px))';
+      box.style.zIndex = '90';
+      box.style.minWidth = '164px';
+      box.style.padding = '8px 10px';
+      box.style.borderRadius = 'var(--radius, 12px)';
+      box.style.border = '1px solid var(--border, #E5E7EB)';
+      box.style.background = 'var(--bg-elevated, #FFFFFF)';
+      box.style.boxShadow = 'var(--shadow, 0 1px 3px rgba(27,28,31,.06))';
+    }
+    const head = el('div', 'focus-reminder-head');
+    const mark = el('span', 'focus-reminder-level', '');
+    const title = el('span', 'focus-reminder-title', '');
+    if (!focusCssDeclared('.focus-reminder-head')) {
+      head.style.display = 'flex';
+      head.style.alignItems = 'center';
+      head.style.gap = '6px';
+    }
+    if (!focusCssDeclared('.focus-reminder-level')) {
+      mark.style.fontWeight = '700';
+      mark.style.color = 'var(--accent, #3B82F6)';
+    }
+    if (!focusCssDeclared('.focus-reminder-title')) {
+      title.style.fontSize = 'var(--text-xs, 12px)';
+      title.style.flex = '1';
+      title.style.whiteSpace = 'nowrap';
+    }
+    const fold = el('button', 'focus-reminder-fold', '–');
+    fold.type = 'button';
+    fold.title = '折叠 / 展开';
+    fold.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const ui = focusReminderUiState();
+      ui.collapsed = !ui.collapsed;
+      focusReminderSaveUi();
+      focusReminderSync(Date.now(), true);
+    });
+    const close = el('button', 'focus-reminder-close', '×');
+    close.type = 'button';
+    close.title = '本次不显示（下一个专注单元自动恢复）';
+    close.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const ui = focusReminderUiState();
+      ui.closedKey = focusReminderEl ? String(focusReminderEl.getAttribute('data-key') || '') : '';
+      focusReminderSync(Date.now(), true);
+    });
+    if (!focusCssDeclared('.focus-reminder-fold') && !focusCssDeclared('.focus-reminder-close')) {
+      [fold, close].forEach(function (b) {
+        b.style.border = '0';
+        b.style.background = 'transparent';
+        b.style.cursor = 'pointer';
+        b.style.color = 'var(--text-muted, #6B7280)';
+        b.style.fontSize = 'var(--text-sm, 13px)';
+        b.style.lineHeight = '1';
+        b.style.padding = '0 2px';
+      });
+    }
+    head.appendChild(mark);
+    head.appendChild(title);
+    head.appendChild(fold);
+    head.appendChild(close);
+    const clock = el('div', 'focus-reminder-clock', '');
+    if (!focusCssDeclared('.focus-reminder-clock')) {
+      clock.style.fontFamily = 'var(--font-mono, ui-monospace)';
+      clock.style.fontSize = 'var(--text-xl, 20px)';
+      clock.style.fontWeight = '700';
+      clock.style.fontVariantNumeric = 'tabular-nums';
+      clock.style.marginTop = '2px';
+    }
+    const meta = el('div', 'focus-reminder-meta', '');
+    if (!focusCssDeclared('.focus-reminder-meta')) {
+      meta.style.fontSize = 'var(--text-2xs, 11px)';
+      meta.style.color = 'var(--text-muted, #6B7280)';
+      meta.style.maxWidth = '210px';
+    }
+    box.appendChild(head);
+    box.appendChild(clock);
+    box.appendChild(meta);
+    document.body.appendChild(box);
+    focusReminderEl = box;
+    return box;
+  }
+
+  // 同步悬浮提醒：任意视图可见；折叠/关闭为即时生效的会话态（折叠持久化）。
+  function focusReminderSync(now, force) {
+    if (typeof document === 'undefined' || !document.body) return { visible: false, rendered: false, info: null };
+    const t = Number(now) || Date.now();
+    const info = focusReminderInfo(loadFocus(), t);
+    const ui = focusReminderUiState();
+    const show = !!(info.visible && (!ui.closedKey || ui.closedKey !== info.key));
+    if (!show) {
+      if (focusReminderEl && focusReminderEl.parentNode) focusReminderEl.parentNode.removeChild(focusReminderEl);
+      focusReminderEl = null;
+      return { visible: false, rendered: false, info: info };
+    }
+    const box = focusReminderEnsure();
+    if (!box) return { visible: true, rendered: false, info: info };
+    box.setAttribute('data-mode', String(info.mode || ''));
+    box.setAttribute('data-level', String(info.level || ''));
+    box.setAttribute('data-key', String(info.key || ''));
+    box.setAttribute('data-collapsed', ui.collapsed ? '1' : '0');
+    box.classList.toggle('is-collapsed', !!ui.collapsed);
+    box.classList.toggle('is-expired', !!info.expired);
+    const mark = box.querySelector('.focus-reminder-level');
+    const title = box.querySelector('.focus-reminder-title');
+    const clock = box.querySelector('.focus-reminder-clock');
+    const meta = box.querySelector('.focus-reminder-meta');
+    if (mark) mark.textContent = String(info.symbol || '#');
+    if (title) title.textContent = String(info.title || '');
+    if (clock) {
+      clock.textContent = String(info.clock || '');
+      clock.style.display = ui.collapsed ? 'none' : '';
+    }
+    if (meta) {
+      const parts = [String(info.subtitle || '')];
+      if (info.mode === 'focus' && info.plannedMin > 0) {
+        parts.push('已过 ' + info.elapsedMin + ' 分 / 共 ' + info.plannedMin + ' 分');
+      }
+      if (info.mode === 'reserve' && info.workCount > 0) parts.push('已备 ' + info.workCount + ' 次');
+      if (info.expired) parts.push('已到点，可完成');
+      meta.textContent = parts.filter(function (x) { return !!x; }).join(' · ');
+      meta.style.display = ui.collapsed ? 'none' : '';
+    }
+    return { visible: true, rendered: true, info: info };
+  }
+
+  function focusReminderClear() {
+    if (focusReminderTimer) {
+      clearInterval(focusReminderTimer);
+      focusReminderTimer = null;
+    }
+  }
+
+  // 独立于专注视图的定时器：既有的 focusTickTimer 在离开 actFocus 时会停表，
+  // 悬浮提醒必须在「浏览 / 统计」等任意视图下继续走秒，故自己起一个 1s 表。
+  function focusReminderStart() {
+    if (typeof document === 'undefined') return false;
+    focusReminderSync(Date.now(), true);
+    if (focusReminderTimer) return true;
+    focusReminderTimer = setInterval(function () {
+      try { focusReminderSync(Date.now(), false); } catch (e) { /* 提醒渲染失败不影响主流程 */ }
+    }, 1000);
+    return true;
+  }
+
+  if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+    if (document.body) focusReminderStart();
+    else document.addEventListener('DOMContentLoaded', function () { focusReminderStart(); });
   }
 
   // ---------------- UI：状态树（编制 + 计划合并） ----------------
@@ -1899,7 +2539,7 @@
     }
     if (selIds.length && !viewReserve) {
       tools.appendChild(el('span', 'muted', '已选 ' + selIds.length + ' 项'));
-      const combine = el('button', 'btn small', '组合到新组');
+      const combine = el('button', 'btn small', '组合到新上级');
       combine.addEventListener('click', function () { focusOpenCombineModal(st); });
       tools.appendChild(combine);
       const moveBtn = el('button', 'btn small', '移动到…');
@@ -1967,6 +2607,41 @@
       row.setAttribute('data-id', r.id);
       row.setAttribute('data-kind', r.kind);
 
+      // 层级：由显式类型（unit/group/corps/army）决定 → data-level + 可测视觉差异（符号/字号/字重/左边框/底色）
+      const nodeLevel = r.level || (r.kind === 'unit' ? 'unit' : null);
+      const vis = r.visual || focusLevelVisual(nodeLevel);
+      if (nodeLevel) {
+        row.setAttribute('data-level', nodeLevel);
+        row.classList.add('focus-level-' + nodeLevel);
+        if (vis && !focusCssDeclared('.focus-tree-row[data-level="' + nodeLevel + '"]')) {
+          row.style.fontSize = vis.fontSize + 'px';
+          row.style.fontWeight = String(vis.fontWeight);
+          row.style.borderLeft = vis.borderWidth + 'px solid ' + vis.borderColor;
+          row.style.background = vis.tint;
+        }
+      }
+
+      // 层级标记（# / ● / ▲ / ◆）+ 缩进连接线：竖列树里层次与归属一眼可读
+      if (nodeLevel) {
+        const mark = el('span', 'focus-level-mark', vis ? vis.symbol : '');
+        mark.setAttribute('data-level', nodeLevel);
+        if (!focusCssDeclared('.focus-level-mark')) {
+          mark.style.display = 'inline-block';
+          mark.style.minWidth = '16px';
+          mark.style.marginRight = '4px';
+          mark.style.fontWeight = '700';
+          mark.style.color = vis ? vis.borderColor : 'inherit';
+        }
+        row.appendChild(mark);
+      } else {
+        const guide = el('span', 'focus-tree-guide', r.depth > 0 ? '└' : '·');
+        if (!focusCssDeclared('.focus-tree-guide')) {
+          guide.style.marginRight = '4px';
+          guide.style.color = 'var(--text-faint, #9CA3AF)';
+        }
+        row.appendChild(guide);
+      }
+
       // 多选
       if (r.kind === 'unit' || r.kind === 'org') {
         const cb = el('input', 'focus-tree-check');
@@ -1990,20 +2665,12 @@
           const ids = focusSelectedIds();
           const src = focusUiState.dragId;
           const targetId = r.id;
-          if (!ids.length && !src) return;
+          const list = ids.length ? ids : (src ? [src] : []);
+          if (!list.length) return;
           focusApply(function (s) {
-            if (ids.length) {
-              const unitIds = ids.filter(function (id) { return focusFindUnit(s, id); });
-              const orgIds = ids.filter(function (id) { return focusFindOrg(s, id); });
-              let rr = { ok: true, state: s };
-              if (unitIds.length) rr = focusAssignUnits(rr.state, unitIds, targetId, Date.now());
-              if (orgIds.length) rr = focusReparentOrgs(rr.state, orgIds, targetId, Date.now());
-              return rr;
-            }
-            if (src && focusFindUnit(s, src)) return focusAssignUnits(s, [src], targetId, Date.now());
-            if (src && focusFindOrg(s, src)) return focusReparentOrgs(s, [src], targetId, Date.now());
-            return { ok: false, reason: 'empty_selection', state: s };
-          }, '已组合到 ' + r.label);
+            // 拖放同样受层次约束：节点只能编入其上一级
+            return focusAttachNodes(s, list, targetId, Date.now());
+          }, '已编入 ' + r.label);
         });
       }
 
@@ -2020,13 +2687,14 @@
         const main = el('div', 'focus-tree-main');
         const tag = r.org.fromPlan && !r.org.formalized ? ' · 计划中' : '';
         const dueTxt = r.org.dueAt ? ' · 截止 ' + focusFmtTs(r.org.dueAt) : '';
-        main.appendChild(el('div', 'focus-tree-label', r.label + tag + dueTxt));
-        const agg = r.aggregates;
         const needN = Math.max(1, Number(r.org.minChildCount) || 1);
-        const nextCount = (function () {
-          const kids = st.orgs.filter(function (o) { return o && o.parentId === r.id; });
-          return kids.length > 0 ? kids.length : (st.units.filter(function (u) { return u && u.orgId === r.id; }).length);
-        })();
+        const nextCount = focusNextLevelCount(st, r.id);
+        const badge = focusLevelBadgeEl(r.org.level, st.settings, nextCount);
+        if (badge) main.appendChild(badge);
+        main.appendChild(el('div', 'focus-tree-label', r.label + tag + dueTxt));
+        // 归属：子项显示父级的层级符号 + 番号 + 名称（跨层级编入后下一次渲染即更新）
+        if (r.parent) main.appendChild(focusParentChipEl(r.parent));
+        const agg = r.aggregates;
         if (agg && agg.unitCount) {
           main.appendChild(el('div', 'focus-tree-meta',
             agg.unitCount + ' 单元 · ' + focusFmtTs(agg.startAt) + ' → ' + focusFmtTs(agg.endAt) +
@@ -2094,6 +2762,7 @@
 
         const main = el('div', 'focus-tree-main');
         main.appendChild(el('div', 'focus-tree-label', r.label));
+        if (r.parent) main.appendChild(focusParentChipEl(r.parent));
         const u = r.unit;
         main.appendChild(el('div', 'focus-tree-meta',
           '完成 ' + u.completion + '% · ' + focusFmtDur(u.actualMin) +
@@ -2479,7 +3148,7 @@
           completion: completion,
           name: name
         });
-      }, '已记 ' + focusWorkLabel(st.seq.unit + 1) + ' · 完成度 ' + (Number.isFinite(completion) ? completion : 0) + '%');
+      }, '已记 ' + focusWorkLabel(focusNextSeq(st, 'unit')) + ' · 完成度 ' + (Number.isFinite(completion) ? completion : 0) + '%');
     });
     const cancel = el('button', 'btn', '取消');
     cancel.addEventListener('click', function () { modal.remove(); });
@@ -2584,7 +3253,7 @@
     modal.appendChild(backdrop);
     const card = el('div', 'map-modal-card wrong-input-card');
     card.appendChild(el('h3', null, '新建计划任务'));
-    card.appendChild(el('p', 'muted', '创建高层次任务；须填充至少一个下级后，才能「转正」为正式层次。'));
+    card.appendChild(el('p', 'muted', '层次严格逐级归属：组 → 群 → 集团；须填充至少一个下级后才能「转正」为正式层次。'));
 
     card.appendChild(el('div', 'muted', '层次'));
     const levelSel = el('select', 'wrong-input');
@@ -2607,12 +3276,12 @@
     card.appendChild(el('div', 'muted', '可转正最低下一级任务数'));
     const minChild = el('input', 'wrong-input');
     minChild.type = 'number';
-    minChild.min = '1';
-    minChild.max = '99';
+    minChild.min = String(FOCUS_MIN_CHILD_MIN);
+    minChild.max = String(FOCUS_MIN_CHILD_MAX);
     minChild.value = '1';
     card.appendChild(minChild);
 
-    // 父级：按层次约束过滤
+    // 父级：按层次约束过滤（父级须恰为上一级）
     card.appendChild(el('div', 'muted', '上级（可选）'));
     const parentSel = el('select', 'wrong-input');
     function fillParents() {
@@ -2620,8 +3289,7 @@
       const none = el('option', null, '（根级）');
       none.value = '';
       parentSel.appendChild(none);
-      const lv = levelSel.value;
-      const wantParent = lv === 'group' ? 'corps' : (lv === 'corps' ? 'army' : null);
+      const wantParent = focusParentLevelOf(levelSel.value);
       if (wantParent) {
         st.orgs.filter(function (o) { return o && o.level === wantParent; }).forEach(function (o) {
           const opt = el('option', null, focusOrgLabel(o, st.settings));
@@ -2639,18 +3307,18 @@
     ok.addEventListener('click', function () {
       const level = levelSel.value;
       const parentId = parentSel.value || null;
-      const nm = name.value;
-      const dueAt = dueInp.value ? new Date(dueInp.value + 'T23:59:59').getTime() : null;
-      const minN = Math.max(1, Math.floor(Number(minChild.value) || 1));
+      // 与「添加子级」共用同一校验：最小下级数 1..99、合法日期
+      const nf = focusPlanNodeFields({ name: name.value, dueAt: dueInp.value, minChildCount: minChild.value }, 1);
+      if (!nf.ok) { toast('截止日期不合法'); return; }
       modal.remove();
       const r = focusApply(function (s) {
         return focusCreateOrg(s, {
           level: level,
-          name: nm,
+          name: nf.name,
           parentId: parentId,
           fromPlan: true,
-          dueAt: dueAt,
-          minChildCount: minN
+          dueAt: nf.dueAt,
+          minChildCount: nf.minChildCount
         }, Date.now());
       }, '已创建计划任务');
       if (r && r.ok && r.org) {
@@ -2667,17 +3335,16 @@
     setTimeout(function () { try { name.focus(); } catch (e) {} }, 50);
   }
 
-  // 树内：给某节点加子级（计划模式）
+  // 树内：给某节点加子级（计划模式）；子级层次由父级显式层次决定，可设最小下级数与截止日期
   function focusOpenInlineChildModal(parentOrg, st) {
-    const rank = { army: 3, corps: 2, group: 1 };
-    const childLevel = parentOrg.level === 'army' ? 'corps' : (parentOrg.level === 'corps' ? 'group' : null);
+    const childLevel = focusChildLevelOf(parentOrg.level);   // 组→单元、群→组、集团→群
     const modal = el('div', 'map-modal habit-modal');
     const backdrop = el('div', 'map-modal-backdrop');
     backdrop.addEventListener('click', function () { modal.remove(); });
     modal.appendChild(backdrop);
     const card = el('div', 'map-modal-card wrong-input-card');
     card.appendChild(el('h3', null, '添加子级 · ' + focusOrgLabel(parentOrg, st.settings)));
-    if (!childLevel) {
+    if (!childLevel || !focusIsOrgLevel(childLevel)) {
       card.appendChild(el('p', 'muted', '任务组之下是单元，由专注完成生成，不在此创建。'));
       const close = el('button', 'btn', '知道了');
       close.addEventListener('click', function () { modal.remove(); });
@@ -2689,16 +3356,35 @@
     card.appendChild(el('div', 'muted', '名称（可选）'));
     const name = el('input', 'wrong-input');
     card.appendChild(name);
+
+    card.appendChild(el('div', 'muted', '截止日期（可选）'));
+    const dueInp = el('input', 'wrong-input');
+    dueInp.type = 'date';
+    card.appendChild(dueInp);
+
+    card.appendChild(el('div', 'muted', '可转正最低下一级任务数'));
+    const minChild = el('input', 'wrong-input');
+    minChild.type = 'number';
+    minChild.min = String(FOCUS_MIN_CHILD_MIN);
+    minChild.max = String(FOCUS_MIN_CHILD_MAX);
+    minChild.value = '1';
+    card.appendChild(minChild);
+
     const btns = el('div', 'wrong-input-btns');
     const ok = el('button', 'btn primary', '创建 ' + (st.settings.levelNames[childLevel] || childLevel));
     ok.addEventListener('click', function () {
+      // 与「新建计划任务」共用同一校验：最小下级数 1..99、合法日期
+      const nf = focusPlanNodeFields({ name: name.value, dueAt: dueInp.value, minChildCount: minChild.value }, 1);
+      if (!nf.ok) { toast('截止日期不合法'); return; }
       modal.remove();
       focusApply(function (s) {
         return focusCreateOrg(s, {
           level: childLevel,
-          name: name.value,
+          name: nf.name,
           parentId: parentOrg.id,
-          fromPlan: true
+          fromPlan: true,
+          dueAt: nf.dueAt,
+          minChildCount: nf.minChildCount
         }, Date.now());
       }, '已添加子级');
     });
@@ -2712,60 +3398,86 @@
     setTimeout(function () { try { name.focus(); } catch (e) {} }, 50);
   }
 
-  // 多选 → 组合到新组
+  // 多选 → 组合到新节点：产物层次 = 成员最高层 + 1（单元→组、组→群、群→集团），可继续向上编入
   function focusOpenCombineModal(st) {
     const ids = focusSelectedIds();
-    const unitIds = ids.filter(function (id) { return focusFindUnit(st, id); });
-    const orgIds = ids.filter(function (id) { return focusFindOrg(st, id); });
-    if (!unitIds.length && !orgIds.length) { toast('请先选择单元或下级'); return; }
+    if (!ids.length) { toast('请先选择单元或下级'); return; }
+    const units = ids.filter(function (id) { return focusFindUnit(st, id); });
+    const orgs = ids.filter(function (id) { return focusFindOrg(st, id); });
+    if (!units.length && !orgs.length) { toast('请先选择单元或下级'); return; }
+    const level = focusCombineLevelOf(st, ids);
+    if (!level) {
+      toast('所选已是最高层次，无法再组合');
+      return;
+    }
+    // 成员层次必须一致：混层无法落在同一产物层次下
+    const mixed = ids.filter(function (id) { return !focusCanAttach(focusNodeLevel(st, id), level); });
+    if (mixed.length) {
+      toast('所选层次不一致：' + (st.settings.levelNames[level] || level) + '只能由' +
+        (st.settings.levelNames[focusChildLevelOf(level)] || '下一级') + '组合');
+      return;
+    }
+    const levelName = st.settings.levelNames[level] || level;
     const modal = el('div', 'map-modal habit-modal');
     const backdrop = el('div', 'map-modal-backdrop');
     backdrop.addEventListener('click', function () { modal.remove(); });
     modal.appendChild(backdrop);
     const card = el('div', 'map-modal-card wrong-input-card');
-    card.appendChild(el('h3', null, '组合到新组'));
-    card.appendChild(el('p', 'muted', '将 ' + unitIds.length + ' 个单元、' + orgIds.length + ' 个下级节点组合为新任务组。'));
+    card.appendChild(el('h3', null, '组合到新' + levelName));
+    card.appendChild(el('p', 'muted', '将 ' + units.length + ' 个单元、' + orgs.length + ' 个下级节点组合为新' + levelName + '。'));
     if (!st.planMode) {
       card.appendChild(el('div', 'focus-await-title', '需开启计划模式'));
     }
-    card.appendChild(el('div', 'muted', '新组名称（可选）'));
+    card.appendChild(el('div', 'muted', '名称（可选）'));
     const name = el('input', 'wrong-input');
     card.appendChild(name);
+
+    card.appendChild(el('div', 'muted', '截止日期（可选）'));
+    const dueInp = el('input', 'wrong-input');
+    dueInp.type = 'date';
+    card.appendChild(dueInp);
+
+    card.appendChild(el('div', 'muted', '可转正最低下一级任务数'));
+    const minChild = el('input', 'wrong-input');
+    minChild.type = 'number';
+    minChild.min = String(FOCUS_MIN_CHILD_MIN);
+    minChild.max = String(FOCUS_MIN_CHILD_MAX);
+    minChild.value = '1';
+    card.appendChild(minChild);
+
     card.appendChild(el('div', 'muted', '挂在（可选）'));
     const parentSel = el('select', 'wrong-input');
     const none = el('option', null, '（根级）');
     none.value = '';
     parentSel.appendChild(none);
-    st.orgs.filter(function (o) { return o && o.level === 'corps'; }).forEach(function (o) {
-      const opt = el('option', null, focusOrgLabel(o, st.settings));
-      opt.value = o.id;
-      parentSel.appendChild(opt);
-    });
+    const wantParent = focusParentLevelOf(level);
+    if (wantParent) {
+      st.orgs.filter(function (o) { return o && o.level === wantParent; }).forEach(function (o) {
+        const opt = el('option', null, focusOrgLabel(o, st.settings));
+        opt.value = o.id;
+        parentSel.appendChild(opt);
+      });
+    }
     card.appendChild(parentSel);
 
     const btns = el('div', 'wrong-input-btns');
     const ok = el('button', 'btn primary', '组合');
     ok.addEventListener('click', function () {
       const parentId = parentSel.value || null;
+      const nf = focusPlanNodeFields({ name: name.value, dueAt: dueInp.value, minChildCount: minChild.value }, 1);
+      if (!nf.ok) { toast('截止日期不合法'); return; }
       modal.remove();
       focusApply(function (s) {
-        if (!s.planMode) return { ok: false, reason: 'need_plan_mode', state: s };
-        const cr = focusCreateOrg(s, {
-          level: 'group',
-          name: name.value,
+        return focusCombineNodes(s, {
+          ids: ids,
+          level: level,
+          name: nf.name,
           parentId: parentId,
-          fromPlan: true
+          fromPlan: true,
+          dueAt: nf.dueAt,
+          minChildCount: nf.minChildCount
         }, Date.now());
-        if (!cr.ok) return cr;
-        const gid = cr.org.id;
-        let st2 = cr.state;
-        if (unitIds.length) {
-          const ar = focusAssignUnits(st2, unitIds, gid, Date.now());
-          if (ar.ok) st2 = ar.state;
-        }
-        // 子级 orgs 若是 group 则挂到新 group 不合法——仅 unit 编入；orgs 改父到新 group 仅当是 unit 级
-        return { ok: true, state: st2, org: cr.org };
-      }, '已组合到新组');
+      }, '已组合到新' + levelName);
       focusUiState.selected = {};
     });
     const cancel = el('button', 'btn', '取消');
@@ -2777,36 +3489,47 @@
     document.body.appendChild(modal);
   }
 
+  // 多选 → 移动到…：目标层次 = 所选层次 + 1（单元→组、组→群、群→集团）
   function focusOpenMoveModal(st, ids) {
+    const list = (Array.isArray(ids) ? ids : []).map(String);
+    const levels = {};
+    list.forEach(function (id) {
+      const lv = focusNodeLevel(st, id);
+      if (lv) levels[lv] = 1;
+    });
+    const keys = Object.keys(levels);
+    if (!keys.length) { toast('请先选择单元或下级'); return; }
+    if (keys.length > 1) { toast('所选层次不一致，请分别移动'); return; }
+    const level = keys[0];
+    const wantParent = focusParentLevelOf(level);
     const modal = el('div', 'map-modal habit-modal');
     const backdrop = el('div', 'map-modal-backdrop');
     backdrop.addEventListener('click', function () { modal.remove(); });
     modal.appendChild(backdrop);
     const card = el('div', 'map-modal-card wrong-input-card');
     card.appendChild(el('h3', null, '移动到…'));
+    card.appendChild(el('p', 'muted',
+      '所选 ' + (st.settings.levelNames[level] || level) + ' 只能编入' +
+      (wantParent ? (st.settings.levelNames[wantParent] || wantParent) : '（无可上升层次）') + '或回到根级。'));
     const sel = el('select', 'wrong-input');
-    const none = el('option', null, '未编入');
+    const none = el('option', null, '未编入（根级）');
     none.value = '';
     sel.appendChild(none);
-    st.orgs.filter(function (o) { return o && o.level === 'group'; }).forEach(function (o) {
-      const opt = el('option', null, focusOrgLabel(o, st.settings));
-      opt.value = o.id;
-      sel.appendChild(opt);
-    });
+    if (wantParent) {
+      st.orgs.filter(function (o) { return o && o.level === wantParent; }).forEach(function (o) {
+        const opt = el('option', null, focusOrgLabel(o, st.settings));
+        opt.value = o.id;
+        sel.appendChild(opt);
+      });
+    }
     card.appendChild(sel);
     const btns = el('div', 'wrong-input-btns');
     const ok = el('button', 'btn primary', '移动');
     ok.addEventListener('click', function () {
       const target = sel.value || null;
       modal.remove();
-      const unitIds = ids.filter(function (id) { return focusFindUnit(loadFocus(), id); });
-      const orgIds = ids.filter(function (id) { return focusFindOrg(loadFocus(), id); });
       focusApply(function (s) {
-        let rr = { ok: true, state: s };
-        if (unitIds.length) rr = focusAssignUnits(rr.state, unitIds, target, Date.now());
-        if (orgIds.length && target) rr = focusReparentOrgs(rr.state, orgIds, target, Date.now());
-        else if (orgIds.length && !target) rr = focusReparentOrgs(rr.state, orgIds, null, Date.now());
-        return rr;
+        return focusAttachNodes(s, list, target, Date.now());
       }, '已移动');
       focusUiState.selected = {};
     });
@@ -2880,6 +3603,27 @@ export {
   FOCUS_FORMAL_TYPE_KEYS,
   FOCUS_LEVEL_KEYS,
   FOCUS_ORG_LEVELS,
+  FOCUS_LEVEL_RANK,
+  FOCUS_MIN_CHILD_MIN,
+  FOCUS_MIN_CHILD_MAX,
+  focusIsLevelKey,
+  focusIsOrgLevel,
+  focusLevelRank,
+  focusLevelAtRank,
+  focusParentLevelOf,
+  focusChildLevelOf,
+  focusCanAttach,
+  focusNodeLevel,
+  focusCombineLevelOf,
+  focusNextSeq,
+  focusMaxSeq,
+  focusNormalizeMinChildCount,
+  focusMinChildCountValid,
+  focusNormalizeDueAt,
+  focusDueDateValid,
+  focusPlanNodeFields,
+  focusAttachNodes,
+  focusCombineNodes,
   FOCUS_SEQ_KEYS,
   FOCUS_TIER_MAIN,
   FOCUS_TIER_NORMAL,
@@ -2956,6 +3700,7 @@ export {
   focusAssignUnits,
   focusReparentOrgs,
   focusUnassignedUnits,
+  focusNextLevelCount,
   focusDescendantUnitIds,
   focusOrgAggregates,
   focusOrgCanFormalize,
@@ -2966,6 +3711,17 @@ export {
   focusPlanFilledCount,
   focusPlanDueSoon,
   focusPlanOverdue,
-  focusPlanSettle
+  focusPlanSettle,
+  FOCUS_LEVEL_VISUALS,
+  FOCUS_LEVEL_VISUAL_KEYS,
+  focusLevelVisual,
+  focusLevelVisualDelta,
+  focusLevelBadge,
+  focusParentAttribution,
+  focusReminderInfo,
+  focusReminderSync,
+  focusReminderStart,
+  focusReminderClear,
+  FOCUS_REMINDER_UI_KEY
 };
 

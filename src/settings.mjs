@@ -7,6 +7,36 @@
   // 键名与 habit.mjs 的 ACT_CFG_KEY 同值；此处不重复声明（构建拼接同作用域）
   const ACT_SETTINGS_CFG_KEY = 'athena_act_cfg_v1';
 
+  // 编制层次键严格划分（单元 unit / 组 group / 群 corps / 集团 army）：
+  // 顺序单一来源 = focus.mjs 的 FOCUS_LEVEL_KEYS；被 tests 抽取求值（无 focus.mjs）时回退本地字面量。
+  // 未知层次键一律不落库（actSanitizeFocusSettings 只遍历已知键）。
+  const ACT_FOCUS_LEVEL_KEYS = ['unit', 'group', 'corps', 'army'];
+  const ACT_FOCUS_LEVEL_DEFAULT_NAMES = {
+    unit: '任务单元',
+    group: '任务组',
+    corps: '任务群',
+    army: '任务集团'
+  };
+
+  function actFocusLevelOrder() {
+    if (typeof FOCUS_LEVEL_KEYS !== 'undefined' && Array.isArray(FOCUS_LEVEL_KEYS) && FOCUS_LEVEL_KEYS.length) {
+      return FOCUS_LEVEL_KEYS.slice();
+    }
+    return ACT_FOCUS_LEVEL_KEYS.slice();
+  }
+
+  function actIsFocusLevelKey(key) {
+    return actFocusLevelOrder().indexOf(String(key)) >= 0;
+  }
+
+  function actDefaultLevelNames() {
+    const out = {};
+    actFocusLevelOrder().forEach(function (k) {
+      out[k] = ACT_FOCUS_LEVEL_DEFAULT_NAMES[k] || k;
+    });
+    return out;
+  }
+
   function actDefaultHabitCfg() {
     return {
       dailyAddLimit: 1,
@@ -27,7 +57,7 @@
       structure: 'free', // 'free' | 'triad'
       flavor: false,
       typeNames: { focus: '专注', assault: '突击', life: '生活', plan: '计划', scout: '侦查' },
-      levelNames: { unit: '任务单元', group: '任务组', corps: '任务群', army: '任务集团' }
+      levelNames: actDefaultLevelNames()
     };
   }
 
@@ -551,7 +581,8 @@
     rFlavor.appendChild(flavorLab);
     wrap.appendChild(rFlavor);
 
-    const LEVEL_ORDER = ['unit', 'group', 'corps', 'army'];
+    // 层次顺序单一来源：严格四级 unit/group/corps/army（见 focus.mjs FOCUS_LEVEL_KEYS）
+    const LEVEL_ORDER = actFocusLevelOrder();
     const rLevels = actRow('层次名');
     const levelWrap = el('div', 'beg-cats');
     LEVEL_ORDER.forEach(function (key) {
@@ -562,8 +593,10 @@
       input.value = focusCfg.levelNames[key] || key;
       input.title = '编制层次名称';
       input.addEventListener('change', function () {
+        // 严格类型：非法层次键不写入
+        if (!actIsFocusLevelKey(key)) { input.value = focusCfg.levelNames[key] || key; return; }
         const patch = {};
-        patch[key] = input.value.trim() || actDefaultFocusSettings().levelNames[key];
+        patch[key] = input.value.trim() || actDefaultLevelNames()[key] || key;
         saveActSettings({ focus: { levelNames: Object.assign({}, loadActSettings().focus.levelNames, patch) } });
         input.value = patch[key];
         toast('层次名已更新');
@@ -594,7 +627,7 @@
     });
     rTypes.appendChild(typeWrap);
     wrap.appendChild(rTypes);
-    wrap.appendChild(el('p', 'muted', '层次：任务单元 → 组 → 群 → 集团（番号 # ● ▲ ◆）；类型：专注 / 突击 / 生活 / 计划 / 侦查。名称可改，番号不变。三三制为创建向导建议模板（每组 3 子），不强制。'));
+    wrap.appendChild(el('p', 'muted', '层次（严格逐级归属）：' + actFocusLevelOrder().map(function (k) { return focusCfg.levelNames[k] || k; }).join(' → ') + '（番号 # ● ▲ ◆）；类型：专注 / 突击 / 生活 / 计划 / 侦查。名称可改，番号不变。三三制为创建向导建议模板（每组 3 子），不强制。'));
 
     wrap.appendChild(el('h3', null, '重置'));
     const rReset = el('div', 'setting-row danger-row');

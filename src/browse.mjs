@@ -4,6 +4,7 @@
     else if (currentView === 'learn') renderLearn();
     else if (currentView === 'browse') renderBrowse();
     else if (currentView === 'quiz') renderQuiz();
+    else if (currentView === 'bank') renderBank();
     else if (currentView === 'statistics') renderStatistics();
     else if (currentView === 'help') renderHelp();
     else if (currentView === 'wrong') renderWrongLearn();
@@ -834,4 +835,89 @@
   let browseExpanded = {};
   let browseMastery = 'all';
   let browseStars = 'all';
+
+  // ---------------- 未到期卡片：「立即重学」（提前复习，不重置记忆历史） ----------------
+  // 浏览时翻到一张还没到期、但其实已经忘了的卡：点一下就能立刻把它纳回复习队列。
+  // 调度只走 sched.mjs 的纯函数 markCardDueNow()——仅把 due 落到此刻，
+  // stability / difficulty / 学习阶段(step/state/grad) / reps / lapses / ivl / lastR 与评分日志全都不动；
+  // 之后的评分仍由既有 FSRS 算法按保留率算出新间隔（间隔与到期时间始终由算法产出）。
+  // 到期时刻的人话（未到期卡片专用）：小时级（学习/重学步进）说分钟，日级说月-日。
+  function browseDueLabel(ts) {
+    const ms = ts - Date.now();
+    if (ms < 60 * 60 * 1000) return Math.max(1, Math.round(ms / 60000)) + ' 分钟后';
+    const d = new Date(ts);
+    return (d.getMonth() + 1) + '-' + d.getDate();
+  }
+
+  // 入口资格：已进入调度、且下次到期时刻在未来（= 未到期）。authoritative 判定在 markCardDueNow 里。
+  function browseRelearnEligible(c) {
+    if (!c) return false;
+    if (c.state !== 'review' && c.state !== 'learning' && c.state !== 'relearning') return false;
+    return typeof c.due === 'number' && isFinite(c.due) && c.due > Date.now();
+  }
+
+  // 卡片标题（提示文案用纯文本：toast 是 textContent，去掉公式定界符避免出现裸 `$`）
+  function browseCardTitle(id) {
+    const f = DATA.filter(function (x) { return x.id === id; })[0];
+    const t = f ? f.title : id;
+    return String(t).replace(/\$/g, '');
+  }
+
+  // 点击「立即重学」：提前到期（幂等）→ 落盘 → 提示 → 重绘（入口随之消失，表示已进队列）
+  function relearnFromBrowse(id) {
+    const c = card(id);
+    if (!c) { toast('这张卡不存在，无法加入复习队列'); return; }
+    if (c.state === 'new') { toast('这张卡还没学过：首次学习后才会进入复习队列'); return; }
+    if (!browseRelearnEligible(c)) { toast('这张卡已经在复习队列里了，直接去「学习」页复习即可'); return; }
+    const dueBefore = browseDueLabel(c.due);
+    if (!markCardDueNow(c)) { toast('这张卡已经在复习队列里了，直接去「学习」页复习即可'); return; }
+    saveDB();
+    toast('「' + browseCardTitle(id) + '」已加入复习队列：立即复习（原定 ' + dueBefore + '，记忆历史保留）');
+    renderApp();
+  }
+
+  // 浏览列表装饰器：每张未到期卡片补一行「立即重学」入口。
+  // 浏览列表渲染在 src/quiz.mjs（本切片 inScope 之外，不改），这里包装同一作用域里的
+  // 函数声明 buildBrowseList（函数声明提升，browse.mjs 在 quiz.mjs 之前拼接也能安全取到原函数）；
+  // 初级视图与搜索局部重绘(renderBrowse 里的 replaceWith(buildBrowseList()))都走这条路径。
+  function decorateBrowseRelearn(list) {
+    if (!list || typeof list.querySelectorAll !== 'function') return list;
+    const items = list.querySelectorAll('.browse-item[data-card]');
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const id = item.getAttribute('data-card');
+      const c = card(id);
+      if (!browseRelearnEligible(c)) continue;
+      const dueLabel = browseDueLabel(c.due);
+      const row = el('div', 'browse-relearn');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 16px 12px;';
+      const btn = el('button', 'btn small browse-relearn-btn', '⏰ 立即重学');
+      btn.type = 'button';
+      btn.setAttribute('data-action', 'relearnnow');
+      btn.setAttribute('data-arg', id);
+      btn.setAttribute('data-relearn', id);
+      btn.title = '未到期（原定 ' + dueLabel + '）——立即纳入复习队列，提前复习不重置记忆历史';
+      btn.addEventListener('click', function (ev) {
+        if (ev && ev.stopPropagation) ev.stopPropagation(); // 不再冒泡给列表头与全局 data-action 委托
+        relearnFromBrowse(id);
+      });
+      row.appendChild(btn);
+      row.appendChild(el('span', 'muted browse-relearn-hint', '未到期 · 原定 ' + dueLabel + '，可提前复习'));
+      const head = item.querySelector('.browse-item-head');
+      if (head && head.nextSibling) item.insertBefore(row, head.nextSibling); else item.appendChild(row);
+    }
+    return list;
+  }
+
+  const buildBrowseListBase = buildBrowseList;
+  buildBrowseList = function () {
+    const list = buildBrowseListBase.apply(null, arguments);
+    try {
+      decorateBrowseRelearn(list);
+    } catch (e) {
+      // 装饰失败绝不能让浏览列表本身崩掉：入口缺失优于列表不可用
+      try { console.warn('Athena: 未到期卡片的「立即重学」入口渲染失败', e); } catch (e2) {}
+    }
+    return list;
+  };
 

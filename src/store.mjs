@@ -136,7 +136,11 @@
   function defaultCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, notes: '', hist: [], lastR: 0, ivlR: 0 }; }
 
   // 错题卡（独立于知识卡，复用 FSRS 调度状态 + 题目字段）
-  function defaultWrongCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, kind: '错题', q: '', a: '', a2: '', src: '', linked: [], errType: '', lastSolveMs: 0, hist: [], lastR: 0, ivlR: 0 }; }
+  // linkedMastery：关联知识点联动开关（1 开 / 0 关）。
+  //   仅「手动录入 + 自行关联知识点」的知识卡错题开启；「例题标入错题」一律为 0——
+  //   例题评分只影响错题卡自身，不再改动关联知识点卡的记忆状态（v2.1.0 依据用户决定下线该联动）。
+  //   旧数据无此字段 → sanitizeWrongCard 补 1，保持历史行为不被静默改写。
+  function defaultWrongCard() { return { reps: 0, ivl: 0, due: 0, lapses: 0, state: 'new', grad: 0, step: 0, diff: 5, stab: 0, fsrsInit: 0, kind: '错题', q: '', a: '', a2: '', src: '', linked: [], errType: '', lastSolveMs: 0, hist: [], lastR: 0, ivlR: 0, linkedMastery: 1 }; }
   function sanitizeWrongCard(w) {
     const out = defaultWrongCard();
     if (w && typeof w === 'object') {
@@ -148,12 +152,18 @@
       if (typeof w.a2 === 'string') out.a2 = w.a2;
       if (typeof w.src === 'string') out.src = w.src;
       if (Array.isArray(w.linked)) out.linked = w.linked.filter(function (x) { return typeof x === 'string'; });
+      // 联动开关：仅显式 0（例题来源）关闭；缺失/非法（旧数据、NaN）一律补 1 —— 历史行为不被静默改写
+      out.linkedMastery = (w.linkedMastery === 0) ? 0 : 1;
       if (typeof w.errType === 'string') out.errType = w.errType;
       if (Array.isArray(w.hist)) out.hist = w.hist.map(function (h) { return { t: h.t, m: h.m }; });
       if (w.state === 'new' || w.state === 'learning' || w.state === 'relearning' || w.state === 'review') out.state = w.state;
     }
     return out;
   }
+  // ===== BEGIN TESTABLE wrong card helpers =====
+  // 单测（tests/wrong.test.mjs）直接调用：联动开关在导入/同步净化后是否保真，在此封闭可验。
+  export { defaultWrongCard, sanitizeWrongCard };
+  // ===== END TESTABLE wrong card helpers =====
 
   // IndexedDB（作为更持久的数据备份；localStorage 仍为主存储）
   function idbOpen() {
@@ -235,6 +245,88 @@
   }
   // ===== END TESTABLE pref scope helpers =====
 
+  // ===== BEGIN TESTABLE quiz persistence helpers =====
+  // 自测数据的存储侧净化器：导入/加载两条路径共用（云同步合并见 sync.mjs 的 mergeDb）。
+  // 常量前缀 STORED_ 是刻意的——store.mjs 与 quiz.mjs 会被 tools/build.mjs 拼进同一 IIFE
+  // 作用域，quiz.mjs 已声明 QUIZ_* 系列，同名 const 会整包语法错误。
+  const STORED_QUIZ_MAX_RECORDS = 200;   // 与 quiz.mjs 的 QUIZ_MAX_RECORDS 同口径：只留最新 200 条
+  const STORED_QUIZ_MIN_COUNT = 1;       // 与 quiz.mjs 的 QUIZ_MIN_COUNT / QUIZ_MAX_COUNT 同口径
+  const STORED_QUIZ_MAX_COUNT = 50;
+  const STORED_QUIZ_DIFF_MIN = 1;        // 与 quiz.mjs 的 QUIZ_DIFF_MIN / QUIZ_DIFF_MAX 同口径
+  const STORED_QUIZ_DIFF_MAX = 10;
+  const STORED_QUIZ_MASTERY_MIN = 0;     // 与 quiz.mjs 的 QUIZ_MASTERY_MIN / QUIZ_MASTERY_MAX 同口径
+  const STORED_QUIZ_MASTERY_MAX = 100;
+  const STORED_QUIZ_MODES = ['cards', 'wrong'];   // 自测的两个来源（知识卡 / 错题）
+
+  // 单条自测记录合法判定：普通对象且 t 为有限数（时间戳是去重键，缺它无法与云同步对齐）。
+  // 其余字段一律不解释、原样保留——记录形状由 quiz.mjs 的 quizSaveRecord 定义（含 byCat/weak/queued
+  // 等嵌套字段），存储层二次解释只会在未来加字段时静默丢数据。
+  function storedQuizRecordValid(e) {
+    return !!e && typeof e === 'object' && !Array.isArray(e) && typeof e.t === 'number' && isFinite(e.t);
+  }
+
+  // 记录数组净化：非法元素单独丢弃（不整块清空）、逐条深拷贝（导入后不与来源共享引用）、
+  // 超上限只保留最新 200 条（与写入侧 splice(0, len - MAX) 同语义）。
+  function storeQuizRecords(list) {
+    if (!Array.isArray(list)) return [];
+    const out = [];
+    list.forEach(function (e) {
+      if (!storedQuizRecordValid(e)) return;
+      let copy = null;
+      try { copy = JSON.parse(JSON.stringify(e)); } catch (err) { copy = null; }
+      if (!copy || typeof copy !== 'object' || Array.isArray(copy)) return; // 不可序列化（循环引用等）→ 丢弃
+      out.push(copy);
+    });
+    if (out.length > STORED_QUIZ_MAX_RECORDS) out.splice(0, out.length - STORED_QUIZ_MAX_RECORDS);
+    return out;
+  }
+
+  // 与 quiz.mjs 的 quizClampNum 同口径（含「数字字符串也认」这条宽容度）——
+  // 两侧净化器对同一份数据必须给出同一结果，否则「导入时被夹坏、读取时又变回来」的诡异差异会误导排查。
+  function storedQuizClampNum(v, lo, hi, dflt) {
+    const n = (typeof v === 'number') ? v : parseFloat(v);
+    if (!isFinite(n)) return dflt;
+    if (n < lo) return lo;
+    if (n > hi) return hi;
+    return n;
+  }
+  // 区间夹取 + 下限大于上限自动交换（与 quiz.mjs 的 quizSanitizeRange 同口径）
+  function storedQuizRange(pair, lo, hi, dflt) {
+    if (!Array.isArray(pair) || pair.length < 2) return dflt.slice();
+    const a = storedQuizClampNum(pair[0], lo, hi, dflt[0]);
+    const b = storedQuizClampNum(pair[1], lo, hi, dflt[1]);
+    return a <= b ? [a, b] : [b, a];
+  }
+  // 单来源自测配置：缺省与非法一律回退默认，绝不抛错。
+  // 章节键只做「非空字符串 + 去重」——分类白名单（CATS）是学科层知识，store 层学科无关；
+  // 读取侧 quiz.mjs 的 quizSanitizeConfig 会用当前科真实分类再净化一次（本函数输出是它的不动点）。
+  function storeQuizCfgOne(raw) {
+    const r = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+    const out = {
+      count: Math.round(storedQuizClampNum(r.count, STORED_QUIZ_MIN_COUNT, STORED_QUIZ_MAX_COUNT, 10)),
+      cats: [],
+      diff: storedQuizRange(r.diff, STORED_QUIZ_DIFF_MIN, STORED_QUIZ_DIFF_MAX, [1, 10]),
+      mastery: storedQuizRange(r.mastery, STORED_QUIZ_MASTERY_MIN, STORED_QUIZ_MASTERY_MAX, [0, 100])
+    };
+    if (Array.isArray(r.cats)) {
+      const seen = {};
+      r.cats.forEach(function (c) {
+        if (typeof c !== 'string' || !c || seen[c]) return;
+        seen[c] = true;
+        out.cats.push(c);
+      });
+    }
+    return out;
+  }
+  // 两来源配置容器：DB.settings.quizCfg = { cards: {...}, wrong: {...} }
+  function storeQuizCfg(raw) {
+    const r = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+    const out = {};
+    STORED_QUIZ_MODES.forEach(function (m) { out[m] = storeQuizCfgOne(r[m]); });
+    return out;
+  }
+  // ===== END TESTABLE quiz persistence helpers =====
+
   function loadGlobalPrefs() {
     if (typeof window !== 'undefined' && window.__globalPrefs) {
       return prefSanitizeGlobal(window.__globalPrefs);
@@ -298,6 +390,8 @@
     if (DB.settings.goalTitle == null) DB.settings.goalTitle = GOAL_DEFAULT;
     if (DB.settings.bareRecall == null) DB.settings.bareRecall = false;
     if (!DB.settings.prefScope || typeof DB.settings.prefScope !== 'object') DB.settings.prefScope = {};
+    // 自测范围配置（v2.1.0 起）：缺省/非法一律回退默认并夹取（不抛错），老库（无此键）加载后照常自测
+    DB.settings.quizCfg = storeQuizCfg(DB.settings.quizCfg);
     // 初学者模式自愈：cats 必须与当前科 CATS 对齐——
     // 教材化整科重置改过 catKey、或 cats 混入他科/旧键时，过滤集合会全挡或全放。
     // 解析时丢弃非法键并回退推荐起步章；写回 sid 供下次切科识别跨科残留。
@@ -309,6 +403,7 @@
     if (!DB.log) DB.log = {};
     if (!DB.log.counts) DB.log.counts = {}; // 每日完成量分类计数（n 新学 / r 复习 / w 错题重做）
     if (!Array.isArray(DB.log.revlogs)) DB.log.revlogs = []; // 评分日志（FSRS 训练数据地基，v1.44.0 起）
+    DB.log.quiz = storeQuizRecords(DB.log.quiz); // 自测记录（v2.1.0 起）：清非法元素 + 只留最新 200 条
     if (!DB.wrongs) DB.wrongs = {};
     if (!DB.custom) DB.custom = {};
     if (!DB.cardOverrides) DB.cardOverrides = {};
@@ -588,6 +683,8 @@
       const r = resolveBeginner(b, BASE_SUBJ, currentSubjectId);
       fresh.settings.beginner = { on: !!(b && b.on), cats: r.cats, sid: currentSubjectId };
     }
+    // 自测范围配置（v2.1.0 起）：此前整块丢弃，表现为「导出→导入后自测范围回到默认」
+    fresh.settings.quizCfg = storeQuizCfg(payload.settings && payload.settings.quizCfg);
     if (payload.log && payload.log.checkins && typeof payload.log.checkins === 'object') {
       fresh.log.checkins = {};
       Object.keys(payload.log.checkins).forEach(function (k) { fresh.log.checkins[k] = true; });
@@ -623,6 +720,9 @@
           if (typeof payload.log.studyTime[dk] === 'number' && isFinite(payload.log.studyTime[dk])) fresh.log.studyTime[dk] = payload.log.studyTime[dk];
         });
       }
+      // 自测记录（v2.1.0 起）：合法记录逐字段保留（含 byCat/weak/queued/diff/mastery 等嵌套字段），
+      // 非法元素单独丢弃、只留最新 200 条（此前整块不在白名单里 → 导出→导入静默丢自测历史）
+      fresh.log.quiz = storeQuizRecords(payload.log.quiz);
     }
     if (payload.wrongs && typeof payload.wrongs === 'object') {
       Object.keys(payload.wrongs).forEach(function (wid) {

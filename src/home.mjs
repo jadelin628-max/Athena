@@ -185,7 +185,9 @@
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6 a2.4 2.4 0 1 1 3.9 1.9 c-.9.7-1.5 1.2-1.5 2.3"/><path d="M12 16.6 v.5"/>',
     act: '<rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4 V3 H15 V4"/><path d="M9 10 H15 M9 14 H13"/>',
     habit: '<path d="M12 20 V11"/><path d="M12 11 C12 11 8 9.5 8 6.5 C8 6.5 12 7.5 12 11"/><path d="M12 13 C12 13 16 11.5 16 8.5 C16 8.5 12 9.5 12 13"/>',
-    mile: '<path d="M7 20 V4"/><path d="M7 5 H18 L15 9 L18 13 H7"/><path d="M5 20 H12"/>'
+    mile: '<path d="M7 20 V4"/><path d="M7 5 H18 L15 9 L18 13 H7"/><path d="M5 20 H12"/>',
+    // bank（题库/真题集）：合上的卡册 + 书脊 + 题签，与 deck（叠放的卡片）区分
+    bank: '<rect x="4.5" y="4" width="15" height="16" rx="2"/><path d="M9 4 V20"/><path d="M15.5 13.5 H18.5 V20 L17 18.6 L15.5 20 Z"/>'
   };
   function icon(name) {
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

@@ -78,7 +78,41 @@ import {
   focusPlanCreate,
   focusPlanFilledCount,
   focusPlanDueSoon,
-  focusPlanSettle
+  focusPlanSettle,
+  FOCUS_LEVEL_KEYS,
+  FOCUS_LEVEL_RANK,
+  FOCUS_MIN_CHILD_MIN,
+  FOCUS_MIN_CHILD_MAX,
+  focusIsLevelKey,
+  focusIsOrgLevel,
+  focusLevelRank,
+  focusLevelAtRank,
+  focusParentLevelOf,
+  focusChildLevelOf,
+  focusCanAttach,
+  focusNodeLevel,
+  focusCombineLevelOf,
+  focusCombineNodes,
+  focusNextSeq,
+  focusMaxSeq,
+  focusNormalizeMinChildCount,
+  focusMinChildCountValid,
+  focusNormalizeDueAt,
+  focusDueDateValid,
+  focusPlanNodeFields,
+  focusAttachNodes,
+  focusNextLevelCount,
+  FOCUS_LEVEL_VISUALS,
+  FOCUS_LEVEL_VISUAL_KEYS,
+  focusLevelVisual,
+  focusLevelVisualDelta,
+  focusLevelBadge,
+  focusParentAttribution,
+  focusReminderInfo,
+  focusReminderSync,
+  focusReminderStart,
+  focusReminderClear,
+  FOCUS_REMINDER_UI_KEY
 } from '../src/focus.mjs';
 
 const NOW = 1770000000000;
@@ -313,7 +347,7 @@ test('高层次创建须计划模式', () => {
   assert.equal(r.org.formalized, false);
 });
 
-test('番号独立流水不回收', () => {
+test('番号复用：删除编制后同层复用最小空缺号，已有号不变、不重号', () => {
   let st = focusSetPlanMode(focusDefaultState(), true).state;
   let r = focusCreateOrg(st, { level: 'group' }, NOW);
   assert.equal(focusOrgLabel(r.org, st.settings).indexOf('●1'), 0);
@@ -321,12 +355,45 @@ test('番号独立流水不回收', () => {
   r = focusCreateOrg(st, { level: 'corps' }, NOW);
   assert.equal(focusOrgLabel(r.org, st.settings).indexOf('▲1'), 0);
   st = r.state;
+  const g2 = focusCreateOrg(st, { level: 'group' }, NOW);
+  assert.equal(g2.org.seq, 2);
+  st = g2.state;
+  const g2Id = g2.org.id;
+  // 删除 group#2 以外的 group#1 → 新建 group 复用 1
+  const g1Id = st.orgs.filter((o) => o.level === 'group' && o.seq === 1)[0].id;
+  st = focusDeleteOrg(st, g1Id, NOW).state;
+  assert.equal(focusFindOrg(st, g1Id), null);
+  r = focusCreateOrg(st, { level: 'group' }, NOW);
+  assert.equal(r.org.seq, 1);
+  st = r.state;
+  // 已有 group#2 号不变
+  assert.equal(focusFindOrg(st, g2Id).seq, 2);
+  assert.equal(focusFindOrg(st, r.org.id).seq, 1);
+  // 同层不重号
+  const groupSeqs = st.orgs.filter((o) => o.level === 'group').map((o) => o.seq).sort();
+  assert.deepEqual(groupSeqs, [1, 2]);
+  // 1、2 都占用后取 3
+  st = focusCreateOrg(st, { level: 'group' }, NOW).state;
+  r = focusCreateOrg(st, { level: 'group' }, NOW);
+  assert.equal(r.org.seq, 4);
+  st = r.state;
+  // 删除中间号（2）后新建仍取最小空缺 2，不动 1/3/4
+  st = focusDeleteOrg(st, g2Id, NOW).state;
   r = focusCreateOrg(st, { level: 'group' }, NOW);
   assert.equal(r.org.seq, 2);
   st = r.state;
-  st = focusDeleteOrg(st, st.orgs[0].id, NOW).state;
-  r = focusCreateOrg(st, { level: 'group' }, NOW);
-  assert.equal(r.org.seq, 3);
+  assert.deepEqual(st.orgs.filter((o) => o.level === 'group').map((o) => o.seq).sort(), [1, 2, 3, 4]);
+  // 层间独立：corps 仍是 1，group 删除不影响
+  assert.deepEqual(st.orgs.filter((o) => o.level === 'corps').map((o) => o.seq), [1]);
+  // 计数器与现存最大号取齐
+  assert.equal(st.seq.group, 4);
+  assert.equal(st.seq.corps, 1);
+  // 单元流水独立：编制删除不回收单元番号
+  const u = focusCreateOrg(st, { level: 'group' }, NOW);
+  st = u.state;
+  assert.equal(focusNextSeq(st, 'unit'), 1);
+  assert.equal(focusMaxSeq(st, 'unit'), 0);
+  assert.equal(focusMaxSeq(st, 'group'), 5);
 });
 
 test('单元可编辑名字 + 显示完成度/时长/起止', () => {
@@ -870,4 +937,533 @@ test('focusHeatData：同一天多个单元按 actualMin 汇总后再定档', ()
   assert.equal(byDay[focusYmd(NOW)].minutes, 100);
   assert.equal(byDay[focusYmd(NOW)].lv, 1); // ceil(100/500*4)
   assert.equal(byDay[focusYmd(NOW - DAY)].lv, 4);
+});
+
+// ---------- 层次严格划分（显式类型 unit/group/corps/army） ----------
+
+function addUnits(st, n, offsetMin) {
+  let cur = st;
+  const base = Number(offsetMin) || 0;
+  for (let i = 0; i < n; i++) {
+    const t0 = NOW + (base + i * 60) * MIN;
+    cur = startAndFinish(cur, 'n1', t0, t0 + 25 * MIN, { name: '单元' }).state;
+  }
+  return cur;
+}
+
+test('层次表：四级键 / rank / 上下级 / 可编入关系（单一来源）', () => {
+  assert.deepEqual(FOCUS_LEVEL_KEYS, ['unit', 'group', 'corps', 'army']);
+  assert.deepEqual(FOCUS_ORG_LEVELS, ['group', 'corps', 'army']);
+  FOCUS_LEVEL_KEYS.forEach(function (k, i) {
+    assert.equal(focusIsLevelKey(k), true);
+    assert.equal(focusLevelRank(k), i);
+    assert.equal(FOCUS_LEVEL_RANK[k], i);
+    assert.equal(focusLevelAtRank(i), k);
+  });
+  assert.equal(focusIsLevelKey('squad'), false);
+  assert.equal(focusLevelRank('squad'), -1);
+  assert.equal(focusLevelAtRank(4), null);
+  assert.equal(focusLevelAtRank(-1), null);
+  // 上级：单元 → 组 → 群 → 集团；集团无上级
+  assert.equal(focusParentLevelOf('unit'), 'group');
+  assert.equal(focusParentLevelOf('group'), 'corps');
+  assert.equal(focusParentLevelOf('corps'), 'army');
+  assert.equal(focusParentLevelOf('army'), null);
+  // 下级：单元无下级
+  assert.equal(focusChildLevelOf('unit'), null);
+  assert.equal(focusChildLevelOf('group'), 'unit');
+  assert.equal(focusChildLevelOf('corps'), 'group');
+  assert.equal(focusChildLevelOf('army'), 'corps');
+  // 可编入：恰为上一级
+  assert.equal(focusCanAttach('unit', 'group'), true);
+  assert.equal(focusCanAttach('group', 'corps'), true);
+  assert.equal(focusCanAttach('corps', 'army'), true);
+  assert.equal(focusCanAttach('group', 'group'), false);
+  assert.equal(focusCanAttach('group', 'army'), false);
+  assert.equal(focusCanAttach('unit', 'corps'), false);
+  assert.equal(focusCanAttach('army', 'army'), false);
+  assert.equal(focusCanAttach('group', null), false);
+  assert.equal(focusCanAttach('unit', 'unit'), false);
+});
+
+test('层级由节点显式类型判定：组挂在群下仍是组（不靠父级槽位推断）', () => {
+  let st = addUnits(makeState(), 1, 0);
+  st = focusSetPlanMode(st, true).state;
+  assert.equal(focusNodeLevel(st, st.units[0].id), 'unit');
+  assert.equal(focusNodeLevel(st, 'nope'), null);
+
+  const gr = focusCreateOrg(st, { level: 'group', name: 'G' }, NOW);
+  st = gr.state;
+  const co = focusCreateOrg(st, { level: 'corps', name: 'C' }, NOW);
+  st = co.state;
+  const at = focusAttachNodes(st, [gr.org.id], co.org.id, NOW);
+  assert.equal(at.ok, true);
+  st = at.state;
+  // 挂在群下的节点仍是「组」，不是「单元」
+  assert.equal(focusNodeLevel(st, gr.org.id), 'group');
+  assert.equal(focusNodeLevel(st, co.org.id), 'corps');
+  assert.equal(focusFindOrg(st, gr.org.id).level, 'group');
+  // 组不能编入组（旧行为：被当成「另一种单元」只能挂到任务组下）
+  const g2 = focusCreateOrg(st, { level: 'group', name: 'G2' }, NOW);
+  st = g2.state;
+  const bad = focusReparentOrgs(st, [gr.org.id], g2.org.id, NOW);
+  assert.equal(bad.ok, false);
+  assert.equal(bad.reason, 'bad_parent');
+  // 组不能编入自己 / 自己的后代
+  assert.equal(focusReparentOrgs(st, [gr.org.id], gr.org.id, NOW).ok, false);
+});
+
+test('未编入单元 → 任务组 → 任务群 → 任务集团：逐级归属', () => {
+  let st = addUnits(makeState(), 3, 0);
+  st = focusSetPlanMode(st, true).state;
+  const unitIds = st.units.map(function (u) { return u.id; });
+
+  // 三个未编入单元 → 组合产物落在 group 层
+  let r = focusCombineNodes(st, { ids: unitIds, name: 'G1' }, NOW);
+  assert.equal(r.ok, true);
+  assert.equal(r.level, 'group');
+  assert.equal(r.org.level, 'group');
+  st = r.state;
+  const g1 = r.org;
+  assert.equal(st.units.filter(function (u) { return u.orgId === g1.id; }).length, 3);
+
+  // 再三个单元 → 另一个任务组
+  st = addUnits(st, 3, 200);
+  const free = focusUnassignedUnits(st).map(function (u) { return u.id; });
+  assert.equal(free.length, 3);
+  r = focusCombineNodes(st, { ids: free, name: 'G2' }, NOW);
+  assert.equal(r.ok, true);
+  assert.equal(r.level, 'group');
+  st = r.state;
+  const g2 = r.org;
+
+  // 两个「未编入单元组合成的任务组」→ 任务群（可继续向上归属）
+  r = focusCombineNodes(st, { ids: [g1.id, g2.id], name: 'C1' }, NOW);
+  assert.equal(r.ok, true);
+  assert.equal(r.level, 'corps');
+  st = r.state;
+  const c1 = r.org;
+  assert.equal(focusFindOrg(st, g1.id).parentId, c1.id);
+  assert.equal(focusFindOrg(st, g2.id).parentId, c1.id);
+  // 组 → 已有群：显式编入同样成立
+  const moved = focusAttachNodes(st, [g1.id], c1.id, NOW);
+  assert.equal(moved.ok, true);
+  assert.equal(focusFindOrg(moved.state, g1.id).parentId, c1.id);
+
+  // 任务群 → 任务集团
+  st = addUnits(st, 3, 400);
+  const free2 = focusUnassignedUnits(st).map(function (u) { return u.id; });
+  const g3 = focusCombineNodes(st, { ids: free2, name: 'G3' }, NOW);
+  assert.equal(g3.ok, true);
+  st = g3.state;
+  const c2 = focusCombineNodes(st, { ids: [g3.org.id], name: 'C2' }, NOW);
+  assert.equal(c2.ok, true);
+  assert.equal(c2.level, 'corps');
+  st = c2.state;
+  const army = focusCombineNodes(st, { ids: [c1.id, c2.org.id], name: 'A1' }, NOW);
+  assert.equal(army.ok, true);
+  assert.equal(army.level, 'army');
+  st = army.state;
+  assert.equal(focusFindOrg(st, c1.id).parentId, army.org.id);
+  assert.equal(focusFindOrg(st, c2.org.id).parentId, army.org.id);
+  // 群 → 集团：显式编入
+  const rep = focusReparentOrgs(st, [c1.id], army.org.id, NOW);
+  assert.equal(rep.ok, true);
+
+  // 集团是最高层：不能再组合、不能再被编入
+  assert.equal(focusParentLevelOf('army'), null);
+  assert.equal(focusCombineLevelOf(st, [army.org.id]), null);
+  const noUp = focusCombineNodes(st, { ids: [army.org.id] }, NOW);
+  assert.equal(noUp.ok, false);
+  assert.equal(noUp.reason, 'no_level_up');
+  assert.equal(focusAttachNodes(st, [army.org.id], c1.id, NOW).reason, 'bad_parent');
+  // 群不能进群/组；单元不能进群/集团
+  assert.equal(focusAttachNodes(st, [c1.id], g1.id, NOW).reason, 'bad_parent');
+  assert.equal(focusAttachNodes(st, [free2[0]], c1.id, NOW).reason, 'bad_parent');
+  assert.equal(focusAttachNodes(st, [free2[0]], army.org.id, NOW).reason, 'bad_parent');
+
+  // 混层组合被拒，且整单原子（不留半个产物）
+  const mix = focusCombineNodes(st, { ids: [free2[0], g1.id] }, NOW);
+  assert.equal(mix.ok, false);
+  assert.equal(mix.reason, 'member_level_mismatch');
+  assert.equal(mix.state.orgs.length, st.orgs.length);
+});
+
+test('组合产物可带截止日期与最小下级数，非法日期整单拒绝', () => {
+  let st = addUnits(makeState(), 2, 0);
+  st = focusSetPlanMode(st, true).state;
+  const ids = st.units.map(function (u) { return u.id; });
+  const due = new Date(2026, 2, 1, 23, 59, 59, 0).getTime();
+  const r = focusCombineNodes(st, { ids: ids, name: 'G', dueAt: '2026-03-01', minChildCount: 4 }, NOW);
+  assert.equal(r.ok, true);
+  assert.equal(r.org.dueAt, due);
+  assert.equal(r.org.minChildCount, 4);
+  const bad = focusCombineNodes(st, { ids: ids, dueAt: '2026-02-30' }, NOW);
+  assert.equal(bad.ok, false);
+  assert.equal(bad.reason, 'bad_due');
+  assert.equal(bad.state.orgs.length, st.orgs.length);
+});
+
+// ---------- 计划参数：两个新建入口共用同一校验 ----------
+
+test('focusPlanNodeFields：最小下级数 1..99 + 合法日期（两入口共用）', () => {
+  const ok = focusPlanNodeFields({ name: '  A  ', dueAt: '2026-03-01', minChildCount: '5' }, 1);
+  assert.equal(ok.ok, true);
+  assert.equal(ok.name, 'A');
+  assert.equal(ok.minChildCount, 5);
+  assert.equal(ok.dueAt, new Date(2026, 2, 1, 23, 59, 59, 0).getTime());
+  // 空日期可选 → null
+  assert.equal(focusDueDateValid(''), true);
+  assert.equal(focusDueDateValid(null), true);
+  assert.equal(focusPlanNodeFields({ dueAt: '' }, 1).dueAt, null);
+  assert.equal(focusPlanNodeFields({}, 3).minChildCount, 3);
+  // 非法日期 → 统一拒绝（两个入口据此不落库）
+  ['2026-02-30', '2026-04-31', '2026-13-01', 'today', '2026/03/01', 'abc'].forEach(function (bad) {
+    assert.equal(focusDueDateValid(bad), false, bad);
+    const r = focusPlanNodeFields({ dueAt: bad }, 1);
+    assert.equal(r.ok, false, bad);
+    assert.equal(r.reason, 'bad_due', bad);
+    assert.equal(focusNormalizeDueAt(bad), null, bad);
+  });
+  // 合法日期多形态
+  assert.equal(focusNormalizeDueAt(1770000000000), 1770000000000);
+  assert.equal(focusNormalizeDueAt('1770000000123'), 1770000000123);
+  assert.equal(focusNormalizeDueAt(new Date(2026, 0, 2, 3, 4, 5)), new Date(2026, 0, 2, 3, 4, 5).getTime());
+  assert.equal(focusNormalizeDueAt('2026-01-02'), new Date(2026, 0, 2, 23, 59, 59, 0).getTime());
+  assert.equal(focusNormalizeDueAt(0), null);
+  assert.equal(focusNormalizeDueAt(-5), null);
+  // 最小下级数：越界收敛、非法回退默认
+  assert.equal(FOCUS_MIN_CHILD_MIN, 1);
+  assert.equal(FOCUS_MIN_CHILD_MAX, 99);
+  assert.equal(focusNormalizeMinChildCount(0, 1), 1);
+  assert.equal(focusNormalizeMinChildCount(-5, 1), 1);
+  assert.equal(focusNormalizeMinChildCount(100, 1), 99);
+  assert.equal(focusNormalizeMinChildCount(3.7, 1), 3);
+  assert.equal(focusNormalizeMinChildCount('abc', 1), 1);
+  assert.equal(focusNormalizeMinChildCount(null, 4), 4);
+  assert.equal(focusNormalizeMinChildCount('', 2), 2);
+  assert.equal(focusMinChildCountValid(1), true);
+  assert.equal(focusMinChildCountValid(99), true);
+  assert.equal(focusMinChildCountValid('7'), true);
+  assert.equal(focusMinChildCountValid(0), false);
+  assert.equal(focusMinChildCountValid(100), false);
+  assert.equal(focusMinChildCountValid(2.5), false);
+  assert.equal(focusMinChildCountValid(''), false);
+});
+
+test('计划参数落库：任意层级新建与子级新建都能带截止日期与最小下级数', () => {
+  let st = focusSetPlanMode(focusDefaultState(), true).state;
+  const due = new Date(2026, 2, 1, 23, 59, 59, 0).getTime();
+  // 入口一：顶层新建任意层级
+  ['group', 'corps', 'army'].forEach(function (level) {
+    const r = focusCreateOrg(st, {
+      level: level, name: 'T-' + level, fromPlan: true, dueAt: '2026-03-01', minChildCount: 7
+    }, NOW);
+    assert.equal(r.ok, true, level);
+    assert.equal(r.org.level, level);
+    assert.equal(r.org.dueAt, due);
+    assert.equal(r.org.minChildCount, 7);
+    assert.equal(r.org.fromPlan, true);
+    assert.equal(r.org.formalized, false);
+    assert.equal(focusOrgCanFormalize(r.state, r.org.id).need, 7);
+  });
+  // 入口二：子级新建（层次由父级显式层次决定）
+  const cr = focusCreateOrg(st, { level: 'corps', name: 'C', fromPlan: true }, NOW);
+  st = cr.state;
+  const childLevel = focusChildLevelOf(cr.org.level);
+  assert.equal(childLevel, 'group');
+  const kid = focusCreateOrg(st, {
+    level: childLevel, parentId: cr.org.id, name: '子', fromPlan: true, dueAt: '2026-05-20', minChildCount: 2
+  }, NOW);
+  assert.equal(kid.ok, true);
+  assert.equal(kid.org.level, 'group');
+  assert.equal(kid.org.parentId, cr.org.id);
+  assert.equal(kid.org.dueAt, new Date(2026, 4, 20, 23, 59, 59, 0).getTime());
+  assert.equal(kid.org.minChildCount, 2);
+  // 两入口共用校验：非法日期同样被拒（不落库）
+  const badTop = focusCreateOrg(st, { level: 'group', fromPlan: true, dueAt: '2026-02-30' }, NOW);
+  assert.equal(badTop.ok, false);
+  assert.equal(badTop.reason, 'bad_due');
+  assert.equal(badTop.org, null);
+  const badKid = focusCreateOrg(st, { level: 'group', parentId: cr.org.id, fromPlan: true, dueAt: '2026-02-30' }, NOW);
+  assert.equal(badKid.ok, false);
+  assert.equal(badKid.reason, 'bad_due');
+  assert.equal(badKid.state.orgs.length, st.orgs.length);
+  // 越界最小下级数：两入口同样收敛到 1..99
+  assert.equal(focusCreateOrg(st, { level: 'group', fromPlan: true, minChildCount: 0 }, NOW).org.minChildCount, 1);
+  assert.equal(focusCreateOrg(st, { level: 'group', fromPlan: true, minChildCount: 250 }, NOW).org.minChildCount, 99);
+  assert.equal(focusCreateOrg(st, { level: 'army', fromPlan: true, minChildCount: -3 }, NOW).org.minChildCount, 1);
+});
+
+test('三三制批量创建：同样接受截止日期与最小下级数', () => {
+  let st = focusSetPlanMode(focusDefaultState(), true).state;
+  const r = focusTemplateTriad(st, { count: 3, dueAt: '2026-04-10', minChildCount: 2 }, NOW);
+  assert.equal(r.created.length, 3);
+  const due = new Date(2026, 3, 10, 23, 59, 59, 0).getTime();
+  r.created.forEach(function (o) {
+    assert.equal(o.dueAt, due);
+    assert.equal(o.minChildCount, 2);
+  });
+  assert.equal(focusTemplateTriad(st, { count: 3, dueAt: '2026-04-31' }, NOW).reason, 'bad_due');
+});
+
+// ---------- 序号复用 ----------
+
+test('focusNextSeq / focusMaxSeq：同层最小空缺，sanitize 收敛历史计数器', () => {
+  const st = focusSanitizeState({
+    seq: { unit: 7, group: 7, corps: 7, army: 7 },
+    chains: [{ id: 'n1', tier: 'normal' }],
+    units: [{ id: 'u1', chainId: 'n1', seq: 2 }, { id: 'u2', chainId: 'n1', seq: 5 }],
+    orgs: [
+      { id: 'g1', level: 'group', seq: 3 },
+      { id: 'g2', level: 'group', seq: 1 },
+      { id: 'c1', level: 'corps', seq: 4 }
+    ]
+  });
+  // 计数器与现存节点取齐（历史虚线不跳号）
+  assert.equal(st.seq.unit, 5);
+  assert.equal(st.seq.group, 3);
+  assert.equal(st.seq.corps, 4);
+  assert.equal(st.seq.army, 0);
+  assert.equal(focusMaxSeq(st, 'unit'), 5);
+  assert.equal(focusMaxSeq(st, 'group'), 3);
+  assert.equal(focusMaxSeq(st, 'corps'), 4);
+  assert.equal(focusMaxSeq(st, 'army'), 0);
+  // 组：1、3 占用 → 复用最小空缺 2
+  assert.equal(focusNextSeq(st, 'group'), 2);
+  // 层间独立
+  assert.equal(focusNextSeq(st, 'corps'), 1);
+  assert.equal(focusNextSeq(st, 'army'), 1);
+  // 单元流水独立于编制
+  assert.equal(focusNextSeq(st, 'unit'), 1);
+  assert.equal(focusNextSeq(st, 'squad'), 0);
+  assert.equal(focusNextSeq(focusDefaultState(), 'group'), 1);
+});
+
+test('删除编制后同层复用最小空缺号：级联删除同时回收多级', () => {
+  let st = focusSetPlanMode(focusDefaultState(), true).state;
+  const c = focusCreateOrg(st, { level: 'corps', name: 'C' }, NOW);
+  st = c.state;
+  const g1 = focusCreateOrg(st, { level: 'group', name: 'G1', parentId: c.org.id }, NOW);
+  st = g1.state;
+  const g2 = focusCreateOrg(st, { level: 'group', name: 'G2', parentId: c.org.id }, NOW);
+  st = g2.state;
+  assert.deepEqual([g1.org.seq, g2.org.seq], [1, 2]);
+  // 删除群 → 级联删两个组 → 组、群都回到 1 可用
+  const del = focusDeleteOrg(st, c.org.id, NOW);
+  assert.equal(del.ok, true);
+  st = del.state;
+  assert.equal(st.orgs.filter(function (o) { return o.level === 'group'; }).length, 0);
+  assert.equal(st.seq.group, 0);
+  assert.equal(st.seq.corps, 0);
+  assert.equal(focusNextSeq(st, 'group'), 1);
+  assert.equal(focusNextSeq(st, 'corps'), 1);
+  // 单元不受影响（其 orgId 被清空，番号不变）
+  st.units.forEach(function (u) { assert.equal(u.orgId, null); });
+});
+
+test('下一级任务数按显式层次统计：组看单元、群看组、集团看群', () => {
+  let st = makeState();
+  const c = focusCreateOrg(st, { level: 'corps', name: 'C', fromPlan: true, minChildCount: 2 }, NOW);
+  st = c.state;
+  assert.equal(focusNextLevelCount(st, c.org.id), 0);
+  // 群里只有 1 个组 → 未达最低下级数
+  const g1 = focusCreateOrg(st, { level: 'group', name: 'G1', parentId: c.org.id }, NOW);
+  st = g1.state;
+  assert.equal(focusNextLevelCount(st, c.org.id), 1);
+  assert.equal(focusOrgCanFormalize(st, c.org.id).ok, false);
+  assert.equal(focusOrgCanFormalize(st, c.org.id).need, 2);
+  const g2 = focusCreateOrg(st, { level: 'group', name: 'G2', parentId: c.org.id }, NOW);
+  st = g2.state;
+  assert.equal(focusNextLevelCount(st, c.org.id), 2);
+  assert.equal(focusOrgCanFormalize(st, c.org.id).ok, true);
+  assert.equal(focusFormalizeOrg(st, c.org.id, NOW).ok, true);
+
+  // 组看的是单元，不是子 org
+  const gOnly = focusCreateOrg(st, { level: 'group', name: 'GX', fromPlan: true }, NOW);
+  st = gOnly.state;
+  assert.equal(focusNextLevelCount(st, gOnly.org.id), 0);
+  st = addUnits(st, 1, 700);
+  st = focusAssignUnit(st, st.units[st.units.length - 1].id, gOnly.org.id, NOW).state;
+  assert.equal(focusNextLevelCount(st, gOnly.org.id), 1);
+  // 集团看的是群
+  const a = focusCreateOrg(st, { level: 'army', name: 'A', fromPlan: true }, NOW);
+  st = a.state;
+  const c2 = focusCreateOrg(st, { level: 'corps', name: 'C2', parentId: a.org.id }, NOW);
+  st = c2.state;
+  assert.equal(focusNextLevelCount(st, a.org.id), 1);
+  assert.equal(focusNextLevelCount(st, 'nope'), 0);
+});
+
+// ---------- t8：四级视觉差异 / 归属可见 / 悬浮提醒 ----------
+
+test('层级视觉：符号与番号前缀一致，任意两层至少两项不同', () => {
+  assert.deepEqual(FOCUS_LEVEL_VISUAL_KEYS, ['symbol', 'fontSize', 'fontWeight', 'borderWidth']);
+  FOCUS_LEVEL_KEYS.forEach(function (lv) {
+    const v = focusLevelVisual(lv);
+    assert.ok(v, 'visual 缺失：' + lv);
+    assert.equal(v.level, lv);
+    assert.equal(v.rank, FOCUS_LEVEL_RANK[lv]);
+    assert.equal(v.symbol, FOCUS_SEQ_KEYS[lv]);
+    assert.equal(typeof v.fontSize, 'number');
+    assert.equal(typeof v.fontWeight, 'number');
+    assert.equal(typeof v.borderWidth, 'number');
+    assert.ok(v.borderColor && v.tint, '颜色/底色缺失：' + lv);
+  });
+  for (let i = 0; i < FOCUS_LEVEL_KEYS.length; i++) {
+    for (let j = i + 1; j < FOCUS_LEVEL_KEYS.length; j++) {
+      const a = FOCUS_LEVEL_KEYS[i];
+      const b = FOCUS_LEVEL_KEYS[j];
+      const d = focusLevelVisualDelta(a, b);
+      assert.ok(d >= 2, a + ' vs ' + b + ' 仅 ' + d + ' 项不同');
+    }
+  }
+  assert.equal(focusLevelVisualDelta('unit', 'unit'), 0);
+  assert.equal(focusLevelVisualDelta('unit', 'squad'), -1);
+  assert.equal(focusLevelVisual('squad'), null);
+  // 视觉规范与层次表同源
+  assert.equal(FOCUS_LEVEL_VISUALS.army.symbol, FOCUS_SEQ_KEYS.army);
+});
+
+test('层级视觉：字号/字重/边框逐级递增，徽标用自定义层次名', () => {
+  const sizes = FOCUS_LEVEL_KEYS.map(function (lv) { return focusLevelVisual(lv).fontSize; });
+  const weights = FOCUS_LEVEL_KEYS.map(function (lv) { return focusLevelVisual(lv).fontWeight; });
+  const borders = FOCUS_LEVEL_KEYS.map(function (lv) { return focusLevelVisual(lv).borderWidth; });
+  [sizes, weights, borders].forEach(function (arr) {
+    for (let i = 1; i < arr.length; i++) {
+      assert.ok(arr[i] > arr[i - 1], '未递增：' + JSON.stringify(arr));
+    }
+  });
+  let st = focusDefaultState();
+  st = focusSetLevelName(st, 'group', '小队', NOW).state;
+  assert.equal(focusLevelBadge('group', st.settings, 3).text, '● 小队 3');
+  assert.equal(focusLevelBadge('group', st.settings, 3).name, '小队');
+  assert.equal(focusLevelBadge('unit', st.settings, 0).text, '# 任务单元');
+  assert.equal(focusLevelBadge('squad', st.settings, 1), null);
+});
+
+test('树行带显式层级与视觉规范（单元行 level=unit）', () => {
+  let st = makeState();
+  const gr = focusCreateOrg(st, { level: 'group', name: '写作', fromPlan: true }, NOW);
+  st = gr.state;
+  st = startAndFinish(st, 'n1', NOW, NOW + 25 * MIN).state;
+  const unitId = st.units[0].id;
+  st = focusAssignUnit(st, unitId, gr.org.id, NOW).state;
+
+  const rows = focusTreeRows(st, {});
+  const uRow = rows.filter(function (r) { return r.kind === 'unit' && r.id === unitId; })[0];
+  assert.equal(uRow.level, 'unit');
+  assert.equal(uRow.visual.symbol, '#');
+  assert.equal(uRow.visual.fontSize, focusLevelVisual('unit').fontSize);
+  const gRow = rows.filter(function (r) { return r.kind === 'org' && r.id === gr.org.id; })[0];
+  assert.equal(gRow.level, 'group');
+  assert.equal(gRow.visual, focusLevelVisual('group'));
+  assert.equal(gRow.parent.attached, false);
+  assert.equal(gRow.parent.text, '未编入');
+  const rootRow = rows.filter(function (r) { return r.kind === 'root'; })[0];
+  assert.equal(rootRow.level, undefined);
+  assert.ok(rootRow.visual == null);
+});
+
+test('归属可见：单元显示父级符号与名称，跨层级编入后立即更新', () => {
+  let st = makeState();
+  const gr = focusCreateOrg(st, { level: 'group', name: '写作', fromPlan: true }, NOW);
+  st = gr.state;
+  st = startAndFinish(st, 'n1', NOW, NOW + 25 * MIN).state;
+  const unitId = st.units[0].id;
+
+  let a = focusParentAttribution(st, unitId);
+  assert.equal(a.level, 'unit');
+  assert.equal(a.attached, false);
+  assert.equal(a.text, '未编入');
+  assert.equal(a.parentSymbol, '·');
+  assert.equal(focusParentAttribution(st, 'missing'), null);
+
+  st = focusAssignUnit(st, unitId, gr.org.id, NOW).state;
+  a = focusParentAttribution(st, unitId);
+  assert.equal(a.attached, true);
+  assert.equal(a.parentId, gr.org.id);
+  assert.equal(a.parentLevel, 'group');
+  assert.equal(a.parentSymbol, '●');
+  assert.equal(a.parentSeq, 1);
+  assert.equal(a.parentName, '写作');
+  assert.equal(a.text, '归属 ●1 写作');
+
+  // 组挂到群下：组自身层次仍是 group（由显式类型判定），归属变为 corps/▲
+  const cr = focusCreateOrg(st, { level: 'corps', name: '论文', fromPlan: true }, NOW);
+  st = cr.state;
+  const att = focusAttachNodes(st, [gr.org.id], cr.org.id, NOW);
+  assert.equal(att.ok, true);
+  st = att.state;
+  const gAttr = focusParentAttribution(st, gr.org.id);
+  assert.equal(gAttr.level, 'group');
+  assert.equal(gAttr.parentLevel, 'corps');
+  assert.equal(gAttr.parentSymbol, '▲');
+  assert.equal(gAttr.parentId, cr.org.id);
+  assert.equal(gAttr.text, '归属 ▲1 论文');
+  assert.equal(focusNodeLevel(st, gr.org.id), 'group');
+  // 单元归属不受影响（父级仍是那个组）
+  assert.equal(focusParentAttribution(st, unitId).parentLevel, 'group');
+});
+
+test('悬浮提醒：空闲不显示；专注走秒、到点、无 DOM 环境安全', () => {
+  let st = makeState();
+  assert.equal(focusReminderInfo(st, NOW).visible, false);
+  assert.equal(focusReminderInfo(null, NOW).visible, false);
+
+  const sit = focusSitDown(st, 'n1', NOW, { taskText: '精读一章', minutes: 25 });
+  assert.equal(sit.ok, true);
+  st = sit.state;
+  let info = focusReminderInfo(st, NOW + 10 * MIN);
+  assert.equal(info.visible, true);
+  assert.equal(info.mode, 'focus');
+  assert.equal(info.level, 'unit');
+  assert.equal(info.symbol, '#');
+  assert.equal(info.remainMs, 15 * MIN);
+  assert.equal(info.clock, '15:00');
+  assert.equal(info.plannedMin, 25);
+  assert.equal(info.elapsedMin, 10);
+  assert.equal(info.progressPct, 40);
+  assert.ok(info.subtitle.indexOf('精读一章') >= 0);
+  assert.ok(info.key && info.key.indexOf('n1:') === 0, 'key=' + info.key);
+  // 走秒：同一状态在更晚的 now 下剩余更少
+  assert.equal(focusReminderInfo(st, NOW + 10 * MIN + 1000).remainMs, 15 * MIN - 1000);
+  // 到点
+  const later = focusReminderInfo(st, NOW + 26 * MIN);
+  assert.equal(later.remainMs, 0);
+  assert.equal(later.expired, true);
+  assert.equal(later.clock, '0:00');
+  assert.equal(later.progressPct, 100);
+  // 无 DOM：同步/启动/清理安全返回，不抛
+  assert.equal(focusReminderStart(), false);
+  assert.equal(focusReminderClear(), undefined);
+  const sync = focusReminderSync(NOW, true);
+  assert.equal(sync.rendered, false);
+  assert.equal(sync.visible, false);
+  assert.equal(typeof FOCUS_REMINDER_UI_KEY, 'string');
+});
+
+test('悬浮提醒：预约保留期倒计时，侦查显示侦查中', () => {
+  let st = makeState();
+  const res = focusReserve(st, 'n1', NOW);
+  assert.equal(res.ok, true);
+  st = res.state;
+  let info = focusReminderInfo(st, NOW + 5 * MIN);
+  assert.equal(info.visible, true);
+  assert.equal(info.mode, 'reserve');
+  assert.equal(info.remainMs, 10 * MIN);
+  assert.equal(info.clock, '10:00');
+  assert.equal(focusReminderInfo(st, NOW + 16 * MIN).expired, true);
+
+  // 侦查进行中优先显示侦查（同一状态上不得被预约分支抢走）
+  let st2 = makeState();
+  const sc = focusScoutStart(st2, 'n1', NOW, { taskText: '找资料', minutes: 10 });
+  assert.equal(sc.ok, true);
+  st2 = sc.state;
+  info = focusReminderInfo(st2, NOW + 4 * MIN);
+  assert.equal(info.mode, 'scout');
+  assert.equal(info.title, '侦查进行中');
+  assert.equal(info.remainMs, 6 * MIN);
+  assert.equal(info.clock, '6:00');
+  assert.equal(info.plannedMin, 10);
 });

@@ -60,6 +60,48 @@
 
 当前 25 科 id：`math3 econ stats politics corp inv music poem py mon fsa sishu acct clang cppl java js rust ai social jp kr fr es wujing`。
 
+## 题库数据（`data/bank_*.js` · `window.BANK`）
+
+题库是**独立于学科数据**的第二套静态内容（POC 首批 47 题 → t19 逐题溯源审计后 45 题：修正 28 题、移除 2 题因题源标注不实/文字层不可还原，详见 `backup/scratch/bank-audit/audit.md`；t27 经 `read_image` 视觉转写补入 2023/2024/2025 三年 9 道选择题（54 题，见 `backup/scratch/bank-vision/audit-vision.md`）；t30 订正 2023 第 1/2 题、补入 2025 第 3 题 → **现行 55 题**，见 `backup/scratch/bank-fix2/t30-report.md`、复核 `backup/scratch/verify-vision2/t31-report.md`）：`data/bank_math3.js` / `data/bank_econ.js` / `data/bank_stats.js`，各自写入 `window.BANK.<subj>`（与 `window.SUBJECTS.<id>` 并列，互不污染）。读取方是 `src/bank.mjs`；加载与预缓存要**两处同改**：`index.html` 的 `data/bank_*.js` 段（`index.html:131-133`，紧跟各科数据、在 `app.js` 之前）与 `sw.js:41-43`。
+
+### 顶层形状
+
+`window.BANK.<subj> = { id, name, subjectId, sourceNote, types[], questions[] }`
+
+| 字段 | 必需 | 类型 | 含义 |
+|---|---|---|---|
+| `id` | 是 | string | 必须等于文件名里的 `<subj>`（`bank_math3.js` → `math3`），`check_data` 强制 |
+| `name` | 是 | string | 全名，如 `考研数学三` |
+| `subjectId` | 是 | string | 对应的 `window.SUBJECTS` 科 id（知识点标签反查用） |
+| `sourceNote` | 是 | string | 题源说明（取自哪几本真题册/解析册、文字层可读性、未入库年份及原因） |
+| `types` | 是 | Type[] | 题型字典，非空 |
+| `questions` | 是 | Question[] | 真题，非空 |
+
+当前三科口径（t30 落定后实测）：合计 **55 题** —— `math3` **24 题 / 12 题型**（2012、2013、2019、2023、2024、2025；题型分布 `evalAns` 4 · `econ` 3 · `ode` 3 · `linalg` 3 · `deriv` 2 · `integral` 2 · `eigen` 2，`limit`/`dblint`/`series`/`proof`/`estimate` 各 1；其中 `integral`（积分与变限积分）与 `series`（级数敛散性判别，t30 新增）为 t27/t30 补题带出的新题型键；库内难度 2★×4 / 3★×9 / 4★×9 / 5★×2，14 题带 `options`（选择题）、10 题不带）；`econ` 15 题 / 6 题型（2016–2020；`consumer` 2 · `market` 2 · `intertemporal` 3 · `oligopoly` 3 · `externality` 3 · `frontier` 2；3★×2 / 4★×9 / 5★×4）；`stats` 16 题 / 6 题型（2016–2020；`regress` 6 · `testing` 4 · `corr` 2 · `chi` 2 · `estimate` 1 · `sampdist` 1；3★×3 / 4★×9 / 5★×4）。
+
+### Type（题型）
+
+`{ key, name, def, judge, sample }`——`key` 科内唯一（`check_data` 强制），且必须被至少一道题命中；`def` 定义 / `judge` 判据 / `sample` 示例题号（如 `2013-Q1`）。**题型频率（自带五星）不写进数据**：由题库模块按库内实际频次统计（`bankTypeStars`：占比 ≥0.18 → 5★、≥0.13 → 4★、否则 3★）。
+
+### Question（每题）
+
+| 字段 | 必需 | 含义 |
+|---|---|---|
+| `id` | 是 | 科内唯一，风格 `<科前缀>-<年>-<序>`，如 `m3-2019-12` / `ec-2016-1` / `st-2016-1`（t19 移除了 `m3-2019-6`、`m3-2019-13`，勿再复用这两个 id） |
+| `year` / `no` | 是 | 年份 / 题号（如 `二(13)`） |
+| `type` | 是 | 必须是本文件 `types[].key`（`check_data` 强制） |
+| `tags` | 是 | 知识点标签，**只放「现有知识点的 id」**——名字与自带难度在运行时由 `src/bank.mjs` 从 `window.SUBJECTS.<subjectId>` 反查，不复制、不改写知识点数据 |
+| `star` | 是 | 库内难度 1–5 整数（**不是**知识点自带五星） |
+| `stem` | 是 | 题干（LaTeX；源 PDF 文字层残损处按题号与解析上下文复原，依据写在 `src.note`，不虚构条件与结论） |
+| `options?` | 否 | 选择题选项——**选择题恰 4 项、填空/解答题不得有选项**，由 `tests/bank.test.mjs` 按期望答案表逐题断言（见「校验归属」） |
+| `answer` | 是 | 答案与解析 |
+| `traps` | 是 | 陷阱 |
+| `hint` | 是 | 提示 |
+| `school` | 是 | 题源院校/科目（t19 起），取自来源册的题块标题、**不得猜测或泛指**，且必须含 `year` 四位数字——如 `北京大学光华-431 金融学统计 2016 年`、`全国硕士研究生入学统一考试-数学三 2012 年`（数学三 2019 / 2023 / 2024 年题为 `全国硕士研究生招生考试-数学三 …`，2012 / 2013 / 2025 年题为 `全国硕士研究生入学统一考试-数学三 …`）。`check_data` 强制非空 + 与 `year` 一致 + 与 `src.file` 同源（规则表见下） |
+| `src` | 是 | `{ file, page, no, note }`——真题出处，`file` 与 `no` 必填（**仅真实真题**，无真题不入库）；`page` 为来源 txt/PDF 页号，`note` 记录文字层残损处的复原依据 |
+
+`school` 的渲染口径：题库徽标「院校 · 年度 · 题号」由 `src/bank.mjs` 的 `bankSchoolLabel(q)` 产出——`q.school`（`trim()` 后非空）→ 兜底 `q.subjectLabel` → `BANK_SUBJECT_META[subject].label` → `q.subject`；`school` 字符串本身已含年份，徽标随后仍单列 `year · no`（如 `…-数学三 2012 年` + `2012 · 一(1)`）。
+
 ## 学习库 DB（每科一份）
 
 `localStorage['<subjId>_formula_srs_v1']`，顶层：
@@ -106,8 +148,11 @@
 | `q` / `a` / `a2` | 题干 / 解析 / 另一解 |
 | `src` | 来源 |
 | `linked` | 关联知识卡 id 数组 |
+| `linkedMastery` | **关联知识点联动开关**：`1` 开（错题评分影响关联知识卡掌握度）/ `0` 关（只走错题卡自身调度）。默认 `1`；`sanitizeWrongCard` 只在显式 `=== 0` 时保留 0，其余一律收敛为 1——**旧数据缺字段按 1 处理**（历史得降级行为不回滚，新评分按新规则） |
 | `errType` | 错误类型标签 |
 | `lastSolveMs` | 上次重做用时 |
+
+`linkedMastery = 0` 目前只有一处自动写入：例题入错题（`wrong.mjs` 的 `markAsWrong`）——例题只进错题本、只按自身调度复习，不再改动关联知识点；手动录入的错题（`saveWrongInput`）保持默认 `1`，行为与既往一致。降级调用点在 `demoteLinked(w, rating)`（`r <= 1` 时触发），三道早退：`linkedMastery === 0`、无 `linked` 关联、`rating > 1`。云同步与导入导出**整卡透传**，不做字段级改写。
 
 ### settings
 
@@ -120,6 +165,7 @@
 | `goalTitle` | `'考研'` | 倒计时目标名 |
 | `bareRecall` | false | 裸回忆（隐藏分类徽标） |
 | `beginner` | — | `{ on: boolean, cats: catKey[], sid?: string }` 初学者模式与勾选章节；`sid` 为配置归属学科，切科/导入时用 `resolveBeginner` 对齐当前科 CATS（过期键自愈，跨科残留丢弃） |
+| `quizCfg` | `{ cards: {…}, wrong: {…} }` | **自测配置**，按来源分开存（知识卡 / 错题）。每份 `{ count, cats, diff, mastery }`，缺省 `{ count: 10, cats: [], diff: [1, 10], mastery: [0, 100] }`：`count` 取整夹 1–50；`cats` 只保留非空字符串并去重（分类白名单属学科层知识，store 层不校验，读取侧 `quizSanitizeConfig` 会用当前科 `CATS` 再净化一次）；`diff` 夹 1–10、`mastery` 夹 0–100，区间逆序自动交换。形状由 `storeQuizCfg` / `storeQuizCfgOne` 定义 |
 
 `targetH` 已迁移为 `targetS`（勿再写入）。
 
@@ -127,8 +173,9 @@
 
 | 字段 | 含义 |
 |---|---|
-| `counts` | `{ [YYYY-MM-DD]: { n, r, w, intro } }`：n 新学 / r 复习 / w 错题重做 / intro 当日引入新卡数 |
+| `counts` | `{ [YYYY-MM-DD]: { n, r, w, intro, q } }`：n 新学 / r 复习 / w 错题重做 / intro 当日引入新卡数 / **q 当日自测题数**（与 n/r/w/a 同层，由 `quizSaveRecord` 累加本场 `total`） |
 | `revlogs` | 评分日志数组（FSRS 训练地基，上限 4 万裁最旧；只增） |
+| `quiz` | **自测记录数组**（`quizSaveRecord` 写入；上限 200 条、超出裁最旧。写入侧常量是 `src/quiz.mjs` 的 `QUIZ_MAX_RECORDS`，读取/导入侧是 `src/store.mjs` 的 `STORED_QUIZ_MAX_RECORDS`，云同步侧是 `src/sync.mjs` 的 `SYNC_QUIZ_MAX`——三处同值 200，改一处必须三处同改）。单条见下 |
 | `daily` | 每日计数（`{ [date]: number }`） |
 | `studyTime` | `{ [date]: 毫秒 }` 前台学习时长（**不是分钟**；展示时 `/60000`） |
 | `detail` | 逐日逐卡计数 |
@@ -137,6 +184,11 @@
 | `newIntro` | `{ ids: string[] }` **已引入新卡并集**（非「今日」；今日引入数在 `counts[date].intro`） |
 
 `revlogs` 单条（`pushRevlog`）：`{ t, cid, r, st, ivl, k }`——时间戳 / 卡 id / 评分 1–4 / 评分前状态编码（new=0, learning=1, review=2, relearning=3）/ 本次间隔 / 类型 `k`：知识卡 `'k'`、错题重做 `'w'`。对齐 FSRS 优化器复习日志。
+
+`quiz` 单条（`quizSaveRecord`）：`{ t, mode, total, correct, pct, ms, msAvg, predicted, gap, verdict, byCat, weak, queued, diff, mastery, cats }`——本场开始时刻 / 来源 `'cards' | 'wrong'` / 题数 / 答对 / 正确率 % / 总用时 ms / 每题均时 / 预测掌握度 % / 差距 `pct - predicted` / 档位 / 逐章 `[{ c, n, ok }]` / 表现差入队 id / 入队张数 / 本场配置（难度区间 · 掌握度区间 · 章节）。
+
+- **存储层只校验、不解释**：`storedQuizRecordValid` 只要求「普通对象且 `t` 为有限数」（时间戳是云同步去重键），其余字段一律原样保留——存储层二次解释只会在将来加字段时静默丢数据。
+- 加载与导入两条路径都过 `storeQuizRecords`：非法元素**单独丢弃**（不整块清空）、逐条深拷贝（导入后不与来源共享引用）、超限只留最新。
 
 ### normalizeDB 自愈规则（读旧数据必知）
 
@@ -173,7 +225,23 @@
 
 ## 云同步合并（摘要）
 
-见 `docs/ARCHITECTURE.md`。要点：`cards`/`wrongs` 并集按卡选边；`revlogs` 按「时间+卡片+评分」去重并集；日志逐日取大；设置本地优先。
+见 `docs/ARCHITECTURE.md`。逐段口径：
+
+| 段 | 合并规则 |
+|---|---|
+| `cards` / `wrongs` | 并集；同卡按 `lastR` 等选边，仅一侧存在则整份采用 |
+| `custom` / `cardOverrides` / `customRel` | 并集，冲突本地优先 |
+| `log.daily` / `log.studyTime` | 逐日取大（同时段两端学习取 max，**不相加**） |
+| `log.counts` / `log.detail` | 逐日（逐字段 / 逐卡）取大 |
+| `log.checkins` | 取「或」 |
+| `log.mastery` / `log.metrics` | 取当日 `studyTime` 较长一侧的快照 |
+| `log.newIntro.ids` | 并集（本地在前） |
+| `log.revlogs` | 按 `t|cid|r` 去重并集、`t` 升序、超 4 万裁最旧 |
+| `log.quiz` | 按 `String(t)` 去重并集（本地在前 → 同 `t` 以本地记录为准）、`t` 升序、超 200 留最新 |
+| `settings` | 本地优先（正在使用的设备）；`updatedAt` / `schemaVersion` 取大 |
+
+- **合并不刷新 `updatedAt`**：`updatedAt` 取两端 max，去重键是内容本身（时间戳），不是计数器——写回时不得刷新（见 `ARCHITECTURE.md` §云同步）。
+- **畸形载荷防御**：`mergeDb` 起手用 `syncSafeMap`（非对象 → `{}`）/ `syncSafeList`（非数组 → `[]`）把外层容器降级，按「该侧没有这段数据」继续；口径是**只守外层容器、不深度净化日值**（曾净化 `counts` 日值，把 `counts: { d2: 4 }` 洗成 `{}`，已回退）。修复后 `out.log.revlogs` 恒为数组。
 
 ## 导出格式
 
@@ -200,9 +268,20 @@
 | 结构：重复 id / META 缺失 / REL·EXAMPLE 断裂 / 非法 cat | `check_data` | **ERR** |
 | 散文 `**` / `$` 未成对（剥 `~~~` 后） | `check_data` | **WARN**（不致 exit 1） |
 | 渲染后 katex-error / 残留 `\textbf`·`\n` 等命令 / 字面 `**` | `check_render` | **ERR** |
+| 题库：`BANK_FILES` 未挂载 `window.BANK.<subj>` / `id` 与文件名不符 / 缺 `name`·`sourceNote` / `types`·`questions` 为空 | `check_data`（`BANK_FILES` 见 `tools/check_data.mjs:27`） | **ERR** |
+| 题库：题目 id 重复；缺 `stem`/`answer`/`traps`/`hint`/`year`/`no`/`type`/`tags`/`school`/`src`；`star` 非 1–5 整数；`type` 不在 `types` 内；`tags` 不是真实卡 id；`src.file`·`src.no` 缺失 | `check_data`（标签池 = 该科真实卡 id，故要求 `window.SUBJECTS` 先加载） | **ERR** |
+| 题库：`school` 缺失/空、`school` 不含 `year`、`school` 与 `src.file` 不同源（`SRC_SCHOOL_RULES`：JYSG 真题册 → 必含「光华」+「431」；数学三解析册 → 必含「数学三」） | `check_data`（`SRC_SCHOOL_RULES` 见 `tools/check_data.mjs:32-35`；同源关键词只取自来源册题块标题，不容许猜测/泛指） | **ERR** |
+| 题库：`src.file` 未被同源规则覆盖；`school` 年份与 `src.file` 四位年份不一致 | `check_data` | **WARN**（不致 exit 1） |
+| 题库：题型 key 重复、题型缺 `name`·`def`·`judge`·`sample` | `check_data` | **ERR** |
+| 题库：某题型无任何题目命中 | `check_data` | **WARN**（不致 exit 1） |
+| 题库：题干·解析·陷阱·提示泄漏内部编号 / `**`·`$` 未成对 | `check_data` | **ERR** / **WARN** |
+| 题库：数学三答案被改写（选择题字母与期望表不符 / 填空·解答题的结论锚点丢失）、新增或删除 math3 题未同步补期望表、选择题选项数不为 4、填空/解答题带了选项 | `tests/bank.test.mjs`（期望表 `tests/fixtures/bank-answer-manifest.json`，守卫 `:212-255`；`letterOf()` 正则 `:233-240`） | **ERR**（`node --test` 失败） |
+| 题库：题量掉到下限以下（math3 < 24 / econ < 15 / stats < 15 / 合计 < 55） | `tests/bank.test.mjs`（`MIN_QUESTIONS` `:62`、`MIN_TOTAL` `:63`） | **ERR**（2.2.0 全量入库后应上调） |
 | 加粗 `\textbf{}` 与 `**…**` 勿混用 | 风格约定（`AGENTS.md`） | 无工具强制 |
 
 新增/修改字段时：更新本文 + `normalizeDB`/`sanitize*` + 同步合并 + 导入导出，并补 `tests/` 若行为可测。
+
+**答案护栏的期望表是第二个事实源**：`tests/fixtures/bank-answer-manifest.json` 逐题记 `kind`（`choice` → 字母 / `fill` → 锚点）+ 转录出处（`src`），`_meta.provenance` 明写「手工逐题转录、不得由脚本从数据生成」，`_meta.evidence` 指到文本层行号；因此改 `data/bank_math3.js` 的答案必须**同时**改期望表并给出处，否则 `node --test tests/bank.test.mjs` 转红。表目前只覆盖 `math3` 24 题（`econ`/`stats` 31 题待 2.2.0 按同一口径扩表）。
 
 
 ## 行动侧其它键（与学习库隔离）

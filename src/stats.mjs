@@ -274,6 +274,32 @@
     wrap.appendChild(el('h3', null, '📋 学习报告'));
     wrap.appendChild(renderStudyReport());
 
+    // —— 自测统计（T51：可配置队列 + 表现差入重学；记录见 DB.log.quiz）——
+    // 聚合窗口跟随上方「学习报告」周期 chips（日报/周报/月报/年报）
+    wrap.appendChild(el('h3', null, '📝 自测统计'));
+    const qDays = REPORT_DAYS[reportPeriod];
+    const qAll = quizLogStats(DB.log && DB.log.quiz, 0);
+    const qWin = quizLogStats(DB.log && DB.log.quiz, Date.now() - qDays * DAY);
+    const qCard = el('div', 'stat-card');
+    if (!qAll.n) {
+      qCard.appendChild(el('p', 'muted', '还没有自测记录——一级导航「自测」或错题本里的「📝 错题自测」都可先配置数量 / 章节 / 难度 / 掌握度范围，再抽题；做完给出成绩、章节表现、用时与预测差距。'));
+    } else {
+      const qkpi = function (label, val) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label)); return c; };
+      const qov = el('div', 'stat-overview');
+      qov.appendChild(qkpi('自测次数（近 ' + qDays + ' 天）', qWin.n));
+      qov.appendChild(qkpi('自测题数', qWin.totalQ + ' 题'));
+      qov.appendChild(qkpi('平均正确率', (qWin.acc == null ? '—' : qWin.acc + '%')));
+      qov.appendChild(qkpi('平均每题', qWin.totalQ ? Math.round(qWin.msAvg / 1000) + ' 秒' : '—'));
+      qov.appendChild(qkpi('表现差提前入队', qWin.queued + ' 张'));
+      qCard.appendChild(qov);
+      qCard.appendChild(el('p', 'muted', '全部历史：' + qAll.n + ' 次 · ' + qAll.totalQ + ' 题 · 正确率 ' + (qAll.acc == null ? '—' : qAll.acc + '%') + '（知识卡 ' + qAll.byMode.cards.n + ' 次 / 错题 ' + qAll.byMode.wrong.n + ' 次）'));
+      qCard.appendChild(el('p', 'muted', '「表现差」＝单题答错，或整场正确率 < ' + QUIZ_WEAK_ACC + '%：这些题按「提前复习」进入重学队列——只把到期时间移到现在，不动记忆历史。'));
+    }
+    wrap.appendChild(qCard);
+    if (qAll.n) {
+      wrap.appendChild(sparkTrend('自测正确率（%）', qAll.list.map(function (r) { return { label: fmtDate(new Date(r.t)), value: r.pct }; }), '#7C5CD6', '%', 100));
+    }
+
     // —— 未来负载预测 ——
     wrap.appendChild(el('h3', null, '📅 未来负载预测（14 天）'));
     wrap.appendChild(renderForecastCard());

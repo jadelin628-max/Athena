@@ -518,6 +518,16 @@
   let mapScale = 1;
   let mapTx = 0, mapTy = 0;
   let mapDragMoved = false;
+  // 题库（bank.mjs）会话状态：题型/知识点/难度/搜索/详情/只看未入错题。
+  // 科目范围不在这里——t17 起题库恒等于全局学科选择器（currentSubjectId）；
+  // 频率维度（bankTypeStar）与页内科目（bankSubject）已随页内科目卡/频率筛选一起下线。
+  // ⚠️ 所有 src/*.mjs 拼在同一个 IIFE 里，bank.mjs 内不得重复声明这些变量。
+  let bankType = 'all';
+  let bankTag = 'all';
+  let bankStar = 'all';
+  let bankQuery = '';
+  let bankOpen = null;
+  let bankOnlyWrong = false;
 
   // 会话级状态一键重置（切换学科 / 导入数据时调用）。
   // ⚠️ 新增会话级可变量时必须在这里同步补上——此前 switchSubject 与 importDB 各自维护
@@ -528,6 +538,9 @@
     mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; mapDragMoved = false; heatSel = null;
     browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
     wrongDeck = []; wrongFrontier = 0; wrongPos = 0; wrongExpanded = {}; wrongJumpId = null;
+    // 题库（bank.mjs）：题型/知识点/难度/搜索/详情状态（科目范围随全局学科选择器，无需复位）
+    bankType = 'all'; bankTag = 'all'; bankStar = 'all';
+    bankQuery = ''; bankOpen = null; bankOnlyWrong = false;
   }
 
   // ---------------- 通用 DOM ----------------
@@ -583,6 +596,7 @@
     if (currentView === 'statistics') return 'stats';
     if (currentView === 'principle') return 'principle';
     if (currentView === 'mile') return 'mile';
+    if (currentView === 'bank') return 'cards';
     if (currentModule === 'wrong') return 'wrong';
     if (currentModule === 'act') return 'act';
     return 'cards';
@@ -606,20 +620,24 @@
       sub.style.top = '0px';
       document.documentElement.style.setProperty('--chrome-h', '0px');
       highlightShell();
+      syncFocusReminder();
       return;
     }
     const items = currentModule === 'wrong'
       ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
       : currentModule === 'act'
-        ? [['actPlan', '计划'], ['actHabit', '习惯树'], ['actFocus', '专注链'], ['actHelp', '帮助']]
-        : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['statistics', '统计'], ['help', '帮助']];
+        ? [['actFocus', '专注链'], ['actPlan', '计划'], ['actHabit', '习惯树'], ['actHelp', '帮助']]
+        : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['bank', '题库'], ['statistics', '统计'], ['help', '帮助']];
     const icons = currentModule === 'wrong'
       ? { wrong: 'wrong', wrongBrowse: 'search', wrongStats: 'chart' }
       : currentModule === 'act'
         ? { actPlan: 'act', actHabit: 'habit', actFocus: 'act', actHelp: 'help' }
-        : { learn: 'deck', browse: 'search', quiz: 'pencil', statistics: 'chart', help: 'help' };
+        : { learn: 'deck', browse: 'search', quiz: 'pencil', bank: 'bank', statistics: 'chart', help: 'help' };
+    // 「错题自测」复用自测视图（currentModule='wrong' + currentView='quiz'，见 src/wrong.mjs 的 wrongQuizEntry），
+    // 高亮必须映射回「重做」项——否则三项（重做/浏览/统计）会全部不高亮。
+    const activeKey = (currentModule === 'wrong' && currentView === 'quiz') ? 'wrong' : currentView;
     items.forEach(function (it) {
-      const b = el('button', 'nav-btn sub-btn' + (currentView === it[0] ? ' active' : ''));
+      const b = el('button', 'nav-btn sub-btn' + (activeKey === it[0] ? ' active' : ''));
       b.appendChild(icon(icons[it[0]]));
       b.appendChild(document.createTextNode(' ' + it[1]));
       b.setAttribute('data-action', 'nav');
@@ -631,6 +649,15 @@
     sub.style.top = headerH + 'px';
     document.documentElement.style.setProperty('--chrome-h', (headerH + sub.offsetHeight) + 'px');
     highlightShell();
+    // 悬浮提醒跟随壳层每次重渲染同步：专注/预约进行时，浏览、统计等任意视图都能看到剩余时间
+    // （focus.mjs 内的 1s 定时器负责走秒，这里负责即时增删，避免视图切换后残留/滞后）
+    syncFocusReminder();
+  }
+
+  function syncFocusReminder() {
+    if (typeof focusReminderSync === 'function') {
+      try { focusReminderSync(Date.now(), false); } catch (e) { /* 提醒失败不影响导航渲染 */ }
+    }
   }
 
   // 移动端底部 Dock：V2_PLAN 四项（主页/学习/错题/行动）；统计与设置在抽屉

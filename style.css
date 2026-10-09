@@ -1714,3 +1714,507 @@ body.immersive #immersiveExit { display: block; }
   .focus-tree-row .btn { min-height: 40px; }
   .focus-tree-fold { width: 40px; height: 40px; }
 }
+
+/* ============================================================================
+   t9 · 样式落地（题库 / 自测 / 任务链层级视觉 / 悬浮提醒）
+   本段为纯追加，不改动上方任何既有规则；风格基线：蓝 --accent、粉 --accent-2、
+   沉底 --bg-sunken，圆角走 --radius/--radius-sm，亮暗两套主题（[data-theme="dark"]）
+   均只使用既有 token 与 color-mix()（本文件既有用法）。
+   ========================================================================== */
+
+/* --- 1. 题库（Linear 风知识库：细边框 1px、紧凑行距、克制用色、字号层级清晰） --- */
+.bank-view {
+  display: flex; flex-direction: column; gap: 12px;
+  max-width: 880px; margin: 0 auto; width: 100%;
+}
+/* 列表与详情共用 .bank-view；详情是单题阅读流，收紧一档行距并收窄阅读行宽 */
+.bank-detail { max-width: 760px; gap: 10px; }
+.bank-head { display: flex; flex-direction: column; gap: 8px; }
+.bank-title {
+  margin: 0; font-family: var(--font-display);
+  font-size: var(--text-xl); font-weight: 700;
+  letter-spacing: var(--tracking-tight); color: var(--text);
+}
+/* t20 · 已删除（t17 重构后无 DOM 消费者）：.bank-tabs / .bank-tab(+:hover/:is-active/相邻) / .bank-note
+   / .bank-subjects / .bank-subject(+:hover/.is-active) / .bank-subject-name / .bank-subject-count
+   / .bank-subject-src —— 证据：src/ 内 grep 零命中（仅 data-bank-facet 属性标记），
+   tests/bank.test.mjs:416 与 :738 亦断言这些类名不得再出现在源码里。 */
+/* t15 · 概览合计行：科目卡是「总量」口径（恒定），这一行是「当前筛选命中」活数。
+   未筛选时与总量相同 → 用 is-filtered 区分「正在筛选中」，避免两个数字并排却看着像打架 */
+.bank-hit {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  font-size: var(--text-sm); color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.bank-hit.is-filtered { color: var(--text); }
+.bank-hit.is-filtered .bank-hit-text { color: var(--accent); font-weight: 600; }
+.bank-empty {
+  padding: 18px 12px; text-align: center;
+  border: 1px dashed var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  font-size: var(--text-sm); color: var(--text-muted);
+}
+/* t20 · 已删除：.bank-facet / .bank-facet-type|tag|star|freq / .bank-facet-title
+   —— t17 起筛选用原生 <select>（标记改为 data-bank-facet 属性，不是类名），旧 chip 组容器不再产生。
+   t20 · 已删除：.bank-chips / .bank-chip(+:hover/.is-active) / .bank-chip-type|tag|star|freq / .bank-chip-label
+   / .bank-chip-cat / .bank-chip-stars(+.bank-star1..5) / .bank-chip-count / .bank-chip-more（同上）。
+   注意：.bank-star1..5 本身仍在用（挂在 .bank-badge 上），故 .bank-badge.bank-star1..5 规则保留在下方。 */
+.bank-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bank-count {
+  font-size: var(--text-2xs); color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.bank-reset {
+  margin-left: auto; appearance: none; cursor: pointer;
+  min-height: 26px; padding: 3px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font: inherit; font-size: var(--text-2xs); color: var(--text-muted);
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.bank-reset:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.bank-list { display: flex; flex-direction: column; gap: 6px; }
+.bank-item {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-elevated); overflow: hidden;
+  transition: border-color var(--dur) var(--ease);
+}
+.bank-item:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
+.bank-item.is-open { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+.bank-item-main {
+  padding: 9px 10px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.bank-item-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.bank-item-actions {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  padding: 0 10px 10px;
+}
+.bank-badge {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 1px 6px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg-sunken);
+  font-size: var(--text-2xs); font-weight: 600; line-height: 1.45;
+  color: var(--text-muted); white-space: nowrap;
+}
+/* t20 · 已删除：.bank-badge-subject（t17 起徽标改「院校 · 年度 · 题号」，院校段用 .bank-badge-school） */
+.bank-badge-year { color: var(--text); font-variant-numeric: tabular-nums; }
+.bank-badge-type { color: var(--accent-2); border-color: var(--accent-2-weak); background: transparent; }
+.bank-badge-freq, .bank-badge-diff { color: var(--text-muted); font-weight: 500; }
+.bank-badge.bank-star5 { color: var(--accent); }
+.bank-badge.bank-star4 { color: color-mix(in srgb, var(--accent) 70%, var(--text-faint)); }
+.bank-badge.bank-star3 { color: color-mix(in srgb, var(--accent) 48%, var(--text-faint)); }
+.bank-badge.bank-star2 { color: color-mix(in srgb, var(--accent) 30%, var(--text-faint)); }
+.bank-badge.bank-star1 { color: color-mix(in srgb, var(--accent) 16%, var(--text-faint)); }
+.bank-stem {
+  margin: 0; font-size: var(--text-sm); line-height: var(--leading-snug);
+  color: var(--text); white-space: normal; overflow-x: auto;
+}
+.bank-tag-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.bank-tag {
+  display: inline-flex; align-items: center;
+  padding: 1px 7px; border-radius: 999px;
+  border: 1px solid transparent; background: var(--bg-sunken);
+  font-size: var(--text-2xs); color: var(--text-muted); white-space: nowrap;
+}
+.bank-tag-more { border-style: dashed; border-color: var(--border); background: transparent; color: var(--text-faint); }
+.bank-btn {
+  appearance: none; cursor: pointer;
+  min-height: 28px; padding: 4px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font: inherit; font-size: var(--text-2xs); font-weight: 500;
+  color: var(--text-muted); white-space: nowrap;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+.bank-btn:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); color: var(--accent); }
+.bank-btn-wrong {
+  border-color: color-mix(in srgb, var(--accent-2) 40%, var(--border));
+  color: var(--accent-2);
+}
+.bank-btn-wrong:hover {
+  border-color: var(--accent-2); color: var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 8%, var(--bg-elevated));
+}
+.bank-btn-wrong.is-in {
+  background: color-mix(in srgb, var(--accent-2) 12%, var(--bg-elevated));
+  border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border));
+  color: var(--accent-2); font-weight: 600; cursor: default;
+}
+.bank-btn-nav { min-width: 62px; }
+/* t20 · 已删除：.bank-btn-src（「来源」按钮 → t17 改为 .bank-btn-detail「详情」；
+   .bank-btn 本身已含 white-space: nowrap，无需再补） */
+.bank-detail-bar { display: flex; align-items: center; gap: 8px; }
+.bank-back {
+  appearance: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+  min-height: 28px; padding: 4px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font: inherit; font-size: var(--text-2xs); color: var(--text-muted);
+}
+.bank-back:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); color: var(--accent); }
+.bank-detail-body {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-elevated);
+}
+.bank-stem-detail { font-size: var(--text-base); line-height: var(--leading-normal); }
+.bank-options {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  font-size: var(--text-sm); line-height: var(--leading-snug);
+}
+.bank-option { display: block; white-space: normal; overflow-x: auto; }
+.bank-sec-title {
+  margin-top: 2px;
+  font-size: var(--text-2xs); font-weight: 600;
+  letter-spacing: var(--tracking-caps); text-transform: uppercase;
+  color: var(--text-faint);
+}
+.bank-answer, .bank-traps, .bank-hint {
+  font-size: var(--text-sm); line-height: var(--leading-normal);
+  white-space: normal; overflow-x: auto;
+}
+.bank-answer { padding-left: 9px; border-left: 2px solid color-mix(in srgb, var(--accent) 60%, var(--border)); }
+.bank-traps { padding-left: 9px; border-left: 2px solid color-mix(in srgb, var(--warn) 60%, var(--border)); }
+.bank-hint { padding-left: 9px; border-left: 2px solid var(--border); color: var(--text-muted); }
+.bank-tag-row-detail { margin-top: 2px; }
+/* t20 · 已删除：.bank-src / .bank-src-title / .bank-src-file / .bank-src-loc / .bank-src-note
+   —— t17 起详情页来源明细块整体移除（数据字段 q.src 保留，原地有注释）。
+   证据：src/bank.mjs 零命中，tests/bank.test.mjs:804/:809 断言 'bank-src' 不得出现。 */
+.bank-detail-actions {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  padding-top: 2px;
+}
+
+/* --- 2. 自测（t7 配置队列 / 报告 / 弱项 / 记录行；.quiz-wrap 既有语义不动，只补间距） --- */
+.quiz-wrap { gap: 12px; }
+.quiz-config {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-elevated);
+}
+.quiz-cfg-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.quiz-cfg-label {
+  min-width: 72px;
+  font-size: var(--text-2xs); font-weight: 600;
+  letter-spacing: var(--tracking-wide); color: var(--text-muted);
+}
+.quiz-cfg-inputs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.quiz-cfg-sep { font-size: var(--text-2xs); color: var(--text-faint); }
+.quiz-cfg-num {
+  width: 64px; min-height: 28px; padding: 3px 7px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-sunken); color: var(--text);
+  font: inherit; font-size: var(--text-sm); font-variant-numeric: tabular-nums;
+  transition: border-color var(--dur) var(--ease);
+}
+.quiz-cfg-num:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.quiz-cfg-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.quiz-cfg-hint {
+  font-size: var(--text-2xs); line-height: var(--leading-snug); color: var(--text-faint);
+}
+.quiz-cfg-info {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding-top: 2px;
+  font-size: var(--text-2xs); color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+.quiz-pool-count {
+  font-weight: 600; color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.quiz-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 2px; }
+.quiz-report { display: flex; flex-direction: column; gap: 10px; }
+.quiz-report-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.quiz-opts-long { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.quiz-opt-long {
+  display: block; text-align: left; white-space: normal; overflow-x: auto;
+  line-height: var(--leading-snug);
+}
+.quiz-fb-ans { display: block; margin-top: 4px; font-size: var(--text-2xs); color: var(--text-muted); }
+.quiz-fb-tex { margin-top: 6px; white-space: normal; overflow-x: auto; }
+.quiz-weak-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.quiz-weak-item {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  font-size: var(--text-2xs); line-height: var(--leading-snug); color: var(--text-muted);
+}
+.quiz-log-row { font-size: var(--text-2xs); font-variant-numeric: tabular-nums; }
+
+/* --- 3. 浏览页「未到期·立即重学」（t3；容器布局由 inline cssText 控制，此处只写子元素） --- */
+.browse-relearn { row-gap: 6px; } /* 行内 wrap 布局由 src/browse.mjs:893 的 cssText 控制，此处只补换行后的行距 */
+.browse-relearn-btn { flex: 0 0 auto; }
+.browse-relearn-hint {
+  font-size: var(--text-2xs); color: var(--text-faint);
+  line-height: var(--leading-snug);
+}
+
+/* --- 4. 任务链层级视觉：四级严格划分（选择器文本须与 focus.mjs 的 focusCssDeclared 逐字一致，inline 兜底才让位） --- */
+.focus-tree-row[data-level="unit"],
+.focus-tree-row[data-level="group"],
+.focus-tree-row[data-level="corps"],
+.focus-tree-row[data-level="army"] { align-items: center; }
+.focus-tree-row[data-level="unit"] {
+  font-size: 12.5px; font-weight: 400;
+  border-left: 2px solid color-mix(in srgb, var(--text-muted) 70%, transparent);
+  background: color-mix(in srgb, var(--text-muted) 6%, transparent);
+}
+.focus-tree-row[data-level="group"] {
+  font-size: 14px; font-weight: 600;
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.focus-tree-row[data-level="corps"] {
+  font-size: 15.5px; font-weight: 700;
+  border-left: 4px solid var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 9%, transparent);
+}
+.focus-tree-row[data-level="army"] {
+  font-size: 17px; font-weight: 800;
+  border-left: 5px solid var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+.focus-level-unit, .focus-level-group, .focus-level-corps, .focus-level-army { letter-spacing: var(--tracking-snug); }
+.focus-tree-guide { flex: 0 0 auto; margin-right: 4px; color: var(--text-faint); }
+.focus-tree-row .focus-level-mark { display: inline-block; min-width: 16px; margin-right: 4px; text-align: center; font-weight: 700; }
+.focus-tree-row[data-level="unit"] .focus-level-mark { color: var(--text-muted); }
+.focus-tree-row[data-level="group"] .focus-level-mark { color: var(--accent); }
+.focus-tree-row[data-level="corps"] .focus-level-mark { color: var(--accent-2); }
+.focus-tree-row[data-level="army"] .focus-level-mark { color: var(--warn); }
+.focus-level-badge[data-level="group"] {
+  display: inline-block; font-size: 12.5px; font-weight: 600;
+  padding: 0 7px; margin-bottom: 2px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent); white-space: nowrap;
+}
+.focus-level-badge[data-level="corps"] {
+  display: inline-block; font-size: 13.5px; font-weight: 700;
+  padding: 0 7px; margin-bottom: 2px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-2) 55%, transparent);
+  background: color-mix(in srgb, var(--accent-2) 10%, transparent);
+  color: var(--accent-2); white-space: nowrap;
+}
+.focus-level-badge[data-level="army"] {
+  display: inline-block; font-size: 15px; font-weight: 800;
+  padding: 0 7px; margin-bottom: 2px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  color: var(--warn); white-space: nowrap;
+}
+.focus-parent-chip {
+  display: inline-block; font-size: 11.5px; font-weight: 400;
+  padding: 0 6px; margin-top: 2px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--bg-elevated);
+  color: var(--text-muted); white-space: nowrap;
+}
+.focus-parent-chip.is-free {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--warn) 55%, var(--border));
+  color: var(--warn);
+}
+.focus-parent-chip[data-parent-level="unit"] { color: var(--text-muted); }
+.focus-parent-chip[data-parent-level="group"] { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.focus-parent-chip[data-parent-level="corps"] { border-color: color-mix(in srgb, var(--accent-2) 40%, var(--border)); }
+.focus-parent-chip[data-parent-level="army"] { border-color: color-mix(in srgb, var(--warn) 40%, var(--border)); }
+
+/* --- 5. 专注 / 预约剩余时间悬浮提醒（body 直接子节点；z-index 90 高于内容与 dock，低于 toast） --- */
+.focus-reminder {
+  position: fixed; right: 14px; bottom: calc(14px + var(--dock-h, 0px));
+  z-index: 90;
+  min-width: 164px; max-width: 240px;
+  padding: 8px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-elevated); color: var(--text);
+  box-shadow: var(--shadow);
+  font-size: var(--text-sm);
+}
+.focus-reminder-head { display: flex; align-items: center; gap: 6px; }
+.focus-reminder-level {
+  font-size: var(--text-2xs); font-weight: 700;
+  letter-spacing: var(--tracking-wide); color: var(--accent);
+  white-space: nowrap;
+}
+.focus-reminder-title {
+  flex: 1; min-width: 0;
+  font-size: var(--text-xs); color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.focus-reminder-fold, .focus-reminder-close {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  display: inline-block; padding: 0 2px; font: inherit; font-size: var(--text-sm); line-height: 1;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: color var(--dur) var(--ease);
+}
+.focus-reminder-fold:hover, .focus-reminder-close:hover { color: var(--text); }
+.focus-reminder-clock {
+  margin-top: 2px;
+  font-family: var(--font-mono); font-size: var(--text-xl); font-weight: 700;
+  font-variant-numeric: tabular-nums; color: var(--text);
+  letter-spacing: var(--tracking-snug);
+}
+.focus-reminder-meta {
+  margin-top: 2px; max-width: 210px;
+  font-size: var(--text-2xs); line-height: var(--leading-snug);
+  color: var(--text-muted);
+}
+.focus-reminder.is-collapsed { min-width: 0; padding: 6px 8px; }
+.focus-reminder.is-collapsed .focus-reminder-clock,
+.focus-reminder.is-collapsed .focus-reminder-meta { display: none; }
+.focus-reminder.is-expired { border-color: color-mix(in srgb, var(--warn) 55%, var(--border)); }
+.focus-reminder.is-expired .focus-reminder-clock { color: var(--warn); }
+.focus-reminder[data-mode="appoint"] .focus-reminder-level { color: var(--accent-2); }
+.focus-reminder[data-mode="appoint"].is-expired { border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border)); }
+.focus-reminder[data-mode="appoint"].is-expired .focus-reminder-clock { color: var(--accent-2); }
+
+/* --- 6. 触屏尺寸（与文件尾部既有 @media 块同规则：只加不删） --- */
+@media (max-width: 760px) {
+  .bank-toolbar { flex-wrap: wrap; }
+  .bank-reset { margin-left: 0; }
+  /* t20 · 本行原为 `.bank-subjects { grid-template-columns: 1fr; }`：t17 起学科选择移到全局顶部选择器，
+     .bank-subjects 已无 DOM 消费者（上方规则块已删），此覆盖随之删除。
+     t20 · 原 `.bank-chip, .bank-btn, .bank-tab, ...` 中的 .bank-chip/.bank-tab 已无 DOM（同上），
+     故收窄为仍在用的三组；.bank-select 的触屏高度在文件末尾 t20 段给出。 */
+  .bank-btn, .bank-reset, .bank-back { min-height: 36px; }
+  .bank-item-main { padding: 10px; }
+  .bank-detail-body { padding: 10px; }
+  .quiz-cfg-row { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .quiz-cfg-row .quiz-cfg-chips { width: 100%; }
+  .quiz-cfg-label { min-width: 0; }
+  .quiz-cfg-num { width: 72px; min-height: 36px; }
+  .quiz-actions .btn { min-height: 40px; }
+  .focus-reminder { right: 8px; left: 8px; max-width: none; min-width: 0; }
+  .focus-reminder-clock { font-size: var(--text-lg); }
+}
+
+/* ==========================================================================================
+   t20 · 题库下拉筛选 + 来源徽标 + 标题范围行（追加段，不改动上方任何既有规则）
+   依据：T61 移交清单（来自 t17 落地的 src/bank.mjs 真实 DOM）。全部色值/尺寸走既有 token，
+   不引入新字体、新依赖、强制覆盖标记与硬编码色值；新增规则一律追加在文件末尾。
+   DOM 事实（src/bank.mjs）：
+     .bank-filters > .bank-filter.bank-filter-<type|tag|star>
+       > label.bank-filter-label[for=bank-filter-<key>] + select.bank-select.bank-select-<key>
+         > option.bank-select-option(+ .bank-select-option-more 供 disabled 的「其余 N 个知识点」)
+     .bank-head > .bank-title(icon svg.ui-icon + span.bank-title-text) + .bank-head-scope
+     列表项徽标首段改 span.bank-badge.bank-badge-school；详情动作按钮改 .bank-btn-detail
+     非题库学科空状态 = .bank-empty.bank-empty-subject
+   注意：.bank-option（详情页选项列表项）与本段无关，不要与 .bank-select-option 混用。
+   ========================================================================================== */
+
+/* --- 1. 三组下拉筛选（题型 / 知识点 / 难度） --- */
+.bank-filters {
+  display: flex; flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: flex-start;
+}
+/* 三组同权平分一行；basis 190px 是「题型：线性回归与 OLS 推断·统计」这类最长标签
+   在 13px 字号下的实测最小可读宽度（窄于此则换行，见段末 @media）。 */
+.bank-filter {
+  display: flex; flex-direction: column; gap: 4px;
+  flex: 1 1 190px; min-width: 0;
+}
+/* 筛选族钩子（源码写 'bank-filter' + ' bank-filter-type|tag|star'）：
+   长知识点名允许在栅格轨道内收缩，不撑破容器、不把相邻下拉挤成零宽 */
+.bank-filter-type, .bank-filter-tag, .bank-filter-star { min-width: 0; }
+.bank-filter-label {
+  font-size: var(--text-2xs); font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* 原生 <select>：保留系统外观以拿到平台下拉箭头（自绘箭头需要 data-URI 里的硬编码色值，
+   违反「只用既有 token」）。宽度 100% + min-width 0 保证长选项名只在控件内被裁剪。 */
+.bank-select {
+  width: 100%; max-width: 100%; min-width: 0;
+  min-height: 32px; padding: 5px 8px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-sunken); color: var(--text);
+  font: inherit; font-size: var(--text-sm);
+  text-overflow: ellipsis; cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.bank-select:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+/* 可见焦点态：显式给出环（全局 :focus-visible 在 style.css:1143，此处再兜一层，
+   同时把边框一起点亮，保证暗色下也看得见） */
+.bank-select:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+  border-color: var(--accent);
+}
+.bank-select-type, .bank-select-tag, .bank-select-star { min-width: 0; }
+/* 展开后的原生 option 不在页面 DOM 里，样式仅供支持的平台使用；
+   option 背景若跟随 --bg-sunken，Windows/Chrome 下与弹层底色同色会糊成一片，故用 --bg-elevated。 */
+.bank-select-option { background: var(--bg-elevated); color: var(--text); }
+.bank-select-option-more { color: var(--text-faint); }
+/* 暗色下让原生弹层/箭头随主题渲染（color-scheme 而非硬编码色值） */
+[data-theme="dark"] .bank-select { color-scheme: dark; }
+
+/* --- 2. 标题 + 范围行（t17 后 .bank-head 变成两个子元素，改为一行两端对齐） --- */
+.bank-head {
+  flex-direction: row; align-items: baseline;
+  justify-content: space-between; flex-wrap: wrap;
+}
+.bank-title { display: flex; align-items: center; gap: 8px; }
+.bank-title .ui-icon { width: 21px; height: 21px; color: var(--accent); }
+.bank-title-text {
+  min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bank-head-scope {
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  /* 用 --text-muted 而非 --text-faint：范围行是 11px 正文，实测 --text-faint on --bg
+     对比度仅 2.39（不达 WCAG AA 4.5），--text-muted 实测 4.55。 */
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* --- 3. 来源徽标（院校 · 年度 · 题号）首段单行省略 --- */
+/* 截断三件套：min-width 0 + max-width 100% 让徽标能在列表行内收缩，overflow+ellipsis 出省略号。
+   配色说明：徽标文字走 --text（白底 17.04 / 暗色同样达标），accent 只保留在描边与底色着色上——
+   实测 11px/600 的 accent 文字在白底仅 3.68（< WCAG AA 4.5，小号字不适用粗体豁免），
+   故不用 accent 作前景，改用 8% accent 底 + --accent-weak 描边保留「院校段」的视觉标识。 */
+.bank-badge-school {
+  min-width: 0; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis;
+  color: var(--text); border-color: var(--accent-weak);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+/* 详情按钮 = 主行动（列表里每题一个），用 accent 描边与文字和「加入错题」区分开 */
+.bank-btn-detail {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  color: var(--accent);
+}
+.bank-btn-detail:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-elevated));
+}
+
+/* --- 4. 非题库学科空状态（亮暗都要可读；长提示居中单列） --- */
+/* 追加式覆盖 t9 的 .bank-empty 底色：默认空状态是 --text-muted on --bg-sunken，实测对比度 4.23
+   （差 0.27 不到 AA 4.5）；本组件是整块提示、不是行内小标签，故改用 --bg-elevated 底
+   （亮 4.83 / 暗色同样达标），并用实线描边区别于列表内的虚线空状态。 */
+.bank-empty-subject {
+  max-width: 520px; margin: 0 auto;
+  border-style: solid;
+  background: var(--bg-elevated);
+  line-height: var(--leading-snug);
+}
+
+/* --- 5. 触屏尺寸（t9 段末 @media 的同族规则；只加不删） --- */
+@media (max-width: 760px) {
+  .bank-filters { flex-direction: column; }
+  .bank-filter { flex: 1 1 auto; width: 100%; }
+  .bank-select { min-height: 40px; }
+  .bank-filter-label { white-space: normal; }
+}

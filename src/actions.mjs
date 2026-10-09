@@ -32,7 +32,7 @@
         closeDrawer();
         currentView = arg;
         if (arg === 'wrong' || arg === 'wrongBrowse' || arg === 'wrongStats') currentModule = 'wrong';
-        else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics') currentModule = 'cards';
+        else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics' || arg === 'bank') currentModule = 'cards';
         else if (arg === 'actPlan' || arg === 'actHabit' || arg === 'actFocus' || arg === 'actHelp') currentModule = 'act';
         else if (arg === 'mile') currentModule = 'cards';
         renderApp();
@@ -40,7 +40,7 @@
       case 'module':
         closeDrawer();
         currentModule = arg;
-        currentView = (arg === 'wrong') ? 'wrong' : (arg === 'act') ? 'actPlan' : 'learn';
+        currentView = (arg === 'wrong') ? 'wrong' : (arg === 'act') ? 'actFocus' : 'learn';
         renderApp();
         break;
       case 'menuclose':
@@ -145,6 +145,70 @@
       case 'qnext':
         quiz.idx++;
         renderApp();
+        break;
+      // ---- 题库（POC）：筛选 / 开题 / 加错题 / 上一题下一题 / 返回 / 重置 ----
+      // bank.mjs 只负责渲染与 data-action 标记，状态改写与重渲染统一收口在这里。
+      case 'bankFilter': {
+        // data-arg 只剩 type= / tag= / star=（页内科目选择与频率维度已下线：
+        // 历史遗留的 subject= / typeStar= 静默忽略，不再有分支）
+        const eq = String(arg == null ? '' : arg).indexOf('=');
+        if (eq < 0) break;
+        const key = String(arg).slice(0, eq);
+        const value = String(arg).slice(eq + 1);
+        if (key === 'type') bankType = value;
+        else if (key === 'tag') bankTag = value;
+        else if (key === 'star') bankStar = value;
+        else if (key === 'query') bankQuery = value;
+        else break;
+        bankOpen = null; // 改筛选即回到列表，避免详情页与筛选条件不一致
+        renderApp();
+        break;
+      }
+      case 'bankOpen': {
+        const q = bankQuestionById(arg);
+        if (!q) break;
+        bankOpen = q.id;
+        renderApp();
+        break;
+      }
+      case 'bankStep': {
+        // 优先在当前筛选结果里走动；若该题不在筛选结果中（从错题本等入口进来），退化为全库顺序
+        const step = parseInt(arg, 10) < 0 ? -1 : 1;
+        const rowIndex = function (list, id) {
+          for (let i = 0; i < list.length; i++) if (list[i].id === id) return i;
+          return -1;
+        };
+        let rows = bankFilteredQuestions();
+        let idx = rowIndex(rows, bankOpen);
+        if (idx < 0) {
+          rows = bankAllQuestions();
+          idx = rowIndex(rows, bankOpen);
+        }
+        const next = idx + step;
+        if (idx < 0 || next < 0 || next >= rows.length) break;
+        bankOpen = rows[next].id;
+        renderApp();
+        break;
+      }
+      case 'bankBack':
+        bankOpen = null;
+        renderApp();
+        break;
+      case 'bankAddWrong': {
+        const q = bankQuestionById(arg);
+        if (!q) break;
+        bankAddToWrong(q); // 内部走 markAsWrong：命中查重会自行跳转错题本并 renderApp
+        renderApp(); // 新增路径不自带重渲染 → 这里刷新「已在错题本」按钮态
+        break;
+      }
+      case 'bankReset':
+        bankType = 'all';
+        bankTag = 'all';
+        bankStar = 'all';
+        bankQuery = '';
+        bankOpen = null;
+        renderApp();
+        toast('已重置题库筛选');
         break;
       case 'export': {
         const subj = subjectList()[currentSubjectId];
@@ -455,13 +519,15 @@
   function switchSubject(id) {
     if (id === currentSubjectId || !setSubject(id)) return;
     const target = id;
+    // 题库跟随全局学科（t17）：切学科前记住是否正停留在题库，加载完成后原样回到题库看新学科题目
+    const wasBank = (typeof currentView !== 'undefined' && currentView === 'bank');
     resetSessionState(); // 统一会话重置（deck/浏览过滤/导图/错题队列一次清干净）
     currentModule = 'cards';
     loadDBAsync().then(function () {
       // 竞态防护：等待期间用户又切到了别的学科时，放弃这次过期的加载结果
       if (currentSubjectId !== target) return;
       if (!loadSession()) buildSession(0);
-      currentView = 'learn';
+      currentView = wasBank ? 'bank' : 'learn';
       renderApp();
     });
   }
@@ -593,9 +659,9 @@
       { label: '主页', hint: 'Today', run: function () { currentModule = 'cards'; currentView = 'home'; renderApp(); } },
       { label: '学习 · 知识卡', hint: 'learn', run: function () { currentModule = 'cards'; currentView = 'learn'; renderApp(); } },
       { label: '错题本', hint: 'wrong', run: function () { currentModule = 'wrong'; currentView = 'wrong'; renderApp(); } },
+      { label: '行动 · 专注链', hint: 'actFocus', run: function () { currentModule = 'act'; currentView = 'actFocus'; renderApp(); } },
       { label: '行动 · 计划', hint: 'actPlan', run: function () { currentModule = 'act'; currentView = 'actPlan'; renderApp(); } },
       { label: '行动 · 习惯树', hint: 'actHabit', run: function () { currentModule = 'act'; currentView = 'actHabit'; renderApp(); } },
-      { label: '行动 · 专注链', hint: 'actFocus', run: function () { currentModule = 'act'; currentView = 'actFocus'; renderApp(); } },
       { label: '行动 · 帮助', hint: 'actHelp', run: function () { currentModule = 'act'; currentView = 'actHelp'; renderApp(); } },
       { label: '里程碑', hint: 'mile', run: function () { currentView = 'mile'; renderApp(); } },
       { label: '统计', hint: 'statistics', run: function () { currentModule = 'cards'; currentView = 'statistics'; renderApp(); } },

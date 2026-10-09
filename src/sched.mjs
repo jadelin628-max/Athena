@@ -67,4 +67,26 @@
     c.reps++; c.state = 'review'; c.due = dayStart(now) + c.ivl * DAY;
   }
 
-export { applySchedRating };
+  // ---------------- 提前复习：把「未到期」的调度中卡片立即到期（纯调度，不重置记忆历史） ----------------
+  // 场景：用户浏览卡片时发现某张还没到期的卡其实已经忘了，想立刻复习（见浏览界面「立即重学」入口，
+  // 自测重构「表现差 → 重学队列」也复用这里，不新增任何算法）。
+  // 语义 = 提前复习、不重置历史：只把 due 落到当前时刻——
+  //   stability / difficulty / 学习阶段(state/step/grad) / reps / lapses / ivl / lastR 一律不动，
+  //   评分日志(revlog)也不写：这次点击不是一次复习记录。
+  // 影响面只有「到期时刻」这一个纯调度字段：卡片随后由既有队列逻辑（buildSession / surfaceDue）
+  // 自动收进复习队列；真正评分时仍由 applySchedRating 按原 stability/difficulty 与 lastR 计算保留率
+  // 与下一个间隔（间隔与到期时间始终由既有 FSRS 算法产出，见 src/fsrs-core.mjs）。
+  // 返回：true = 本次确实把未到期卡提前到期；false = 未到期条件不成立（新卡未进调度 / 已到期 / 缺 due）
+  //       —— false 分支不改动任何字段，因此重复调用是幂等的。
+  function markCardDueNow(c, now) {
+    if (!c || typeof c !== 'object') return false;
+    // 只有已进入调度状态的卡才有「到期/未到期」语义；新卡由新学队列引入，不在此处提前
+    if (c.state !== 'review' && c.state !== 'learning' && c.state !== 'relearning') return false;
+    if (typeof c.due !== 'number' || !isFinite(c.due)) return false; // 排期缺失/损坏：不猜测，交给 normalizeDB 自愈
+    const t = (typeof now === 'number' && isFinite(now)) ? now : Date.now();
+    if (c.due <= t) return false; // 已到期：幂等，一个字段都不写
+    c.due = t;
+    return true;
+  }
+
+export { applySchedRating, markCardDueNow };

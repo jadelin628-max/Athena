@@ -397,3 +397,265 @@ test('actModuleWriteLocal：mile 落到 athena_mile_v1；老载荷缺 mile → {
   assert.deepEqual(Object.keys(store).filter((k) => /_formula_srs_v1$/.test(k)), ['math3_formula_srs_v1']);
   assert.equal(JSON.parse(store['math3_formula_srs_v1']).updatedAt, 4242);
 });
+
+// ===================== 自测数据持久化（v2.1.0）：log.quiz / settings.quizCfg =====================
+// 记录形状来源：src/quiz.mjs 的 quizSaveRecord。这里照形状造一份工厂做对拍基准——
+// 字段改名会先在测试里红灯，而不是等用户发现「导出→导入后自测历史没了」。
+const quizRec = (t, extra) => Object.assign({
+  t: t,
+  mode: 'cards',
+  total: 2,
+  correct: 1,
+  pct: 50,
+  ms: 12000,
+  msAvg: 6000,
+  predicted: 82,
+  gap: -32,
+  verdict: '表现差',
+  byCat: [{ c: '极限', n: 1, ok: 1 }, { c: '级数', n: 1, ok: 0 }],
+  weak: ['k_lim_2'],
+  queued: ['k_ser_9'],
+  diff: [1, 10],
+  mastery: [0, 100],
+  cats: ['极限', '级数']
+}, extra || {});
+const bareDb = (extra) => Object.assign({ updatedAt: 1, schemaVersion: 1, cards: {}, wrongs: {}, settings: {}, log: {} }, extra || {});
+
+// store.mjs 的 importDB / normalizeDB 整源抽取：剥离 ESM 导出（与 tools/build.mjs 的 stripExports 同规则）
+// 后在 vm 里当普通脚本求值，于是能在 Node 里跑**真实的导入/加载路径**（而非只测纯函数）。
+const { readFileSync } = await import('node:fs');
+const nodeVm = (await import('node:vm')).default;
+const storeSrc = readFileSync(new URL('../src/store.mjs', import.meta.url), 'utf8')
+  .replace(/^\s*export\s*\{[\s\S]*?\}\s*;?\s*$/gm, '');
+function newStoreCtx() {
+  const sandbox = {
+    window: {},
+    localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+    setTimeout: () => 0,   // saveDB 的延迟落盘：单测不需要真计时器（避免悬挂 timer 拖慢/挂住进程）
+    DB: { cards: {}, settings: {}, log: {} },
+    DATA: [],              // 静态卡数据集不参与：importDB 的 DATA.forEach 为空
+    BASE_SUBJ: null,       // refreshData() 首行即返回（无静态数据可合成）
+    currentSubjectId: 'math3',
+    GOAL_DEFAULT: '考研',
+    TARGET_S_DEFAULT: 90
+  };
+  // store.mjs 在模块内声明了 `let DB`（L134）：脚本作用域的同名绑定会遮蔽沙箱属性，
+  // 于是 vm 内 `DB = fresh` 不会写回 sandbox.DB。跑完后把沙箱的 DB 换成读回内部状态的 getter，
+  // 测试里的 ctx.DB 才等于真实 DB（getDB 作为等价入口一并保留）。
+  nodeVm.runInNewContext(storeSrc
+    + '\nthis.__t12 = { importDB: importDB, normalizeDB: normalizeDB, getDB: function () { return DB; } };'
+    + "\nObject.defineProperty(this, 'DB', { get: function () { return DB; }, enumerable: true, configurable: true });", sandbox);
+  return sandbox;
+}
+// 读取侧口径：quiz.mjs 的净化器（同一份数据的「消费端」），用于「store 输出是它的不动点」对拍
+const quizSrc = readFileSync(new URL('../src/quiz.mjs', import.meta.url), 'utf8');
+const Q_BEGIN = '// ===== BEGIN TESTABLE quiz core helpers =====';
+const Q_END = '// ===== END TESTABLE quiz core helpers =====';
+const qa = quizSrc.indexOf(Q_BEGIN);
+const qb = quizSrc.indexOf(Q_END);
+if (qa < 0 || qb < 0) throw new Error('quiz.mjs 缺少 quiz core helpers 标记块');
+const quizSandbox = {};
+nodeVm.runInNewContext(quizSrc.slice(qa + Q_BEGIN.length, qb) + '\nthis.quizDefaultConfig = quizDefaultConfig;\nthis.quizSanitizeConfig = quizSanitizeConfig;\nthis.QUIZ_MAX_RECORDS = QUIZ_MAX_RECORDS;', quizSandbox);
+
+test('mergeDb：log.quiz 按 t 去重并集（升序、同 t 本地优先、云端独有 t 才标记 changed）', () => {
+  const local = bareDb({ updatedAt: 10, log: { quiz: [quizRec(300), quizRec(100)] } });
+  const remote = bareDb({ updatedAt: 20, log: { quiz: [quizRec(100, { correct: 2 }), quizRec(200)] } });
+  const m = mergeDb(local, remote);
+  assert.deepEqual(m.log.quiz.map((r) => r.t), [100, 200, 300]);   // 并集 + 按 t 升序
+  assert.equal(m.log.quiz.length, 3);                              // 同 t 不翻倍
+  assert.equal(m.log.quiz.find((r) => r.t === 100).correct, 1);    // 同 t 以本地记录为准
+  assert.deepEqual(m.log.quiz.find((r) => r.t === 200).byCat, quizRec(200).byCat); // 云端记录整条保留（嵌套字段不丢）
+  assert.deepEqual(m.log.quiz.find((r) => r.t === 200).weak, ['k_lim_2']);
+  assert.equal(m.__changedFromRemote, true);                        // 采用了云端独有的场次 → 需写回本地
+  assert.equal(m.updatedAt, 20);                                    // updatedAt 仍是「取大」：合并不额外刷新时间戳
+
+  // 两端完全相同 → 不标记变化（自测记录不会让本机旧数据反复推送覆盖云端）
+  const base = bareDb({ updatedAt: 500, log: { quiz: [quizRec(1), quizRec(2)] } });
+  const same = mergeDb(base, JSON.parse(JSON.stringify(base)));
+  assert.deepEqual(same.log.quiz.map((r) => r.t), [1, 2]);
+  assert.equal(same.__changedFromRemote, false);
+
+  // 只有本机有自测记录（云端载荷来自旧版本）→ 记录保留、且不算「云端有新内容」
+  const onlyLocal = mergeDb(bareDb({ updatedAt: 7, log: { quiz: [quizRec(9)] } }), bareDb({ updatedAt: 5 }));
+  assert.deepEqual(onlyLocal.log.quiz.map((r) => r.t), [9]);
+  assert.equal(onlyLocal.__changedFromRemote, false);
+});
+
+test('mergeDb：log.quiz 超 200 条只保留最新 200 条（与应用端上限一致）', () => {
+  const local = bareDb({ updatedAt: 1, log: { quiz: [] } });
+  const remote = bareDb({ updatedAt: 2, log: { quiz: [] } });
+  for (let i = 1; i <= 150; i++) local.log.quiz.push(quizRec(i));
+  for (let i = 151; i <= 300; i++) remote.log.quiz.push(quizRec(i));
+  const m = mergeDb(local, remote);
+  assert.equal(m.log.quiz.length, 200);
+  assert.equal(m.log.quiz[0].t, 101);      // 最旧的 100 条先出队
+  assert.equal(m.log.quiz[199].t, 300);
+  assert.equal(m.__changedFromRemote, true);
+});
+
+test('mergeDb：log.quiz 畸形输入（非数组 / 元素坏 / 缺 log）→ 空结构默认值，不抛错', () => {
+  assert.deepEqual(mergeDb(bareDb({ log: { quiz: 'nope' } }), bareDb()).log.quiz, []);
+  assert.deepEqual(mergeDb({ cards: {}, wrongs: {}, settings: {} }, { cards: {}, wrongs: {}, settings: {} }).log.quiz, []);
+  const bad = mergeDb(
+    bareDb({ log: { quiz: [null, 7, 'x', [], {}, { t: 'x' }, { t: NaN }, quizRec(5)] } }),
+    bareDb({ log: { quiz: [null, quizRec(6)] } })
+  );
+  assert.deepEqual(bad.log.quiz.map((r) => r.t), [5, 6]);   // 非法元素单独丢弃，合法元素不丢
+  const m = mergeDb(bareDb({ log: { quiz: [] } }), bareDb({ log: { quiz: [] } }));
+  assert.deepEqual(m.log.quiz, []);
+  assert.equal(m.__changedFromRemote, false);
+});
+
+// vm 里造出来的对象属于另一个 realm（[[Prototype]] 不同），node:assert/strict 的 deepEqual
+// 连原型一起比 → 断言前做一次 JSON 结构归一（被测数据本身就是 JSON 可序列化的持久化结构）。
+const plain = (v) => JSON.parse(JSON.stringify(v));
+
+test('store.importDB 往返：log.quiz 逐字段保留（含嵌套 byCat/weak/queued/diff/mastery）、非法元素丢弃', () => {
+  const ctx = newStoreCtx();
+  const payload = {
+    schemaVersion: 1, updatedAt: 12345, cards: {},
+    settings: { quizCfg: { cards: { count: 3, cats: ['极限', '极限', '', 7], diff: [10, 1], mastery: [100, 1] }, wrong: { count: 999 } } },
+    log: { quiz: [quizRec(1000), null, 7, 'x', [], { t: '1000' }, { t: NaN }, quizRec(2000)] }
+  };
+  ctx.__t12.importDB(JSON.stringify(payload));   // 导出路径就是 JSON.stringify(DB)：往返一次
+  const db = plain(ctx.DB);
+  assert.deepEqual(db.log.quiz.map((r) => r.t), [1000, 2000]);
+  assert.deepEqual(db.log.quiz[0], quizRec(1000));            // 逐字段一致（含嵌套）
+  assert.deepEqual(db.log.quiz[1].byCat, quizRec(2000).byCat);
+  assert.deepEqual(db.log.quiz[1].weak, ['k_lim_2']);
+  assert.deepEqual(db.log.quiz[1].queued, ['k_ser_9']);
+  assert.deepEqual(db.log.quiz[1].diff, [1, 10]);
+  assert.deepEqual(db.log.quiz[1].mastery, [0, 100]);
+  // 深拷贝：改来源对象后重新读回导入结果，值不动（否则后续改动会回流进这个「备份」载荷）
+  payload.log.quiz[7].byCat[0].ok = 99;
+  assert.equal(plain(ctx.DB).log.quiz[1].byCat[0].ok, 1);
+  // quizCfg：数量夹取、区间自动交换、章节去重/过滤非字符串；只给了 count 的来源其余回退默认
+  assert.deepEqual(plain(db.settings.quizCfg.cards), { count: 3, cats: ['极限'], diff: [1, 10], mastery: [1, 100] });
+  assert.deepEqual(plain(db.settings.quizCfg.wrong), { count: 50, cats: [], diff: [1, 10], mastery: [0, 100] });
+});
+
+test('store.importDB 往返：超过 200 条的自测记录只保留最新 200 条', () => {
+  const ctx = newStoreCtx();
+  const quiz = [];
+  for (let i = 1; i <= 260; i++) quiz.push(quizRec(i));
+  ctx.__t12.importDB(JSON.stringify({ schemaVersion: 1, cards: {}, settings: {}, log: { quiz: quiz } }));
+  assert.equal(ctx.DB.log.quiz.length, 200);
+  assert.equal(ctx.DB.log.quiz[0].t, 61);
+  assert.equal(ctx.DB.log.quiz[199].t, 260);
+});
+
+test('store.normalizeDB：quizCfg 缺省/非法兜底与夹取（不抛错）；老库无 log.quiz 时补空数组', () => {
+  const ctx = newStoreCtx();
+  const defaults = {
+    cards: { count: 10, cats: [], diff: [1, 10], mastery: [0, 100] },
+    wrong: { count: 10, cats: [], diff: [1, 10], mastery: [0, 100] }
+  };
+  ctx.__t12.normalizeDB({ cards: {}, settings: {}, log: {} });   // 老库：既无 quizCfg 也无 log.quiz
+  assert.deepEqual(plain(ctx.DB.settings.quizCfg), defaults);
+  assert.deepEqual(ctx.DB.log.quiz.length, 0);                   // 老库补空数组（而非 undefined）
+
+  // 整块非法（字符串 / 数组 / null / 数字 / 布尔）→ 回退默认，绝不抛错
+  ['nope', [], null, 0, true].forEach((bad) => {
+    ctx.__t12.normalizeDB({ cards: {}, settings: { quizCfg: bad }, log: { quiz: bad } });
+    assert.deepEqual(plain(ctx.DB.settings.quizCfg), defaults);
+    assert.deepEqual(ctx.DB.log.quiz.length, 0);
+  });
+
+  // 逐字段非法：夹取/回退，合法部分保留
+  ctx.__t12.normalizeDB({
+    cards: {},
+    settings: { quizCfg: { cards: { count: 0, cats: [1, null, '', 'x', 'x', 'y'], diff: [5], mastery: [-3, 999] } } },
+    log: { quiz: [null, { t: NaN }, { t: 'x' }, quizRec(5)] }
+  });
+  assert.equal(ctx.DB.settings.quizCfg.cards.count, 1);                    // 夹到下限 1
+  assert.deepEqual(plain(ctx.DB.settings.quizCfg.cards.cats), ['x', 'y']);   // 非字符串/空串丢弃、重复去重
+  assert.deepEqual(plain(ctx.DB.settings.quizCfg.cards.diff), [1, 10]);      // 单元素不是合法区间 → 默认
+  assert.deepEqual(plain(ctx.DB.settings.quizCfg.cards.mastery), [0, 100]);  // 越界夹取
+  assert.deepEqual(plain(ctx.DB.settings.quizCfg.wrong), defaults.wrong);    // 缺来源 → 默认
+  assert.deepEqual(plain(ctx.DB.log.quiz).map((r) => r.t), [5]);
+});
+
+test('契约对拍：store 兜底出的自测配置是 quiz.mjs 读取侧净化器的不动点（老库加载后照常自测）', () => {
+  const ctx = newStoreCtx();
+  ctx.__t12.normalizeDB({ cards: {}, settings: {}, log: {} });
+  const cats = ['极限', '级数'];
+  const cfg = plain(ctx.DB.settings.quizCfg);
+  assert.deepEqual(plain(quizSandbox.quizDefaultConfig()), cfg.cards);     // 与读取侧默认值同源
+  assert.deepEqual(plain(quizSandbox.quizSanitizeConfig(cfg.cards, cats)), cfg.cards);   // store 输出是读取侧净化器的不动点
+  assert.deepEqual(plain(quizSandbox.quizSanitizeConfig(cfg.wrong, cats)), cfg.wrong);
+  assert.equal(quizSandbox.QUIZ_MAX_RECORDS, 200);                         // 上限三处一致（quiz 写入侧/store 读取侧/sync 合并侧）
+  // 两个来源各自独立对象（深拷贝语义）：改一个不影响另一个
+  ctx.DB.settings.quizCfg.cards.count = 7;
+  assert.equal(ctx.DB.settings.quizCfg.wrong.count, 10);
+});
+
+// —— t13 云同步合并的畸形输入防御 ——
+// 修复前的真实失败形态（完整日志见 backup/scratch/sync2/probe-capture.log）：
+//   local.revlogs='nope'   → TypeError: ar.concat(...).forEach is not a function
+//   remote.revlogs=42      → TypeError: br.forEach is not a function
+//   newIntro.ids=42        → TypeError: bi.filter is not a function
+//   detail={d1:null}       → TypeError: Cannot convert undefined or null to object
+//   revlogs=[null,…]（两侧都是数组时 br 循环读 ar 元素）→ TypeError: Cannot read properties of null (reading 't')
+// 修后：畸形数据按既有净化精神丢弃（该侧按「没有这段数据」参与合并），任何组合都不再中断整条同步链路。
+const revLog = (t, cid, r) => ({ t: t, cid: cid, r: r, st: 1, ivl: 2, k: 'k' });
+
+test('mergeDb：revlogs 单边非数组 → 不抛错，按该侧无数据合并，另一侧合法记录保留', () => {
+  const remoteOnly = mergeDb(bareDb({ log: { revlogs: 'nope' } }), bareDb({ log: { revlogs: [revLog(1, 'c1', 3)] } }));
+  assert.deepEqual(remoteOnly.log.revlogs, [revLog(1, 'c1', 3)]);
+  assert.equal(remoteOnly.__changedFromRemote, true);   // 云端独有评分 → 仍需写回本地
+
+  const localOnly = mergeDb(bareDb({ log: { revlogs: [revLog(2, 'c2', 1)] } }), bareDb({ log: { revlogs: 42 } }));
+  assert.deepEqual(localOnly.log.revlogs, [revLog(2, 'c2', 1)]);
+  assert.equal(localOnly.__changedFromRemote, false);   // 云端没有可用评分 → 不算改动
+});
+
+test('mergeDb：revlogs/quiz 双边非数组 → 降级空数组（结构合法），不抛错', () => {
+  const m = mergeDb(bareDb({ log: { revlogs: {}, quiz: true } }), bareDb({ log: { revlogs: 'x', quiz: null } }));
+  assert.deepEqual(m.log.revlogs, []);
+  assert.deepEqual(m.log.quiz, []);
+  assert.equal(m.__changedFromRemote, false);
+});
+
+test('mergeDb：数组内元素为非对象 → 坏元素单独丢弃、合法元素保留（修前读 null.t 即抛 TypeError）', () => {
+  const m = mergeDb(
+    bareDb({ log: { revlogs: [null, 7, 'x', [], {}, { t: 1 }, revLog(100, 'c1', 3)] } }),
+    bareDb({ log: { revlogs: [revLog(200, 'c1', 2), revLog(100, 'c1', 3)] } })
+  );
+  assert.deepEqual(m.log.revlogs.map((e) => e.t), [100, 200]);   // 键 t|cid|r 去重 + 升序
+  assert.equal(m.__changedFromRemote, true);
+});
+
+test('mergeDb：quiz 数组内元素为非对象（含 t 非数字）→ 丢弃，同 t 仍本地优先', () => {
+  const m = mergeDb(
+    bareDb({ log: { quiz: [null, 7, 'x', [], {}, { t: 'x' }, { t: NaN }, quizRec(1000)] } }),
+    bareDb({ log: { quiz: [null, quizRec(1000, { correct: 2 }), quizRec(2000)] } })
+  );
+  assert.deepEqual(m.log.quiz.map((r) => r.t), [1000, 2000]);
+  assert.equal(m.log.quiz[0].correct, 1);   // 本地优先
+});
+
+test('mergeDb：log 整体缺失 / 为 null / 为字符串或数字 / 逐字段畸形 → 返回结构始终合法', () => {
+  const shapes = [
+    mergeDb({ cards: {}, wrongs: {}, settings: {} }, { cards: {}, wrongs: {}, settings: {}, log: null }),
+    mergeDb(bareDb({ log: 'x' }), bareDb({ log: 42 })),
+    mergeDb(bareDb({ log: { revlogs: null, quiz: undefined, counts: null, detail: { d1: null }, newIntro: { ids: 42 } } }), bareDb({ log: {} }))
+  ];
+  shapes.forEach((m) => {
+    assert.equal(typeof m.log, 'object');
+    assert.ok(Array.isArray(m.log.revlogs));   // 修前 revlogs 缺失/为对象会原样留在结果里
+    assert.ok(Array.isArray(m.log.quiz));
+    assert.equal(typeof m.log.counts, 'object');
+    assert.ok(Array.isArray(m.log.newIntro.ids));
+  });
+});
+
+test('mergeDb：畸形字段不影响其余合法语义（counts 逐日逐字段取大、updatedAt/cards 不动）', () => {
+  const local = bareDb({ updatedAt: 900, cards: { x: { lastR: 900, stab: 9 } }, log: { counts: { d1: { n: 2, r: 3 } }, revlogs: 'nope', quiz: 42 } });
+  const remote = bareDb({ updatedAt: 100, cards: { x: { lastR: 100, stab: 1 } }, log: { counts: { d1: { n: 1, r: 5 }, d2: { n: 4 } }, revlogs: [revLog(1, 'c1', 3)], quiz: [quizRec(5)] } });
+  const m = mergeDb(local, remote);
+  assert.deepEqual(m.log.counts, { d1: { n: 2, r: 5 }, d2: { n: 4 } });
+  assert.equal(m.updatedAt, 900);            // 仍取大、不刷新
+  assert.equal(m.cards.x.lastR, 900);
+  assert.deepEqual(m.log.revlogs.map((e) => e.t), [1]);   // 本地 revlogs 畸形 → 按空，云端记录照常并入
+  assert.deepEqual(m.log.quiz.map((r) => r.t), [5]);
+});

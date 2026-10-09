@@ -18,7 +18,7 @@ if (a < 0 || b < 0) throw new Error('settings.mjs 缺少 act settings helpers �
 const block = src.slice(a + BEGIN.length, b);
 const sandbox = {};
 vm.runInNewContext(
-  block + '\nthis.actDefaultHabitCfg = actDefaultHabitCfg;\nthis.actDefaultFocusSettings = actDefaultFocusSettings;\nthis.actSanitizeHabitCfg = actSanitizeHabitCfg;\nthis.actSanitizeFocusSettings = actSanitizeFocusSettings;\nthis.actSanitizeSettings = actSanitizeSettings;\nthis.ACT_SETTINGS_CFG_KEY = ACT_SETTINGS_CFG_KEY;',
+  block + '\nthis.actDefaultHabitCfg = actDefaultHabitCfg;\nthis.actDefaultFocusSettings = actDefaultFocusSettings;\nthis.actSanitizeHabitCfg = actSanitizeHabitCfg;\nthis.actSanitizeFocusSettings = actSanitizeFocusSettings;\nthis.actSanitizeSettings = actSanitizeSettings;\nthis.ACT_SETTINGS_CFG_KEY = ACT_SETTINGS_CFG_KEY;\nthis.actFocusLevelOrder = actFocusLevelOrder;\nthis.actIsFocusLevelKey = actIsFocusLevelKey;\nthis.actDefaultLevelNames = actDefaultLevelNames;',
   sandbox
 );
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -123,4 +123,41 @@ test('actSanitizeSettings：合并视图 habit+focus', () => {
   assert.equal(m.focus.unitMinutes, 60);
   assert.equal(m.focus.flavor, true);
   assert.equal(m.focus.reserveWindowMin, 15);
+});
+
+// ---- 层次键严格类型（严格四级：unit/group/corps/army，单一顺序来源）----
+
+test('actFocusLevelOrder：严格四级顺序，且与默认层次名一一对应', () => {
+  const order = Array.from(sandbox.actFocusLevelOrder());
+  assert.deepEqual(order, ['unit', 'group', 'corps', 'army']);
+  const names = sandbox.actDefaultLevelNames();
+  assert.deepEqual(Object.keys(names), ['unit', 'group', 'corps', 'army']);
+  assert.equal(names.unit, '任务单元');
+  assert.equal(names.group, '任务组');
+  assert.equal(names.corps, '任务群');
+  assert.equal(names.army, '任务集团');
+  assert.deepEqual(clone(names), actDefaultFocusSettings().levelNames);
+});
+
+test('actIsFocusLevelKey：合法四级键 true，未知/别名/空 false', () => {
+  ['unit', 'group', 'corps', 'army'].forEach((k) => {
+    assert.equal(sandbox.actIsFocusLevelKey(k), true);
+  });
+  ['', 'UNIT', 'squad', 'team', 'task', 'level', '__proto__'].forEach((k) => {
+    assert.equal(sandbox.actIsFocusLevelKey(k), false);
+  });
+});
+
+test('actSanitizeFocusSettings：未知层次键被丢弃，合法键保留', () => {
+  const s = actSanitizeFocusSettings({
+    levelNames: { unit: '单元', squad: '小队', team: '战队', corps: '群', army: '集团', bogus: '???' }
+  });
+  assert.deepEqual(Object.keys(s.levelNames), ['unit', 'group', 'corps', 'army']);
+  assert.equal(s.levelNames.unit, '单元');
+  assert.equal(s.levelNames.corps, '群');
+  assert.equal(s.levelNames.army, '集团');
+  assert.equal(s.levelNames.squad, undefined);
+  assert.equal(s.levelNames.bogus, undefined);
+  // 全空 → 回默认
+  assert.deepEqual(actSanitizeFocusSettings({ levelNames: {} }).levelNames, actDefaultFocusSettings().levelNames);
 });

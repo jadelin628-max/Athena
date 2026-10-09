@@ -9,6 +9,7 @@
   const SYNC_CFG_KEY = 'athena_sync';
   const SYNC_DIR = 'athena-sync';
   const SYNC_TOLERANCE_MS = 2000; // 时间戳容差：2 秒内的两端写入视为一致
+  const SYNC_QUIZ_MAX = 200; // 自测记录合并上限（与 quiz.mjs 的 QUIZ_MAX_RECORDS / store.mjs 的 STORED_QUIZ_MAX_RECORDS 同口径）
 
   function syncCfg() {
     try { return JSON.parse(localStorage.getItem(SYNC_CFG_KEY)) || {}; } catch (e) { return {}; }
@@ -46,11 +47,18 @@
     return winner;
   }
 
+  // —— 合并时的畸形输入安全取值（云同步负载可能来自旧版本 / 手工编辑 / 损坏文件）——
+  // 合法形态（普通对象 / 数组）原样返回；undefined / null / 非对象 / 非数组一律降级为空对象 / 空数组：
+  // 合并按「该侧没有这段数据」继续，坏数据按既有净化精神丢弃，绝不因 TypeError 中断整条同步链路。
+  function syncSafeMap(v) { return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {}; }
+  function syncSafeList(v) { return Array.isArray(v) ? v : []; }
+
   // —— 合并两侧 DB（纯函数，供单测）——
   // 卡片/错题：并集，同卡按上述规则选边；仅一侧存在的卡整卡采用。
   // 日志：daily/studyTime/counts/detail 逐日（逐字段）取大——同时段两端学习时计数取 max 而非相加，
   //       只影响统计展示精度，不影响任何学习数据；checkins 取「或」；mastery/metrics 取当日专注较长一侧。
   // 自定义内容（custom/cardOverrides/customRel）：并集，冲突本地优先（低频，archive 兜底）。
+  // 自测记录（log.quiz）：按 t 去重并集、升序、只留最新 200 条（同端同一场自测不重复；不推进 updatedAt）。
   // 设置：本地优先（正在使用的设备）。updatedAt/schemaVersion 取大。
   function mergeDb(local, remote) {
     const out = {};
@@ -76,17 +84,17 @@
       out[key] = Object.assign({}, remote[key] || {}, local[key] || {});
     });
 
-    const lg = Object.assign({}, local.log || {});
-    const rlog = remote.log || {};
+    const lg = Object.assign({}, syncSafeMap(local.log));
+    const rlog = syncSafeMap(remote.log);
     ['daily', 'studyTime'].forEach(function (k) {
-      const a = (local.log && local.log[k]) || {}, b = (rlog && rlog[k]) || {};
+      const a = syncSafeMap(local.log && local.log[k]), b = syncSafeMap(rlog && rlog[k]);
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) { m[d] = Math.max(a[d] || 0, b[d] || 0); });
       Object.keys(b).forEach(function (d) { if ((b[d] || 0) > (a[d] || 0)) changed = true; });
       lg[k] = m;
     });
     (function () { // counts：每日逐字段取大（n/r/w/a，按并集遍历——新增计数字段自动兼容）
-      const a = (local.log && local.log.counts) || {}, b = (rlog && rlog.counts) || {};
+      const a = syncSafeMap(local.log && local.log.counts), b = syncSafeMap(rlog && rlog.counts);
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) {
         const day = Object.assign({}, b[d] || {});
@@ -97,18 +105,18 @@
       lg.counts = m;
     })();
     (function () { // detail：逐日逐卡取大
-      const a = (local.log && local.log.detail) || {}, b = (rlog && rlog.detail) || {};
+      const a = syncSafeMap(local.log && local.log.detail), b = syncSafeMap(rlog && rlog.detail);
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) {
         const day = Object.assign({}, b[d] || {});
-        Object.keys(a[d]).forEach(function (id) { day[id] = Math.max(a[d][id] || 0, (b[d] && b[d][id]) || 0); });
+        Object.keys(a[d] || {}).forEach(function (id) { day[id] = Math.max(a[d][id] || 0, (b[d] && b[d][id]) || 0); });
         Object.keys(b[d] || {}).forEach(function (id) { if ((b[d][id] || 0) > ((a[d] && a[d][id]) || 0)) changed = true; });
         m[d] = day;
       });
       lg.detail = m;
     })();
     (function () { // checkins：取或
-      const a = (local.log && local.log.checkins) || {}, b = (rlog && rlog.checkins) || {};
+      const a = syncSafeMap(local.log && local.log.checkins), b = syncSafeMap(rlog && rlog.checkins);
       const m = Object.assign({}, b);
       Object.keys(a).forEach(function (d) { if (a[d]) m[d] = true; });
       Object.keys(b).forEach(function (d) { if (b[d] && !a[d]) changed = true; });
@@ -117,7 +125,7 @@
     (function () { // mastery/metrics：取当日专注较长一侧的快照
       const st = lg.studyTime || {};
       ['mastery', 'metrics'].forEach(function (k) {
-        const a = (local.log && local.log[k]) || {}, b = (rlog && rlog[k]) || {};
+        const a = syncSafeMap(local.log && local.log[k]), b = syncSafeMap(rlog && rlog[k]);
         const m = Object.assign({}, b);
         Object.keys(a).forEach(function (d) {
           const aSt = (local.log && local.log.studyTime && local.log.studyTime[d]) || 0;
@@ -130,16 +138,15 @@
       });
     })();
     (function () { // newIntro：已引入新卡并集（本地在前）
-      const ai = (local.log && local.log.newIntro && local.log.newIntro.ids) || [];
-      const bi = (rlog && rlog.newIntro && rlog.newIntro.ids) || [];
+      const ai = syncSafeList(local.log && local.log.newIntro && local.log.newIntro.ids);
+      const bi = syncSafeList(rlog && rlog.newIntro && rlog.newIntro.ids);
       const extra = bi.filter(function (id) { return ai.indexOf(id) === -1; });
       if (extra.length) changed = true;
       lg.newIntro = { ids: ai.concat(extra) };
     })();
     (function () { // revlogs：评分日志去重并集（键 t|cid|r——同端同一次评分不重复产生）
-      const ar = (local.log && local.log.revlogs) || [];
-      const br = (rlog && rlog.revlogs) || [];
-      if (!Array.isArray(ar) && !Array.isArray(br)) return;
+      const ar = syncSafeList(local.log && local.log.revlogs);   // 非数组（旧载荷/损坏数据）按空处理
+      const br = syncSafeList(rlog && rlog.revlogs);
       const seen = {};
       const merged = [];
       ar.concat(br).forEach(function (e) {
@@ -155,10 +162,33 @@
       br.forEach(function (e) {
         if (!e || typeof e !== 'object' || typeof e.cid !== 'string' || !e.cid) return;
         const k = (e.t || 0) + '|' + e.cid + '|' + (e.r || 0);
-        if (!ar.some(function (a) { return (a.t || 0) + '|' + a.cid + '|' + (a.r || 0) === k; })) remoteNew++;
+        if (!ar.some(function (a) { return a && typeof a === 'object' && ((a.t || 0) + '|' + a.cid + '|' + (a.r || 0)) === k; })) remoteNew++;
       });
       if (remoteNew) changed = true;
       lg.revlogs = merged;
+    })();
+    (function () { // quiz：自测记录按 t 去重并集（t 即该场自测的开始时刻，同端同一次自测不重复产生）
+      const aq = syncSafeList(local.log && local.log.quiz);   // 非数组（旧载荷/损坏数据）按空处理
+      const bq = syncSafeList(rlog && rlog.quiz);
+      const isValid = function (e) {
+        return !!e && typeof e === 'object' && !Array.isArray(e) && typeof e.t === 'number' && isFinite(e.t);
+      };
+      const seen = {};
+      const merged = [];
+      aq.concat(bq).forEach(function (e) { // 本地在前 → 同 t 以本地记录为准（内容一致时不产生差异）
+        if (!isValid(e)) return;
+        const k = String(e.t);
+        if (seen[k]) return;
+        seen[k] = 1;
+        merged.push(e);
+      });
+      merged.sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
+      if (merged.length > SYNC_QUIZ_MAX) merged.splice(0, merged.length - SYNC_QUIZ_MAX); // 与应用端上限一致（只留最新）
+      const remoteNew = bq.filter(function (e) {
+        return isValid(e) && aq.every(function (a) { return !isValid(a) || String(a.t) !== String(e.t); });
+      }).length;
+      if (remoteNew) changed = true;
+      lg.quiz = merged;
     })();
     out.log = lg;
     // 供同步层判断是否需要写回本地；enumerable=false 使 JSON 序列化自动跳过

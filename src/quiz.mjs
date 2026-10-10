@@ -241,11 +241,14 @@
   const QUIZ_MAX_COUNT = 50;       // 数量上限（配置面板边界校验）
   const QUIZ_DEFAULT_COUNT = 10;
   const QUIZ_WEAK_ACC = 60;        // 整场正确率 < 60% → 视为「表现差」（阈值明确可测）
-  const QUIZ_DIFF_MIN = 1;         // FSRS 记忆难度 D 的值域
-  const QUIZ_DIFF_MAX = 10;
+  // 「难度」维度＝知识卡难度标签（★1–★5，取卡片星标 META[id][0]，见 learn.mjs 的 metaOf）。
+  // 与 FSRS 记忆难度 D（算法维护的 1–10）是两个口径：D 既不参与筛选，也不在卡面展示
+  // （t20：题头的 D 参考行已删，卡面只以星标呈现难度）。
+  const QUIZ_DIFF_MIN = 1;
+  const QUIZ_DIFF_MAX = 5;
   const QUIZ_MASTERY_MIN = 0;      // 掌握度（%）值域
   const QUIZ_MASTERY_MAX = 100;
-  const QUIZ_DEFAULT_DIFF = 5;     // 未进入排期的卡没有真实 D，按默认 5 计
+  const QUIZ_DEFAULT_DIFF = 3;     // 卡片没有星标标记（metaOf 缺省）时按 ★3 计，与 learn.mjs:182 同口径
   const QUIZ_UNCATED = '未关联';    // 错题没有关联知识点时的章节桶
   const QUIZ_MAX_RECORDS = 200;    // DB.log.quiz 保留条数上限
 
@@ -276,6 +279,14 @@
     return n;
   }
 
+  // 难度标签（★1–★5）归一：与浏览页 starText / metaOf 完全同规则——
+  // 非有限数回落缺省 ★QUIZ_DEFAULT_DIFF（未打星标的卡按 ★3），否则四舍五入再夹到 1–5。
+  function quizStarNorm(v) {
+    const n = (typeof v === 'number') ? v : parseFloat(v);
+    if (!isFinite(n)) return QUIZ_DEFAULT_DIFF;
+    return Math.max(QUIZ_DIFF_MIN, Math.min(QUIZ_DIFF_MAX, Math.round(n) || QUIZ_DEFAULT_DIFF));
+  }
+
   // 区间净化：夹取到 [lo,hi]；下限大于上限时自动交换
   function quizSanitizeRange(pair, lo, hi, dflt) {
     const a = Array.isArray(pair) ? pair : [];
@@ -284,7 +295,7 @@
     return l <= h ? [l, h] : [h, l];
   }
 
-  // 四维配置净化（配置面板的边界校验）：数量 1–50、难度 1–10、掌握度 0–100，
+  // 四维配置净化（配置面板的边界校验）：数量 1–50、难度 ★1–5（知识卡难度标签）、掌握度 0–100，
   // 越界夹取、非法值回落默认、未知章节丢弃、重复章节去重。
   function quizSanitizeConfig(raw, allCats) {
     const r = (raw && typeof raw === 'object') ? raw : {};
@@ -308,7 +319,7 @@
     };
   }
 
-  // 候选筛选：章节范围（空数组=全部）+ 难度范围 + 掌握度范围，三段都命中才留在池子里
+  // 候选筛选：章节范围（空数组=全部）+ 难度标签范围（★1–★5）+ 掌握度范围，三段都命中才留在池子里
   function quizFilterEntries(entries, cfg) {
     const c = cfg || quizDefaultConfig();
     const cats = c.cats || [];
@@ -317,7 +328,8 @@
     return (Array.isArray(entries) ? entries : []).filter(function (e) {
       if (!e || !e.id) return false;
       if (cats.length && cats.indexOf(e.cat) === -1) return false;
-      const diff = (typeof e.diff === 'number' && isFinite(e.diff)) ? e.diff : QUIZ_DEFAULT_DIFF;
+      // 难度维度取「卡片难度标签」星标（非 FSRS 记忆难度 D），与浏览页 starText / metaOf 同口径
+      const diff = quizStarNorm(e.diff);
       const mast = (typeof e.mastery === 'number' && isFinite(e.mastery)) ? e.mastery : 0;
       if (!(diff >= d[0] && diff <= d[1])) return false;
       return mast >= m[0] && mast <= m[1];
@@ -351,7 +363,7 @@
         label: e.label,
         prompt: e.prompt,
         cat: e.cat,
-        diff: (typeof e.diff === 'number' && isFinite(e.diff)) ? e.diff : QUIZ_DEFAULT_DIFF,
+        diff: quizStarNorm(e.diff),
         mastery: (typeof e.mastery === 'number' && isFinite(e.mastery)) ? e.mastery : 0,
         predicted: (typeof e.predicted === 'number' && isFinite(e.predicted)) ? e.predicted : 0,
         opts: quizShuffle([e].concat(distract), rand).map(function (x) { return { id: x.id, label: x.label }; })
@@ -460,18 +472,18 @@
       list: list
     };
   }
-  // 知识卡候选（纯）：data 为知识点数组，cardOf(id)→排期卡、masteryOf(id)→掌握度%、
-  // rOf(id)→算法预测可提取性 R（null 表示无）。题面方向：给出内容（back），选它的名称（title）。
-  function quizCardCandidates(data, cardOf, masteryOf, rOf) {
+  // 知识卡候选（纯）：data 为知识点数组，masteryOf(id)→掌握度%、
+  // rOf(id)→算法预测可提取性 R（null 表示无）、starOf(id)→知识卡难度标签 ★1–★5
+  // （= learn.mjs 的 metaOf(id)[0]，缺省 ★3）。题面方向：给出内容（back），选它的名称（title）。
+  function quizCardCandidates(data, masteryOf, rOf, starOf) {
     return (Array.isArray(data) ? data : []).map(function (f) {
-      const c = (typeof cardOf === 'function') ? (cardOf(f.id) || {}) : {};
       const r = (typeof rOf === 'function') ? rOf(f.id) : null;
       return {
         id: f.id,
         label: f.title,
         prompt: f.back,
         cat: f.cat,
-        diff: (typeof c.diff === 'number' && isFinite(c.diff)) ? c.diff : QUIZ_DEFAULT_DIFF,
+        diff: quizStarNorm((typeof starOf === 'function') ? starOf(f.id) : NaN),
         mastery: (typeof masteryOf === 'function') ? (masteryOf(f.id) || 0) : 0,
         predicted: (r == null || !isFinite(r)) ? 0 : r
       };
@@ -479,23 +491,28 @@
   }
 
   // 错题候选（纯）：wrongs 为错题表，data 为知识点数组（把关联知识点映射到章节）；
-  // masteryOf(wid)→掌握度%、predOf(w)→算法预测可提取性 R。题面方向：给出题目（q），选它的解析（a）。
+  // masteryOf(wid)→掌握度%、predOf(w)→算法预测可提取性 R、starOf(kid)→知识卡难度标签 ★1–★5。
+  // 难度维度用「关联知识点」的卡片星标（错题记录自身没有星标）；无 linked / 关联不到卡片
+  // 时回落缺省 ★3，否则 D>5 的历史错题会被 ★1–5 区间静默排除。
+  // 题面方向：给出题目（q），选它的解析（a）。
   // 没有关联知识点的错题单列 QUIZ_UNCATED 桶（不影响筛选：选「全部」时仍会被抽到）。
-  function quizWrongCandidates(wrongs, data, masteryOf, predOf) {
+  function quizWrongCandidates(wrongs, data, masteryOf, predOf, starOf) {
     const list = Array.isArray(data) ? data : [];
     return Object.keys(wrongs || {}).map(function (wid) {
       const w = wrongs[wid] || {};
       let cat = QUIZ_UNCATED;
+      let star = NaN;
       if (w.linked && w.linked.length) {
         const f = list.find(function (x) { return x.id === w.linked[0]; });
         if (f) cat = f.cat;
+        if (typeof starOf === 'function') star = starOf(w.linked[0]);
       }
       return {
         id: wid,
         label: w.a || '（无解析）',
         prompt: w.q,
         cat: cat,
-        diff: (typeof w.diff === 'number' && isFinite(w.diff)) ? w.diff : QUIZ_DEFAULT_DIFF,
+        diff: quizStarNorm(star),
         mastery: (typeof masteryOf === 'function') ? (masteryOf(wid) || 0) : 0,
         predicted: (typeof predOf === 'function') ? (predOf(w) || 0) : 0
       };
@@ -533,16 +550,18 @@
   }
 
   // 知识卡候选（适配层）：给出内容（back），选它的名称（title）——与旧版自测同向
+  // 难度维度＝卡片自身的难度标签星标 metaOf(id)[0]（缺省 ★3），与浏览页 star-badge / 星标筛选同源
   function quizCardEntries() {
     return quizCardCandidates(
       DATA,
-      function (id) { return card(id); },
       function (id) { return mastery(id).pct; },
-      function (id) { return currentR(id); }
+      function (id) { return currentR(id); },
+      function (id) { return metaOf(id)[0]; }
     );
   }
 
-  // 错题候选（适配层）：给出题目（q），选它的解析（a）；章节取关联知识点所属分类，未关联单列一桶
+  // 错题候选（适配层）：给出题目（q），选它的解析（a）；章节取关联知识点所属分类，未关联单列一桶；
+  // 难度维度＝关联知识点的卡片星标（无关联时由 quizWrongCandidates 回落 ★3）
   function quizWrongEntries() {
     return quizWrongCandidates(
       DB.wrongs,
@@ -554,7 +573,8 @@
           return Math.round(fsrsRetention(days, w.stab) * 100);
         }
         return 0;
-      }
+      },
+      function (kid) { return metaOf(kid)[0]; }
     );
   }
 
@@ -706,7 +726,13 @@
       renderApp();
     }));
     box.appendChild(quizCatRow(mode, cfg));
-    box.appendChild(quizRangeRow(mode, '难度范围', 'FSRS 记忆难度 D（1–10）；未进入排期的卡按默认 D=' + QUIZ_DEFAULT_DIFF + ' 计', QUIZ_DIFF_MIN, QUIZ_DIFF_MAX, 0.5, 'diff', cfg));
+    // 难度维度＝知识卡的难度标签（★1–★5，取卡片星标 META[id][0]，与浏览页星标同源）；
+    // 不再是 FSRS 记忆难度 D（算法维护的 1–10，不参与筛选，也不在卡面展示）。
+    const diffHint = '知识卡难度标签（★1–★5，取自卡片星标）'
+      + (mode === 'wrong'
+        ? '；错题按关联知识点的星标计，未关联的按缺省 ★' + QUIZ_DEFAULT_DIFF + ' 计'
+        : '；没有星标标记的卡按缺省 ★' + QUIZ_DEFAULT_DIFF + ' 计');
+    box.appendChild(quizRangeRow(mode, '难度范围（★）', diffHint, QUIZ_DIFF_MIN, QUIZ_DIFF_MAX, 1, 'diff', cfg));
     box.appendChild(quizRangeRow(mode, '掌握度范围', '掌握度 %（0–100）；口径与「浏览」/「错题统计」一致', QUIZ_MASTERY_MIN, QUIZ_MASTERY_MAX, 1, 'mastery', cfg));
     wrap.appendChild(box);
 
@@ -742,10 +768,12 @@
     const wrongMode = quiz.mode === 'wrong';
     const wrap = el('div', 'quiz-wrap');
 
+    // 题头口径：难度＝本题筛选用的「知识卡难度标签」★1–★5（starText 与浏览页 / 配置面板同源）。
+    // 卡面不展示 FSRS 记忆难度 D（t20：用户明确不要 D 参考行），只保留掌握度百分比。
     const top = el('div', 'learn-top');
     top.appendChild(el('span', 'muted', '第 ' + (quiz.idx + 1) + ' / ' + quiz.qs.length + ' 题'));
     top.appendChild(el('span', 'badge', '得分 ' + quiz.score));
-    top.appendChild(el('span', 'muted', 'D=' + (q.diff || QUIZ_DEFAULT_DIFF).toFixed(1) + ' · 掌握 ' + Math.round(q.mastery || 0) + '%'));
+    top.appendChild(el('span', 'muted', '难度 ' + starText(quizStarNorm(q.diff)) + ' · 掌握 ' + Math.round(q.mastery || 0) + '%'));
     wrap.appendChild(top);
 
     const cardEl = el('div', 'card');
@@ -849,6 +877,8 @@
       byCat: rep.byCat.map(function (c) { return { c: c.cat, n: c.n, ok: c.ok }; }),
       weak: rep.weakIds,
       queued: rep.queued,
+      // 口径提示：这里的 diff 是本次筛选用的「知识卡难度标签 ★1–★5」（不是 FSRS 记忆难度 D）；
+      // 字段名沿用 diff 以兼容旧记录/云同步，读侧不应再按 1–10 的 D 语义解释。
       diff: quiz.cfg ? quiz.cfg.diff : null,
       mastery: quiz.cfg ? quiz.cfg.mastery : null,
       cats: quiz.cfg ? quiz.cfg.cats : null
@@ -875,6 +905,13 @@
     head.appendChild(el('h2', null, '测验完成'));
     head.appendChild(el('p', 'big-score', rep.correct + ' / ' + rep.total));
     head.appendChild(el('p', 'muted', '正确率 ' + rep.pct + '% · ' + rep.verdict + '（表现差线 ' + QUIZ_WEAK_ACC + '%）'));
+    // 报告口径：难度维度＝知识卡难度标签（★1–★5，取自卡片星标），不是 FSRS 记忆难度 D
+    const qcfg = quiz.cfg;
+    if (qcfg && Array.isArray(qcfg.diff)) {
+      const mm = Array.isArray(qcfg.mastery) ? qcfg.mastery : [QUIZ_MASTERY_MIN, QUIZ_MASTERY_MAX];
+      head.appendChild(el('p', 'muted', '筛选范围：难度 ★' + qcfg.diff[0] + '–★' + qcfg.diff[1]
+        + '（知识卡难度标签，取自卡片星标；非 FSRS 记忆难度 D）· 掌握度 ' + mm[0] + '–' + mm[1] + '%'));
+    }
     wrap.appendChild(head);
 
     const kpi = function (label, val) {

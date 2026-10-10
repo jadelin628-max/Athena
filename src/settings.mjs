@@ -55,7 +55,7 @@
       scoutMinutes: 5,
       planDueRemindDays: 3,
       structure: 'free', // 'free' | 'triad'
-      flavor: false,
+      flavor: false, // t41：风味开的行标题口径 = 中文序数层级名（第一任务集团 / 第82任务单元）
       typeNames: { focus: '专注', assault: '突击', life: '生活', plan: '计划', scout: '侦查' },
       levelNames: actDefaultLevelNames()
     };
@@ -90,6 +90,7 @@
       planDueRemindDays: Math.round(actClampNum(raw.planDueRemindDays, 0, 30, d.planDueRemindDays)),
       structure: raw.structure === 'triad' ? 'triad' : 'free',
       flavor: raw.flavor == null ? d.flavor : !!raw.flavor,
+      // t41：层次徽标开关已下线——旧数据里携带的该键在此静默忽略（不输出，也不抛错）
       typeNames: Object.assign({}, d.typeNames),
       levelNames: Object.assign({}, d.levelNames)
     };
@@ -573,13 +574,16 @@
     flavorCb.checked = !!focusCfg.flavor;
     const flavorLab = el('label', 'setting-check', '');
     flavorLab.appendChild(flavorCb);
-    flavorLab.appendChild(el('span', null, '显示类型名与层次名（番号 # 始终显示）'));
+    flavorLab.appendChild(el('span', null, '显示中文序数层级名（第一任务集团 / 第82任务单元）；关闭时只留番号（◆1 总目标 / #82 名称）'));
     flavorCb.addEventListener('change', function () {
       saveActSettings({ focus: { flavor: flavorCb.checked } });
       toast(flavorCb.checked ? '风味显示已开启' : '风味显示已关闭（仅番号）');
     });
     rFlavor.appendChild(flavorLab);
     wrap.appendChild(rFlavor);
+
+    // t41：原层次徽标开关的设置行已删除——行内层级名改由中文序数口径承担，无独立开关。
+    // （删除依据见 src/focus.mjs 的 t41 注释；本文件不再出现该设置键与 UI 入口）
 
     // 层次顺序单一来源：严格四级 unit/group/corps/army（见 focus.mjs FOCUS_LEVEL_KEYS）
     const LEVEL_ORDER = actFocusLevelOrder();

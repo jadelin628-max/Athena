@@ -141,28 +141,21 @@
     wrongPos = 0;
   }
 
-  // 错题自测入口：复用自测视图（quiz.mjs），来源模式由 currentModule === 'wrong' 派生——
-  // 配置面板、出题队列、报告与入队逻辑整体复用，错题版只是换一套候选（错题）与题面方向。
-  function wrongQuizEntry() {
-    const b = el('button', 'btn small', '📝 错题自测');
-    b.addEventListener('click', function () {
-      currentModule = 'wrong';
-      currentView = 'quiz';
-      quiz = null;
-      renderApp();
-    });
-    return b;
-  }
+  // 「错题自测」页内入口已删除（t28）：入口已改为二级功能栏「自测」——错题模块的二级项
+  // `nav:'wrongQuiz'` 由 src/actions.mjs 的 enterWrongQuiz() 落成 currentModule='wrong' +
+  // currentView='quiz'（进行中的会话保持不丢进度），页内不再重复放按钮。
+  // 自测视图本身仍整体复用 quiz.mjs：配置面板、出题队列、报告与入队逻辑不变，
+  // 来源模式由 currentModule === 'wrong' 派生，错题版只是换一套候选（错题）与题面方向。
 
   function renderWrongLearn() {
     const app = document.getElementById('app');
     const total = Object.keys(DB.wrongs || {}).length;
     const tb = el('div', 'learn-top');
-    tb.appendChild(el('span', 'muted', '共 ' + total + ' 道'));
+    // 左上角：移动端首屏即可点到（t28；热区由 style.css 的 `.learn-top .btn.small` 统一给出，不再内联）
     const add = el('button', 'btn small primary', '➕ 手动录入');
     add.addEventListener('click', openWrongInput);
     tb.appendChild(add);
-    tb.appendChild(wrongQuizEntry());
+    tb.appendChild(el('span', 'muted', '共 ' + total + ' 道'));
     app.appendChild(tb);
     // 统计行（与知识卡学习页 statsBar 同构）：待重做 / 今日已重做 / 掌握分布
     if (total > 0) app.appendChild(wrongStatsBar());
@@ -403,11 +396,11 @@
     const app = document.getElementById('app');
     const ids = Object.keys(DB.wrongs || {});
     const tb = el('div', 'learn-top');
-    tb.appendChild(el('span', 'muted', '共 ' + ids.length + ' 道'));
+    // 左上角：与重做视图同款（t28；热区同上，由 style.css 统一，不再内联）
     const add = el('button', 'btn small primary', '➕ 手动录入');
     add.addEventListener('click', openWrongInput);
     tb.appendChild(add);
-    tb.appendChild(wrongQuizEntry());
+    tb.appendChild(el('span', 'muted', '共 ' + ids.length + ' 道'));
     app.appendChild(tb);
 
     if (!ids.length) {
@@ -508,7 +501,6 @@
     }
     const tb = el('div', 'learn-top');
     tb.appendChild(el('span', 'muted', '共 ' + ids.length + ' 道'));
-    tb.appendChild(wrongQuizEntry());
     wrap.appendChild(tb);
 
     let due = 0, fresh = 0, review = 0, grad = 0, pctSum = 0, lapses = 0;
@@ -572,7 +564,7 @@
     wrap.appendChild(el('h3', null, '📝 自测统计'));
     const qb = el('div', 'stat-card');
     if (!qs.n) {
-      qb.appendChild(el('p', 'muted', '还没有错题自测记录——点上方「📝 错题自测」按范围抽题，做完给出成绩、章节表现、用时与预测差距。'));
+      qb.appendChild(el('p', 'muted', '还没有错题自测记录——点二级功能栏「自测」按范围抽题（配置数量 / 章节 / 难度 / 掌握度），做完给出成绩、章节表现、用时与预测差距。'));
     } else {
       qb.appendChild(el('p', null, '共 ' + qs.n + ' 次 · ' + qs.totalQ + ' 题 · 平均正确率 ' + qs.acc + '% · 平均每题 ' + Math.round(qs.msAvg / 1000) + ' 秒'));
       qb.appendChild(el('p', 'muted', '表现差提前入队 ' + qs.queued + ' 张（只把到期时间提前到现在，不改记忆历史）'));

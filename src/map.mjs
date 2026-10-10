@@ -23,7 +23,7 @@
         { g: '🟢', ref: 'Roediger & Karpicke 2006 · Psychological Science' },
         { g: '🟢', ref: 'Dunlosky et al. 2013 · Psychological Science in the Public Interest（效用 A 级）' }
       ],
-      features: [{ label: '自测', nav: 'quiz' }, { label: '错题本', nav: 'wrongBrowse' }]
+      features: [{ label: '自测', nav: 'quiz' }, { label: '错题本', nav: 'wrongBrowse' }, { label: '错题自测', nav: 'wrongQuiz' }]
     },
     {
       id: 'spacing', cat: 'learn', icon: '📅', title: '间隔重复',
@@ -464,7 +464,7 @@
       evidence: [
         { g: '🟢', ref: 'Dunlosky et al. 2013 · Psychological Science in the Public Interest' }
       ],
-      features: [{ label: '自测', nav: 'quiz' }, { label: '错题本', nav: 'wrongBrowse' }]
+      features: [{ label: '自测', nav: 'quiz' }, { label: '错题本', nav: 'wrongBrowse' }, { label: '错题自测', nav: 'wrongQuiz' }]
     },
     {
       id: 'trouble', cat: 'appx', icon: '🛠️', title: '学不进去排查',

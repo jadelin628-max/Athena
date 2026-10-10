@@ -252,8 +252,10 @@
   const STORED_QUIZ_MAX_RECORDS = 200;   // 与 quiz.mjs 的 QUIZ_MAX_RECORDS 同口径：只留最新 200 条
   const STORED_QUIZ_MIN_COUNT = 1;       // 与 quiz.mjs 的 QUIZ_MIN_COUNT / QUIZ_MAX_COUNT 同口径
   const STORED_QUIZ_MAX_COUNT = 50;
-  const STORED_QUIZ_DIFF_MIN = 1;        // 与 quiz.mjs 的 QUIZ_DIFF_MIN / QUIZ_DIFF_MAX 同口径
-  const STORED_QUIZ_DIFF_MAX = 10;
+  // 难度维度＝知识卡难度标签（★1–★5），与 quiz.mjs 的 QUIZ_DIFF_MIN / QUIZ_DIFF_MAX 同口径。
+  // 旧档里的 FSRS 记忆难度 D（1–10）区间由 storedQuizRange 夹取迁移（[1,10]→[1,5]、[3,7]→[3,5]）。
+  const STORED_QUIZ_DIFF_MIN = 1;
+  const STORED_QUIZ_DIFF_MAX = 5;
   const STORED_QUIZ_MASTERY_MIN = 0;     // 与 quiz.mjs 的 QUIZ_MASTERY_MIN / QUIZ_MASTERY_MAX 同口径
   const STORED_QUIZ_MASTERY_MAX = 100;
   const STORED_QUIZ_MODES = ['cards', 'wrong'];   // 自测的两个来源（知识卡 / 错题）
@@ -305,7 +307,8 @@
     const out = {
       count: Math.round(storedQuizClampNum(r.count, STORED_QUIZ_MIN_COUNT, STORED_QUIZ_MAX_COUNT, 10)),
       cats: [],
-      diff: storedQuizRange(r.diff, STORED_QUIZ_DIFF_MIN, STORED_QUIZ_DIFF_MAX, [1, 10]),
+      // 缺省 ★1–★5；旧档的 D 语义区间（如 [1,10] / [3,7]）在这里被夹取迁移到星标域
+      diff: storedQuizRange(r.diff, STORED_QUIZ_DIFF_MIN, STORED_QUIZ_DIFF_MAX, [1, 5]),
       mastery: storedQuizRange(r.mastery, STORED_QUIZ_MASTERY_MIN, STORED_QUIZ_MASTERY_MAX, [0, 100])
     };
     if (Array.isArray(r.cats)) {

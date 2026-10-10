@@ -91,6 +91,9 @@
   --sidebar-w: 208px;
   --chrome-h: 0px;
   --dock-h: 0px;
+  /* 顶部安全区（刘海 / 状态栏）：Web 侧恒为 0，原生壳（Tauri/安装到主屏）可注入实际值。
+     被 .focus-reminder 顶部锚定引用（style.css:2032），t8 新增，非颜色 token。 */
+  --safe-top: 0px;
 }
 /* 暗色可选（非默认）：V2_PLAN §1.1 */
 [data-theme="dark"] {
@@ -1729,8 +1732,18 @@ body.immersive #immersiveExit { display: block; }
 }
 /* 列表与详情共用 .bank-view；详情是单题阅读流，收紧一档行距并收窄阅读行宽 */
 .bank-detail { max-width: 760px; gap: 10px; }
-.bank-head { display: flex; flex-direction: column; gap: 8px; }
+/* t8 合并：t20 曾在此规则之后另起一条 .bank-head{flex-direction:row;align-items:baseline;
+   justify-content:space-between;flex-wrap:wrap}（「一行两端对齐」），属同一选择器的重复定义；
+   现按层叠等价合并到本处（后者覆盖的 flex-direction 取 row，其余属性取并集），全表只此一处。 */
+.bank-head {
+  display: flex;
+  flex-direction: row; align-items: baseline;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 8px;
+}
+/* t8 合并：同上，t20 的 .bank-title{display:flex;align-items:center;gap:8px} 与此处合并为一条 */
 .bank-title {
+  display: flex; align-items: center; gap: 8px;
   margin: 0; font-family: var(--font-display);
   font-size: var(--text-xl); font-weight: 700;
   letter-spacing: var(--tracking-tight); color: var(--text);
@@ -1801,11 +1814,14 @@ body.immersive #immersiveExit { display: block; }
 .bank-badge-year { color: var(--text); font-variant-numeric: tabular-nums; }
 .bank-badge-type { color: var(--accent-2); border-color: var(--accent-2-weak); background: transparent; }
 .bank-badge-freq, .bank-badge-diff { color: var(--text-muted); font-weight: 500; }
+/* 星标色阶：低星端曾混 --text-faint，实测 bank-star1 仅 2.38（<3:1，非文本也不达标），
+   t8 起混 --text-muted——五档实测 4.09 / 4.2+ / 3.78 / 3.9+ / 3.68（亮）与 6.3+（暗），
+   全部 ≥3:1，且「★/☆ 数量」与 title 属性仍各自独立承载等级信息。 */
 .bank-badge.bank-star5 { color: var(--accent); }
-.bank-badge.bank-star4 { color: color-mix(in srgb, var(--accent) 70%, var(--text-faint)); }
-.bank-badge.bank-star3 { color: color-mix(in srgb, var(--accent) 48%, var(--text-faint)); }
-.bank-badge.bank-star2 { color: color-mix(in srgb, var(--accent) 30%, var(--text-faint)); }
-.bank-badge.bank-star1 { color: color-mix(in srgb, var(--accent) 16%, var(--text-faint)); }
+.bank-badge.bank-star4 { color: color-mix(in srgb, var(--accent) 70%, var(--text-muted)); }
+.bank-badge.bank-star3 { color: color-mix(in srgb, var(--accent) 48%, var(--text-muted)); }
+.bank-badge.bank-star2 { color: color-mix(in srgb, var(--accent) 30%, var(--text-muted)); }
+.bank-badge.bank-star1 { color: color-mix(in srgb, var(--accent) 16%, var(--text-muted)); }
 .bank-stem {
   margin: 0; font-size: var(--text-sm); line-height: var(--leading-snug);
   color: var(--text); white-space: normal; overflow-x: auto;
@@ -1817,7 +1833,9 @@ body.immersive #immersiveExit { display: block; }
   border: 1px solid transparent; background: var(--bg-sunken);
   font-size: var(--text-2xs); color: var(--text-muted); white-space: nowrap;
 }
-.bank-tag-more { border-style: dashed; border-color: var(--border); background: transparent; color: var(--text-faint); }
+/* +N 计数（t8 复测）：--text-faint on --bg-elevated 实测仅 2.53（11px 次要文本需 ≥3:1），
+   改 --text-muted（亮 4.83 / 暗 6.79）；虚线描边仍保留「还有更多」的弱化语义。 */
+.bank-tag-more { border-style: dashed; border-color: var(--border); background: transparent; color: var(--text-muted); }
 .bank-btn {
   appearance: none; cursor: pointer;
   min-height: 28px; padding: 4px 10px;
@@ -1869,12 +1887,19 @@ body.immersive #immersiveExit { display: block; }
   background: var(--bg-sunken);
   font-size: var(--text-sm); line-height: var(--leading-snug);
 }
-.bank-option { display: block; white-space: normal; overflow-x: auto; }
+/* 选项行 = 字母列 + 公式文本列（t8）：字母固定不动，长公式只在文本列内横向滚动。
+   旧写法整行 block + overflow-x:auto，滚动时 (A) 字母会跟着滑出视野。 */
+.bank-option {
+  display: flex; align-items: flex-start; gap: 8px;
+  white-space: normal;
+}
 .bank-sec-title {
   margin-top: 2px;
   font-size: var(--text-2xs); font-weight: 600;
   letter-spacing: var(--tracking-caps); text-transform: uppercase;
-  color: var(--text-faint);
+  /* t8：原 var(--text-faint) 在 --bg-elevated 上实测 2.53（<3:1，连次要文本阈值都不达），
+     改 --text-muted（亮 4.83 / 暗 6.79）；该选择器仅 src/bank.mjs:912/921/924 消费。 */
+  color: var(--text-muted);
 }
 .bank-answer, .bank-traps, .bank-hint {
   font-size: var(--text-sm); line-height: var(--leading-normal);
@@ -1958,78 +1983,34 @@ body.immersive #immersiveExit { display: block; }
   line-height: var(--leading-snug);
 }
 
-/* --- 4. 任务链层级视觉：四级严格划分（选择器文本须与 focus.mjs 的 focusCssDeclared 逐字一致，inline 兜底才让位） --- */
-.focus-tree-row[data-level="unit"],
-.focus-tree-row[data-level="group"],
-.focus-tree-row[data-level="corps"],
-.focus-tree-row[data-level="army"] { align-items: center; }
-.focus-tree-row[data-level="unit"] {
-  font-size: 12.5px; font-weight: 400;
-  border-left: 2px solid color-mix(in srgb, var(--text-muted) 70%, transparent);
-  background: color-mix(in srgb, var(--text-muted) 6%, transparent);
-}
-.focus-tree-row[data-level="group"] {
-  font-size: 14px; font-weight: 600;
-  border-left: 3px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 9%, transparent);
-}
-.focus-tree-row[data-level="corps"] {
-  font-size: 15.5px; font-weight: 700;
-  border-left: 4px solid var(--accent-2);
-  background: color-mix(in srgb, var(--accent-2) 9%, transparent);
-}
-.focus-tree-row[data-level="army"] {
-  font-size: 17px; font-weight: 800;
-  border-left: 5px solid var(--warn);
-  background: color-mix(in srgb, var(--warn) 10%, transparent);
-}
-.focus-level-unit, .focus-level-group, .focus-level-corps, .focus-level-army { letter-spacing: var(--tracking-snug); }
-.focus-tree-guide { flex: 0 0 auto; margin-right: 4px; color: var(--text-faint); }
-.focus-tree-row .focus-level-mark { display: inline-block; min-width: 16px; margin-right: 4px; text-align: center; font-weight: 700; }
-.focus-tree-row[data-level="unit"] .focus-level-mark { color: var(--text-muted); }
-.focus-tree-row[data-level="group"] .focus-level-mark { color: var(--accent); }
-.focus-tree-row[data-level="corps"] .focus-level-mark { color: var(--accent-2); }
-.focus-tree-row[data-level="army"] .focus-level-mark { color: var(--warn); }
-.focus-level-badge[data-level="group"] {
-  display: inline-block; font-size: 12.5px; font-weight: 600;
-  padding: 0 7px; margin-bottom: 2px; border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  color: var(--accent); white-space: nowrap;
-}
-.focus-level-badge[data-level="corps"] {
-  display: inline-block; font-size: 13.5px; font-weight: 700;
-  padding: 0 7px; margin-bottom: 2px; border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent-2) 55%, transparent);
-  background: color-mix(in srgb, var(--accent-2) 10%, transparent);
-  color: var(--accent-2); white-space: nowrap;
-}
-.focus-level-badge[data-level="army"] {
-  display: inline-block; font-size: 15px; font-weight: 800;
-  padding: 0 7px; margin-bottom: 2px; border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent);
-  background: color-mix(in srgb, var(--warn) 12%, transparent);
-  color: var(--warn); white-space: nowrap;
-}
-.focus-parent-chip {
-  display: inline-block; font-size: 11.5px; font-weight: 400;
-  padding: 0 6px; margin-top: 2px; border-radius: 999px;
-  border: 1px solid var(--border); background: var(--bg-elevated);
-  color: var(--text-muted); white-space: nowrap;
-}
-.focus-parent-chip.is-free {
-  border-style: dashed;
-  border-color: color-mix(in srgb, var(--warn) 55%, var(--border));
-  color: var(--warn);
-}
-.focus-parent-chip[data-parent-level="unit"] { color: var(--text-muted); }
-.focus-parent-chip[data-parent-level="group"] { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
-.focus-parent-chip[data-parent-level="corps"] { border-color: color-mix(in srgb, var(--accent-2) 40%, var(--border)); }
-.focus-parent-chip[data-parent-level="army"] { border-color: color-mix(in srgb, var(--warn) 40%, var(--border)); }
+/* --- 4. 任务链层级视觉：2.2.0 回滚 2.0 简洁风——层级只由树杈引导（.focus-tree-guide）+ 层级文字标文本承担 --- */
+/* t23 纯减法：删掉 2.1.0 按层级上色/放大的一整套规则 ——
+   原 .focus-tree-row .focus-level-mark 五条（含 unit/group/corps/army 四色）、
+   树行四级 font-size/font-weight + 彩色 border-left + 底色、.focus-level-badge 三级彩色胶囊、
+   父级 chip 的 is-free 警告色与 data-parent-level 四级 border-color。
+   依据：t12 后 src/** 已 0 处输出 .focus-level-mark；层级徽标的 data-level 钩子当时仍由
+   src/focus.mjs 输出（只作语义标记，不产生任何视觉差异：同主题下 computed
+   color / background-color / border-color 与取值无关）——t41 起徽标元素本身已下线
+   （data-level 现只留在树行上），t42 删除其 CSS 残留（见下）。
+   t24 补删死代码：父级 chip 的渲染函数自 t12 起已无调用点（DOM 实例恒为 0），
+   其基础规则块与 is-free / data-parent-level 钩子的来源一并从 src/**、style.css 删除；
+   归属信息改由展开面板 .focus-tree-expand-attr（「归属 …」一行）承担。
+   t42 收尾：t41 删净徽标生产者（渲染函数 + 设置键）后 `.focus-level-badge*` 已无生产者，
+   残留的 2 个选择器（原 :2381 组合规则中的半条、原 :2387 整条）按纯减法删除。
+   .focus-tree-row 基础规则（style.css:1587，2.0 既有）保持不变。 */
+/* 树杈引导色：原 var(--text-faint) 在树区实际底色上实测 2.54（亮 #FFFFFF，<3:1，连次要文本阈值都不达），
+   改 var(--text-muted)（同底色实测亮 4.83 / 暗 6.79）；与 2.0 基线 .focus-tree-root 的次要文本 token 同源（同 t8 在 .bank-sec-title 的处理） */
+.focus-tree-guide { flex: 0 0 auto; margin-right: 4px; color: var(--text-muted); }
 
 /* --- 5. 专注 / 预约剩余时间悬浮提醒（body 直接子节点；z-index 90 高于内容与 dock，低于 toast） --- */
+/* t8 · 顶部锚定（原贴底 bottom: 14px + --dock-h，实测会压住 .rating 四档档位条：
+   窄屏 .rating:not(.hidden) 贴在 --dock-h 之上（style.css:443），悬浮窗同在底部一条带里、
+   z-index 90 盖住档位按钮 → 点不到）。改贴顶后与底部两条带（.rating / .dock）矩形必然不相交，
+   桌面 right:14px / 顶部 12px（+--safe-top），≤760px 由段末 @media 收紧为左右各 8px。
+   子规则（head/level/title/fold/clock/meta）与 is-collapsed / is-expired 一字未动；
+   `[data-mode]` 子规则见本段末尾 t37 说明（三条 appoint 规则已作为死 CSS 删除）。 */
 .focus-reminder {
-  position: fixed; right: 14px; bottom: calc(14px + var(--dock-h, 0px));
+  position: fixed; right: 14px; top: calc(12px + var(--safe-top, 0px)); bottom: auto; left: auto;
   z-index: 90;
   min-width: 164px; max-width: 240px;
   padding: 8px 10px;
@@ -2073,9 +2054,12 @@ body.immersive #immersiveExit { display: block; }
 .focus-reminder.is-collapsed .focus-reminder-meta { display: none; }
 .focus-reminder.is-expired { border-color: color-mix(in srgb, var(--warn) 55%, var(--border)); }
 .focus-reminder.is-expired .focus-reminder-clock { color: var(--warn); }
-.focus-reminder[data-mode="appoint"] .focus-reminder-level { color: var(--accent-2); }
-.focus-reminder[data-mode="appoint"].is-expired { border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border)); }
-.focus-reminder[data-mode="appoint"].is-expired .focus-reminder-clock { color: var(--accent-2); }
+/* t37 · 删死 CSS：原 `.focus-reminder[data-mode="appoint"] .focus-reminder-level { color: var(--accent-2); }`、
+   `.focus-reminder[data-mode="appoint"].is-expired { border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border)); }`、
+   `.focus-reminder[data-mode="appoint"].is-expired .focus-reminder-clock { color: var(--accent-2); }` 三条规则。
+   依据：唯一写 `data-mode` 的生产者 src/focus.mjs 的 focusReminderSync（现 :2762）只写 `info.mode`，取值仅
+   scout / focus / reserve（src/focus.mjs:1098 / :1122 / :1137）；`appoint` 在 src/、tests/、index.html、sw.js 命中 0；
+   真实预约态是 `reserve` → 三条规则永不可达（t26/T100 判红项 F2）。 */
 
 /* --- 6. 触屏尺寸（与文件尾部既有 @media 块同规则：只加不删） --- */
 @media (max-width: 760px) {
@@ -2101,46 +2085,57 @@ body.immersive #immersiveExit { display: block; }
    t20 · 题库下拉筛选 + 来源徽标 + 标题范围行（追加段，不改动上方任何既有规则）
    依据：T61 移交清单（来自 t17 落地的 src/bank.mjs 真实 DOM）。全部色值/尺寸走既有 token，
    不引入新字体、新依赖、强制覆盖标记与硬编码色值；新增规则一律追加在文件末尾。
-   DOM 事实（src/bank.mjs）：
-     .bank-filters > .bank-filter.bank-filter-<type|tag|star>
-       > label.bank-filter-label[for=bank-filter-<key>] + select.bank-select.bank-select-<key>
-         > option.bank-select-option(+ .bank-select-option-more 供 disabled 的「其余 N 个知识点」)
+   DOM 事实（src/bank.mjs，t8 按当前源码核对）：
+     .bank-filters > .bank-filter.bank-filter-<type|tag|star|year>
+       > label.bank-filter-label[for=bank-filter-<key>]
+       + button.bank-select.bank-select-<key>[aria-haspopup=listbox][aria-expanded]
+           > span.bank-select-text + span.bank-select-caret
+       + div.bank-select-menu[role=listbox] > button.bank-select-option[role=option][aria-selected]
+           (+ .bank-select-option-more，供 disabled 的「其余 N 个知识点」)
      .bank-head > .bank-title(icon svg.ui-icon + span.bank-title-text) + .bank-head-scope
      列表项徽标首段改 span.bank-badge.bank-badge-school；详情动作按钮改 .bank-btn-detail
      非题库学科空状态 = .bank-empty.bank-empty-subject
    注意：.bank-option（详情页选项列表项）与本段无关，不要与 .bank-select-option 混用。
    ========================================================================================== */
 
-/* --- 1. 三组下拉筛选（题型 / 知识点 / 难度） --- */
+/* --- 1. 四组下拉筛选（题型 / 知识点 / 难度 / 年份·卷）—— 第四组由 t14 追加在难度之后 --- */
 .bank-filters {
   display: flex; flex-wrap: wrap;
   gap: 8px 10px;
   align-items: flex-start;
 }
-/* 三组同权平分一行；basis 190px 是「题型：线性回归与 OLS 推断·统计」这类最长标签
-   在 13px 字号下的实测最小可读宽度（窄于此则换行，见段末 @media）。 */
+/* 四组同权平分一行；basis 190px 是「题型：线性回归与 OLS 推断·统计」「年份/卷：2025 年 · 全国硕士
+   研究生入学统一考试-数学三 · 2 题」这类最长标签在 13px 字号下的实测最小可读宽度（窄于此则换行，
+   见段末 @media 760px）。t8 实测：1120px 版心内四组各得 ≈262px，单行不下挤、无横向溢出
+   （探针 probe-style.mjs 的 filterGroups 段记录每组的 clientWidth 与溢出标记）。 */
 .bank-filter {
   display: flex; flex-direction: column; gap: 4px;
   flex: 1 1 190px; min-width: 0;
+  /* t8：自定义下拉的弹层定位参照（.bank-select-menu 绝对定位在 trigger 正下方） */
+  position: relative;
 }
-/* 筛选族钩子（源码写 'bank-filter' + ' bank-filter-type|tag|star'）：
-   长知识点名允许在栅格轨道内收缩，不撑破容器、不把相邻下拉挤成零宽 */
-.bank-filter-type, .bank-filter-tag, .bank-filter-star { min-width: 0; }
+/* 筛选族钩子（源码写 'bank-filter' + ' bank-filter-type|tag|star|year'）：
+   长知识点名/长年份卷名允许在栅格轨道内收缩，不撑破容器、不把相邻下拉挤成零宽 */
+.bank-filter-type, .bank-filter-tag, .bank-filter-star, .bank-filter-year { min-width: 0; }
 .bank-filter-label {
   font-size: var(--text-2xs); font-weight: 600;
   letter-spacing: var(--tracking-wide);
   color: var(--text-muted);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-/* 原生 <select>：保留系统外观以拿到平台下拉箭头（自绘箭头需要 data-URI 里的硬编码色值，
-   违反「只用既有 token」）。宽度 100% + min-width 0 保证长选项名只在控件内被裁剪。 */
+/* t8：触发控件由原生 <select> 换成 <button class="bank-select">（自绘下拉，t17 的 src/bank.mjs），
+   故按按钮重置并按「行内两栏」布局：左 .bank-select-text（当前值，可省略）+ 右 .bank-select-caret。
+   宽度 100% + min-width 0 保证长选项名只在控件内被裁剪；省略号在三件套在 .bank-select-text 上
+   （flex 容器自身不再需要 text-overflow）。 */
 .bank-select {
+  display: flex; align-items: center; gap: 6px; text-align: left;
+  appearance: none;
   width: 100%; max-width: 100%; min-width: 0;
   min-height: 32px; padding: 5px 8px;
   border: 1px solid var(--border); border-radius: var(--radius-sm);
   background: var(--bg-sunken); color: var(--text);
   font: inherit; font-size: var(--text-sm);
-  text-overflow: ellipsis; cursor: pointer;
+  cursor: pointer;
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 .bank-select:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
@@ -2151,19 +2146,35 @@ body.immersive #immersiveExit { display: block; }
   border-color: var(--accent);
 }
 .bank-select-type, .bank-select-tag, .bank-select-star { min-width: 0; }
-/* 展开后的原生 option 不在页面 DOM 里，样式仅供支持的平台使用；
-   option 背景若跟随 --bg-sunken，Windows/Chrome 下与弹层底色同色会糊成一片，故用 --bg-elevated。 */
-.bank-select-option { background: var(--bg-elevated); color: var(--text); }
-.bank-select-option-more { color: var(--text-faint); }
-/* 暗色下让原生弹层/箭头随主题渲染（color-scheme 而非硬编码色值） */
-[data-theme="dark"] .bank-select { color-scheme: dark; }
-
-/* --- 2. 标题 + 范围行（t17 后 .bank-head 变成两个子元素，改为一行两端对齐） --- */
-.bank-head {
-  flex-direction: row; align-items: baseline;
-  justify-content: space-between; flex-wrap: wrap;
+/* t8：选项行住在 .bank-select-menu 弹层里（不再是原生 option），是 <button role="option">；
+   桌面弹层单行、公式标签放不下时换行（白名单标签含 KaTeX，裁掉半截公式比多一行更糟）。
+   more 行是 <div aria-disabled> 的说明文案，不接收点击。 */
+.bank-select-option {
+  display: block; width: 100%; min-width: 0;
+  min-height: 28px; padding: 5px 8px;
+  appearance: none; border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated); color: var(--text);
+  font: inherit; font-size: var(--text-sm); text-align: left;
+  white-space: normal; overflow-x: auto; overflow-wrap: break-word;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
-.bank-title { display: flex; align-items: center; gap: 8px; }
+.bank-select-option-more {
+  cursor: default;
+  margin-top: 4px; padding-top: 6px;
+  border-top: 1px dashed var(--border);
+  font-size: var(--text-2xs);
+  /* --text-faint on --bg-elevated 实测 2.53（<3:1），改 --text-muted（4.83 / 6.79） */
+  color: var(--text-muted);
+}
+/* t20 · 已删除：[data-theme="dark"] .bank-select { color-scheme: dark; }
+   —— 该规则原为让原生弹层/箭头随暗色主题渲染，t8 起 .bank-select 是自绘 <button> +
+   .bank-select-menu 弹层，color-scheme 已无消费者（弹层色全部走 token）。 */
+
+/* --- 2. 标题 + 范围行（t17 后 .bank-head 变成两个子元素，改为一行两端对齐） ---
+   t8：原两条重复定义（.bank-head / .bank-title）已按层叠等价合并到上方 :1735 附近的基础规则处，
+   本段只保留 t17 新增的图标规则，避免同一选择器两处定义。 */
 .bank-title .ui-icon { width: 21px; height: 21px; color: var(--accent); }
 .bank-title-text {
   min-width: 0;
@@ -2218,3 +2229,355 @@ body.immersive #immersiveExit { display: block; }
   .bank-select { min-height: 40px; }
   .bank-filter-label { white-space: normal; }
 }
+
+/* ==========================================================================================
+   t8 · 题库新结构样式（自定义下拉 / 选择题 (A)–(D) 与正确项 / 公式内联）
+   依据：t7（bank-render）交付的类名清单 backup/scratch/bank-render/class-inventory.md 与
+   src/bank.mjs 的真实 DOM。全部色值/尺寸走既有 token（style.css:21–115），不引入新字体、
+   新依赖、硬编码色值；同一个选择器只在一处定义（本段只写 t7 新增类，既有类在上方就地改）。
+   DOM 事实（src/bank.mjs）：
+     .bank-filter > label.bank-filter-label + button.bank-select.bank-select-<key>
+       > span.bank-select-text(texEl) + span.bank-select-caret('▾')
+       + div.bank-select-menu[role=listbox][aria-hidden]（展开态 + .is-open）
+         > button.bank-select-option(.is-selected)[role=option][aria-selected]
+         | div.bank-select-option.bank-select-option-more[aria-disabled]
+     详情页 .bank-options > .bank-option(.is-answer)[data-option-letter]
+       > span.bank-option-letter('(A)') + span.bank-option-text(texEl)
+       … .bank-sec-title + div.bank-answer-letter('答案：X') + div.bank-answer(texEl)
+   ========================================================================================== */
+
+/* --- 1. 下拉触发控件：当前值（可省略）+ 指示箭头 --- */
+.bank-select-text {
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* '▾' 是纯文本字形（与 t15 星级同族做法），非图标资源；11px 配色 --text-muted on --bg-sunken
+   实测 4.23（非文本 3:1 达标，见 backup/scratch/bank-style/README.md 对比度表）。 */
+.bank-select-caret {
+  flex: none;
+  font-size: var(--text-2xs); line-height: 1;
+  color: var(--text-muted);
+  transition: transform var(--dur) var(--ease);
+}
+.bank-select[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: var(--bg-elevated);
+}
+.bank-select[aria-expanded="true"] .bank-select-caret { transform: rotate(180deg); }
+
+/* --- 2. 弹层（listbox）：trigger 正下方、限高滚动、关闭态 display:none --- */
+.bank-select-menu {
+  display: none;
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  z-index: 30;
+  max-height: 264px;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 4px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+}
+.bank-select-menu.is-open { display: block; }
+/* 悬停/键盘焦点：只加 8% accent 底，文字仍是 --text（accent 前景在白底仅 3.68，不达 AA） */
+.bank-select-option:hover { background: color-mix(in srgb, var(--accent) 8%, var(--bg-elevated)); }
+.bank-select-option:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* 选中态：accent-weak 底 + 加粗 + 前缀 ✓（✓ 走 --text，暗色下同样高对比；
+   不用 accent 做前景色，理由同上） */
+.bank-select-option.is-selected {
+  background: var(--accent-weak);
+  color: var(--text); font-weight: 600;
+}
+.bank-select-option.is-selected::before { content: '✓'; margin-right: 6px; }
+.bank-select-option.is-selected:hover { background: color-mix(in srgb, var(--accent) 18%, var(--bg-elevated)); }
+
+/* --- 3. 选择题：(A)–(D) 字母列 + 公式文本列；正确项 is-answer --- */
+.bank-option-letter {
+  flex: none; min-width: 22px;
+  color: var(--text); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.bank-option-text { flex: 1 1 auto; min-width: 0; overflow-x: auto; }
+/* 正确项：10% --ok 底 + 左侧 2px 竖条。竖条用 --ok 与 --text 的混合色而不是纯 --ok——
+   纯 --ok on --bg-sunken 亮色下非文本对比仅 ~2.2（<3:1），混合后 ~3.4 达标（暗色更高）。 */
+.bank-option.is-answer {
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+  box-shadow: inset 2px 0 0 0 color-mix(in srgb, var(--ok) 75%, var(--text));
+}
+/* 「答案：X」标识：药丸 chip，位于 .bank-answer 之前（.bank-detail-body 是 flex column，
+   align-self 让它收缩到内容宽而不是拉满整行） */
+.bank-answer-letter {
+  align-self: flex-start;
+  display: inline-flex; align-items: center;
+  padding: 1px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 999px;
+  background: var(--accent-weak); color: var(--text);
+  font-size: var(--text-2xs); font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- 4. 公式内联适配：紧凑容器里的 KaTeX 不放大、不撑破 --- */
+/* 全局 .katex 是 1.14em（style.css:561，正文配比）；徽标/标签/下拉/答案标识是 11–13px 的
+   小容器，放大后会把同行文字顶出去，故在这些容器内回到 1em。 */
+.bank-badge .katex, .bank-tag .katex, .bank-select-text .katex,
+.bank-select-option .katex, .bank-answer-letter .katex { font-size: 1em; }
+/* 行内公式在 nowrap 容器里可能超宽：自身限宽 + 横向滚动，父容器不被撑破 */
+.bank-badge .kx-inline, .bank-tag .kx-inline,
+.bank-select-text .kx-inline, .bank-select-option .kx-inline,
+.bank-answer-letter .kx-inline {
+  display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle;
+}
+/* 块级公式（$$…$$ 渲染成 .kx-block，全局是 display:block + margin 8px）在紧凑容器里改行内块、
+   去外边距，避免把徽标/标签/弹层选项撑成两行 */
+.bank-badge .kx-block, .bank-tag .kx-block,
+.bank-select-text .kx-block, .bank-select-option .kx-block,
+.bank-answer-letter .kx-block {
+  display: inline-block; margin: 0; max-width: 100%; overflow-x: auto; vertical-align: middle;
+}
+.bank-option-text .kx-block { margin: 0; }
+
+/* --- 5. 触屏补充（t20 段末 @media 同族；只加不删） --- */
+@media (max-width: 760px) {
+  .bank-select-menu { max-height: 50vh; }
+}
+
+/* ============================================================================
+   t29 · 专注链树 UI 视觉落地（大纲软件质感 + Linear 风）
+   结构/类名契约来自 t27，交接件 backup/scratch/focus-ui2/t28-class-map.md：本段只加视觉，
+   不改行 DOM、不复制缩进步长数值（--focus-tree-indent 由渲染端写 14px，这里只消费）、
+   不按文本措辞写选择器、不用颜色区分层级（沿用 t23/t24 的克制口径）。
+   用色一律既有 token 与 color-mix()；新增自定义属性只在本段内定义并引用。
+   ========================================================================== */
+
+/* --- 1. 作用域变量：行背景叠加态下仍满足 AA 的小字墨色 --- */
+.focus-tree {
+  /* --text-muted 在 --bg-sunken 上实测 4.24:1（不达 AA），在 hover / is-expanded 叠加底上更低；
+     此处取「20% --text + 80% --text-muted」的安静墨色，在 --bg-elevated / --bg-sunken /
+     accent 叠加底上均 ≥4.5:1，亮暗两主题由同一表达式推导。 */
+  --focus-ink-quiet: color-mix(in srgb, var(--text) 20%, var(--text-muted));
+}
+
+/* --- 2. 树行：hover / selected / is-expanded / focus-visible（行即展开开关，role=button） --- */
+/* 桌面单行：长名走省略号，不把 label 挤到第二行（否则树杈引导与名称不同行，对齐断掉）；
+   ≤760px 由第 9 节媒体查询恢复 2.0 的换行行为。 */
+.focus-tree-row { border-radius: var(--radius-sm); padding: 4px 6px; flex-wrap: nowrap; }
+.focus-tree-row[data-expand-toggle="row"] { cursor: pointer; }
+.focus-tree-row[data-expand-toggle="row"]:hover { background: var(--bg-sunken); }
+.focus-tree-row.is-expanded {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+/* 同时选中且展开时，沿用既有 .selected（accent 10%）口径，保持选中更醒目 */
+.focus-tree-row.selected.is-expanded { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.focus-tree-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* --- 3. 主行：单行 flex（名称 + 层级标 + 状态），长名省略不撑破窄屏 --- */
+.focus-tree-main {
+  flex: 1 1 auto; min-width: 0;
+  display: flex; align-items: center; flex-wrap: nowrap; gap: 6px;
+}
+.focus-tree-label { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* --- 4. 状态文字标 / 转正小字：中性小标，层次不由颜色承担 --- */
+/* t42 死规则纯减法（唯一原地删除处，原因见文件末「t42 · 单元类型标签视觉落地」段）：
+   t41 删掉「层次徽标」的全部生产者（纯函数 + 元素函数 + 设置键 showLevelTag）后，下面两条规则已无生产者 ——
+     · 组合选择器里的 .focus-level-badge 半条（原 `:2381` `.focus-level-badge, .focus-tree-state {`）：只删 badge 一半，state 半条逐字保留；
+     · `.focus-level-badge { border-radius: 6px; }`（原 `:2387`）：整条删除。
+   删除前后（同一口径：去注释后按「选择器组 + 声明块」计，见 backup/scratch/focus-style3/probe-style3.mjs 的 S5）：
+   清理本身 = 声明块 −1、逗号拆分后选择器 −2（含 badge 选择器的规则块 2 → 0）；
+   全文件（含文件末追加的类型标签规则）= 声明块 820 → 820、逗号拆分后选择器 906 → 905。
+   DOM 命中 0（t41 四组组合 + t42 四组组合）。 */
+.focus-tree-state {
+  flex: 0 0 auto; white-space: nowrap;
+  font-size: 12px; line-height: 1.6; font-weight: 500;
+  color: var(--focus-ink-quiet); background: var(--bg-elevated);
+  border: 1px solid var(--border); padding: 0 6px;
+}
+.focus-tree-state { border-radius: 999px; padding: 0 8px; }
+/* 提示文字（「转正需下级全部完成」）可收缩 + 允许断行：窄屏下不再整段顶出视口。 */
+.focus-tree-hint { flex: 0 1 auto; min-width: 0; font-size: 12px; line-height: 1.4; color: var(--focus-ink-quiet); }
+
+/* --- 5. 行内复选框与操作按钮（热区不缩小；≤760px 由既有媒体查询抬到 40px） ---
+   容器可收缩（flex: 0 1 auto）：桌面宽度充裕时尺寸不变，窄屏时让「按钮组」自己换行而不是整块顶出视口。 */
+.focus-tree-check { flex: 0 0 auto; accent-color: var(--accent); }
+.focus-tree-acts { flex: 0 1 auto; align-items: center; }
+.focus-tree-acts .btn { flex: 0 0 auto; }
+
+/* --- 6. 树杈引导线：等宽字符格保证同层对齐、逐层连续（字符列数由纯函数给出，这里不改字符） --- */
+.focus-tree-guide {
+  font-family: Consolas, ui-monospace, SFMono-Regular, Menlo, "Courier New", monospace;
+  font-size: calc(var(--focus-tree-indent) - 2px);
+  line-height: 1.5;
+  white-space: pre;
+}
+
+/* --- 7. 层级折叠键：方形热区 + hover / active / focus-visible，与树杈视觉对齐。
+   选择器写成 `.focus-tree-row .focus-tree-fold-level`（带行前缀）是硬约束：
+   src 侧守卫 src/focus.mjs:2918 以 focusCssDeclared('.focus-tree-row .focus-tree-fold-level')
+   做子串匹配，只有带前缀才会被判定为「CSS 已接管」而不再注入内联兜底。 --- */
+.focus-tree-row .focus-tree-fold-level {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; min-width: 28px; min-height: 28px; padding: 0;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg-elevated); color: var(--text-muted);
+  line-height: 1; cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.focus-tree-row .focus-tree-fold-level:hover {
+  border-color: var(--accent); background: var(--accent-weak);
+  color: color-mix(in srgb, var(--accent) 75%, var(--text));
+}
+.focus-tree-row .focus-tree-fold-level:active { transform: translateY(1px); }
+.focus-tree-row .focus-tree-fold-level:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.focus-tree-row .focus-tree-fold-level[data-collapsed="1"] {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--text-muted) 45%, var(--border));
+}
+
+/* --- 8. 展开面板：Linear 风模块卡 + 标签 chip + 归属行（左缩进取一个半步长） --- */
+.focus-tree-expand-panel {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px;
+  margin: 4px 0 8px calc(var(--focus-tree-indent) * 1.5);
+  box-shadow: var(--shadow-sm);
+}
+.focus-tree-expand-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.focus-tree-expand-seq {
+  font-family: Consolas, ui-monospace, SFMono-Regular, Menlo, "Courier New", monospace;
+  font-size: 12px; color: var(--focus-ink-quiet); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.focus-tree-expand-level {
+  flex: 0 0 auto; font-size: 12px; line-height: 1.6;
+  color: var(--focus-ink-quiet); background: var(--bg-sunken);
+  border-radius: 6px; padding: 0 6px; white-space: nowrap;
+}
+.focus-tree-expand-title {
+  min-width: 0; font-size: 14px; font-weight: 600; color: var(--text);
+  overflow-wrap: anywhere;
+}
+.focus-tree-expand-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.focus-tree-expand-tag {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  background: var(--bg-sunken); border: 1px solid var(--border);
+  border-radius: 6px; padding: 2px 6px;
+  font-size: 12px; line-height: 1.6;
+}
+/* 按 data-kind 区分（不按文本措辞匹配）：plan 带主色细描边、due 保持中性 */
+.focus-tree-expand-tag[data-kind="plan"] { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.focus-tree-expand-tag[data-kind="due"] { border-color: color-mix(in srgb, var(--text-muted) 35%, var(--border)); }
+.focus-tree-expand-tag-key { color: var(--focus-ink-quiet); }
+.focus-tree-expand-tag-val { color: var(--text); }
+.focus-tree-expand-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.focus-tree-expand-mod {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  background: var(--bg-sunken); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px;
+}
+.focus-tree-expand-mod-key { font-size: 12px; line-height: 1.4; color: var(--focus-ink-quiet); }
+.focus-tree-expand-mod-val {
+  font-size: 13px; color: var(--text);
+  font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
+.focus-tree-expand-attr {
+  font-size: 12px; line-height: 1.5; color: var(--focus-ink-quiet);
+  border-top: 1px solid var(--border); padding-top: 6px;
+}
+
+/* --- 9. 窄屏：≤760px 恢复树行换行（2.0 行为）；≤420px 折叠键抬到 40×40、模块卡单列、面板不再额外左缩进 --- */
+@media (max-width: 760px) {
+  .focus-tree-row { flex-wrap: wrap; }
+  .focus-tree-main { flex-wrap: wrap; }
+}
+@media (max-width: 420px) {
+  .focus-tree-row .focus-tree-fold-level { width: 40px; height: 40px; min-width: 40px; min-height: 40px; }
+  .focus-tree-expand-grid { grid-template-columns: 1fr; }
+  .focus-tree-expand-panel { margin-left: 0; }
+}
+
+/* --- 10. 错题模块「手动录入」热区转正（t28 内联兜底 → 规则；由 t31 删内联并复跑测试） ---
+   .btn.small 把 .btn 的 36px 压到 30px，错题重做/浏览视图首行按钮热区偏小；
+   .learn-top 是 flex + space-between（style.css:417），「手动录入」为其首个子元素。 */
+.learn-top .btn.small { min-height: 32px; }
+
+/* ============================================================================
+   t34 · 层级折叠键字形精修：文字字形 → CSS 几何三角（用户要求「展开键更显眼更美观」）
+   ----------------------------------------------------------------------------
+   问题：字形来自 src（▾ / ▸），而 ▾ 是 U+25BE「BLACK DOWN-POINTING *SMALL*
+   TRIANGLE」——墨迹只有字号的 ≈1/3（实测 12px → 墨迹 4.0×6.0px，即使抬到 28px 也仅
+   8.6px 高），在 28×28 白底圆角盒里等于「空盒子 + 一个小点」；且 ▾ 与 ▸ 是两个字形，
+   墨迹尺寸还不一致（8.63×9.63 vs 9.75×8.75），两态看起来不一样大。
+   解法：改用 CSS 几何三角（::before + clip-path），墨迹 13×10px（≥9px，宽高比 1.30），
+   折叠态只是把同一形状旋转 90°（视觉 10×13，比例 1/1.30）→ 两态同形、不变形；
+   填色用 currentColor，于是 t29 的 hover / active / focus-visible / [data-collapsed="1"]
+   四态配色与过渡全部原样继承，零新增 token、零颜色字面量、无 !important。
+   覆盖说明（append-only 段，只加不改）：t29 的
+   .focus-tree-row .focus-tree-fold-level（style.css:2406）未声明 font-size，字形字号
+   继承自 2.0 的 .focus-tree-fold（style.css:1602 font-size:12px）；这里以「同特异性
+   选择器 + 文件末尾后置声明」把它覆盖为 font-size:0（只让文字不参与绘制；
+   DOM 文本、类名、aria-label、aria-expanded、data-collapsed 与既有点击行为一字未动）。
+   热区尺寸（桌面 28×28、≤760px 40×40、≤420px 40×40）不在本段，保持 t27/t29 原值。 */
+.focus-tree-row .focus-tree-fold-level { font-size: 0; }
+.focus-tree-row .focus-tree-fold-level::before {
+  content: ''; display: block;
+  width: 13px; height: 10px;                 /* 墨迹 13×10 CSS px（修复前 4×6） */
+  background: currentColor;                  /* 颜色全部来自 t29 的四态声明 */
+  clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+  transform-origin: center; transform: rotate(0deg);
+  transition: transform var(--dur) var(--ease);
+}
+.focus-tree-row .focus-tree-fold-level[data-collapsed="1"]::before { transform: rotate(-90deg); }
+/* ≤760px 折叠键热区为 40×40（style.css:1718），字形同比例放大到 16×12（比例 1.33） */
+@media (max-width: 760px) {
+  .focus-tree-row .focus-tree-fold-level::before { width: 16px; height: 12px; }
+}
+
+/* ============================================================================
+   t42 · 单元类型标签视觉落地（.focus-unit-type-tag）+ 层次徽标 chip 死规则清理
+   ----------------------------------------------------------------------------
+   结构契约来自 t41（src/focus.mjs 的 focusUnitTypeTagEl）：标签是 .focus-tree
+   （列向 flex，gap:2px）的独立子元素，DOM 顺序 = 标签 → 所属单元行 →（展开面板），
+   所以「上方标签、下方归属行」由 DOM 承担，这里只管形态。
+   1) 形态：胶囊（999px）中性小标 —— 12px/500，1px --border 描边 + --bg-sunken 底，
+      文字色 --focus-ink-quiet（t29 在 .focus-tree 上定义的安静墨色：--text-muted
+      在 --bg-sunken 上只有 4.24:1，不达 AA）。底色不用 t29 状态胶囊的 --bg-elevated，
+      是为了与同一行右侧的状态胶囊区分（形状同、底色不同）；类型语义只由文本承担，
+      不按类型上色（沿用 t23 起「层级/类型不驱动颜色」的口径）。
+   2) 缩进对齐：**刻意不按 data-depth 缩进**。t41 冻结探针断言标签左缘 ≡ 所属行左缘
+      （|Δx| ≤ 1px，见 backup/scratch/focus-flavor/probe-flavor.mjs:805）；若按
+      depth × 步长缩进，就要在 CSS 里复制渲染端步长（FOCUS_TREE_INDENT_PX = 14px），
+      既违 t29「只消费 --focus-tree-indent、不复制步长」的口径，也会让标签与行左缘错位。
+      归属感由「贴住下方行」的间距承担：margin-top 6px（与前一个兄弟行拉开）
+      + .focus-tree 既有 2px gap（紧贴所属行）。
+   3) 窄屏：max-width:100% + nowrap + 省略号，兜住任意长度的类型名（类型名可来自
+      设置 focusUnitTypeLabel），≤760px / ≤420px 不换行、不溢出、不加宽。
+   4) 不可交互：标签不绑监听、不可拖拽（t41 契约），因此没有 hover/active/focus 态。
+   零新增 token、零颜色字面量、无 !important（延续探针 A3/A4/A5/A8 口径）。
+   ========================================================================== */
+.focus-unit-type-tag {
+  align-self: flex-start;   /* 关键：默认 stretch 会把它拉成整行色带，这里收成内容宽度 */
+  flex: 0 0 auto;           /* 不参与剩余空间分配（它是 .focus-tree 的独立子项） */
+  max-width: 100%;
+  margin-top: 6px;          /* 与前一个兄弟行拉开；下方只隔 .focus-tree 的 2px gap */
+  padding: 1px 8px;         /* 高度 ≈ 12px×1.6 + 2×1px 描边 + 2×1px 内边距 = 23px */
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  color: var(--focus-ink-quiet);
+  font-size: 12px; line-height: 1.6; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* --- 死规则清理记录（本任务唯一两处原地删除；就地说明见「§4 状态文字标」上方）---
+   删除项 1：`.focus-level-badge, .focus-tree-state { … }` 的 badge 半条（原 :2381）
+   删除项 2：`.focus-level-badge { border-radius: 6px; }`（原 :2387，整条）
+   依据：t41 删净徽标生产者（元素函数 + 设置键 showLevelTag），DOM 命中 0。
+   口径（去注释后按「选择器组 + 声明块」计数）：
+     清理本身 = 声明块 −1、逗号拆分后选择器 −2；含 .focus-level-badge 的规则块 2 → 0。
+     全文件（含本段追加的 .focus-unit-type-tag 规则）= 声明块 820 → 820、逗号拆分后选择器 906 → 905。
+   保留：`.focus-tree-state` 半条与 `.focus-tree-state { border-radius: 999px; … }` 逐字未动。
+   原则：不留无生产者的选择器；徽标若回归，先恢复生产者再补规则。
+   ------------------------------------------------------------------------- */

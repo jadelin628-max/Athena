@@ -24,6 +24,9 @@ backup/
 # 参考材料（教材讲义与历年真题 PDF，约 401 MB，仅本地阅读参考，不入库）
 参考文件/
 
+# 参考资料抽取索引（大 JSON ≥190 KB，仅本地复算；入库只保留可读的 .md 与裁定）
+docs/refs/*.json
+
 # Tauri 桌面版：前端拷贝与 Rust 构建产物
 dist/
 src-tauri/target/

@@ -64,6 +64,8 @@ test('actDefaultFocusSettings：H4 专注/结构默认值（对齐 focusDefaultS
   assert.equal(d.planDueRemindDays, 3);
   assert.equal(d.structure, 'free');
   assert.equal(d.flavor, false);
+  // t41：层次徽标开关已下线——默认设置不再输出该键（设置页也已无该行）
+  assert.equal('showLevel' + 'Tag' in d, false, '默认设置仍输出层次徽标开关');
   assert.equal(d.typeNames.focus, '专注');
   assert.equal(d.typeNames.scout, '侦查');
   assert.equal(d.levelNames.unit, '任务单元');
@@ -111,6 +113,23 @@ test('actSanitizeFocusSettings：单元时长去重保序', () => {
   assert.equal(s.unitMinutes, 50);
   const empty = actSanitizeFocusSettings({ unitDurations: [] });
   assert.deepEqual(empty.unitDurations, [25, 50, 60]);
+});
+
+test('actSanitizeFocusSettings：层次徽标开关字段已移除（旧数据静默忽略，不抛错）', () => {
+  const KEY = 'showLevel' + 'Tag';
+  // 旧数据携带该键：sanitize 不得抛错，且输出对象里不再有该键
+  const withFalse = actSanitizeFocusSettings({ [KEY]: false });
+  assert.equal(KEY in withFalse, false, 'sanitize 仍输出层次徽标开关');
+  const withZero = actSanitizeFocusSettings({ [KEY]: 0 });
+  assert.equal(KEY in withZero, false);
+  const withTrue = actSanitizeFocusSettings({ [KEY]: true });
+  assert.equal(KEY in withTrue, false);
+  assert.equal(KEY in actSanitizeFocusSettings({}), false);
+  assert.equal(KEY in actSanitizeFocusSettings(null), false);
+  // 合并视图同样不保留该键，且其余 focus 字段正常
+  const merged = actSanitizeSettings({ focus: { [KEY]: false, flavor: true } });
+  assert.equal(KEY in merged.focus, false, '合并视图仍输出层次徽标开关');
+  assert.equal(merged.focus.flavor, true);
 });
 
 test('actSanitizeSettings：合并视图 habit+focus', () => {

@@ -6,9 +6,11 @@
 //
 // 学科范围（t17）：题库不再自带页内学科选择，范围恒等于全局学科选择器当前学科
 // （src/app.mjs 的 currentSubjectId，三科 id 同名 math3/econ/stats）；三科之外渲染空状态。
-// 三组筛选（题型 / 知识点 / 难度≥）收进原生 <select>：原生控件无法携带随选择变化的
-// data-arg，因此 change 时直接派发既有 bankFilter 动作与既有参数名（type= / tag= / star=），
-// 不新增 action 名；状态改写与重渲染仍统一收口在 src/actions.mjs 的 case 'bankFilter'。
+// 四组筛选（题型 / 知识点 / 难度≥ / 年份·卷，t14 追加年份）收进自建下拉（trigger button +
+// 弹层 listbox）：原生 <select> 的 <option> 只吃纯文本、承载不了 KaTeX 公式与随选择变化的
+// data-arg，故选项自带 data-action="bankFilter" + data-arg（type= / tag= / star= / year=），
+// 由 src/actions.mjs 的全局 click 委托派发既有动作与既有参数名，不新增 action 名；
+// 状态改写与重渲染仍统一收口在 src/actions.mjs 的 case 'bankFilter'。
 
 // ---- 会话级状态 ----
 // ⚠️ 这些状态变量声明在 src/learn.mjs 的「视图状态」区（与 browse*/wrong* 同处），
@@ -140,6 +142,7 @@ function bankNormalizeTypeFilter(subjectId) {
 // t17 起已无「题型出现频率」维度（typeStar），故不再参与匹配。
 function bankMatch(q, f) {
   if (f.subject && f.subject !== 'all' && q.subject !== f.subject) return false;
+  if (!bankYearSelected(q, f.year)) return false; // t14：f.year 缺省（历史调用方）时不参与匹配
   if (!bankTypeSelected(q, f.type)) return false;
   if (f.tag && f.tag !== 'all' && (q.tags || []).indexOf(f.tag) < 0) return false;
   if (f.star && f.star !== 'all' && bankStarLevel(q.star) < Number(f.star)) return false;
@@ -203,6 +206,7 @@ function bankCurrentFilter() {
     type: bankType,
     tag: bankTag,
     star: bankStar,
+    year: bankYear,
     query: bankQuery
   };
 }
@@ -354,6 +358,91 @@ function bankSchoolLabel(q) {
     q.subject || '';
 }
 
+// ---- t14 年份/卷 筛选（纯函数，选项派生与谓词都在 TESTABLE 块内）----
+// 值编码：同一年只有一份来源（q.school）时用裸年份 '2013'——选项文案最短；
+// 同一年有多份来源时用 '年份|来源'（来源 = bankSchoolLabel(q)。只按年份合并会把两份卷的题目
+// 混在一个选项里、也说不清考生看到的是哪一份）。注：2025 数学三曾同时存在「入学统一考试」与
+// 「招生考试」两种写法，t21 已按试题册封面统一为「招生考试」；t32 起统计学科入库卡片派生题，
+// 同一年不同学校/卷子真实并存（2016 年就有 10 种来源），「同年多来源 → 年份|来源」因此是常态分支。
+// 同一份卷子内出现两种写法（含措辞漂移）会被 tools/check_data.mjs 的「题源一致性」校验判红。
+// 年份与来源一律从题目自带的 q.year / q.school 派生 → data/bank_*.js 零改动。
+
+function bankYearSelected(q, sel) {
+  var v = sel == null ? '' : String(sel);
+  if (!v || v === 'all') return true;
+  var bar = v.indexOf('|');
+  if (bar < 0) return String(q.year) === v;
+  return String(q.year) === v.slice(0, bar) && bankSchoolLabel(q) === v.slice(bar + 1);
+}
+
+// 来源简称：去掉来源串尾部的「<年份> 年」（数据侧 school 形如「…考试-数学三 2025 年」），
+// 仅用于同年多来源时的选项文案；value 里始终存完整来源串，避免出现两个同名前缀互相覆盖。
+function bankYearSourceLabel(year, school) {
+  var s = String(school == null ? '' : school).trim();
+  var y = String(year == null ? '' : year);
+  if (y) s = s.replace(new RegExp('\\s*' + y + '\\s*年?\\s*$'), '').trim();
+  return s || String(school == null ? '' : school).trim();
+}
+
+// 年份/卷 排名：按 (年份, 来源) 聚合当前科目的题目，年份降序、同年按来源升序，附题数。
+function bankYearRows(subjectId) {
+  var sid = subjectId || bankCurrentSubjectId();
+  var bank = sid ? bankData(sid) : null;
+  var list = (bank && bank.questions) || [];
+  var bag = {}, out = [];
+  for (var i = 0; i < list.length; i++) {
+    var q = list[i];
+    var year = q.year == null ? '' : String(q.year);
+    if (!year) continue;
+    var school = bankSchoolLabel(q);
+    var key = year + '|' + school;
+    if (!bag[key]) { bag[key] = { year: year, school: school, count: 0 }; out.push(bag[key]); }
+    bag[key].count++;
+  }
+  out.sort(function (a, b) {
+    var ya = Number(a.year), yb = Number(b.year);
+    var d = (isNaN(ya) || isNaN(yb)) ? String(b.year).localeCompare(String(a.year)) : yb - ya;
+    if (d) return d;
+    if (a.school === b.school) return 0;
+    return a.school < b.school ? -1 : 1;
+  });
+  return out;
+}
+
+// 年份选项：首项全选 + 逐年（同年多来源时逐年逐来源），label 形如
+// 「2013 年 · 8 题」（同年单来源 → value 为裸年份）/
+// 「2016 年 · 复旦大学 432 统计学真题 · 5 题」（同年多来源 → value 为「年份|来源」）。
+// 注：t32 起统计学科入库了卡片派生题，同一年的不同学校/卷子真实并存（如 2016 年有 10 种来源），
+// 多来源 「年份|来源」 编码因此成为常态；同一份卷子内不得出现两种 school 写法，由
+// tools/check_data.mjs 的「题源一致性」校验与 tests/bank.test.mjs 的年份/来源口径用例守住。
+function bankYearOptions(subjectId) {
+  var rows = bankYearRows(subjectId);
+  var perYear = {};
+  for (var i = 0; i < rows.length; i++) perYear[rows[i].year] = (perYear[rows[i].year] || 0) + 1;
+  var out = [{ value: 'all', label: '全部年份' }];
+  for (var j = 0; j < rows.length; j++) {
+    var r = rows[j];
+    var multi = perYear[r.year] > 1;
+    out.push({
+      value: multi ? r.year + '|' + r.school : r.year,
+      label: multi
+        ? r.year + ' 年 · ' + bankYearSourceLabel(r.year, r.school) + ' · ' + r.count + ' 题'
+        : r.year + ' 年 · ' + r.count + ' 题'
+    });
+  }
+  return out;
+}
+
+// 会话里的年份值在当前科目的选项里没有对应项（历史会话值 / 切换学科后跨科残留）→ 回全选态自愈，
+// 否则下拉显示「全部年份」而列表被一个看不见的年份条件筛住（同 bankNormalizeTypeFilter 的范式）。
+function bankNormalizeYearFilter(subjectId) {
+  var cur = bankYear == null ? '' : String(bankYear);
+  if (!cur || cur === 'all') { bankYear = ''; return; }
+  var opts = bankYearOptions(subjectId);
+  for (var i = 0; i < opts.length; i++) if (String(opts[i].value) === cur) return;
+  bankYear = '';
+}
+
 // ---- 运行时小工具 ----
 
 function bankData(subjectId) {
@@ -395,6 +484,22 @@ function bankWrongState(q) {
   var hit = bankLookupWrongEntry(q);
   return { inBook: !!(hit && hit.entry), entry: (hit && hit.entry) || null };
 }
+
+// 选择题答案字母（纯函数）——数据侧 options 是纯文本数组、没有「正确项」字段，字母只能从
+// answer 散文派生（如「选 B。记 $a_n=…」）。三个正则按序取第一个命中，口径与
+// tests/bank.test.mjs 的期望答案护栏（人工转录 tests/fixtures/bank-answer-manifest.json）逐字一致：
+//   ① 选 X  ② 答案：X / 答案 X  ③ 括号式 (X)
+// 解析不出返回 null（界面据此不显示空标识；data/bank_*.js 零改动）。
+var BANK_CHOICE_RES = [/选\s*([A-D])\b/, /答案\s*[：:]?\s*\(?([A-D])\)?/, /\(([A-D])\)/];
+function bankChoiceLetter(q) {
+  var text = (q && q.answer != null) ? String(q.answer) : '';
+  if (!text) return null;
+  for (var i = 0; i < BANK_CHOICE_RES.length; i++) {
+    var m = BANK_CHOICE_RES[i].exec(text);
+    if (m) return m[1];
+  }
+  return null;
+}
 // ===== END TESTABLE bank-helpers =====
 
 function bankAvailableSubjects() {
@@ -429,16 +534,26 @@ function bankFindByStem(stem) {
 }
 
 // 题目「可纳入错题本」的载体：题型 + 钩子（wrongId 便于回跳定位）
+// t32：卡片派生题没有真题册文件，来源串回退到 src.card/note（不渲染 undefined）
+function bankSourceText(q) {
+  var s = q && q.src;
+  if (!s) return '';
+  if (s.file) return String(s.file) + (s.no ? (' · ' + s.no) : '');
+  if (s.card) return '卡片例题 ' + s.card;
+  return s.note ? String(s.note) : '';
+}
+
 function bankBuildCard(q) {
   var tagText = (q.tags || []).map(function (id) { return bankTagTitle(q.subject, id) || id; }).join(' · ');
+  var head = [q.subjectLabel, q.year, q.no].filter(function (v) { return v != null && v !== ''; }).join(' ');
   return {
-    title: q.subjectLabel + ' ' + q.year + ' ' + q.no + ' · ' + q.typeName,
+    title: head + ' · ' + q.typeName,
     question: q.stem,
     answer: q.answer,
     questionHtml: q.stem,
     answerHtml: q.answer,
     tags: tagText,
-    source: (q.src && (q.src.file || '')) + (q.src && q.src.no ? (' · ' + q.src.no) : ''),
+    source: bankSourceText(q),
     wrongId: 'bank_' + q.id
   };
 }
@@ -452,7 +567,7 @@ function bankAddToWrong(q) {
   var ex = {
     q: q.stem,
     a: q.answer,
-    src: (q.src && q.src.file) ? (q.src.file + (q.src.no ? ' ' + q.src.no : '')) : '',
+    src: bankSourceText(q),
     id: 'bank_' + q.id,
     subject: q.subject,
     year: q.year,
@@ -502,6 +617,8 @@ function renderBank() {
   var app = document.getElementById('app');
   if (!app) return null;
   app.innerHTML = '';
+  // 每次重渲染都重建筛选控件，旧弹层节点已随 innerHTML 丢弃，展开态同步归零
+  bankSelectOpen = null;
   if (!bankAvailableSubjects().length) {
     var empty = el('div', 'bank-empty', '题库数据未加载（data/bank_*.js）。');
     app.appendChild(empty);
@@ -524,6 +641,7 @@ function bankListPage() {
   wrap.appendChild(bankHeader());
 
   bankNormalizeTypeFilter(sid);
+  bankNormalizeYearFilter(sid); // t14：年份/卷 值不在本学科选项里（切换学科后残留）时回全选态自愈
   // 概览区恒为「本科目总量」口径（读全库，不随筛选变化）；筛选命中数是单独一行活数。
   var totals = bankSubjectTotals();
   var rows = bankFilteredQuestions();
@@ -574,9 +692,60 @@ function bankHeader() {
   return head;
 }
 
-// 三组并列筛选（题型 / 知识点 / 难度≥）——原生 <select>，各带可见 <label>。
-// 原生控件无法携带随选择变化的 data-arg，因此 change 时直接派发既有 bankFilter 动作与
-// 既有参数名（type= / tag= / star=）：不新增 action 名，状态改写与重渲染仍收口在 actions.mjs。
+// 四组并列筛选（题型 / 知识点 / 难度≥ / 年份·卷）——自定义下拉：trigger button + 弹层 listbox。
+// 原生 <select> 的 <option> 只吃纯文本，知识点标签标题里的公式（math3 13 / econ 3 / stats 4 条含 $）
+// 在选项里只能原样显示，故自建控件，选项文本一律经 texEl → renderTex 渲染：
+//   .bank-filter > label.bank-filter-label[for] + button.bank-select.bank-select-<key>
+//     + .bank-select-menu[role=listbox] > button.bank-select-option[role=option]
+// 语义类 .bank-select / .bank-select-option 与 data-arg 口径（key=value）保持 t17/t20 不变。
+// 选项带 data-action="bankFilter" + data-arg，选中后由 actions.mjs 的全局 click 委托派发既有
+// bankFilter 动作与既有参数名（type= / tag= / star=）：不新增 action 名，状态改写与重渲染仍收口在
+// actions.mjs（原生控件无法携带随选择变化的 data-arg 才需要旧 change 直派，自建控件已无此限制）。
+// 展开/收起、选择后关闭、点控件外关闭、Esc 关闭都在本模块收口。
+var bankSelectOpen = null; // 同一时刻只展开一个下拉（{field, trigger, menu}）
+var bankSelectDismissBound = false;
+
+function bankCloseSelect() {
+  if (!bankSelectOpen) return;
+  var menu = bankSelectOpen.menu;
+  var trigger = bankSelectOpen.trigger;
+  bankSelectOpen = null;
+  if (menu) {
+    menu.className = 'bank-select-menu';
+    menu.setAttribute('aria-hidden', 'true');
+  }
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+}
+
+function bankOpenSelect(field, trigger, menu) {
+  bankCloseSelect();
+  bankSelectOpen = { field: field, trigger: trigger, menu: menu };
+  menu.className = 'bank-select-menu is-open';
+  menu.setAttribute('aria-hidden', 'false');
+  trigger.setAttribute('aria-expanded', 'true');
+}
+
+// 文档级关闭：点击落在控件之外 → 收起；Esc → 收起并把焦点还给 trigger（只绑定一次）
+function bankBindSelectDismiss() {
+  if (bankSelectDismissBound) return;
+  if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return;
+  bankSelectDismissBound = true;
+  document.addEventListener('click', function (ev) {
+    if (!bankSelectOpen) return;
+    var t = ev && ev.target;
+    if (t && bankSelectOpen.field && bankSelectOpen.field.contains && bankSelectOpen.field.contains(t)) return;
+    bankCloseSelect();
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (!bankSelectOpen) return;
+    var k = ev && ev.key;
+    if (k !== 'Escape' && k !== 'Esc') return;
+    var trigger = bankSelectOpen.trigger;
+    bankCloseSelect();
+    if (trigger && typeof trigger.focus === 'function') trigger.focus();
+  });
+}
+
 function bankFilterField(labelText, key, options, current) {
   var field = el('div', 'bank-filter bank-filter-' + key);
   var id = 'bank-filter-' + key;
@@ -584,26 +753,53 @@ function bankFilterField(labelText, key, options, current) {
   lab.setAttribute('for', id);
   field.appendChild(lab);
 
-  var sel = el('select', 'bank-select bank-select-' + key);
-  sel.setAttribute('id', id);
-  sel.setAttribute('data-bank-facet', key);
-  sel.setAttribute('aria-label', labelText);
   var value = bankSelectValue(options, current);
-  sel.setAttribute('data-arg', key + '=' + value); // 供调试/测试观察当前筛选参数
+  var label = '';
+  for (var k = 0; k < options.length; k++) if (String(options[k].value) === value) { label = options[k].label; break; }
+
+  var trigger = el('button', 'bank-select bank-select-' + key);
+  trigger.setAttribute('type', 'button');
+  trigger.setAttribute('id', id);
+  trigger.setAttribute('data-bank-facet', key);
+  trigger.setAttribute('data-arg', key + '=' + value); // 供调试/测试观察当前筛选参数
+  trigger.setAttribute('aria-haspopup', 'listbox');
+  trigger.setAttribute('aria-expanded', 'false');
+  trigger.setAttribute('aria-label', labelText);
+  trigger.appendChild(texEl('span', 'bank-select-text', label));
+  trigger.appendChild(el('span', 'bank-select-caret', '▾'));
+  field.appendChild(trigger);
+
+  var menu = el('div', 'bank-select-menu');
+  menu.setAttribute('role', 'listbox');
+  menu.setAttribute('data-bank-menu', key);
+  menu.setAttribute('aria-hidden', 'true');
   for (var i = 0; i < options.length; i++) {
-    var o = el('option', 'bank-select-option' + (options[i].disabled ? ' bank-select-option-more' : ''), options[i].label);
-    o.setAttribute('value', options[i].value);
-    if (options[i].disabled) o.setAttribute('disabled', 'disabled');
-    if (String(options[i].value) === value) o.setAttribute('selected', 'selected');
-    sel.appendChild(o);
+    var o = options[i];
+    var v = String(o.value);
+    if (o.disabled) {
+      // 上限外的知识点：只做提示不可选（语义同原 disabled <option>），不进 data-action 委托
+      var more = texEl('div', 'bank-select-option bank-select-option-more', o.label);
+      more.setAttribute('aria-disabled', 'true');
+      menu.appendChild(more);
+      continue;
+    }
+    var op = texEl('button', 'bank-select-option' + (v === value ? ' is-selected' : ''), o.label);
+    op.setAttribute('type', 'button');
+    op.setAttribute('role', 'option');
+    op.setAttribute('data-value', v);
+    op.setAttribute('data-arg', key + '=' + v); // 派发口径与旧 change 的 key+'='+value 一致
+    op.setAttribute('data-action', 'bankFilter');
+    op.setAttribute('aria-selected', v === value ? 'true' : 'false');
+    op.addEventListener('click', function () { bankCloseSelect(); }); // 选择后关闭（状态改写仍归 actions.mjs）
+    menu.appendChild(op);
   }
-  sel.value = value; // 回填当前筛选值（value 不在选项里时 bankSelectValue 已归到 all）
-  sel.addEventListener('change', function () {
-    var v = sel.value || 'all';
-    sel.setAttribute('data-arg', key + '=' + v);
-    if (typeof handleAction === 'function') handleAction('bankFilter', key + '=' + v);
+  field.appendChild(menu);
+
+  trigger.addEventListener('click', function () {
+    if (bankSelectOpen && bankSelectOpen.menu === menu) { bankCloseSelect(); return; }
+    bankOpenSelect(field, trigger, menu);
   });
-  field.appendChild(sel);
+  bankBindSelectDismiss();
   return field;
 }
 
@@ -619,6 +815,8 @@ function bankFilters(rows) {
   }
   box.appendChild(bankFilterField('知识点', 'tag', tagOptions, bankTag));
   box.appendChild(bankFilterField('难度（≥）', 'star', bankStarOptions(), bankStar));
+  // t14：年份/卷 追加在难度之后——既有三组的顺序与语义不变（新增维度只追加，不重排）
+  box.appendChild(bankFilterField('年份/卷', 'year', bankYearOptions(bankCurrentSubjectId()), bankYear));
   return box;
 }
 
@@ -634,13 +832,17 @@ function bankItemNode(q) {
 
   var top = el('div', 'bank-item-top');
   // 来源只留徽标：「院校 · 年度 · 题号」（院校取 q.school，数据侧尚未补时回退科目名）
-  top.appendChild(el('span', 'bank-badge bank-badge-school', bankSchoolLabel(q)));
-  top.appendChild(el('span', 'bank-badge bank-badge-year', q.year + ' · ' + q.no));
-  top.appendChild(el('span', 'bank-badge bank-badge-type', q.typeName));
-  var tstar = el('span', 'bank-badge bank-badge-freq bank-star' + q.typeStars, bankStars(q.typeStars));
+  // 徽标文案一律经 texEl → renderTex（科目名/题型名可能是含 $ 的知识点名），不再用纯文本 el
+  // t32：卡片派生题可能缺 year/school（无四位年份的例题一律不入库；此处只做防御，缺则跳过该徽标，不渲染 undefined）
+  var schoolLabel = bankSchoolLabel(q);
+  if (schoolLabel) top.appendChild(texEl('span', 'bank-badge bank-badge-school', schoolLabel));
+  var yearNo = [q.year, q.no].filter(function (v) { return v != null && v !== ''; }).join(' · ');
+  if (yearNo) top.appendChild(texEl('span', 'bank-badge bank-badge-year', yearNo));
+  top.appendChild(texEl('span', 'bank-badge bank-badge-type', q.typeName));
+  var tstar = texEl('span', 'bank-badge bank-badge-freq bank-star' + q.typeStars, bankStars(q.typeStars));
   tstar.setAttribute('title', '题型出现频率星级（库内统计）');
   top.appendChild(tstar);
-  var dstar = el('span', 'bank-badge bank-badge-diff bank-star' + bankStarLevel(q.star), bankStars(q.star));
+  var dstar = texEl('span', 'bank-badge bank-badge-diff bank-star' + bankStarLevel(q.star), bankStars(q.star));
   dstar.setAttribute('title', '题目难度星级');
   top.appendChild(dstar);
   main.appendChild(top);
@@ -651,11 +853,11 @@ function bankItemNode(q) {
   var tags = el('div', 'bank-tag-row');
   var list = q.tags || [];
   for (var i = 0; i < Math.min(4, list.length); i++) {
-    var tag = el('span', 'bank-tag', bankTagTitle(q.subject, list[i]) || list[i]);
+    var tag = texEl('span', 'bank-tag', bankTagTitle(q.subject, list[i]) || list[i]);
     tag.setAttribute('title', bankTagCat(q.subject, list[i]) + ' · ' + list[i]);
     tags.appendChild(tag);
   }
-  if (list.length > 4) tags.appendChild(el('span', 'bank-tag bank-tag-more', '+' + (list.length - 4)));
+  if (list.length > 4) tags.appendChild(texEl('span', 'bank-tag bank-tag-more', '+' + (list.length - 4)));
   main.appendChild(tags);
   item.appendChild(main);
 
@@ -699,35 +901,65 @@ function bankDetailNode(q) {
   var body = el('div', 'bank-detail-body');
   var top = el('div', 'bank-item-top');
   // 来源只留徽标：「院校 · 年度 · 题号」（院校取 q.school，数据侧尚未补时回退科目名）
-  top.appendChild(el('span', 'bank-badge bank-badge-school', bankSchoolLabel(q)));
-  top.appendChild(el('span', 'bank-badge bank-badge-year', q.year + ' · ' + q.no));
-  top.appendChild(el('span', 'bank-badge bank-badge-type', q.typeName));
-  top.appendChild(el('span', 'bank-badge bank-badge-freq bank-star' + q.typeStars, bankStars(q.typeStars) + ' 出现频率'));
-  top.appendChild(el('span', 'bank-badge bank-badge-diff bank-star' + bankStarLevel(q.star), bankStars(q.star) + ' 难度'));
+  // 徽标文案一律经 texEl → renderTex（与列表页同款）；t32 起 year/school 缺失时跳过该徽标（不渲染 undefined/空行）
+  var schoolLabel = bankSchoolLabel(q);
+  if (schoolLabel) top.appendChild(texEl('span', 'bank-badge bank-badge-school', schoolLabel));
+  var yearNo = [q.year, q.no].filter(function (v) { return v != null && v !== ''; }).join(' · ');
+  if (yearNo) top.appendChild(texEl('span', 'bank-badge bank-badge-year', yearNo));
+  top.appendChild(texEl('span', 'bank-badge bank-badge-type', q.typeName));
+  top.appendChild(texEl('span', 'bank-badge bank-badge-freq bank-star' + q.typeStars, bankStars(q.typeStars) + ' 出现频率'));
+  top.appendChild(texEl('span', 'bank-badge bank-badge-diff bank-star' + bankStarLevel(q.star), bankStars(q.star) + ' 难度'));
   body.appendChild(top);
 
   body.appendChild(texEl('div', 'bank-stem bank-stem-detail', q.stem));
 
   var opt = q.options;
-  if (opt && opt.length) {
+  var hasOpts = !!(opt && opt.length);
+  // 选择题：字母表由 options 下标派生（数据侧不加字段），正确项按 answer 派生的字母标记
+  var letter = hasOpts ? bankChoiceLetter(q) : null;
+  if (hasOpts) {
     var ol = el('div', 'bank-options');
-    for (var i = 0; i < opt.length; i++) ol.appendChild(texEl('div', 'bank-option', opt[i]));
+    for (var i = 0; i < opt.length; i++) {
+      var optLetter = String.fromCharCode(65 + i);
+      var row = el('div', 'bank-option' + (letter === optLetter ? ' is-answer' : ''));
+      row.setAttribute('data-option-letter', optLetter);
+      row.appendChild(el('span', 'bank-option-letter', '(' + optLetter + ')'));
+      row.appendChild(texEl('span', 'bank-option-text', opt[i]));
+      ol.appendChild(row);
+    }
     body.appendChild(ol);
   }
 
   body.appendChild(el('div', 'bank-sec-title', '答案与解析'));
+  // 显式答案标识：只在选择题且字母解析成功时出现（无 options 的题行为不变，也不显示空标识）
+  if (letter) {
+    var ansLetter = el('div', 'bank-answer-letter', '答案：' + letter);
+    ansLetter.setAttribute('data-answer-letter', letter);
+    body.appendChild(ansLetter);
+  }
   body.appendChild(texEl('div', 'bank-answer', q.answer));
 
-  body.appendChild(el('div', 'bank-sec-title', '陷阱'));
-  body.appendChild(texEl('div', 'bank-traps', q.traps));
+  // 另解（t32）：卡片派生题的第二解 a2 → bankAltAnswer。只在存在时渲染，缺则整块省略。
+  if (q.altAnswer) {
+    body.appendChild(el('div', 'bank-sec-title', '另解'));
+    body.appendChild(texEl('div', 'bank-alt-answer', q.altAnswer));
+  }
 
-  body.appendChild(el('div', 'bank-sec-title', '提示'));
-  body.appendChild(texEl('div', 'bank-hint', q.hint));
+  // 陷阱/提示（t32）：卡片派生题可能无 PITFALL/MNEM 条目（禁止编造，字段省略）→ 缺则整段省略（标题与正文一起不渲染）
+  if (q.traps) {
+    body.appendChild(el('div', 'bank-sec-title', '陷阱'));
+    body.appendChild(texEl('div', 'bank-traps', q.traps));
+  }
+
+  if (q.hint) {
+    body.appendChild(el('div', 'bank-sec-title', '提示'));
+    body.appendChild(texEl('div', 'bank-hint', q.hint));
+  }
 
   var tagBox = el('div', 'bank-tag-row bank-tag-row-detail');
   var tags = q.tags || [];
   for (var j = 0; j < tags.length; j++) {
-    var tag = el('span', 'bank-tag', bankTagTitle(q.subject, tags[j]) || tags[j]);
+    var tag = texEl('span', 'bank-tag', bankTagTitle(q.subject, tags[j]) || tags[j]);
     tag.setAttribute('title', bankTagCat(q.subject, tags[j]) + ' · ' + tags[j]);
     tagBox.appendChild(tag);
   }
@@ -759,8 +991,12 @@ export {
   // t15：概览总量口径 / 当前筛选命中
   bankTypeSelected, bankCurrentFilter,
   bankSubjectTotals, bankSubjectTotal, bankSubjectTypeCount, bankHitText, bankScopeText,
-  // t17：学科范围＝全局学科选择器 / 三组下拉选项 / 徽标院校回退
+  // t17：学科范围＝全局学科选择器 / 下拉选项（t14 起含年份·卷）/ 徽标院校回退
   bankCurrentSubjectId, bankNormalizeTypeFilter,
   bankTypeOptions, bankTagRanking, bankTagOptions, bankTagOptionHidden, bankStarOptions,
-  bankSelectValue, bankSchoolLabel
+  bankSelectValue, bankSchoolLabel,
+  // t14：年份/卷 维度（选项派生 + 谓词 + 选中态自愈）
+  bankYearSelected, bankYearSourceLabel, bankYearRows, bankYearOptions, bankNormalizeYearFilter,
+  // t7：选择题答案字母（渲染「答案：X」标识与正确项 is-answer 标记用，口径同期望答案护栏）
+  bankChoiceLetter
 };

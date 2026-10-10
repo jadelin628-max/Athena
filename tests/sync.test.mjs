@@ -524,14 +524,15 @@ test('store.importDB 往返：log.quiz 逐字段保留（含嵌套 byCat/weak/qu
   assert.deepEqual(db.log.quiz[1].byCat, quizRec(2000).byCat);
   assert.deepEqual(db.log.quiz[1].weak, ['k_lim_2']);
   assert.deepEqual(db.log.quiz[1].queued, ['k_ser_9']);
-  assert.deepEqual(db.log.quiz[1].diff, [1, 10]);
+  assert.deepEqual(db.log.quiz[1].diff, [1, 10]);   // 历史记录里的 diff 原样保留（旧 FSRS D 口径的字段语义不被回写）
   assert.deepEqual(db.log.quiz[1].mastery, [0, 100]);
   // 深拷贝：改来源对象后重新读回导入结果，值不动（否则后续改动会回流进这个「备份」载荷）
   payload.log.quiz[7].byCat[0].ok = 99;
   assert.equal(plain(ctx.DB).log.quiz[1].byCat[0].ok, 1);
-  // quizCfg：数量夹取、区间自动交换、章节去重/过滤非字符串；只给了 count 的来源其余回退默认
-  assert.deepEqual(plain(db.settings.quizCfg.cards), { count: 3, cats: ['极限'], diff: [1, 10], mastery: [1, 100] });
-  assert.deepEqual(plain(db.settings.quizCfg.wrong), { count: 50, cats: [], diff: [1, 10], mastery: [0, 100] });
+  // quizCfg：数量夹取、区间自动交换、章节去重/过滤非字符串；只给了 count 的来源其余回退默认。
+  // 难度口径＝知识卡难度标签 ★1–★5：旧档 [10,1]（FSRS D 口径）夹取迁移为 [1,5]
+  assert.deepEqual(plain(db.settings.quizCfg.cards), { count: 3, cats: ['极限'], diff: [1, 5], mastery: [1, 100] });
+  assert.deepEqual(plain(db.settings.quizCfg.wrong), { count: 50, cats: [], diff: [1, 5], mastery: [0, 100] });
 });
 
 test('store.importDB 往返：超过 200 条的自测记录只保留最新 200 条', () => {
@@ -547,8 +548,8 @@ test('store.importDB 往返：超过 200 条的自测记录只保留最新 200 �
 test('store.normalizeDB：quizCfg 缺省/非法兜底与夹取（不抛错）；老库无 log.quiz 时补空数组', () => {
   const ctx = newStoreCtx();
   const defaults = {
-    cards: { count: 10, cats: [], diff: [1, 10], mastery: [0, 100] },
-    wrong: { count: 10, cats: [], diff: [1, 10], mastery: [0, 100] }
+    cards: { count: 10, cats: [], diff: [1, 5], mastery: [0, 100] },
+    wrong: { count: 10, cats: [], diff: [1, 5], mastery: [0, 100] }
   };
   ctx.__t12.normalizeDB({ cards: {}, settings: {}, log: {} });   // 老库：既无 quizCfg 也无 log.quiz
   assert.deepEqual(plain(ctx.DB.settings.quizCfg), defaults);
@@ -569,10 +570,43 @@ test('store.normalizeDB：quizCfg 缺省/非法兜底与夹取（不抛错）；
   });
   assert.equal(ctx.DB.settings.quizCfg.cards.count, 1);                    // 夹到下限 1
   assert.deepEqual(plain(ctx.DB.settings.quizCfg.cards.cats), ['x', 'y']);   // 非字符串/空串丢弃、重复去重
-  assert.deepEqual(plain(ctx.DB.settings.quizCfg.cards.diff), [1, 10]);      // 单元素不是合法区间 → 默认
+  assert.deepEqual(plain(ctx.DB.settings.quizCfg.cards.diff), [1, 5]);       // 单元素不是合法区间 → 默认 ★1–★5
   assert.deepEqual(plain(ctx.DB.settings.quizCfg.cards.mastery), [0, 100]);  // 越界夹取
   assert.deepEqual(plain(ctx.DB.settings.quizCfg.wrong), defaults.wrong);    // 缺来源 → 默认
   assert.deepEqual(plain(ctx.DB.log.quiz).map((r) => r.t), [5]);
+});
+
+test('旧存档难度迁移：FSRS D 口径的旧区间（1–10）夹取到星标域（★1–★5），normalizeDB 与 importDB 同口径', () => {
+  const legacy = (diff) => ({ cards: { count: 7, cats: ['极限'], diff: diff, mastery: [20, 80] }, wrong: { diff: diff } });
+  const want = { count: 7, cats: ['极限'], diff: [1, 5], mastery: [20, 80] };
+
+  // ① 加载老库（normalizeDB）
+  const ctx = newStoreCtx();
+  ctx.__t12.normalizeDB({ cards: {}, settings: { quizCfg: legacy([1, 10]) }, log: {} });
+  assert.deepEqual(plain(ctx.DB.settings.quizCfg.cards), want, '旧默认 [1,10] → [1,5]');
+  assert.deepEqual(plain(ctx.DB.settings.quizCfg.wrong).diff, [1, 5], '缺 count/cats 的来源只迁移难度维度');
+
+  // ② 云端导入（importDB）：两条路径结果一致
+  const imp = newStoreCtx();
+  imp.__t12.importDB(JSON.stringify({ schemaVersion: 1, cards: {}, settings: { quizCfg: legacy([1, 10]) }, log: {} }));
+  assert.deepEqual(plain(imp.DB.settings.quizCfg), plain(ctx.DB.settings.quizCfg), 'normalizeDB 与 importDB 迁移结果一致');
+
+  // ③ 逐个旧区间：夹取（不是按比例缩放）+ 逆序交换 + 缺失兜底
+  [['[3,7]', [3, 7], [3, 5]],
+    ['[10,3]', [10, 3], [3, 5]],
+    ['[2,6]', [2, 6], [2, 5]],
+    ['缺失', undefined, [1, 5]]].forEach((row) => {
+    const c = newStoreCtx();
+    c.__t12.normalizeDB({ cards: {}, settings: { quizCfg: { cards: { diff: row[1] } } }, log: {} });
+    assert.deepEqual(plain(c.DB.settings.quizCfg.cards.diff), row[2], '旧区间 ' + row[0] + ' → ' + row[2]);
+  });
+
+  // ④ 已是星标口径的区间是不动点（迁移只夹取，不改变合法值）
+  const ok = newStoreCtx();
+  ok.__t12.normalizeDB({ cards: {}, settings: { quizCfg: { cards: { diff: [1, 5] } } }, log: {} });
+  assert.deepEqual(plain(ok.DB.settings.quizCfg.cards.diff), [1, 5]);
+  assert.deepEqual(plain(quizSandbox.quizSanitizeConfig({ diff: [1, 5] }, [])).diff, [1, 5],
+    'store 迁移结果同时是读取侧净化器的不动点');
 });
 
 test('契约对拍：store 兜底出的自测配置是 quiz.mjs 读取侧净化器的不动点（老库加载后照常自测）', () => {

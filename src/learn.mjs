@@ -518,13 +518,14 @@
   let mapScale = 1;
   let mapTx = 0, mapTy = 0;
   let mapDragMoved = false;
-  // 题库（bank.mjs）会话状态：题型/知识点/难度/搜索/详情/只看未入错题。
+  // 题库（bank.mjs）会话状态：题型/知识点/难度/年份·卷/搜索/详情/只看未入错题。
   // 科目范围不在这里——t17 起题库恒等于全局学科选择器（currentSubjectId）；
   // 频率维度（bankTypeStar）与页内科目（bankSubject）已随页内科目卡/频率筛选一起下线。
   // ⚠️ 所有 src/*.mjs 拼在同一个 IIFE 里，bank.mjs 内不得重复声明这些变量。
   let bankType = 'all';
   let bankTag = 'all';
   let bankStar = 'all';
+  let bankYear = ''; // t14：年份/卷（'' = 全部；同一年有多份来源时值为 '年份|来源'）
   let bankQuery = '';
   let bankOpen = null;
   let bankOnlyWrong = false;
@@ -538,8 +539,8 @@
     mapCat = null; mapSel = null; mapScale = 1; mapTx = 0; mapTy = 0; mapDragMoved = false; heatSel = null;
     browseCat = 'all'; browseQuery = ''; browseExpanded = {}; browseMastery = 'all'; browseStars = 'all';
     wrongDeck = []; wrongFrontier = 0; wrongPos = 0; wrongExpanded = {}; wrongJumpId = null;
-    // 题库（bank.mjs）：题型/知识点/难度/搜索/详情状态（科目范围随全局学科选择器，无需复位）
-    bankType = 'all'; bankTag = 'all'; bankStar = 'all';
+    // 题库（bank.mjs）：题型/知识点/难度/年份·卷/搜索/详情状态（科目范围随全局学科选择器，无需复位）
+    bankType = 'all'; bankTag = 'all'; bankStar = 'all'; bankYear = '';
     bankQuery = ''; bankOpen = null; bankOnlyWrong = false;
   }
 
@@ -624,18 +625,18 @@
       return;
     }
     const items = currentModule === 'wrong'
-      ? [['wrong', '重做'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
+      ? [['wrong', '重做'], ['wrongQuiz', '自测'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
       : currentModule === 'act'
         ? [['actFocus', '专注链'], ['actPlan', '计划'], ['actHabit', '习惯树'], ['actHelp', '帮助']]
         : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['bank', '题库'], ['statistics', '统计'], ['help', '帮助']];
     const icons = currentModule === 'wrong'
-      ? { wrong: 'wrong', wrongBrowse: 'search', wrongStats: 'chart' }
+      ? { wrong: 'wrong', wrongQuiz: 'pencil', wrongBrowse: 'search', wrongStats: 'chart' }
       : currentModule === 'act'
         ? { actPlan: 'act', actHabit: 'habit', actFocus: 'act', actHelp: 'help' }
         : { learn: 'deck', browse: 'search', quiz: 'pencil', bank: 'bank', statistics: 'chart', help: 'help' };
-    // 「错题自测」复用自测视图（currentModule='wrong' + currentView='quiz'，见 src/wrong.mjs 的 wrongQuizEntry），
-    // 高亮必须映射回「重做」项——否则三项（重做/浏览/统计）会全部不高亮。
-    const activeKey = (currentModule === 'wrong' && currentView === 'quiz') ? 'wrong' : currentView;
+    // 「错题自测」是错题模块的二级视图（currentModule='wrong' + currentView='quiz'，与 src/wrong.mjs 的
+    // wrongQuizEntry 同一状态对）：高亮必须映射到自己的那一项，否则自测进行时四项全部不高亮。
+    const activeKey = (currentModule === 'wrong' && currentView === 'quiz') ? 'wrongQuiz' : currentView;
     items.forEach(function (it) {
       const b = el('button', 'nav-btn sub-btn' + (activeKey === it[0] ? ' active' : ''));
       b.appendChild(icon(icons[it[0]]));

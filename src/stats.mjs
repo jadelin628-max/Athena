@@ -282,7 +282,7 @@
     const qWin = quizLogStats(DB.log && DB.log.quiz, Date.now() - qDays * DAY);
     const qCard = el('div', 'stat-card');
     if (!qAll.n) {
-      qCard.appendChild(el('p', 'muted', '还没有自测记录——一级导航「自测」或错题本里的「📝 错题自测」都可先配置数量 / 章节 / 难度 / 掌握度范围，再抽题；做完给出成绩、章节表现、用时与预测差距。'));
+      qCard.appendChild(el('p', 'muted', '还没有自测记录——二级功能栏「自测」（卡片模块）与错题模块的「自测」都可先配置数量 / 章节 / 难度 / 掌握度范围，再抽题；做完给出成绩、章节表现、用时与预测差距。'));
     } else {
       const qkpi = function (label, val) { const c = el('div', 'stat-kpi'); c.appendChild(el('strong', null, String(val))); c.appendChild(el('span', 'muted', label)); return c; };
       const qov = el('div', 'stat-overview');

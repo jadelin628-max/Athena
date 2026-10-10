@@ -10,8 +10,13 @@
  *         必须是本学科真实卡 id / 题干·答案解析·难度·题型·标签·陷阱·提示·来源齐全
  *   题源（school）：每题必须标注来源院校/科目（非空），且来源年份与 school 一致；
  *         school 还必须与 src.file 同源（JYSG 真题册 → 含「光华」「431」；数学三解析册 → 含「数学三」）
+ *   题源一致性（t21）：按（科目, 年份, 规范化后的来源）分组，同组出现 ≥2 种原始 school 写法即 ERR
+ *         —— 同一份卷子被写成多种措辞，会让「年份/卷」筛选把同一年拆成多项。规范化口径：
+ *         全角→半角、去首尾与内部空白、·／–— 等分隔符统一、
+ *         「全国硕士研究生入学统一考试 / 入学考试 / 招生考试」视为同一考试
  *
  * 用法：  node tools/check_data.mjs
+ *         ATHENA_DATA_DIR=<目录>  改用替代数据目录跑校验（反证/回归脚本用；默认 <仓库>/data）
  * 退出码：0 = 全绿；1 = 发现错误
  */
 
@@ -21,7 +26,10 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DATA_DIR = path.join(ROOT, 'data');
+// 数据目录可用环境变量替换：反证脚本把 data/ 复制到临时目录并注入缺陷，再让本校验去判红
+const DATA_DIR = process.env.ATHENA_DATA_DIR
+  ? path.resolve(process.env.ATHENA_DATA_DIR)
+  : path.join(ROOT, 'data');
 const FILES = ['math3.js', 'econ.js', 'stats.js', 'politics.js', 'corp.js', 'inv.js', 'music.js', 'poem.js', 'py.js', 'mon.js', 'fsa.js', 'sishu.js', 'acct.js', 'clang.js', 'cppl.js', 'java.js', 'js.js', 'rust.js', 'ai.js', 'social.js', 'jp.js', 'kr.js', 'fr.js', 'es.js', 'wujing.js'];
 // 题库数据（POC）：window.BANK.<subj>；其 tags 必须命中同名 data/<subj>.js 的真实卡 id
 const BANK_FILES = ['bank_math3.js', 'bank_econ.js', 'bank_stats.js'];
@@ -135,6 +143,7 @@ console.log('=== 题库（window.BANK.<subj>）校验 ===\n');
 const bankSandbox = { window: { SUBJECTS: subjects, BANK: {} }, String, Math, console };
 vm.createContext(bankSandbox);
 let bankQuestionTotal = 0;
+let cardOriginTotal = 0;   // t32：origin === 'card' 的卡片派生题数（全库）
 for (const f of BANK_FILES) {
   const filePath = path.join(DATA_DIR, f);
   if (!fs.existsSync(filePath)) { report('ERR', '题库文件缺失: data/' + f); continue; }
@@ -180,9 +189,23 @@ for (const f of BANK_FILES) {
     if (seenIds.has(q.id)) report('ERR', title + ' 题目 id 重复: ' + q.id);
     seenIds.add(q.id);
     bankQuestionTotal++;
-    // 必填字段（题干/答案解析/难度/题型/知识点标签/陷阱/提示/来源）
-    for (const fld of ['stem', 'answer', 'traps', 'hint']) {
+    // 字段契约分两族（t32）：
+    //   origin 缺省/'year' —— 真题册入库题（既有 55 题）：题干/解析/陷阱/提示四件套齐全；
+    //   origin 'card'      —— 卡片派生题：traps/hint 只在 PITFALL/MNEM 有条目时写入（禁止编造），缺则整字段省略。
+    const origin = q.origin == null ? 'year' : q.origin;
+    if (origin === 'card') cardOriginTotal++;
+    else if (origin !== 'year') report('ERR', title + ' ' + q.id + ' origin 非法（只能是 year / card）: ' + q.origin);
+    // 必填字段（题干/答案解析）
+    for (const fld of ['stem', 'answer']) {
       if (typeof q[fld] !== 'string' || !q[fld].trim()) report('ERR', title + ' ' + q.id + ' 缺字段 ' + fld);
+    }
+    // 条件必需：存在即非空（空串占位与编造一律判红）
+    for (const fld of ['traps', 'hint']) {
+      if (q[fld] == null) {
+        if (origin !== 'card') report('ERR', title + ' ' + q.id + ' 缺字段 ' + fld);
+        continue;
+      }
+      if (typeof q[fld] !== 'string' || !q[fld].trim()) report('ERR', title + ' ' + q.id + ' 字段 ' + fld + ' 存在但为空（无内容应省略该字段）');
     }
     if (!q.year) report('ERR', title + ' ' + q.id + ' 缺 year');
     else years.add(q.year);
@@ -200,7 +223,13 @@ for (const f of BANK_FILES) {
     if (!(st >= 1 && st <= 5 && Number.isInteger(st))) report('ERR', title + ' ' + q.id + ' 难度 star 非 1..5 整数: ' + q.star);
     else stars[st] = (stars[st] || 0) + 1;
     if (!q.src || typeof q.src !== 'object') report('ERR', title + ' ' + q.id + ' 缺 src 来源对象');
-    else {
+    else if (origin === 'card') {
+      // 卡片派生题的溯源主体：src.card（本学科真实卡 id）+ src.note（例题来源原文与缺失字段说明）
+      if (typeof q.src.card !== 'string' || !q.src.card.trim()) report('ERR', title + ' ' + q.id + ' src 缺 card（卡片派生题必须标注来源卡片 id）');
+      else if (!pool.has(q.src.card)) report('ERR', title + ' ' + q.id + ' src.card 不是本学科真实卡 id: ' + q.src.card);
+      if (typeof q.src.note !== 'string' || !q.src.note.trim()) report('ERR', title + ' ' + q.id + ' src 缺 note（来源原文与缺失字段说明）');
+      else if (!q.src.note.includes(String(q.year))) report('ERR', title + ' ' + q.id + ' src.note 未含题目年份（溯源原文与 year 不一致）: ' + q.year);
+    } else {
       for (const fld of ['file', 'no']) {
         if (typeof q.src[fld] !== 'string' || !q.src[fld].trim()) report('ERR', title + ' ' + q.id + ' src 缺 ' + fld);
       }
@@ -214,19 +243,23 @@ for (const f of BANK_FILES) {
       schools.add(school);
       if (!school.includes(String(q.year))) report('ERR', title + ' ' + q.id + ' school 与 year 不一致: ' + school + ' vs ' + q.year);
       const srcFile = (q.src && typeof q.src.file === 'string') ? q.src.file : '';
-      let covered = false;
-      for (const rule of SRC_SCHOOL_RULES) {
-        if (!rule.fileMatch.test(srcFile)) continue;
-        covered = true;
-        for (const need of rule.need) {
-          if (!school.includes(need)) report('ERR', title + ' ' + q.id + ' school 与 src.file 不同源（' + rule.label + ' 缺「' + need + '」）: ' + school + ' ← ' + srcFile);
+      // 同源规则只针对真题册文件（src.file）；卡片派生题没有真题册文件，溯源一致性由 src.card/src.note 与
+      // 下方「题源一致性」分组共同约束（缺 src.file 时不再刷 WARN）
+      if (srcFile) {
+        let covered = false;
+        for (const rule of SRC_SCHOOL_RULES) {
+          if (!rule.fileMatch.test(srcFile)) continue;
+          covered = true;
+          for (const need of rule.need) {
+            if (!school.includes(need)) report('ERR', title + ' ' + q.id + ' school 与 src.file 不同源（' + rule.label + ' 缺「' + need + '」）: ' + school + ' ← ' + srcFile);
+          }
         }
-      }
-      if (!covered) report('WARN', title + ' ' + q.id + ' src.file 未被同源规则覆盖，请人工确认 school: ' + srcFile);
-      // 文件名里带「<四位年>年」时，school 的年份应与之一致（范围文件名如「1987-2025年」不适用）
-      const yearsInFile = srcFile.match(/(?:19|20)\d{2}(?=年)/g) || [];
-      if (yearsInFile.length === 1 && !school.includes(yearsInFile[0])) {
-        report('WARN', title + ' ' + q.id + ' school 与 src.file 年份不一致: ' + school + ' vs ' + yearsInFile[0]);
+        if (!covered) report('WARN', title + ' ' + q.id + ' src.file 未被同源规则覆盖，请人工确认 school: ' + srcFile);
+        // 文件名里带「<四位年>年」时，school 的年份应与之一致（范围文件名如「1987-2025年」不适用）
+        const yearsInFile = srcFile.match(/(?:19|20)\d{2}(?=年)/g) || [];
+        if (yearsInFile.length === 1 && !school.includes(yearsInFile[0])) {
+          report('WARN', title + ' ' + q.id + ' school 与 src.file 年份不一致: ' + school + ' vs ' + yearsInFile[0]);
+        }
       }
     }
     // 内容不变量（与卡片同口径）：题干/解析/陷阱/提示
@@ -250,13 +283,58 @@ for (const f of BANK_FILES) {
 
   const starText = Object.keys(stars).sort().map((k) => k + '★×' + stars[k]).join(' ');
   const qTotal = (bank.questions || []).length;
-  console.log(`  ${title.padEnd(20)} ${String(qTotal).padStart(3)} 题 | ${typeKeys.size} 题型 | 年份 ${[...years].sort().join(',')} | 难度 ${starText || '—'} | school=${qSchool}/${qTotal}（${schools.size} 个来源） | id泄漏=${qLeak} **奇=${qStarOdd} $奇=${qDollarOdd}`);
+  const cardText = bank.questions.some((q) => q && q.origin === 'card') ? ' | 卡片派生=' + bank.questions.filter((q) => q && q.origin === 'card').length : '';
+  console.log(`  ${title.padEnd(20)} ${String(qTotal).padStart(3)} 题 | ${typeKeys.size} 题型 | 年份 ${[...years].sort().join(',')} | 难度 ${starText || '—'} | school=${qSchool}/${qTotal}（${schools.size} 个来源）${cardText} | id泄漏=${qLeak} **奇=${qStarOdd} $奇=${qDollarOdd}`);
 }
+
+console.log('');
+console.log('=== 题源一致性（同一份卷子不得多种写法）===\n');
+
+// school 规范化：用于把「同一份卷子的不同措辞」归到同一组（组内再有 ≥2 种原始写法即 ERR）
+const normalizeSchool = (s) => String(s == null ? '' : s)
+  .replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)) // 全角 ASCII → 半角
+  .replace(/\u3000/g, ' ')                       // 全角空格
+  .replace(/[·・•∙‧]/g, '-')                     // 间隔号类 → '-'
+  .replace(/[／∕]/g, '/')                        // 全角/除号斜杠 → '/'
+  .replace(/[—–―‐－]/g, '-')                     // 各种破折号/连字号 → '-'
+  .replace(/\s+/g, '')                           // 去首尾与内部空白
+  .replace(/入学统一考试/g, '招生考试')            // 1987-2019 旧称 ≡ 现称
+  .replace(/入学考试/g, '招生考试');
+
+const schoolGroups = new Map(); // key → { sid, year, norm, raw: Map<原始字符串, 题 id[]> }
+for (const f of BANK_FILES) {
+  const sid = f.replace(/^bank_/, '').replace(/\.js$/, '');
+  const bank = banks[sid];
+  if (!bank || !Array.isArray(bank.questions)) continue;
+  for (const q of bank.questions) {
+    if (!q || typeof q.school !== 'string' || !q.school.trim() || !q.year) continue;
+    const raw = q.school.trim();
+    const norm = normalizeSchool(raw);
+    const key = sid + '\u0000' + q.year + '\u0000' + norm;
+    if (!schoolGroups.has(key)) schoolGroups.set(key, { sid, year: q.year, norm, raw: new Map() });
+    const g = schoolGroups.get(key);
+    if (!g.raw.has(raw)) g.raw.set(raw, []);
+    g.raw.get(raw).push(q.id);
+  }
+}
+
+let schoolGroupCount = 0, schoolConflictCount = 0;
+for (const g of schoolGroups.values()) {
+  schoolGroupCount++;
+  if (g.raw.size < 2) continue;
+  schoolConflictCount++;
+  const variants = [...g.raw.entries()].map(([raw, ids]) => '「' + raw + '」(' + ids.join('、') + ')');
+  report('ERR', '[题库] ' + g.sid + ' ' + g.year + ' 年同一份卷子出现 ' + g.raw.size + ' 种 school 写法'
+    + '（规范化后同为「' + g.norm + '」，会让「年份/卷」筛选拆成 ' + g.raw.size + ' 项）：' + variants.join(' vs '));
+}
+console.log('  (科目, 年份, 规范化来源) 分组 ' + schoolGroupCount + ' 组 | 同组多写法 ' + schoolConflictCount + ' 组'
+  + (schoolConflictCount ? ' ← 必须合并为单一写法' : '（一致）'));
 
 console.log('');
 console.log('=== 结果 ===');
 console.log('学科数:', Object.keys(bySubject).length, '| 卡片总数:', allIds.size ? [...Object.values(bySubject)].reduce((a, b) => a + b.data.length, 0) : 0,
-  '| 题库科目:', Object.keys(banks).length, '| 真题总数:', bankQuestionTotal);
+  '| 题库科目:', Object.keys(banks).length, '| 真题总数:', bankQuestionTotal,
+  '| 其中卡片派生题(origin=card):', cardOriginTotal);
 if (errorCount === 0 && warnCount === 0) {
   console.log('✅ 全绿：结构完整、无泄漏、无未闭合标记');
 } else {

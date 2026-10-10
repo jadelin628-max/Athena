@@ -37,6 +37,7 @@
       scoutExtendMin: FOCUS_SCOUT_EXTEND_MIN,
       structure: 'free',              // 'free' | 'triad'（仅设置）
       flavor: false,                  // 风味总开关（仅设置）
+      // t41：主线「层次徽标」开关已随 chip 整体下线，不再作为设置字段存在（旧数据里的该键静默忽略）
       planDueRemindDays: 3,
       triadChildCount: 3,
       typeNames: {
@@ -150,6 +151,7 @@
       scoutExtendMin: Number.isFinite(se) && se > 0 ? Math.min(60, Math.round(se)) : def.scoutExtendMin,
       structure: raw.structure === 'triad' ? 'triad' : 'free',
       flavor: !!raw.flavor,
+      // t41：层次徽标已下线——旧数据里携带的该开关键在此被静默忽略（不输出该键，也不抛错）
       planDueRemindDays: Number.isFinite(prd) && prd >= 0 ? Math.min(30, Math.round(prd)) : def.planDueRemindDays,
       triadChildCount: Number.isFinite(tc) && tc > 0 ? Math.min(9, Math.round(tc)) : def.triadChildCount,
       typeNames: focusSanitizeTypeNames(raw.typeNames),
@@ -445,30 +447,92 @@
     return ((state && state.chains) || []).filter(function (c) { return c && c.tier === FOCUS_TIER_MAIN; })[0] || null;
   }
 
-  // 番号标签
+  // 番号标签（风味**关**的唯一口径：符号前缀 + 序号；风味开不再输出任何符号，见焦点两标签函数）
   function focusSeqLabel(level, seq) {
     const prefix = FOCUS_SEQ_KEYS[level] || '#';
     const v = Number(seq);
     return prefix + (Number.isFinite(v) && v > 0 ? Math.floor(v) : 0);
   }
 
-  function focusUnitLabel(unit, settings) {
-    if (!unit) return focusSeqLabel('unit', 0);
-    const base = focusSeqLabel('unit', unit.seq);
-    const st = settings || focusDefaultSettings();
-    const nm = unit.name || unit.taskText;
-    if (!st.flavor) return base + (nm ? ' · ' + nm : '');
-    return base + ' · ' + (st.typeNames[unit.typeKey] || unit.typeKey) + (nm ? ' ' + nm : '');
+  // 中文序数（t41）：1..9999 → 一 / 二 / 三 / 十 / 十一 / 二十 / 二十一 / 九十九 …
+  // 非法序号（<=0、非数字、非整数、>9999）一律返回 ''——调用方据此去掉「第」前缀降级，绝不输出「第undefined」。
+  function focusChineseNumber(seq) {
+    const n = Number(seq);
+    if (!Number.isFinite(n) || Math.floor(n) !== n || n <= 0 || n > 9999) return '';
+    const digits = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    const units = ['', '十', '百', '千'];
+    if (n < 10) return digits[n];
+    if (n < 20) return '十' + (n % 10 ? digits[n % 10] : '');
+    const s = String(n);
+    let out = '';
+    let pendingZero = false;
+    for (let i = 0; i < s.length; i++) {
+      const d = Number(s.charAt(i));
+      const u = s.length - 1 - i;
+      if (d === 0) { if (out) pendingZero = true; continue; }
+      if (pendingZero) { out += digits[0]; pendingZero = false; }
+      out += digits[d] + units[u];
+    }
+    return out;
   }
 
+  // 序号能否作为「第N…」前缀：正整数且为整数（非整数/0/负数/NaN 均降级为不带序数前缀）
+  function focusSeqOrdinalOk(seq) {
+    const v = Number(seq);
+    return Number.isFinite(v) && Math.floor(v) === v && v > 0;
+  }
+
+  // 单元行标题（t41）：
+  //   风味关（回归护栏，逐字同 2.1.1）：`#<序号> · <名称>`
+  //   风味开：`第<阿拉伯数字序号><单元层级名> · <名称>`，例「第82任务单元 · 名称」；序号非法 → 去掉序数前缀
+  function focusUnitLabel(unit, settings) {
+    if (!unit) return focusSeqLabel('unit', 0);
+    const st = settings || focusDefaultSettings();
+    const nm = unit.name || unit.taskText;
+    if (!st.flavor) {
+      const base = focusSeqLabel('unit', unit.seq);
+      return base + (nm ? ' · ' + nm : '');
+    }
+    const names = (st && st.levelNames) || {};
+    const levelName = names.unit || focusDefaultSettings().levelNames.unit;
+    const head = (focusSeqOrdinalOk(unit.seq) ? '第' + String(Math.floor(Number(unit.seq))) : '') + levelName;
+    return nm ? head + ' · ' + nm : head;
+  }
+
+  // 编制行标题（t41）：
+  //   风味关（回归护栏，逐字同 2.1.1）：`<符号><序号> <名称>`，例「◆1 总目标」
+  //   风味开：`第<中文序数><层级名> · <名称>`，例「第一任务集团 · 总目标」；序号非法 → 去掉序数前缀
+  //   风味开时不再输出番号符号（◆/▲/●）——符号只属于风味关口径（focusSeqLabel）
   function focusOrgLabel(org, settings) {
     if (!org) return '';
-    const base = focusSeqLabel(org.level, org.seq);
     const st = settings || focusDefaultSettings();
-    const levelName = st.levelNames[org.level] || org.level;
     const nm = org.name || '';
-    if (!st.flavor) return base + (nm ? ' ' + nm : '');
-    return base + ' · ' + levelName + (nm ? ' ' + nm : '');
+    if (!st.flavor) {
+      const base = focusSeqLabel(org.level, org.seq);
+      return base + (nm ? ' ' + nm : '');
+    }
+    const names = (st && st.levelNames) || {};
+    const levelName = names[org.level] || org.level;
+    const ord = focusChineseNumber(org.seq);
+    const head = (ord ? '第' + ord : '') + levelName;
+    return nm ? head + ' · ' + nm : head;
+  }
+
+  // 单元类型标签（t41）：未知/空 typeKey 归一到 'focus'（标签文本随之回退默认「专注」）
+  function focusUnitTypeKey(unit) {
+    const key = String((unit && unit.typeKey) || '');
+    return FOCUS_TYPE_KEYS.indexOf(key) >= 0 ? key : FOCUS_TYPE_KEYS[0];
+  }
+
+  // 类型标签文本：取 settings.typeNames[typeKey]；空值/未知键回退默认「专注」（与风味开关无关，两种模式都显示）
+  function focusUnitTypeLabel(unit, settings) {
+    const st = settings || focusDefaultSettings();
+    const names = (st && st.typeNames) || {};
+    const key = focusUnitTypeKey(unit);
+    const txt = names[key] == null ? '' : String(names[key]);
+    if (txt) return txt;
+    const def = focusDefaultSettings().typeNames;
+    return def[key] || def.focus;
   }
 
   function focusWorkLabel(n) {
@@ -562,6 +626,85 @@
       if (r > max) max = r;
     });
     return max < 0 ? null : focusLevelAtRank(max + 1);
+  }
+
+  // 「完成单元」：计时已结束、已成流水（units 流水里 endedAt > 0）。
+  // 未完成单元尚未入流水（仍在计划层），完成度是自评、不入判据。
+  function focusUnitDone(unit) {
+    return !!(unit && Number(unit.endedAt) > 0);
+  }
+
+  // 「计划层待转正」：计划模式创建、尚未转正 → 仍在待转正流程；转正后即为「已完成层次」。
+  function focusOrgPending(org) {
+    return !!(org && org.fromPlan && !org.formalized);
+  }
+
+  // 节点是否「已完成」：完成单元 / 已完成层次（已转正或非计划创建）。计划层待转正 → 未完成。
+  function focusNodeDone(state, id) {
+    const unit = focusFindUnit(state, id);
+    if (unit) return focusUnitDone(unit);
+    const org = focusFindOrg(state, id);
+    return !!org && !focusOrgPending(org);
+  }
+
+  // 节点的文字状态（只用文字区分层次性质，不用颜色/图标）：计划中 / 已完成 / ''（未知）
+  function focusOrgStateLabel(org) {
+    if (!org) return '';
+    return focusOrgPending(org) ? '计划中' : '已完成';
+  }
+
+  // 组合准备度：成员全部为已完成节点 → 免计划模式即可组合（产物为「已完成层次」）；
+  // 否则须计划模式（或显式 force），并给出未完成成员清单。
+  function focusCombineReadiness(state, ids) {
+    const list = (Array.isArray(ids) ? ids : []).map(String);
+    const pending = list.filter(function (id) { return !focusNodeDone(state, id); });
+    return {
+      ok: list.length > 0 && pending.length === 0,
+      allDone: list.length > 0 && pending.length === 0,
+      done: list.length - pending.length,
+      total: list.length,
+      pending: pending
+    };
+  }
+
+  // 子树内「未完成」清单（转正判据）：未结束的单元 + 仍是计划层未转正的下级节点。
+  // 组 → 直接下级单元；群/集团 → 递归到单元；返回 {kind,id,level,label} 便于给原因文案。
+  function focusIncompleteUnder(state, orgId) {
+    const st = state || {};
+    const out = [];
+    const seen = {};
+    const walk = function (pid) {
+      const key = String(pid);
+      if (seen[key]) return;
+      seen[key] = 1;
+      ((st.units) || []).forEach(function (u) {
+        if (!u || String(u.orgId == null ? '' : u.orgId) !== key) return;
+        if (focusUnitDone(u)) return;
+        out.push({ kind: 'unit', id: String(u.id), level: 'unit', label: focusUnitLabel(u, st.settings) });
+      });
+      ((st.orgs) || []).forEach(function (o) {
+        if (!o || String(o.parentId == null ? '' : o.parentId) !== key) return;
+        if (focusOrgPending(o)) {
+          out.push({ kind: 'org', id: String(o.id), level: String(o.level), label: focusOrgLabel(o, st.settings) });
+        }
+        walk(o.id);
+      });
+    };
+    walk(orgId);
+    return out;
+  }
+
+  // 转正入口的可用性与文案：条件不满足时给出原因（need_fill / need_done_units）
+  function focusFormalizeHint(chk) {
+    if (!chk) return '';
+    if (chk.reason === 'need_fill') {
+      return '转正需 ' + Number(chk.need || 1) + ' 个下级（现有 ' + Number(chk.childCount || 0) + '）';
+    }
+    if (chk.reason === 'need_done_units') {
+      const n = (chk.pending || []).length;
+      return '转正需下级全部完成（未完成 ' + n + ' 项）';
+    }
+    return '';
   }
 
   // 同层级最小空缺番号：删除编制后复用；已有节点番号不变、同层不重号
@@ -701,41 +844,29 @@
     return { ok: true, state: next, touched: touched, skipped: skipped };
   }
 
-  // ---------------- 纯函数：层级视觉 / 归属 ----------------
+  // ---------------- 纯函数：层级结构规范 / 树杈引导 / 归属 ----------------
 
-  // 四级层次的视觉规范：符号 / 字号 / 字重 / 左边框四项逐级不同（任意两层至少两项不同）。
-  // 颜色取设计令牌（--accent / --accent-2 / --warn / --text-muted，均带字面回退），
-  // 是「层次可辨认」的单一事实源：渲染层只读它，测试直接断言它；t9 在 style.css 落地时可比对这套数值。
-  const FOCUS_LEVEL_VISUAL_KEYS = ['symbol', 'fontSize', 'fontWeight', 'borderWidth'];
+  // 2.2.0：专注链回滚 2.0 简洁风——层次只由「结构」区分，不再由颜色区分。
+  // 保留的规范字段刻意只留可验证的结构属性（层级、序、四级次序）；
+  // 符号（# ● ▲ ◆）仍由 FOCUS_SEQ_KEYS 提供（只作番号前缀；t41 起风味开时连符号一起下线），
+  // 字号/字重/彩色描边/底色一律不进 DOM（彩色层级视觉见 docs/2.2.0 回滚说明）。
+  const FOCUS_LEVEL_VISUAL_KEYS = ['rank', 'order'];
+  const FOCUS_LEVEL_VISUAL_ORDER = ['unit', 'group', 'corps', 'army'];
 
-  const FOCUS_LEVEL_VISUALS = {
-    unit: {
-      level: 'unit', rank: 0, symbol: '#', name: '任务单元',
-      fontSize: 12.5, fontWeight: 400, borderWidth: 2,
-      borderColor: 'var(--text-muted, #9AA3B2)', tint: 'rgba(148, 163, 184, 0.08)'
-    },
-    group: {
-      level: 'group', rank: 1, symbol: '●', name: '任务组',
-      fontSize: 14, fontWeight: 600, borderWidth: 3,
-      borderColor: 'var(--accent, #3B82F6)', tint: 'rgba(59, 130, 246, 0.10)'
-    },
-    corps: {
-      level: 'corps', rank: 2, symbol: '▲', name: '任务群',
-      fontSize: 15.5, fontWeight: 700, borderWidth: 4,
-      borderColor: 'var(--accent-2, #D4537E)', tint: 'rgba(212, 83, 126, 0.10)'
-    },
-    army: {
-      level: 'army', rank: 3, symbol: '◆', name: '任务集团',
-      fontSize: 17, fontWeight: 800, borderWidth: 5,
-      borderColor: 'var(--warn, #F59E0B)', tint: 'rgba(245, 158, 11, 0.10)'
-    }
-  };
+  const FOCUS_LEVEL_VISUALS = (function () {
+    const out = {};
+    FOCUS_LEVEL_VISUAL_ORDER.forEach(function (lv, i) {
+      out[lv] = { level: lv, rank: FOCUS_LEVEL_RANK[lv], order: i };
+      out[lv].name = focusDefaultSettings().levelNames[lv];
+    });
+    return out;
+  })();
 
   function focusLevelVisual(level) {
     return FOCUS_LEVEL_VISUALS[String(level)] || null;
   }
 
-  // 两层视觉差异项数（验收：任意两层 ≥ 2 项不同）；未知层次返回 -1
+  // 两层结构差异项数（验收：任意两层 ≥ 1 项不同）；未知层次返回 -1
   function focusLevelVisualDelta(a, b) {
     const va = focusLevelVisual(a);
     const vb = focusLevelVisual(b);
@@ -746,17 +877,238 @@
     return n;
   }
 
-  // 层级徽标：符号 + 层次名（+ 可选计数），名可取设置里的自定义层次名
-  function focusLevelBadge(level, settings, count) {
-    const v = focusLevelVisual(level);
-    if (!v) return null;
-    const names = (settings || {}).levelNames || {};
-    const nm = String(names[v.level] || v.name);
-    const n = Math.max(0, Math.floor(Number(count) || 0));
-    return { level: v.level, symbol: v.symbol, name: nm, count: n, text: v.symbol + ' ' + nm + (n > 0 ? ' ' + n : '') };
+  // ---------------- 纯函数：树杈引导（2.0 简洁风的层级表达） ----------------
+
+  // 树杈字符集（半角无衬线 + 等宽兜底都能正确显示；不依赖颜色）
+  const FOCUS_TREE_GUIDE_VERT = '│';       // 父级竖线：祖先层「还有下文」
+  const FOCUS_TREE_GUIDE_GAP = '\u00A0';   // 祖先层没有下文 → 留白（不换行空格：HTML 不会把它折叠掉，缩进才不会错位）
+  const FOCUS_TREE_GUIDE_BRANCH = '├'; // 同级分支：本行不是最后一个兄弟
+  const FOCUS_TREE_GUIDE_LAST = '└';   // 同级分支：本行是最后一个兄弟
+
+  // 树杈缩进步长（t27，渲染端唯一真源）：每层固定 14px。渲染端把它写成树容器的 CSS 变量
+  // --focus-tree-indent / data-indent-step，行上写 data-indent = depth * 步长；
+  // 引导线字符的列宽由字符本身保证（chars = 2*(depth+1)），故视觉缩进与字符缩进一致递进。
+  const FOCUS_TREE_INDENT_PX = 14;
+
+  // 每一级占 2 个字符（竖线/留白 + 空格），末段是「1 个分支字符 + 短横」，
+  // 故整条引导线的宽度 = 2 * (层级 + 1) 个字符：缩进天然按层级递进。
+  // chain 的末位 = 本行自身（true → └ 是最后一个兄弟，false → ├ 还有下文），
+  // 前面各位 = 祖先层是否仍有下文（true → │ 实线，false → 留白）。
+  function focusTreeGuideLine(chain) {
+    const c = Array.isArray(chain) ? chain : [];
+    if (!c.length) return FOCUS_TREE_GUIDE_BRANCH + '─';
+    let s = '';
+    for (let i = 0; i < c.length - 1; i++) {
+      s += String(c[i] ? FOCUS_TREE_GUIDE_VERT : FOCUS_TREE_GUIDE_GAP) + ' ';
+    }
+    s += (c[c.length - 1] ? FOCUS_TREE_GUIDE_LAST : FOCUS_TREE_GUIDE_BRANCH) + '─';
+    return s;
   }
 
+  // 树行 → 每个祖先位的「是否还有下文」链：父级竖线可见，本条是分支（├ / └）
+  //
+  // 渲染端树杈契约（t27，对齐大纲软件的分层缩进与连续引导线）：
+  //   · 缩进步长统一：渲染端每层固定 FOCUS_TREE_INDENT_PX（14px，树容器 CSS 变量
+  //     --focus-tree-indent），行上只暴露 data-depth / data-indent，不得各行写不同 padding 数字。
+  //   · 连续无断口：chain[d]=true 表示第 d 层祖先「还有下文」，text 对应列已是 '│'（竖线连续到
+  //     本级分支），false 列为 '\u00A0'（留白）；渲染端必须原样输出 text，不得改写字符。
+  //   · 末位收口：last=true → chain 末位 '└'（本级最后一个兄弟，不再向下延伸）；false → '├'。
+  //   · 折叠不残留：本函数只接收「已按折叠过滤后的可见行」，父级折叠后其子树不参与 lastAt 判定，
+  //     上层末位自然收口，故不残留悬空竖线（渲染端不得自行按全量行计算引导）。
+  //   · 同级对齐：同 depth 行前缀列数与步长完全一致（chars = 2*(depth+1)，等宽字体下对齐）。
+  //   输出契约保持 {depth,last,chain,text,chars} 不变（单测直接读 text/chars）。
+  function focusTreeGuides(rows) {
+    const list = Array.isArray(rows) ? rows : [];
+    // 跳过自己的子孙后，同层还有下一个兄弟 → 本条不是「最后一个兄弟」
+    const lastAt = function (i, list2) {
+      const r = list2[i] || {};
+      if (r.id == null) return true;
+      const depth = Number(r.depth) || 0;
+      for (let k = i + 1; k < list2.length; k++) {
+        const d = Number(list2[k].depth) || 0;
+        if (d < depth) return true;
+        if (d === depth) return false;
+      }
+      return true;
+    };
+    const out = new Array(list.length);
+    // lines[d]：第 d 层「还有下文」→ 其子树内的行要画竖线 │
+    // 关键一：只跟踪「该层的代表节点」（上一次出现在该层的行）是否有后续兄弟；
+    // 关键二：遍历到更浅的一层时，更深各层立即闭合（留空），不能沿用上一棵子树的竖线。
+    const lines = [];
+    let prevDepth = 0;
+    for (let i = 0; i < list.length; i++) {
+      const r = list[i] || {};
+      const depth = Number(r.depth) || 0;
+      const last = lastAt(i, list);
+      if (depth < prevDepth) {
+        for (let d = depth + 1; d <= prevDepth; d++) lines[d] = false;
+      }
+      const chain = [];
+      // 祖先层（0..depth-1）取各自代表节点是否还有下文；本行位取分支字符
+      for (let d = 0; d < depth; d++) chain.push(!!lines[d]);
+      chain.push(last);
+      lines[depth] = !last;
+      prevDepth = depth;
+      const text = focusTreeGuideLine(chain);
+      out[i] = {
+        depth: depth,
+        last: !!last,
+        chain: chain,
+        text: text,
+        chars: text.length
+      };
+    }
+    return out;
+  }
+
+  // t41：主线「层次徽标」chip（渲染函数、元素函数、设置开关三者）已整体删除，此位留作删除依据说明。
+  // 层级名改由行标题承担：风味开 → 「第一任务集团 · 总目标」（focusOrgLabel）；
+  // 风味关 → 番号符号 + 名称（focusSeqLabel）。此处不留任何 chip 纯函数（不留死代码，参照 t24 先例）。
+
+  // ---------------- 纯函数：两段式第二段（字段面板） ----------------
+
+  // 展开控件主键：单元 / 编制各自独立展开
+  function focusTreeExpandKey(node) {
+    const n = node || {};
+    return String(n.kind) + ':' + String(n.id);
+  }
+
+  // 展开行第二段的「字段名 + 值」清单。这一段的取值口径固定（自检与单测都读它）：
+  //   起止时间 span     = 值里必含 '→'
+  //   平均完成度 span   = 含 '%'
+  //   是否计划中 span   = 以 '是' / '否' 开头
+  //   计划截止日期 span = 未设置时为 '未设置'
+  // 数据全部来自既有纯函数：focusOrgAggregates（任务书里的 focusOrgStats）、
+  // focusNextLevelCount、focusChildLevelOf、focusFmtTs、focusFmtDur。
+  //
+  // t27 口径（渲染端结构升级，本条链的键名与取值逐字不变）：
+  //   · title 只放「主体名称」，不再拼 '单元 #N · 链名' / '第 X 层 · 层次名' 这类层级前缀；
+  //   · 番号与层次名各走独立字段：seqText（单元 '#N'；编制 '符号+番号'，如 '▲1'）、
+  //     levelText（单元为空串；编制为层次名，如 '任务组'）——渲染端用独立元素承载，不得混入 title；
+  //   · fields 里「是否计划中」「计划截止日期」两行由 focusExpandTagViews 提升为标签，
+  //     其余字段由 focusExpandModuleViews 模块卡化（两者都只从 fields 派生）。
+  //
+  // t36 口径（归属单一渲染点，两处互斥）：已编入单元**不带**「归属」字段行——它的归属文本由渲染端
+  // `.focus-tree-expand-attr`（守卫 attached，已编入才渲染）承载；未编入单元没有 attr 行，归属改由
+  // 本函数的字段行 `['归属', '未编入']` 承载。二者永不同时出现 → DOM 中每个单元展开面板里「归属」
+  // 恰好一次（t26 F1 判红正是字段行 + attr 行双渲染；t25:attribution-* 三条断言与本口径同源：
+  // 已编入 `attrLines===1` 且模块卡无「归属」键；未编入 `attrLines===0` 且模块卡给「归属：未编入」）。
+  // 本函数的 parent 字段仍然照给（focusParentAttribution 的实体，不含「归属 」前缀），
+  // 供渲染端与调用点按契约取用；节点层级语义、其余字段键名与取值不变。
+  function focusTreeExpandFields(state, node) {
+    const st = state || focusDefaultState();
+    const n = node || {};
+    const settings = st.settings || {};
+    const parent = n.parent || (n.id != null ? focusParentAttribution(st, n.id) : null);
+    if (n.kind === 'unit') {
+      const u = n.unit || {};
+      const useq = Number(u.seq) || 0;
+      const unitFields = [
+        ['起止时间', focusFmtTs(u.startedAt) + ' → ' + focusFmtTs(u.endedAt)],
+        ['总时间', focusFmtDur(u.actualMin) + '（实际）/ ' + focusFmtDur(u.plannedMin) + '（计划）'],
+        ['完成度', String(Number(u.completion) || 0) + '%']
+      ];
+      // t36：归属字段行**只在未编入时**出现（此时渲染端不渲 attr 行，见 focusTreeExpandPanelEl）。
+      // 已编入单元不带此键——否则面板里「归属」会出现两次（t26 F1）。
+      if (!(parent && parent.attached)) {
+        unitFields.push(['归属', String((parent && parent.text) || '未编入')]);
+      }
+      return {
+        kind: 'unit',
+        title: String(u.name == null ? '' : u.name) || '未命名单元',
+        seqText: '#' + useq,
+        levelText: '',
+        fields: unitFields,
+        parent: parent
+      };
+    }
+    const org = n.org || {};
+    const agg = n.aggregates || focusOrgAggregates(st, n.id);
+    const nextCount = focusNextLevelCount(st, n.id);
+    const childLevel = focusChildLevelOf(org.level);
+    const names = settings.levelNames || {};
+    const childName = names[childLevel] || childLevel || '';
+    const planned = !!(org.fromPlan && !org.formalized);
+    const needN = Math.max(1, Number(org.minChildCount) || 1);
+    const vis = focusLevelVisual(org.level);
+    return {
+      kind: 'org',
+      title: String(org.name == null ? '' : org.name) || '未命名层次',
+      seqText: String(FOCUS_SEQ_KEYS[org.level] || '') + (Number(org.seq) || 0),
+      levelText: String((vis && vis.name) || org.level),
+      fields: [
+        ['起止时间', agg.unitCount ? (focusFmtTs(agg.startAt) + ' → ' + focusFmtTs(agg.endAt)) : '暂无（无下级单元）'],
+        ['总时间', focusFmtDur(agg.totalMin)],
+        ['平均完成度', agg.unitCount ? String(agg.avgCompletion) + '%' : '暂无'],
+        ['下级数量', String(nextCount) + (childName ? ' 个' + childName : '')],
+        ['单元数量', String(agg.unitCount) + ' 个'],
+        ['是否计划中', planned ? '是 · 转正需下级全部完成（≥ ' + needN + ' 个）' : '否（已完成层次）'],
+        ['计划截止日期', org.dueAt ? focusFmtTs(org.dueAt) : '未设置']
+      ],
+      parent: parent
+    };
+  }
+
+  // 详情面板的「状态标签」视图（t27）：把 fields 里的「是否计划中」「计划截止日期」两行提升为标签，
+  // 数据仍以 fields 为单一真源（本函数只派生，不另立取值口径）：
+  //   plan 标签：text = 计划中 / 已完成层次，title = fields 原值（含「转正需下级全部完成（≥ N 个）」）
+  //   due  标签：text = 截止 <时间> / 无截止日期，title = 具体时间 / 未设置截止日期
+  // 单元没有这两种状态 → 空数组。渲染端：span.focus-tree-expand-tag[data-kind="plan"|"due"]。
+  function focusExpandTagViews(info) {
+    const it = info || {};
+    if (it.kind !== 'org') return [];
+    const byKey = {};
+    const list = Array.isArray(it.fields) ? it.fields : [];
+    list.forEach(function (f) {
+      if (f) byKey[String(f[0])] = String(f[1] == null ? '' : f[1]);
+    });
+    const planVal = byKey['是否计划中'] || '';
+    const dueVal = byKey['计划截止日期'] || '';
+    const planned = planVal.charAt(0) === '是';
+    const hasDue = !!dueVal && dueVal !== '未设置';
+    return [
+      {
+        kind: 'plan',
+        key: '是否计划中',
+        text: planned ? '计划中' : '已完成层次',
+        title: planned ? planVal : '已完成层次（正式层次）'
+      },
+      {
+        kind: 'due',
+        key: '计划截止日期',
+        text: hasDue ? '截止 ' + dueVal : '无截止日期',
+        title: hasDue ? dueVal : '未设置截止日期'
+      }
+    ];
+  }
+
+  // 模块卡视图（t27）：fields 去掉已提升为标签的两行，其余按顺序进模块卡（Linear 风并列块）。
+  function focusExpandModuleViews(info) {
+    const it = info || {};
+    const tagKeys = focusExpandTagViews(it).map(function (t) {
+      return t.key;
+    });
+    const list = Array.isArray(it.fields) ? it.fields : [];
+    return list
+      .filter(function (f) {
+        return f && tagKeys.indexOf(String(f[0])) === -1;
+      })
+      .map(function (f) {
+        return { key: String(f[0]), val: String(f[1] == null ? '' : f[1]) };
+      });
+  }
+
+  // ---------------- 纯函数：归属可见性 ----------------
+
   // 归属可见性：子项挂在哪个父级下（父级层次符号 + 番号 + 名称）；未编入也返回一条 attached:false。
+  // 返回契约：text 是「归属文案实体」，**不含「归属 」前缀**——已编入＝父级标签（如 '●1 写作'），
+  // 未编入＝'未编入'；需要前缀的展示点自行拼接。
+  // t36 单一渲染点（全仓唯一前缀处）：focusTreeExpandPanelEl 的 `.focus-tree-expand-attr`，
+  // 形如「归属 ●1 写作」——**仅已编入（attached）时渲染**。未编入节点不渲染该行：单元由
+  // focusTreeExpandFields 的字段行 ['归属','未编入'] 承载（无前缀），因此 DOM 中每个单元展开面板里
+  // 「归属」恰好一次（t26 F1：字段行 + attr 行同时出现即判红）。其余调用点按本契约取用（只取 text，
+  // 不得再拼前缀，也不得重新引入第二个展示点）。
   // 归属恒由节点自身的显式类型 + parentId/orgId 决定，跨层级编入后立即反映（纯函数无缓存）。
   function focusParentAttribution(state, nodeId) {
     const st = state || {};
@@ -773,13 +1125,12 @@
         parentSymbol: '·', parentSeq: 0, parentName: '', parentLabel: '', text: '未编入'
       };
     }
-    const pv = focusLevelVisual(parent.level);
     const label = focusOrgLabel(parent, st.settings);
     return {
       level: selfLevel, attached: true, parentId: parent.id, parentLevel: String(parent.level),
-      parentSymbol: pv ? pv.symbol : '', parentSeq: Number(parent.seq) || 0,
+      parentSymbol: FOCUS_SEQ_KEYS[String(parent.level)] || '', parentSeq: Number(parent.seq) || 0,
       parentName: String(parent.name == null ? '' : parent.name),
-      parentLabel: label, text: '归属 ' + label
+      parentLabel: label, text: label
     };
   }
 
@@ -810,7 +1161,7 @@
         nodeId: focusUnitKey(active),
         key: focusUnitKey(active),
         level: 'unit',
-        symbol: (focusLevelVisual('unit') || {}).symbol || '#',
+        symbol: FOCUS_SEQ_KEYS.unit,
         title: isScout ? '侦查进行中' : String(typeNames[cur.typeKey] || '专注中'),
         subtitle: focusWorkLabel(focusNextSeq(st, 'unit')) +
           (cur.taskText ? ' · ' + String(cur.taskText) : ''),
@@ -1507,15 +1858,26 @@
       if (!focusCanAttach(level, parent.level)) return { ok: false, reason: 'bad_parent', state: next };
     }
     const t = Number(now) || 0;
+    // 免计划组合（2.2.0）：成员全为已完成节点时，无需计划模式即可组合，产物是「已完成层次」
+    // （fromPlan=false → formalized=true），不进入待转正流程；含未完成成员时非计划模式明确拒绝（零写入）。
+    const ready = focusCombineReadiness(next, ids);
+    if (!next.planMode && !f.force && !ready.allDone) {
+      return {
+        ok: false, reason: 'member_incomplete', state: next,
+        pending: ready.pending, doneCount: ready.done, memberCount: ready.total
+      };
+    }
     const plan = focusPlanNodeFields(f, 1);
     if (!plan.ok) return { ok: false, reason: plan.reason, state: next };
+    // 非计划模式恒为已完成层次；计划模式沿用既有语义（fromPlan 缺省 true → 计划层）
+    const fromPlan = next.planMode ? (f.fromPlan == null ? true : !!f.fromPlan) : false;
     const cr = focusCreateOrg(next, {
       level: level,
       name: plan.name,
       parentId: parentId,
       planId: f.planId,
-      fromPlan: f.fromPlan,
-      force: f.force,
+      fromPlan: fromPlan,
+      force: f.force || (!fromPlan && !next.planMode),
       dueAt: plan.dueAt,
       minChildCount: plan.minChildCount
     }, t);
@@ -1618,16 +1980,26 @@
     const need = Math.max(1, Number(org.minChildCount) || 1);
     // 下一级由显式层次决定：组看单元、群看组、集团看群（与树内展示同一口径）
     const nextLevelCount = focusNextLevelCount(state, org.id);
+    // 转正收紧（2.2.0）：除数量下限外，下一级必须全部为完成单元（组→单元；群/集团→递归到单元）
+    const pending = focusIncompleteUnder(state, org.id);
     if (nextLevelCount < need) {
-      return { ok: false, reason: 'need_fill', need: need, childCount: nextLevelCount };
+      return { ok: false, reason: 'need_fill', need: need, childCount: nextLevelCount, pending: pending };
     }
-    return { ok: true, need: need, childCount: nextLevelCount };
+    if (pending.length) {
+      return { ok: false, reason: 'need_done_units', need: need, childCount: nextLevelCount, pending: pending };
+    }
+    return { ok: true, need: need, childCount: nextLevelCount, pending: [] };
   }
 
   function focusFormalizeOrg(state, orgId, now) {
     const next = focusCloneState(state);
     const chk = focusOrgCanFormalize(next, orgId);
-    if (!chk.ok) return { ok: false, reason: chk.reason, state: next };
+    if (!chk.ok) {
+      return {
+        ok: false, reason: chk.reason, state: next,
+        need: chk.need, childCount: chk.childCount, pending: chk.pending || []
+      };
+    }
     const org = focusFindOrg(next, orgId);
     org.formalized = true;
     org.updatedAt = Number(now) || 0;
@@ -1854,6 +2226,7 @@
   const focusUiState = {
     tab: 'seat',
     collapsed: {},
+    expanded: {},          // 2.0 两段式：第二段（字段面板）展开态，键 = kind:id
     assignFilter: 'all',       // all | assigned | unassigned（是否编入）
     selected: {},          // 树内多选
     dragId: null,          // 拖动源
@@ -1935,6 +2308,54 @@
     return Object.keys(focusUiState.selected).filter(function (k) { return focusUiState.selected[k]; });
   }
 
+  // 纯函数的原因文案映射（focusApply 与 UI 预览共用同一口径）
+  const FOCUS_REASON_TEXT = {
+    busy: '当前有进行中的单元',
+    not_found: '对象不存在',
+    reservation_expired: '预约已超时',
+    no_unit: '没有进行中的单元',
+    empty_behavior: '请描述可疑行为',
+    not_in_unit: '仅专注/侦查中途可标记可疑行为',
+    no_pending: '没有待裁决的可疑行为',
+    bad_decision: '无效选择',
+    not_scouting: '当前不在侦查任务中',
+    no_normal: '没有可继位的普通链',
+    no_elite: '没有崩溃的主链',
+    main_exists: '同一时间只能有一个主链',
+    bad_inherit: '只能从普通链继承',
+    dup_id: 'id 冲突',
+    empty_task: '请先填写任务内容',
+    timer_not_done: '计时结束才可完成',
+    use_scout: '侦查请用「侦查」入口',
+    bad_type: '无效类型',
+    empty_name: '名称不能为空',
+    bad_level: '无效层次',
+    bad_parent: '父级层次不匹配',
+    bad_org: '只能编入任务组',
+    bad_due: '截止日期不合法',
+    member_level_mismatch: '所选层次不一致，须逐级组合',
+    no_level_up: '已是最高层次，无法再组合',
+    bad_min_child: '最低下级数须为 1..99',
+    need_plan_mode: '请先开启计划模式',
+    need_fill: '须至少填充一个下级层次',
+    // 转正收紧：下一级必须全部为完成单元
+    need_done_units: '下级还有未完成单元，须全部完成后才可转正',
+    not_plan: '不是计划创建的节点',
+    already_formal: '已转正',
+    empty_selection: '请先选择节点',
+    // 免计划组合：成员须全为已完成节点
+    member_incomplete: '有待完成的成员，须全部完成后才可免计划组合',
+    reserve_chain_bound: '预约链仅计数，由其他链预约绑定',
+    empty_title: '请填写计划标题',
+    empty_due: '请设置截止时间',
+    bad_target: '目标单元数须 ≥ 1',
+    not_active: '计划已结算'
+  };
+
+  function focusReasonText(reason) {
+    return FOCUS_REASON_TEXT[String(reason == null ? '' : reason)] || '操作失败';
+  }
+
   function focusApply(mutator, msg) {
     const st = loadFocus();
     const r = mutator(st);
@@ -1942,45 +2363,7 @@
     renderApp();
     if (msg && r && r.ok) toast(msg);
     else if (!r || !r.ok) {
-      const map = {
-        busy: '当前有进行中的单元',
-        not_found: '对象不存在',
-        reservation_expired: '预约已超时',
-        no_unit: '没有进行中的单元',
-        empty_behavior: '请描述可疑行为',
-        not_in_unit: '仅专注/侦查中途可标记可疑行为',
-        no_pending: '没有待裁决的可疑行为',
-        bad_decision: '无效选择',
-        not_scouting: '当前不在侦查任务中',
-        no_normal: '没有可继位的普通链',
-        no_elite: '没有崩溃的主链',
-        main_exists: '同一时间只能有一个主链',
-        bad_inherit: '只能从普通链继承',
-        dup_id: 'id 冲突',
-        empty_task: '请先填写任务内容',
-        timer_not_done: '计时结束才可完成',
-        use_scout: '侦查请用「侦查」入口',
-        bad_type: '无效类型',
-        empty_name: '名称不能为空',
-        bad_level: '无效层次',
-        bad_parent: '父级层次不匹配',
-        bad_org: '只能编入任务组',
-        bad_due: '截止日期不合法',
-        member_level_mismatch: '所选层次不一致，须逐级组合',
-        no_level_up: '已是最高层次，无法再组合',
-        bad_min_child: '最低下级数须为 1..99',
-        need_plan_mode: '请先开启计划模式',
-        need_fill: '须至少填充一个下级层次',
-        not_plan: '不是计划创建的节点',
-        already_formal: '已转正',
-        empty_selection: '请先选择节点',
-        reserve_chain_bound: '预约链仅计数，由其他链预约绑定',
-        empty_title: '请填写计划标题',
-        empty_due: '请设置截止时间',
-        bad_target: '目标单元数须 ≥ 1',
-        not_active: '计划已结算'
-      };
-      toast(map[(r && r.reason) || ''] || '操作失败');
+      toast(focusReasonText((r && r.reason) || ''));
     }
     return r;
   }
@@ -2258,7 +2641,7 @@
     statusBox.appendChild(runBtns);
   }
 
-  // ---------------- UI：层级徽标 / 归属徽标 ----------------
+  // ---------------- UI：样式接管探测 ----------------
 
   // 该选择器是否已由样式表接管：t9 在 style.css 落地后，本文件的 inline 兜底自动让位。
   function focusCssDeclared(selector) {
@@ -2276,46 +2659,8 @@
     return false;
   }
 
-  // 层级徽标：符号 + 层次名 +（下级计数）
-  function focusLevelBadgeEl(level, settings, count) {
-    const b = focusLevelBadge(level, settings, count);
-    if (!b) return null;
-    const v = focusLevelVisual(b.level);
-    const chip = el('span', 'focus-level-badge', b.text);
-    chip.setAttribute('data-level', b.level);
-    if (v && !focusCssDeclared('.focus-level-badge[data-level="' + b.level + '"]')) {
-      chip.style.display = 'inline-block';
-      chip.style.fontSize = v.fontSize + 'px';
-      chip.style.fontWeight = String(v.fontWeight);
-      chip.style.padding = '0 7px';
-      chip.style.marginBottom = '2px';
-      chip.style.borderRadius = '999px';
-      chip.style.border = v.borderWidth + 'px solid ' + v.borderColor;
-      chip.style.background = v.tint;
-    }
-    return chip;
-  }
-
-  // 归属徽标：父级层级符号 + 番号 + 名称（未编入时高亮提示）
-  function focusParentChipEl(attr) {
-    const a = attr || {};
-    const chip = el('span', 'focus-parent-chip' + (a.attached ? '' : ' is-free'), String(a.text || ''));
-    chip.setAttribute('data-parent-level', a.attached ? String(a.parentLevel || '') : 'none');
-    chip.setAttribute('data-parent-id', a.parentId ? String(a.parentId) : '');
-    chip.title = String(a.text || '');
-    if (!focusCssDeclared('.focus-parent-chip')) {
-      chip.style.display = 'inline-block';
-      chip.style.fontSize = '11.5px';
-      chip.style.fontWeight = '400';
-      chip.style.padding = '0 6px';
-      chip.style.marginTop = '2px';
-      chip.style.borderRadius = '999px';
-      chip.style.border = '1px solid var(--border, #E5E7EB)';
-      chip.style.background = 'var(--bg-elevated, #FFFFFF)';
-      chip.style.color = a.attached ? 'var(--text-muted, #6B7280)' : 'var(--warn, #F59E0B)';
-    }
-    return chip;
-  }
+  // t41：层次徽标 chip 的元素渲染入口已删除，本区段不再有 chip 代码。
+  // 行内层级信息只剩行标题一处（focusOrgLabel / focusUnitLabel）；单元类型另由行上方的 .focus-unit-type-tag 承担。
 
   // ---------------- UI：悬浮提醒（任意视图可见的剩余时间） ----------------
 
@@ -2349,11 +2694,31 @@
     if (focusReminderEl && focusReminderEl.parentNode) return focusReminderEl;
     const box = el('div', 'focus-reminder');
     box.id = 'focusReminder';
+    // 2.2.0 回滚：计时悬浮窗改为「顶部锚定」。旧实现贴底（bottom: calc(14px + var(--dock-h))），
+    // 在卡片页会压住 .rating 四档记忆档位条（style.css:443/.dock:1181 都在底部一条带上），
+    // 用户点不到档位。内联写 top / bottom:auto 时带 !important：style.css 的 .focus-reminder
+    // 底部锚定由 style-eng 的任务改，本文件只保证「悬浮窗一定在顶部」，两种取值下都不遮挡底栏。
+    box.style.position = 'fixed';
+    box.style.top = '14px';
+    box.style.bottom = 'auto';
+    box.style.right = '14px';
+    box.style.left = 'auto';
+    box.style.zIndex = '90';
+    if (typeof matchMedia === 'function' && matchMedia('(max-width: 420px)').matches) {
+      // ≤420px：左右各收 8px（与 style.css 窄屏 .focus-reminder 的 intent 一致），
+      // 并整体下移到顶栏之下：窄屏顶栏是单行且右侧就是 ☰ 菜单键（style.css:1178-1182），
+      // 悬浮窗若贴顶会盖住它，连抽屉导航都点不开（自检实测：点击被悬浮窗 head 截获，抽屉不开）。
+      box.style.top = '78px';
+      box.style.left = '8px';
+      box.style.right = '8px';
+    }
+    try {
+      box.style.setProperty('top', box.style.top, 'important');
+      box.style.setProperty('bottom', 'auto', 'important');
+      box.style.setProperty('right', box.style.right, 'important');
+      box.style.setProperty('left', box.style.left, 'important');
+    } catch (e) { /* 老 WebView 不支持 important 时退回无 important 的同上取值 */ }
     if (!focusCssDeclared('.focus-reminder')) {
-      box.style.position = 'fixed';
-      box.style.right = '14px';
-      box.style.bottom = 'calc(14px + var(--dock-h, 0px))';
-      box.style.zIndex = '90';
       box.style.minWidth = '164px';
       box.style.padding = '8px 10px';
       box.style.borderRadius = 'var(--radius, 12px)';
@@ -2596,51 +2961,182 @@
     });
     const tree = el('div', 'act-panel focus-tree');
     tree.id = 'focusTree';
+    // 树杈缩进步长（t27 渲染端唯一真源）：每层固定 FOCUS_TREE_INDENT_PX，经 CSS 变量暴露给
+    // style.css（t28 落地视觉）；行上只写 data-depth / data-indent，不写各行不同的 padding 数字。
+    tree.style.setProperty('--focus-tree-indent', FOCUS_TREE_INDENT_PX + 'px');
+    tree.setAttribute('data-indent-step', String(FOCUS_TREE_INDENT_PX));
     if (!rows.length) {
       tree.appendChild(illus('empty-focus'));
       tree.appendChild(el('p', 'muted', '暂无数据。完成专注单元后会出现在「未编入」。' + (st.planMode ? '点上方「＋ 计划任务」创建高层次。' : '开启计划模式后可创建高层次任务。')));
     }
 
-    rows.forEach(function (r) {
-      const row = el('div', 'focus-tree-row' + (focusUiState.selected[r.id] ? ' selected' : ''));
-      row.style.paddingLeft = (8 + r.depth * 18) + 'px';
+    const guides = focusTreeGuides(rows);
+
+    // 层级折叠键内联兜底（t27）：桌面 ≥28×28、≤420px 或触屏 ≥40×40（视觉细节交给 style.css / t28）。
+    // 判定选择器必须指向「新」折叠键类名 .focus-tree-fold-level：旧的 .focus-tree-expand 已随
+    // 每行详情展开键删除，若继续拿它判定，会把已由 CSS 覆盖的场景又写上内联尺寸。
+    function focusTreeFoldDefaults(btn) {
+      if (focusCssDeclared('.focus-tree-row .focus-tree-fold-level')) return;
+      const narrow = !!((window.matchMedia && window.matchMedia('(max-width: 420px)').matches) || ('ontouchstart' in window));
+      const px = narrow ? 40 : 28;
+      btn.style.minWidth = px + 'px';
+      btn.style.minHeight = px + 'px';
+      btn.style.padding = narrow ? '0 10px' : '0 8px';
+    }
+
+    // 展开行主键复用纯函数 focusTreeExpandKey(node)（见上文「两段式第二段」段）
+    function focusIsExpanded(r) {
+      return !!focusUiState.expanded[focusTreeExpandKey(r)];
+    }
+    function focusToggleExpanded(r) {
+      const k = focusTreeExpandKey(r);
+      focusUiState.expanded[k] = !focusUiState.expanded[k];
+      renderApp();
+    }
+
+    // 点击行/模块即展开详情（t27）：删除每行独立详情展开键，行本身成为展开开关。
+    // 行内既有控件（按钮/复选框/下拉/链接）不触发展开（保持各自的 stopPropagation 语义）。
+    function focusRowInteractive(target) {
+      const t = target || null;
+      if (!t || typeof t.closest !== 'function') return false;
+      return !!t.closest('button, input, select, textarea, a, label, option');
+    }
+
+    // 行 = button 语义：role/tabindex/aria-expanded，Enter / Space 与鼠标点击等效
+    function focusBindRowExpand(row, r) {
+      if (!row || !r || r.kind === 'root') return;
+      const open = focusIsExpanded(r);
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
+      row.setAttribute('aria-expanded', open ? 'true' : 'false');
+      row.setAttribute('data-expand-toggle', 'row');
+      row.title = open ? '收起详情' : '展开详情';
+      row.addEventListener('click', function (e) {
+        if (focusRowInteractive(e.target)) return;
+        focusToggleExpanded(r);
+      });
+      row.addEventListener('keydown', function (e) {
+        const k = e.key;
+        if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar') return;
+        if (focusRowInteractive(e.target)) return;
+        e.preventDefault();
+        focusToggleExpanded(r);
+        // t27：renderApp 整树重渲染会丢掉焦点 → 键盘触发后把焦点交还给同一行，
+        // Enter / Space 因而是可连续使用的等效开关（否则第二次按键落到 body 上）。
+        const again = document.querySelector('.focus-tree-row[data-id="' + String(r.id) + '"]');
+        if (again && typeof again.focus === 'function') again.focus();
+      });
+    }
+
+    // 第二段展开面板（t27，Linear 风）：标题只放主体名称，「番号 / 层次名」各为独立元素；
+    // 「是否计划中」「计划截止日期」提升为状态标签；其余字段进模块卡（并列块），空值给明确文案。
+    function focusTreeExpandPanelEl(st, r, now) {
+      const info = focusTreeExpandFields(st, r, now);
+      const pane = el('div', 'focus-tree-expand-panel act-panel');
+      pane.setAttribute('data-id', String(r.id));
+      pane.setAttribute('data-kind', String(r.kind));
+      pane.setAttribute('role', 'group');
+      const head = el('div', 'focus-tree-expand-head');
+      if (info.seqText) head.appendChild(el('span', 'focus-tree-expand-seq', String(info.seqText)));
+      if (info.levelText) head.appendChild(el('span', 'focus-tree-expand-level', String(info.levelText)));
+      head.appendChild(el('span', 'focus-tree-expand-title', String(info.title || '')));
+      pane.appendChild(head);
+
+      // 状态标签：只用文字区分「计划中 / 已完成层次」「有截止 / 无截止」，不用颜色与图标
+      const tags = focusExpandTagViews(info);
+      if (tags.length) {
+        const tagBox = el('div', 'focus-tree-expand-tags');
+        tags.forEach(function (t) {
+          const tag = el('span', 'focus-tree-expand-tag');
+          tag.setAttribute('data-kind', String(t.kind));
+          tag.title = String(t.title || '');
+          tag.appendChild(el('span', 'focus-tree-expand-tag-key', String(t.key)));
+          tag.appendChild(el('span', 'focus-tree-expand-tag-val', String(t.text)));
+          tagBox.appendChild(tag);
+        });
+        pane.appendChild(tagBox);
+      }
+
+      // 模块卡：起止时间 / 总时间（实际·计划）/ 平均完成度 / 下级数量 / 单元数量
+      const grid = el('div', 'focus-tree-expand-grid');
+      focusExpandModuleViews(info).forEach(function (m) {
+        const mod = el('div', 'focus-tree-expand-mod focus-tree-expand-field');
+        mod.appendChild(el('span', 'focus-tree-expand-mod-key focus-tree-expand-key', String(m.key)));
+        mod.appendChild(el('span', 'focus-tree-expand-mod-val focus-tree-expand-val', String(m.val)));
+        grid.appendChild(mod);
+      });
+      pane.appendChild(grid);
+
+      // 归属行（t36：已编入才渲染）。本行是全仓唯一拼「归属 」前缀的地方；未编入单元没有本行，
+      // 它的归属由单元模块卡字段行 ['归属','未编入'] 承载（focusTreeExpandFields）——两处互斥，
+      // 保证 DOM 中每个单元展开面板里「归属」恰好一次（t25:attribution-* 三条断言同源）。
+      if (info.parent && info.parent.attached) {
+        pane.appendChild(el('div', 'focus-tree-expand-attr', '归属 ' + String(info.parent.text || '')));
+      }
+      return pane;
+    }
+
+    // 主行名称：长名称靠「最小宽度 0 + 溢出隐藏」在 flex 行内收窄，
+    // 不写 textOverflow（避免越权改视觉），但保证不会把行/页面撑宽（移动端 ≤420px 无横向溢出）
+    function focusTreeLabelEl(text) {
+      const box = el('div', 'focus-tree-label', text);
+      box.title = String(text == null ? '' : text);
+      box.style.minWidth = '0';
+      box.style.maxWidth = '100%';
+      box.style.overflow = 'hidden';
+      box.style.boxSizing = 'border-box';
+      return box;
+    }
+
+    // 单元类型标签（t41）：渲染在该单元行**上方**的独立块级元素（风味开/关两种模式都显示）。
+    // 纯展示，因此：不设 draggable、不绑任何 click/drag 监听（点它不改该行的展开态与选中态）；
+    // 文本取 settings.typeNames[typeKey]（空/未知 typeKey 回退「专注」）。
+    // 类名 .focus-unit-type-tag；data-id/data-type/data-depth/data-indent 供 style.css 与探针对齐用。
+    // 视觉（字号/间距/≤420px 表现）由后续 style.css 任务落地——本任务只保证结构、语义、无横向溢出。
+    function focusUnitTypeTagEl(unit, depth, settings) {
+      const key = focusUnitTypeKey(unit);
+      const tag = el('div', 'focus-unit-type-tag', focusUnitTypeLabel(unit, settings));
+      if (unit && unit.id != null) tag.setAttribute('data-id', String(unit.id));
+      tag.setAttribute('data-type', key);
+      tag.setAttribute('data-depth', String(Number(depth) || 0));
+      tag.setAttribute('data-indent', String((Number(depth) || 0) * FOCUS_TREE_INDENT_PX));
+      tag.title = '单元类型：' + focusUnitTypeLabel(unit, settings);
+      return tag;
+    }
+
+    rows.forEach(function (r, idx) {
+      const gd = guides[idx] || { text: '', depth: 0 };
+      const expanded = focusIsExpanded(r);
+      const row = el('div', 'focus-tree-row' + (focusUiState.selected[r.id] ? ' selected' : '') + (expanded ? ' is-expanded' : ''));
+      // 2.2.0 回滚 2.0：缩进不再靠 paddingLeft + 彩色块，改由树杈引导线（前缀字符）递进
       row.setAttribute('data-id', r.id);
       row.setAttribute('data-kind', r.kind);
+      row.setAttribute('data-depth', String(r.depth));
+      // t27：缩进按统一步长暴露（depth * FOCUS_TREE_INDENT_PX），不写各行不同的 paddingLeft
+      row.setAttribute('data-indent', String((Number(r.depth) || 0) * FOCUS_TREE_INDENT_PX));
 
-      // 层级：由显式类型（unit/group/corps/army）决定 → data-level + 可测视觉差异（符号/字号/字重/左边框/底色）
+      // 层级：由显式类型（unit/group/corps/army）决定 → data-level 只作结构标记；
+      // 不再写任何字号/字重/彩色描边/底色内联样式（层次可辨认改由树杈 + 风味开的行内层级名承担）
       const nodeLevel = r.level || (r.kind === 'unit' ? 'unit' : null);
-      const vis = r.visual || focusLevelVisual(nodeLevel);
       if (nodeLevel) {
         row.setAttribute('data-level', nodeLevel);
         row.classList.add('focus-level-' + nodeLevel);
-        if (vis && !focusCssDeclared('.focus-tree-row[data-level="' + nodeLevel + '"]')) {
-          row.style.fontSize = vis.fontSize + 'px';
-          row.style.fontWeight = String(vis.fontWeight);
-          row.style.borderLeft = vis.borderWidth + 'px solid ' + vis.borderColor;
-          row.style.background = vis.tint;
-        }
       }
 
-      // 层级标记（# / ● / ▲ / ◆）+ 缩进连接线：竖列树里层次与归属一眼可读
-      if (nodeLevel) {
-        const mark = el('span', 'focus-level-mark', vis ? vis.symbol : '');
-        mark.setAttribute('data-level', nodeLevel);
-        if (!focusCssDeclared('.focus-level-mark')) {
-          mark.style.display = 'inline-block';
-          mark.style.minWidth = '16px';
-          mark.style.marginRight = '4px';
-          mark.style.fontWeight = '700';
-          mark.style.color = vis ? vis.borderColor : 'inherit';
-        }
-        row.appendChild(mark);
-      } else {
-        const guide = el('span', 'focus-tree-guide', r.depth > 0 ? '└' : '·');
-        if (!focusCssDeclared('.focus-tree-guide')) {
-          guide.style.marginRight = '4px';
-          guide.style.color = 'var(--text-faint, #9CA3AF)';
-        }
-        row.appendChild(guide);
-      }
+      // t27：点行即展开详情（role=button + tabindex + aria-expanded，Enter/Space 等效）
+      focusBindRowExpand(row, r);
+
+      // 树杈引导线：父级竖线 + 同级分支（├ / └），纯字符、与颜色无关。
+      // t27：data-chain = 逐层「还有下文」位串（1/0），data-span = 列数（= chars），data-indent = 步长缩进，
+      // 供 style.css（t28）画连续竖线与收口用；字符本身仍是唯一真源，渲染端不改写。
+      const guide = el('span', 'focus-tree-guide', String(gd.text || (r.depth > 0 ? '└─' : '──')));
+      guide.setAttribute('data-depth', String(r.depth));
+      guide.setAttribute('data-last', gd.last ? '1' : '0');
+      guide.setAttribute('data-chain', (Array.isArray(gd.chain) ? gd.chain : []).map(function (b) { return b ? '1' : '0'; }).join(''));
+      guide.setAttribute('data-span', String(Number(gd.chars) || 0));
+      guide.setAttribute('data-indent', String((Number(r.depth) || 0) * FOCUS_TREE_INDENT_PX));
+      guide.setAttribute('aria-hidden', 'true');
+      row.appendChild(guide);
 
       // 多选
       if (r.kind === 'unit' || r.kind === 'org') {
@@ -2675,35 +3171,30 @@
       }
 
       if (r.kind === 'org') {
-        const fold = el('button', 'focus-tree-fold', r.collapsed ? '▸' : '▾');
+        // 层级折叠键（t27 更显眼）：独立类名 focus-tree-fold-level + data-collapsed + aria-expanded；
+        // 保留 focus-tree-fold 基类（既有选择器/样式继续命中）。热区：桌面 ≥28×28、≤420px 或触屏 ≥40×40。
+        const fold = el('button', 'focus-tree-fold focus-tree-fold-level', r.collapsed ? '▸' : '▾');
         fold.type = 'button';
+        fold.title = r.collapsed ? '展开下级' : '收起下级';
+        fold.setAttribute('aria-expanded', r.collapsed ? 'false' : 'true');
+        fold.setAttribute('aria-label', (r.collapsed ? '展开下级 ' : '收起下级 ') + String(r.label || ''));
+        fold.setAttribute('data-collapsed', r.collapsed ? '1' : '0');
+        focusTreeFoldDefaults(fold);
         fold.addEventListener('click', function (e) {
           e.stopPropagation();
           focusUiState.collapsed[r.id] = !focusUiState.collapsed[r.id];
           renderApp();
         });
         row.appendChild(fold);
+        // t27：每行独立的详情展开键已删除 → 点行/模块即展开（见 focusBindRowExpand）
 
         const main = el('div', 'focus-tree-main');
-        const tag = r.org.fromPlan && !r.org.formalized ? ' · 计划中' : '';
-        const dueTxt = r.org.dueAt ? ' · 截止 ' + focusFmtTs(r.org.dueAt) : '';
-        const needN = Math.max(1, Number(r.org.minChildCount) || 1);
-        const nextCount = focusNextLevelCount(st, r.id);
-        const badge = focusLevelBadgeEl(r.org.level, st.settings, nextCount);
-        if (badge) main.appendChild(badge);
-        main.appendChild(el('div', 'focus-tree-label', r.label + tag + dueTxt));
-        // 归属：子项显示父级的层级符号 + 番号 + 名称（跨层级编入后下一次渲染即更新）
-        if (r.parent) main.appendChild(focusParentChipEl(r.parent));
-        const agg = r.aggregates;
-        if (agg && agg.unitCount) {
-          main.appendChild(el('div', 'focus-tree-meta',
-            agg.unitCount + ' 单元 · ' + focusFmtTs(agg.startAt) + ' → ' + focusFmtTs(agg.endAt) +
-            ' · 总时 ' + focusFmtDur(agg.totalMin) + ' · 均完成 ' + agg.avgCompletion + '%' +
-            (r.org.fromPlan && !r.org.formalized ? ' · 下级 ' + nextCount + '/' + needN : '')));
-        } else {
-          main.appendChild(el('div', 'focus-tree-meta muted',
-            '暂无下级单元' + (r.org.fromPlan && !r.org.formalized ? ' · 转正需下级 ≥ ' + needN + '（现有 ' + nextCount + '）' : '')));
-        }
+        // 主行两段式第一段：风味关 = 番号（●/▲/◆）+ 名称；风味开 = 中文序数层级名 + 名称（label 是单一真源）。
+        // t41：层次徽标 chip 已下线，行内不再追加任何层次徽标。
+        main.appendChild(focusTreeLabelEl(r.label));
+        // 「计划层 / 已完成层次」只用文字区分（不得用颜色或图标）
+        const stateTag = focusOrgStateLabel(r.org);
+        if (stateTag) main.appendChild(el('span', 'focus-tree-state', stateTag));
         row.appendChild(main);
 
         // 树内操作（非「新建」大按钮）
@@ -2724,21 +3215,23 @@
         act.appendChild(rename);
 
         if (r.org.fromPlan && !r.org.formalized) {
+          const finChk = focusOrgCanFormalize(st, r.id);
+          const finHint = focusFormalizeHint(finChk);
           const fin = el('button', 'btn small primary', '转正');
-          fin.addEventListener('click', function (e) {
-            e.stopPropagation();
-            const chk = focusOrgCanFormalize(loadFocus(), r.id);
-            if (!chk.ok) {
-              if (chk.reason === 'need_fill') {
-                toast('须至少 ' + (chk.need || 1) + ' 个下级（现有 ' + (chk.childCount || 0) + '）');
-              } else {
-                toast('当前不可转正');
-              }
-              return;
-            }
-            focusApply(function (s) { return focusFormalizeOrg(s, r.id, Date.now()); }, '已转正为正式层次');
-          });
+          if (!finChk.ok) {
+            // 只在满足条件时可用：下级数量达下限，且下级全部为完成单元
+            fin.disabled = true;
+            fin.title = finHint;
+          } else {
+            fin.addEventListener('click', function (e) {
+              e.stopPropagation();
+              const chk = focusOrgCanFormalize(loadFocus(), r.id);
+              if (!chk.ok) { toast(focusReasonText(chk.reason)); return; }
+              focusApply(function (s) { return focusFormalizeOrg(s, r.id, Date.now()); }, '已转正为已完成层次');
+            });
+          }
           act.appendChild(fin);
+          if (finHint) act.appendChild(el('span', 'focus-tree-hint focus-tree-meta', finHint));
         }
 
         const del = el('button', 'btn small danger', '删');
@@ -2760,13 +3253,13 @@
         });
         row.addEventListener('dragend', function () { focusUiState.dragId = null; });
 
+        // t27：每行独立的详情展开键已删除 → 点行/模块即展开（见 focusBindRowExpand）
+
         const main = el('div', 'focus-tree-main');
-        main.appendChild(el('div', 'focus-tree-label', r.label));
-        if (r.parent) main.appendChild(focusParentChipEl(r.parent));
         const u = r.unit;
-        main.appendChild(el('div', 'focus-tree-meta',
-          '完成 ' + u.completion + '% · ' + focusFmtDur(u.actualMin) +
-          ' · ' + focusFmtTs(u.startedAt) + ' → ' + focusFmtTs(u.endedAt)));
+        // 主行两段式第一段（label 是单一真源）：风味关 = 番号 `#N` + 名称；风味开 = `第82任务单元 · 名称`
+        // t41：类型改由行上方 .focus-unit-type-tag 承担（行内不再重复类型/层次徽标）
+        main.appendChild(focusTreeLabelEl(r.label));
         row.appendChild(main);
 
         const act = el('div', 'focus-tree-acts');
@@ -2780,7 +3273,11 @@
       } else {
         row.appendChild(el('span', 'focus-tree-root', r.label));
       }
+      // t41：单元类型标签渲染在该单元行**上方**（同一 tree 容器内的独立元素，左缘与所属行对齐）
+      if (r.kind === 'unit') tree.appendChild(focusUnitTypeTagEl(r.unit, r.depth, st.settings));
       tree.appendChild(row);
+      // 第二段：展开后追加一行字段面板（主行右侧按钮驱动；面板是树的兄弟节点，不打断树杈结构）
+      if (expanded && r.kind !== 'root') tree.appendChild(focusTreeExpandPanelEl(st, r, now));
     });
     wrap.appendChild(tree);
   }
@@ -3418,6 +3915,9 @@
       return;
     }
     const levelName = st.settings.levelNames[level] || level;
+    // 免计划组合（2.2.0）：成员全为已完成节点时无需计划模式，产物为「已完成层次」
+    const ready = focusCombineReadiness(st, ids);
+    const freeCombine = !st.planMode && ready.allDone;
     const modal = el('div', 'map-modal habit-modal');
     const backdrop = el('div', 'map-modal-backdrop');
     backdrop.addEventListener('click', function () { modal.remove(); });
@@ -3426,24 +3926,38 @@
     card.appendChild(el('h3', null, '组合到新' + levelName));
     card.appendChild(el('p', 'muted', '将 ' + units.length + ' 个单元、' + orgs.length + ' 个下级节点组合为新' + levelName + '。'));
     if (!st.planMode) {
-      card.appendChild(el('div', 'focus-await-title', '需开启计划模式'));
+      if (ready.allDone) {
+        // 只用文字标识产物性质（不得用颜色或图标）
+        card.appendChild(el('div', 'focus-await-title', '成员均已完成 → 产物为「已完成层次」，无需计划模式'));
+      } else {
+        card.appendChild(el('div', 'focus-await-title', '需开启计划模式'));
+        card.appendChild(el('div', 'focus-tree-hint focus-tree-meta',
+          focusReasonText('member_incomplete') + '（未完成 ' + ready.pending.length + ' 项）'));
+      }
     }
     card.appendChild(el('div', 'muted', '名称（可选）'));
     const name = el('input', 'wrong-input');
     card.appendChild(name);
 
-    card.appendChild(el('div', 'muted', '截止日期（可选）'));
-    const dueInp = el('input', 'wrong-input');
-    dueInp.type = 'date';
-    card.appendChild(dueInp);
+    // t27：非计划免日期组合（成员全为已完成节点 → 产物是「已完成层次」）不渲染「截止日期」与
+    // 「可转正最低下一级任务数」两个字段——只有计划层需要它们；提交时也不读隐藏输入，
+    // 直接按非计划语义传 dueAt:null / minChildCount:1。
+    let dueInp = null;
+    let minChild = null;
+    if (!freeCombine) {
+      card.appendChild(el('div', 'muted', '截止日期（可选）'));
+      dueInp = el('input', 'wrong-input');
+      dueInp.type = 'date';
+      card.appendChild(dueInp);
 
-    card.appendChild(el('div', 'muted', '可转正最低下一级任务数'));
-    const minChild = el('input', 'wrong-input');
-    minChild.type = 'number';
-    minChild.min = String(FOCUS_MIN_CHILD_MIN);
-    minChild.max = String(FOCUS_MIN_CHILD_MAX);
-    minChild.value = '1';
-    card.appendChild(minChild);
+      card.appendChild(el('div', 'muted', '可转正最低下一级任务数'));
+      minChild = el('input', 'wrong-input');
+      minChild.type = 'number';
+      minChild.min = String(FOCUS_MIN_CHILD_MIN);
+      minChild.max = String(FOCUS_MIN_CHILD_MAX);
+      minChild.value = '1';
+      card.appendChild(minChild);
+    }
 
     card.appendChild(el('div', 'muted', '挂在（可选）'));
     const parentSel = el('select', 'wrong-input');
@@ -3462,10 +3976,21 @@
 
     const btns = el('div', 'wrong-input-btns');
     const ok = el('button', 'btn primary', '组合');
+    if (!st.planMode && !ready.allDone) {
+      ok.disabled = true;
+      ok.title = focusReasonText('member_incomplete');
+    }
     ok.addEventListener('click', function () {
       const parentId = parentSel.value || null;
-      const nf = focusPlanNodeFields({ name: name.value, dueAt: dueInp.value, minChildCount: minChild.value }, 1);
-      if (!nf.ok) { toast('截止日期不合法'); return; }
+      // t27：非计划免日期组合不读隐藏输入（字段本就不渲染），按非计划语义传参；
+      // 计划模式仍走同一校验（最小下级数 1..99、合法日期）。
+      let nf;
+      if (freeCombine) {
+        nf = { ok: true, name: String(name.value || '').trim(), dueAt: null, minChildCount: 1 };
+      } else {
+        nf = focusPlanNodeFields({ name: name.value, dueAt: dueInp.value, minChildCount: minChild.value }, 1);
+        if (!nf.ok) { toast('截止日期不合法'); return; }
+      }
       modal.remove();
       focusApply(function (s) {
         return focusCombineNodes(s, {
@@ -3473,11 +3998,12 @@
           level: level,
           name: nf.name,
           parentId: parentId,
-          fromPlan: true,
+          // 计划模式 → 计划层；非计划模式（成员全已完成）→ 已完成层次
+          fromPlan: st.planMode ? true : false,
           dueAt: nf.dueAt,
           minChildCount: nf.minChildCount
         }, Date.now());
-      }, '已组合到新' + levelName);
+      }, freeCombine ? '已组合为已完成层次' : '已组合到新' + levelName);
       focusUiState.selected = {};
     });
     const cancel = el('button', 'btn', '取消');
@@ -3615,6 +4141,15 @@ export {
   focusCanAttach,
   focusNodeLevel,
   focusCombineLevelOf,
+  focusUnitDone,
+  focusOrgPending,
+  focusNodeDone,
+  focusOrgStateLabel,
+  focusCombineReadiness,
+  focusIncompleteUnder,
+  focusFormalizeHint,
+  focusReasonText,
+  FOCUS_REASON_TEXT,
   focusNextSeq,
   focusMaxSeq,
   focusNormalizeMinChildCount,
@@ -3653,8 +4188,12 @@ export {
   focusFindPlan,
   focusMainChain,
   focusSeqLabel,
+  focusChineseNumber,
+  focusSeqOrdinalOk,
   focusUnitLabel,
   focusOrgLabel,
+  focusUnitTypeKey,
+  focusUnitTypeLabel,
   focusWorkLabel,
   focusIsPrecedent,
   focusReservationRemainingMs,
@@ -3705,6 +4244,7 @@ export {
   focusOrgAggregates,
   focusOrgCanFormalize,
   focusFormalizeOrg,
+  focusIsAncestorOrg,
   focusTemplateTriad,
   focusTreeRows,
   focusPlanCreate,
@@ -3714,9 +4254,23 @@ export {
   focusPlanSettle,
   FOCUS_LEVEL_VISUALS,
   FOCUS_LEVEL_VISUAL_KEYS,
+  FOCUS_LEVEL_VISUAL_ORDER,
   focusLevelVisual,
   focusLevelVisualDelta,
-  focusLevelBadge,
+  // t41：层次徽标 chip 的纯函数已删除（整体下线），不再导出任何 chip 入口
+  focusTreeGuideLine,
+  focusTreeGuides,
+  focusTreeExpandKey,
+  focusTreeExpandFields,
+  focusExpandTagViews,
+  focusExpandModuleViews,
+  FOCUS_TREE_INDENT_PX,
+  focusFmtTs,
+  focusFmtDur,
+  FOCUS_TREE_GUIDE_VERT,
+  FOCUS_TREE_GUIDE_GAP,
+  FOCUS_TREE_GUIDE_BRANCH,
+  FOCUS_TREE_GUIDE_LAST,
   focusParentAttribution,
   focusReminderInfo,
   focusReminderSync,

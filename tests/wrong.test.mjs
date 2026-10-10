@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 import {
   fsrsInitDifficulty, fsrsInitStability, fsrsRetention,
   fsrsDifficulty, fsrsLapseStability, fsrsSuccessStability, fsrsInterval
@@ -261,4 +262,237 @@ test('接线契约：doWrongRate 仍按来源调用联动（demoteLinked(w, r)�
   assert.ok(callLine > rateLine && callLine < rateLine + 30, 'demoteLinked 调用不在 doWrongRate 体内（联动接线被改动）');
   const markBody = lines.slice(markLine, markLine + 40).join('\n'); // markAsWrong 体内
   assert.match(markBody, /linkedMastery\s*=\s*0/, 'markAsWrong 未关闭例题的联动开关');
+});
+
+// ---------------- t18：错题自测作为二级导航项（错题模块） ----------------
+// src/learn.mjs / src/actions.mjs 都是「同一 IIFE 内的片段」（learn.mjs 末尾停在 `function renderApp() {`，
+// 函数体在 browse.mjs 开头；actions.mjs 末尾的 `})();` 收的是 app.mjs 开的那层 IIFE），
+// 既不能整文件 import 也不能 node --check。这里按花括号配对切出被测函数原文，塞进 vm 沙箱跑真逻辑：
+// 断言直接落在生产代码上，且行号漂移不会让用例失真（与上面「接线契约」的源码级校验同思路）。
+const SRC_LEARN = readFileSync(new URL('../src/learn.mjs', import.meta.url), 'utf8');
+const SRC_ACTIONS = readFileSync(new URL('../src/actions.mjs', import.meta.url), 'utf8');
+// SRC_WRONG 可用 ATHENA_WRONG_FILE 覆盖（t28）：反证「把页内入口加回 / 把「手动录入」挪回末位」时，
+// 同一套断言必须在被改坏的源码上判红，见 backup/scratch/wrong-entry/check-wrong-entry.mjs
+const SRC_WRONG = readFileSync(process.env.ATHENA_WRONG_FILE || new URL('../src/wrong.mjs', import.meta.url), 'utf8');
+const SRC_CSS = readFileSync(process.env.ATHENA_CSS_FILE || new URL('../style.css', import.meta.url), 'utf8');
+
+// 花括号配对（跳过字符串/模板串/行注释/块注释），用于切出完整函数原文
+function braceEnd(text, openAt) {
+  let depth = 0;
+  for (let i = openAt; i < text.length; i++) {
+    const c = text[i];
+    const n = text[i + 1];
+    if (c === '/' && n === '/') { const e = text.indexOf('\n', i); i = e < 0 ? text.length : e; continue; }
+    if (c === '/' && n === '*') { const e = text.indexOf('*/', i + 2); i = e < 0 ? text.length : e + 1; continue; }
+    if (c === '"' || c === "'" || c === '`') {
+      for (let j = i + 1; j < text.length; j++) {
+        if (text[j] === '\\') { j++; continue; }
+        if (text[j] === c) { i = j; break; }
+      }
+      continue;
+    }
+    if (c === '{') depth++;
+    else if (c === '}') { depth--; if (depth === 0) return i; }
+  }
+  throw new Error('括号不闭合：' + text.slice(openAt, openAt + 40));
+}
+
+function sliceFunction(text, header) {
+  const at = text.indexOf(header);
+  assert.ok(at >= 0, '未找到 ' + header);
+  const openAt = text.indexOf('{', at + header.length - 1);
+  assert.ok(openAt > at, header + ' 没有函数体');
+  return text.slice(at, braceEnd(text, openAt) + 1);
+}
+
+// 切出 switch 里 `case 'x':` 的分支体（到 break; 或下一个 case 为止）
+function caseBody(text, label) {
+  const header = "case '" + label + "':";
+  const at = text.indexOf(header);
+  assert.ok(at >= 0, '未找到 ' + header);
+  const start = at + header.length;
+  const brk = text.indexOf('break;', start);
+  const next = text.indexOf("case '", start);
+  const end = brk >= 0 && (next < 0 || brk < next) ? brk : next;
+  assert.ok(end > start, header + ' 没有结尾');
+  return text.slice(start, end);
+}
+
+// 最小 DOM 桩：够 el()/renderSubnav()/wrongQuizEntry() 用
+function mkNode(tag) {
+  return {
+    tag: tag, className: '', textContent: '', attrs: {}, children: [], handlers: {}, offsetHeight: 0,
+    style: { setProperty() {} },
+    appendChild(c) { this.children.push(c); return c; },
+    setAttribute(k, v) { this.attrs[k] = String(v); },
+    getAttribute(k) { return Object.prototype.hasOwnProperty.call(this.attrs, k) ? this.attrs[k] : null; },
+    addEventListener(type, fn) { this.handlers[type] = fn; },
+    classList: { add() {}, remove() {}, toggle() {} }
+  };
+}
+
+const EL_SRC = sliceFunction(SRC_LEARN, 'function el(tag, cls, text)');
+const SUBNAV_SRC = sliceFunction(SRC_LEARN, 'function renderSubnav()');
+const ENTER_WRONG_QUIZ_SRC = sliceFunction(SRC_ACTIONS, 'function enterWrongQuiz()');
+const NAV_CASE_SRC = caseBody(SRC_ACTIONS, 'nav');
+const MODULE_CASE_SRC = caseBody(SRC_ACTIONS, 'module');
+
+// 跑真 renderSubnav()，回收二级栏按钮（args/labels/icons/active 都是 DOM 上的事实）
+function renderSubnavOf(view, moduleId) {
+  const sub = mkNode('div');
+  const iconNames = [];
+  const ctx = {
+    currentView: view, currentModule: moduleId, iconNames: iconNames,
+    highlightShell() {}, syncFocusReminder() {}, icon(name) { iconNames.push(name); return mkNode('span'); },
+    document: {
+      documentElement: { style: { setProperty() {} } },
+      createElement: (t) => mkNode(t),
+      createTextNode: (t) => ({ tag: '#text', text: String(t) }),
+      getElementById: (id) => (id === 'subnav' ? sub : null),
+      querySelector: (sel) => (sel === 'header' ? { offsetHeight: 56 } : null),
+      querySelectorAll: () => []
+    }
+  };
+  vm.createContext(ctx);
+  vm.runInContext(EL_SRC + '\n' + SUBNAV_SRC, ctx);
+  vm.runInContext('renderSubnav()', ctx);
+  const buttons = sub.children.filter((c) => c.tag === 'button');
+  return {
+    buttons: buttons,
+    args: buttons.map((b) => b.getAttribute('data-arg')),
+    labels: buttons.map((b) => (b.children.find((c) => c.tag === '#text') || { text: '' }).text.trim()),
+    actions: buttons.map((b) => b.getAttribute('data-action')),
+    classes: buttons.map((b) => b.className),
+    icons: iconNames.slice(),
+    active: buttons.filter((b) => /\bactive\b/.test(b.className)).map((b) => b.getAttribute('data-arg'))
+  };
+}
+
+// 跑真 handleAction 的 nav / module 分支体（其余分支不执行、不参与，仅本分支逻辑进沙箱）
+function dispatchNav(state, action, arg) {
+  const calls = { render: 0, close: 0 };
+  const ctx = Object.assign({
+    currentView: 'wrong', currentModule: 'wrong', quiz: null,
+    closeDrawer() { calls.close++; }, renderApp() { calls.render++; }
+  }, state || {});
+  vm.createContext(ctx);
+  vm.runInContext(ENTER_WRONG_QUIZ_SRC + '\nfunction navStep(arg) {' + NAV_CASE_SRC + '}\nfunction moduleStep(arg) {' + MODULE_CASE_SRC + '}', ctx);
+  if (action === 'nav') ctx.navStep(arg); else ctx.moduleStep(arg);
+  return { view: ctx.currentView, module: ctx.currentModule, quiz: ctx.quiz, render: calls.render };
+}
+
+// 跑真 renderWrongLearn() / renderWrongBrowse()（DB.wrongs 为空 → 建完工具条即走空态早退），
+// 回收 .learn-top 工具条本身：子节点顺序与属性都是生产代码 appendChild 的事实（t28）
+function renderWrongToolbar(fnName) {
+  const app = mkNode('div');
+  const ctx = {
+    DB: { wrongs: {} }, wrongDeck: [], wrongFrontier: 0, wrongPos: 0,
+    openWrongInput() {}, illus: () => mkNode('span'),
+    document: {
+      createElement: (t) => mkNode(t),
+      createTextNode: (t) => ({ tag: '#text', text: String(t) }),
+      getElementById: (id) => (id === 'app' ? app : null)
+    }
+  };
+  vm.createContext(ctx);
+  vm.runInContext(EL_SRC, ctx);
+  vm.runInContext(sliceFunction(SRC_WRONG, 'function ' + fnName + '()'), ctx);
+  vm.runInContext(fnName + '()', ctx);
+  const tb = app.children.filter((c) => /\blearn-top\b/.test(c.className));
+  assert.equal(tb.length, 1, fnName + ' 应恰好建立一个 .learn-top 工具条');
+  return tb[0];
+}
+
+test('t18 二级项：错题模块新增「自测」（紧随「重做」），图标与卡片模块自测同一字符图标', () => {
+  const wrong = renderSubnavOf('wrong', 'wrong');
+  assert.deepEqual(wrong.args, ['wrong', 'wrongQuiz', 'wrongBrowse', 'wrongStats'], '错题模块二级项顺序应为 重做 → 自测 → 浏览 → 统计');
+  assert.deepEqual(wrong.labels, ['重做', '自测', '浏览', '统计']);
+  assert.equal(wrong.icons[1], 'pencil', '「自测」应沿用自测字符图标口径（pencil）');
+  assert.ok(wrong.classes.every((c) => c === 'nav-btn sub-btn' || c === 'nav-btn sub-btn active'), '二级项类名沿用 nav-btn sub-btn（未新增类名，样式/移动端口径不变）');
+  assert.ok(wrong.actions.every((a) => a === 'nav'), '二级项一律派发 data-action="nav"');
+  assert.ok(wrong.buttons.every((b) => b.children.some((c) => c.tag === 'span')), '每项都带图标节点');
+  const cards = renderSubnavOf('quiz', 'cards');
+  assert.deepEqual(cards.args, ['learn', 'browse', 'quiz', 'bank', 'statistics', 'help'], '卡片模块二级项不得被改动');
+  assert.equal(cards.icons[2], wrong.icons[1], '错题自测与卡片自测必须共用同一图标名');
+  // 移动端二级栏宽度：错题模块 4 项 ≤ 既有最多 6 项（卡片模块），标签仍是 2 个汉字，未新建最坏情况
+  assert.ok(wrong.buttons.length <= cards.buttons.length, '错题模块项数（' + wrong.buttons.length + '）不应超过既有最多项数（' + cards.buttons.length + '）');
+});
+
+test('t18 高亮：错题自测视图高亮「自测」（不再映射回「重做」），卡片自测仍高亮 quiz', () => {
+  const cases = [
+    ['wrong', 'wrong', 'wrong'],
+    ['quiz', 'wrong', 'wrongQuiz'],
+    ['wrongBrowse', 'wrong', 'wrongBrowse'],
+    ['wrongStats', 'wrong', 'wrongStats'],
+    ['quiz', 'cards', 'quiz'],
+    ['learn', 'cards', 'learn'],
+    ['bank', 'cards', 'bank'],
+    ['actFocus', 'act', 'actFocus']
+  ];
+  for (const [view, moduleId, expect] of cases) {
+    const r = renderSubnavOf(view, moduleId);
+    assert.deepEqual(r.active, [expect], 'currentModule=' + moduleId + ' currentView=' + view + ' 应恰好高亮 ' + expect);
+  }
+  const home = renderSubnavOf('home', 'cards');
+  assert.deepEqual(home.active, [], '主页无二级栏（不受影响）');
+});
+
+test('t18 派发：nav/module wrongQuiz → currentModule=wrong + currentView=quiz（不落 learn），单次渲染且不带入卡片会话', () => {
+  assert.ok(!/currentView\s*=\s*arg;/.test(NAV_CASE_SRC), 'nav 分支不得把 arg 直接当视图写回（wrongQuiz 不是渲染分支，必须落 quiz）');
+  const nav = dispatchNav({ quiz: { mode: 'cards' } }, 'nav', 'wrongQuiz');
+  assert.equal(nav.module, 'wrong');
+  assert.equal(nav.view, 'quiz', 'nav wrongQuiz 的视图必须是 quiz（不能是 wrongQuiz / learn）');
+  assert.equal(nav.render, 1, '只渲染一次，不得重复渲染');
+  assert.equal(nav.quiz, null, '卡片自测（mode=cards）会话不得被带进错题自测视图');
+  const ongoing = { mode: 'wrong', qs: [{ id: 'x' }] };
+  assert.equal(dispatchNav({ quiz: ongoing }, 'nav', 'wrongQuiz').quiz, ongoing, '进行中的错题自测会话应保持（二级栏误点不丢进度）');
+  // 既有派发口径零回归
+  assert.equal(dispatchNav({}, 'nav', 'quiz').module, 'cards');
+  assert.equal(dispatchNav({}, 'nav', 'wrong').view, 'wrong');
+  assert.equal(dispatchNav({}, 'nav', 'wrongBrowse').view, 'wrongBrowse');
+  assert.equal(dispatchNav({}, 'nav', 'wrongStats').view, 'wrongStats');
+  // 一级模块入口（module）同样不得把 wrongQuiz 落到 learn
+  assert.equal(dispatchNav({}, 'module', 'wrongQuiz').view, 'quiz');
+  assert.equal(dispatchNav({}, 'module', 'wrongQuiz').module, 'wrong');
+  assert.equal(dispatchNav({}, 'module', 'wrong').view, 'wrong');
+  assert.equal(dispatchNav({}, 'module', 'act').view, 'actFocus');
+  assert.equal(dispatchNav({}, 'module', 'cards').view, 'learn');
+});
+
+test('t28 页内入口已删除：二级功能栏「自测」是唯一入口（wrongQuizEntry 与其 3 处调用全部移除）', () => {
+  assert.equal((SRC_WRONG.match(/wrongQuizEntry/g) || []).length, 0, 'src/wrong.mjs 不得残留 wrongQuizEntry（函数与 3 处调用都应删除）');
+  assert.ok(!/function\s+wrongQuizEntry\s*\(/.test(SRC_WRONG), 'wrongQuizEntry 函数应整体删除');
+  assert.ok(!SRC_WRONG.includes('tb.appendChild(wrongQuizEntry'), '三个工具条都不得再挂页内自测入口');
+  assert.ok(!SRC_WRONG.includes('📝 错题自测'), '错题本页内不得再渲染「📝 错题自测」按钮');
+  assert.ok(!SRC_WRONG.includes('点上方「📝 错题自测」'), '错题统计页文案不得再指向已删除的页内按钮');
+  assert.match(SRC_WRONG, /入口已改为二级功能栏/, '删除处必须留注释说明入口已改为二级功能栏');
+  // 唯一入口的行为零回归：nav 与 module 两条路径都落 wrong/quiz，且不丢进行中的会话
+  const nav = dispatchNav({ quiz: { mode: 'cards' } }, 'nav', 'wrongQuiz');
+  assert.deepEqual([nav.module, nav.view, nav.quiz, nav.render], ['wrong', 'quiz', null, 1], '二级栏「自测」应一次渲染落 wrong/quiz，且不带入卡片会话');
+  const ongoing = { mode: 'wrong', qs: [{ id: 'x' }] };
+  assert.equal(dispatchNav({ quiz: ongoing }, 'nav', 'wrongQuiz').quiz, ongoing, '二级栏「自测」不得重置进行中的错题自测会话');
+  assert.equal(dispatchNav({}, 'module', 'wrongQuiz').view, 'quiz');
+  assert.equal(dispatchNav({}, 'module', 'wrongQuiz').module, 'wrong');
+  // nav 与 module 两条派发路径共用同一个会话守卫（页内入口删除不影响它）
+  assert.match(SRC_ACTIONS, /function enterWrongQuiz\(\)/);
+  assert.equal((SRC_ACTIONS.match(/enterWrongQuiz\(\)/g) || []).length, 3, 'enterWrongQuiz 应为 1 处定义 + nav/module 各 1 处调用');
+});
+
+test('t28 「手动录入」在重做/浏览两视图里都是 .learn-top 首个子元素（左上角、热区 ≥32px、计数排后）', () => {
+  for (const fnName of ['renderWrongLearn', 'renderWrongBrowse']) {
+    const tb = renderWrongToolbar(fnName);
+    assert.ok(tb.children.length >= 2, fnName + ' 工具条应至少含「手动录入」+ 计数两段');
+    const first = tb.children[0];
+    assert.equal(first.tag, 'button', fnName + ' 的 .learn-top 首个子元素必须是按钮（左上角，移动端首屏可点）');
+    assert.ok(/手动录入/.test(first.textContent), fnName + ' 首个子元素应是「➕ 手动录入」，实际：' + first.textContent);
+    assert.ok(/\bprimary\b/.test(first.className), fnName + ' 手动录入应沿用既有 primary 按钮类（不新建类名）');
+    // t31 起热区不再内联：由 style.css 的 `.learn-top .btn.small` 统一给出（.btn.small 默认 30px）
+    assert.ok(!/style\.minHeight/.test(SRC_WRONG), fnName + ' 手动录入不得再内联 min-height（t31 起样式归 style.css）');
+    assert.ok(/\.learn-top\s+\.btn\.small\s*\{[^}]*min-height:\s*32px/.test(SRC_CSS),
+      fnName + ' 热区 ≥32px 必须由 style.css 的 .learn-top .btn.small 规则给出');
+    assert.equal(typeof first.handlers.click, 'function', fnName + ' 手动录入必须绑定 openWrongInput');
+    const second = tb.children[1];
+    assert.equal(second.tag, 'span', fnName + ' 计数字符串必须排在「手动录入」之后');
+    assert.ok(/^共 \d+ 道$/.test(second.textContent), fnName + ' 第二个子元素应是计数文本，实际：' + second.textContent);
+  }
 });

@@ -1,10 +1,13 @@
-/* Athena 题库 · 统计学（POC 首批：北大光华-431 统计 2016–2020 真题，共 16 题）
+/* Athena 题库 · 统计学（POC 首批 16 题：北大光华-431 统计 2016–2020 真题；t32 追加 170 条卡片派生题，共 186 题）
  *
  * 数据形态与 data/bank_math3.js 完全一致（window.BANK.<subj>），见该文件头部注释。
  * 题型分类依据：参考文件/教材讲义/统计/专题一 … 专题十四（14 个专题讲义）
  *   + 参考文件/北大金融茆书知识点划分.pdf 的章节划分（概率论 → 数理统计 → 回归）；
  *   题型 key 即按「专题讲义 + 茆书章节」的统计方法维度划分（逐题给出判据）。
  * 题源：参考文件/真题/统计/JYSG真题册_2026_02_01 (1).txt（题面）与 解析册_2026_02_01 (1).txt（解答）。
+ * t32 卡片派生题（origin: 'card'，id 形如 cv-st-<卡片id>，见 BEGIN GENERATED 哨兵块）：
+ *   由 data/stats.js 的 EXAMPLE（166 键 / 177 条）按已裁定映射生成，**不要手改**——改 data/stats.js 后
+ *   重跑 `node backup/scratch/bank-cv/build-bank-cv.mjs --write` 即可复算；字段口径见 docs/DATA_SCHEMA.md。
  */
 (function () {
   'use strict';
@@ -15,7 +18,19 @@
     { key: 'chi', name: '列联表与拟合优度 χ² 检验', def: '分类数据的独立性/同质性检验：算期望频数 E_ij=R_iC_j/N，构造 χ² 统计量并与临界值比较。', judge: '题干给出分类频数表（行×列）或「是否存在显著差异」。', sample: '2018-Q3、2020-Q1' },
     { key: 'corr', name: '相关分析与独立性辨析', def: '相关系数的定义与性质、相关与独立的关系、相关系数检验的统计量。', judge: '题干出现「相关性/独立性」「相关系数」或要求判断二者关系。', sample: '2018-Q1、2019-Q1' },
     { key: 'sampdist', name: '抽样分布与统计量分布', def: '由正态总体样本构造统计量并确定其分布（χ²、t、F、Beta 等，含两样本组合）。', judge: '题干给出独立同分布样本并要求「求…的分布」。', sample: '2016-Q4' },
-    { key: 'regress', name: '线性回归与 OLS 推断', def: '最小二乘/极大似然估计回归系数、系数与整体显著性的检验、R² 与调整 R²、异方差、测量误差。', judge: '题干给出回归模型（含 y_i=…+ε_i 与误差假设），要求估计量、分布或检验。', sample: '2016-Q3、2017-Q2、2018-Q2、2019-Q2' }
+    { key: 'regress', name: '线性回归与 OLS 推断', def: '最小二乘/极大似然估计回归系数、系数与整体显著性的检验、R² 与调整 R²、异方差、测量误差。', judge: '题干给出回归模型（含 y_i=…+ε_i 与误差假设），要求估计量、分布或检验。', sample: '2016-Q3、2017-Q2、2018-Q2、2019-Q2' },
+  // ==== BEGIN GENERATED card-questions (t32) ====
+    { key: "prob", name: "概率计算与事件运算", def: "古典/几何概型计数，条件概率、乘法公式、全概率与贝叶斯公式，事件运算（互斥、对立、独立）与加法公式。",
+      judge: "卡片章节 cat=prob_basic（随机事件与概率）：求事件概率、判断事件关系、已知条件求条件概率。", sample: "pb02、pb03、pb04" },
+    { key: "dist", name: "随机变量分布与密度", def: "分布函数与分布律/密度函数的互求、常见分布（0-1/二项/泊松/几何/均匀/正态/指数/伽马等）的识别与计算、随机变量函数的分布。",
+      judge: "卡片章节 cat=dist（随机变量及分布）：给出分布或密度，求分布函数、概率、函数的分布。", sample: "rv02、rv06、rv15" },
+    { key: "multi", name: "多维随机变量与联合分布", def: "联合分布函数、边缘分布、条件分布与条件密度、独立性判定、二维均匀/正态、卷积与和的分布、次序统计量。",
+      judge: "卡片章节 cat=multidim（多维随机变量）：涉及两个及以上随机变量的联合/边缘/条件结构或次序统计量。", sample: "mv02、mv06、xt02" },
+    { key: "numchar", name: "数字特征与矩", def: "期望与方差的定义与性质、协方差与相关系数、原点矩与中心矩、条件期望、特征函数与矩母函数、马尔可夫/切比雪夫不等式。",
+      judge: "卡片章节 cat=numchar（数字特征，标题不含「相关」）：求期望/方差/协方差/矩或证明不等式。", sample: "nc01、nc06、nc15" },
+    { key: "limit", name: "大数定律与中心极限定理", def: "切比雪夫/辛钦/伯努利大数定律的适用条件与结论、棣莫弗-拉普拉斯与中心极限定理的近似计算、两类极限定理的区别。",
+      judge: "卡片章节 cat=limit（大数定律与中心极限定理）：判断收敛形式或做正态近似计算。", sample: "ll02、ll05、ll06" },
+  // ==== END GENERATED card-questions (t32) ====
   ];
 
   var DATA = [
@@ -162,7 +177,1251 @@
       traps: '把百分比当频数直接代入 $\\chi^2$（必须先乘样本量化成频数）；期望频数用「总合计」而不是行/列合计的乘积；自由度写成 $3\\times2-1$；忘记检验的是「独立性/同质性」而非与某给定比例的拟合优度。',
       hint: '列联表题固定三步：化频数 → $E_{ij}=R_iC_j/N$ → $\\chi^2$ 与 $\\chi^2_{1-\\alpha}((r-1)(c-1))$ 比较。',
       src: { file: '参考文件/真题/统计/JYSG真题册_2026_02_01 (1).txt', page: 17, no: '2020 统计部分 一、(15分)', note: '题面取自真题册 txt 第 17 页（书内第 15 页）「2020 统计部分真题」一、(15 分)；解答取自解析册「2020 统计部分解析」一、(15 分) 块。' }
-    }
+    },
+  // ==== BEGIN GENERATED card-questions (t32) ====
+    {
+      id: "cv-st-pb01", origin: 'card', year: 2026, school: "复旦大学 432 统计学真题 2026 年", no: "卡片 pb01", type: "prob", star: 4,
+      tags: ["pb01"],
+      stem: "考虑一个包含三个孩子的家庭。假设每个孩子的性别取值服从参数为 $p=\\frac12$ 的伯努利分布（生男、生女的概率均为 $\\frac12$），且各次生育相互独立。求：(1) 该家庭中最多有 1 个女孩的概率；(2) 三个孩子既有男孩又有女孩的概率",
+      answer: "样本空间 $\\Omega=\\{BBB,\\ BBG,\\ BGB,\\ GBB,\\ BGG,\\ GBG,\\ GGB,\\ GGG\\}$，$|\\Omega|=2^{3}=8$（古典概型，每个基本事件概率 $\\frac18$）。\n(1) 设 $X$ 为女孩个数，事件 $\\{X\\le1\\}=\\{X=0\\}\\cup\\{X=1\\}$ 是两个互斥事件之并，由加法公式\n$$P(X\\le1)=P(X=0)+P(X=1)=\\frac18+\\frac38=\\frac12$$\n(2) “既有男孩又有女孩”的对立事件是“全是男孩或全是女孩”：\n$$P(B)=1-P(B^{c})=1-\\frac28=\\frac34$$",
+      traps: "对立事件 $\\bar A$ 必与 $A$ 互斥且 $A\\cup\\bar A=\\Omega$；但互斥只需 $AB=\\varnothing$，未必对立（如二者合起来不是全部结果）。勿把“互斥”当“对立”。",
+      src: { card: "pb01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"pb01\"]）来源原文：2026 复旦大学 432 统计学真题。traps 取自 PITFALL[pb01]。MNEM[pb01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-pb02", origin: 'card', year: 2018, school: "复旦大学 432 统计学真题 2018 年", no: "卡片 pb02", type: "prob", star: 4,
+      tags: ["pb02"],
+      stem: "从 $1,2,\\dots,10$ 中不放回地随机取 3 个数字。求：(1) 最小数字是 5 的概率；(2) 最大数字是 5 的概率",
+      answer: "样本点总数 $C_{10}^{3}=120$。\n(1) 最小为 5：必取 5，另两个取自 $\\{6,7,8,9,10\\}$，$P=\\dfrac{C_{5}^{2}}{C_{10}^{3}}=\\dfrac{10}{120}=\\dfrac{1}{12}$。\n(2) 最大为 5：必取 5，另两个取自 $\\{1,2,3,4\\}$，$P=\\dfrac{C_{4}^{2}}{C_{10}^{3}}=\\dfrac{6}{120}=\\dfrac{1}{20}$。",
+      src: { card: "pb02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"pb02\"]）来源原文：2018 复旦大学 432 统计学真题。PITFALL[pb02] 无条目 → 省略 traps 字段。MNEM[pb02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-pb03", origin: 'card', year: 2017, school: "中国科学技术大学 432 统计学真题 2017 年", no: "卡片 pb03", type: "prob", star: 5,
+      tags: ["pb03"],
+      stem: "设事件 $A,B,C$ 两两独立，$P(A)=P(B)=P(C)=p<0.5$，$ABC=\\varnothing$，且 $P(A\\cup B\\cup C)=\\frac{9}{16}$。求 $p$",
+      answer: "由加法公式（容斥原理）：\n$$P(A\\cup B\\cup C)=P(A)+P(B)+P(C)-P(AB)-P(AC)-P(BC)+P(ABC)$$\n两两独立给出 $P(AB)=P(AC)=P(BC)=p^{2}$，且 $P(ABC)=0$，故\n$$\\frac{9}{16}=3p-3p^{2}\\ \\Rightarrow\\ p=\\frac14\\ \\text{或}\\ \\frac34$$\n由 $p<0.5$ 得 $p=\\dfrac14$。",
+      traps: "求 $P(A\\cup B)$ 当 $A,B$ 不相交时才省略 $-P(AB)$；有交集时必须减去交叉项，避免重复计数。",
+      src: { card: "pb03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"pb03\"]）来源原文：2017 中国科学技术大学 432 统计学真题。traps 取自 PITFALL[pb03]。MNEM[pb03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-pb04", origin: 'card', year: 2020, school: "复旦大学 432 统计学真题 2020 年", no: "卡片 pb04", type: "prob", star: 5,
+      tags: ["pb04"],
+      stem: "一家有两个孩子（每个孩子为男或女的概率均为 $\\frac12$，且相互独立）。求：(1) 已知第一个孩子是女孩，第二个孩子也是女孩的概率；(2) 已知至少有一个是女孩，另一个也是女孩的概率",
+      answer: "设 $A=$“第一个是女孩”，$B=$“第二个是女孩”。\n(1) 两孩性别独立，$P(B\\,|\\,A)=P(B)=\\dfrac12$。\n(2) “至少一个女孩”有 $\\{$女女, 男女, 女男$\\}$ 三种等可能情形，其中“两个都是女孩”占 1 种，故 $P=\\dfrac13$。\n（用条件概率：$P(\\text{两女}\\,|\\,\\text{至少一女})=\\dfrac{P(\\text{两女})}{P(\\text{至少一女})}=\\dfrac{1/4}{3/4}=\\dfrac13$。）",
+      traps: "条件概率分母是“条件事件”的概率：$P(B|A)$ 分母为 $P(A)$，勿把 $P(AB)$ 与 $P(B|A)$ 混淆。",
+      hint: "条件概率分母是「条件事件」的概率：$P(B|A)$ 分母为 $P(A)$——「谁在竖线后面，谁做分母」。",
+      src: { card: "pb04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"pb04\"]）来源原文：2020 复旦大学 432 统计学真题。traps 取自 PITFALL[pb04]。hint 取自 MNEM[pb04]。" }
+    },
+    {
+      id: "cv-st-pb05", origin: 'card', year: 2018, school: "复旦大学 432 统计学真题 2018 年", no: "卡片 pb05", type: "prob", star: 5,
+      tags: ["pb05"],
+      stem: "有一堆球：2 红、3 黑、4 白。随机摸一个球，若为黑色则赢；若为其他颜色则有放回地继续摸，直至重复出现该颜色或黑色为止——若出现第一次摸到的颜色则赢，否则输。求赢的概率",
+      answer: "设 $A_k$ 为第 $k$ 次摸球获胜，则 $P(\\text{赢})=\\sum_{k\\ge1}P(A_k)$。第一次摸到黑直接赢：$P(A_1)=\\frac39=\\frac13$。\n第 $k$ 次（$k>1$）赢，由乘法公式需：第一次摸到红或白（且非黑），中间 $k-2$ 次既非黑也非初始色，第 $k$ 次摸回初始色：\n$$P(A_k)=P(R)P(A_k\\,|\\,R)+P(W)P(A_k\\,|\\,W)=\\frac29\\left(\\frac49\\right)^{k-2}\\frac29+\\frac49\\left(\\frac29\\right)^{k-2}\\frac49$$\n故\n$$P(\\text{赢})=\\frac13+\\sum_{k\\ge2}P(A_k)=\\frac13+\\frac{4/81}{1-4/9}+\\frac{16/81}{1-2/9}=\\frac13+\\frac{4}{45}+\\frac{16}{63}=\\frac{71}{105}$$",
+      src: { card: "pb05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"pb05\"]）来源原文：2018 复旦大学 432 统计学真题。PITFALL[pb05] 无条目 → 省略 traps 字段。MNEM[pb05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-pb08", origin: 'card', year: 2016, school: "复旦大学 432 统计学真题 2016 年", no: "卡片 pb08", type: "prob", star: 4,
+      tags: ["pb08"],
+      stem: "三个人独立地同时破译同一密码，三人能破译的概率分别为 $\\frac15,\\ \\frac13,\\ \\frac14$。求此密码能够被破译的概率",
+      answer: "密码被破译 = 至少一人破译。利用独立性取对立事件：\n$$P(\\text{被破译})=1-P(\\text{三人均未破译})=1-\\left(1-\\frac15\\right)\\left(1-\\frac13\\right)\\left(1-\\frac14\\right)=1-\\frac45\\cdot\\frac23\\cdot\\frac34=1-\\frac25=\\frac35$$",
+      altAnswer: "💡巧解（容斥/加法公式）：设 $A,B,C$ 为三人各自破译成功，所求\n$$P(A\\cup B\\cup C)=P(A)+P(B)+P(C)-P(AB)-P(AC)-P(BC)+P(ABC)$$\n由独立性 $=\\dfrac15+\\dfrac13+\\dfrac14-\\dfrac1{15}-\\dfrac1{20}-\\dfrac1{12}+\\dfrac1{60}=\\dfrac35$。",
+      src: { card: "pb08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"pb08\"]）来源原文：2016 复旦大学 432 统计学真题。PITFALL[pb08] 无条目 → 省略 traps 字段。MNEM[pb08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-pb09", origin: 'card', year: 2022, school: "南开大学 432 统计学真题 2022 年", no: "卡片 pb09", type: "prob", star: 4,
+      tags: ["pb09"],
+      stem: "设 $P(A)=0.3$，且 $A,B$ 互不相容，$P(B)=0.4$，求 $P(B\\,|\\,\\bar{A})$",
+      answer: "由 $A,B$ 互不相容，$AB=\\varnothing$，故 $B\\bar{A}=B$。利用对立事件 $\\bar{A}$：\n$$P(B\\,|\\,\\bar{A})=\\frac{P(B\\bar{A})}{P(\\bar{A})}=\\frac{P(B)}{1-P(A)}=\\frac{0.4}{0.7}=\\frac47$$",
+      src: { card: "pb09", note: "卡片例题（data/stats.js 的 EXAMPLE[\"pb09\"]）来源原文：2022 南开大学 432 统计学真题。PITFALL[pb09] 无条目 → 省略 traps 字段。MNEM[pb09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-pb10", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 pb10", type: "prob", star: 4,
+      tags: ["pb10"],
+      stem: "$A,B,C$ 都是事件，下列关于事件运算的表达式，正确的是（  ）\\\\\nA. $(A-B)-C=A-(B-C)$　B. 若 $AC=\\varnothing,\\ B\\subset A$，则 $BC=\\varnothing$\\\\\nC. $(A\\cup B)-B=A$　D. $(A-B)+B=A$",
+      answer: "选 B。因 $B\\subset A$ 且 $AC=\\varnothing$，故 $BC\\subset AC=\\varnothing$，即 $BC=\\varnothing$（互斥关系的传递性）。\n反例排除：C 中 $(A\\cup B)-B=A-B\\ne A$；D 中 $(A-B)+B=A\\cup B\\ne A$；A 一般不成立。",
+      src: { card: "pb10", note: "卡片例题（data/stats.js 的 EXAMPLE[\"pb10\"]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[pb10] 无条目 → 省略 traps 字段。MNEM[pb10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-pb11", origin: 'card', year: 2026, school: "复旦大学 432 统计学真题 2026 年", no: "卡片 pb11", type: "prob", star: 3,
+      tags: ["pb11"],
+      stem: "在自然数集 $\\mathbb{N}$ 上定义概率测度：$P(\\{n\\})=\\dfrac{6}{\\pi^{2}n^{2}}$。\\\\\n(1) 对 $p\\in\\mathbb{N}^{+}$，定义 $p\\mathbb{N}^{+}=\\{pk:k\\in\\mathbb{N}^{+}\\}$，求 $P(p\\mathbb{N}^{+})$；\\\\\n(2) 若 $p,q$ 为不相等的质数，证明事件 $p\\mathbb{N}^{+}$ 与 $q\\mathbb{N}^{+}$ 相互独立",
+      answer: "(1) 由可列可加性（概率公理）：\n$$P(p\\mathbb{N}^{+})=\\sum_{k=1}^{\\infty}\\frac{6}{\\pi^{2}(pk)^{2}}=\\frac{6}{\\pi^{2}p^{2}}\\sum_{k=1}^{\\infty}\\frac{1}{k^{2}}=\\frac{6}{\\pi^{2}p^{2}}\\cdot\\frac{\\pi^{2}}{6}=\\frac{1}{p^{2}}$$\n(2) $p,q$ 为不同质数时 $p\\mathbb{N}^{+}\\cap q\\mathbb{N}^{+}=pq\\mathbb{N}^{+}$，故\n$$P(p\\mathbb{N}^{+}\\cap q\\mathbb{N}^{+})=P(pq\\mathbb{N}^{+})=\\frac{1}{p^{2}q^{2}}=P(p\\mathbb{N}^{+})\\,P(q\\mathbb{N}^{+})$$\n即两事件相互独立。",
+      src: { card: "pb11", note: "卡片例题（data/stats.js 的 EXAMPLE[\"pb11\"]）来源原文：2026 复旦大学 432 统计学真题。PITFALL[pb11] 无条目 → 省略 traps 字段。MNEM[pb11] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv01", origin: 'card', year: 2026, school: "复旦大学 432 统计学真题 2026 年", no: "卡片 rv01", type: "dist", star: 5,
+      tags: ["rv01"],
+      stem: "设 $\\xi\\sim N(0,1)$，$\\eta\\sim b(1,\\frac12)$，且 $\\xi,\\eta$ 相互独立，$Z=\\xi+\\eta$。(1) 判别 $Z$ 是否为连续型随机变量并证明；(2) 求 $Z$ 的分布函数 $F_Z(z)$",
+      answer: "(1) 对任意 $z_0$，$P(Z=z_0)=\\frac12P(\\xi=z_0)+\\frac12P(\\xi=z_0-1)=0$，故 $Z$ 为连续型随机变量（绝对连续测度与任意概率测度的卷积仍绝对连续）。\n(2) 由全概率公式：\n$$F_Z(z)=P(Z\\le z)=\\frac12P(\\xi\\le z)+\\frac12P(\\xi+1\\le z)=\\frac12\\Phi(z)+\\frac12\\Phi(z-1)$$\n其中 $\\Phi$ 为标准正态分布函数。",
+      src: { card: "rv01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv01\"]）来源原文：2026 复旦大学 432 统计学真题。PITFALL[rv01] 无条目 → 省略 traps 字段。MNEM[rv01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv02", origin: 'card', year: 2018, school: "中山大学 432 统计学真题 2018 年", no: "卡片 rv02", type: "dist", star: 4,
+      tags: ["rv02"],
+      stem: "以下哪条不是概率的公理化定义中概率函数的性质？\\\\\nA. 有限可加性　B. 次可加性　C. 单调性　D. 右连续性",
+      answer: "选 D。概率函数的性质有次可加性、单调性、有限可加性、连续性（上/下连续）等；右连续性是\\textbf{分布函数}的性质（单调不减、$F(-\\infty)=0$、$F(+\\infty)=1$、右连续），并非概率函数独有的性质。",
+      src: { card: "rv02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv02\"]）来源原文：2018 中山大学 432 统计学真题。PITFALL[rv02] 无条目 → 省略 traps 字段。MNEM[rv02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv03", origin: 'card', year: 2021, school: "复旦大学 432 统计学真题 2021 年", no: "卡片 rv03", type: "dist", star: 5,
+      tags: ["rv03"],
+      stem: "$X_0,X_1,\\dots$ 是 i.i.d. 的服从 $U(0,1)$ 的随机变量，记 $N=\\inf\\{n\\ge1:X_n>X_0\\}$，求 $N$ 的分布律",
+      answer: "给定 $X_0=x$ 时（条件几何型）：\n$$P(N=k\\,|\\,X_0=x)=P(X_1\\le x,\\dots,X_{k-1}\\le x,\\ X_k>x)=x^{k-1}(1-x)$$\n由全概率公式（对 $x$ 积分）：\n$$P(N=k)=\\int_0^1 x^{k-1}(1-x)\\,dx=\\frac{1}{k(k+1)},\\qquad k=1,2,\\dots$$\n且 $\\sum_{k\\ge1}\\frac{1}{k(k+1)}=1$，确为一条分布律。",
+      traps: "分布律须同时满足 $p_k\\ge0$ 与 $\\sum_k p_k=1$；它只对离散变量定义。连续型用密度 $f(x)$，逐点概率为 0，不能把 $f(x)$ 当概率。",
+      src: { card: "rv03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv03\"]）来源原文：2021 复旦大学 432 统计学真题。traps 取自 PITFALL[rv03]。MNEM[rv03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv04", origin: 'card', year: 2017, school: "复旦大学 432 统计学真题 2017 年", no: "卡片 rv04", type: "dist", star: 5,
+      tags: ["rv04"],
+      stem: "设 $X_1,X_2$ i.i.d. $\\sim Exp(1)$，求 $W=\\dfrac{X_1}{X_1+X_2}$ 的密度函数",
+      answer: "作变换 $U=X_1/(X_1+X_2)$，$V=X_1+X_2$，则 $X_1=UV,\\ X_2=V(1-U)$，雅可比 $|J|=V$。联合密度\n$$f_{U,V}(u,v)=e^{-uv}\\,e^{-v(1-u)}\\cdot v=v\\,e^{-v},\\qquad u\\in(0,1),\\ v>0$$\n对 $v$ 积分得\n$$f_W(u)=\\int_0^{\\infty}v\\,e^{-v}\\,dv=1,\\qquad 0<u<1$$\n即 $W\\sim U(0,1)$（贝塔分布 $Beta(1,1)$），且 $\\int_0^1 1\\,du=1$ 验证了归一化。",
+      src: { card: "rv04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv04\"]）来源原文：2017 复旦大学 432 统计学真题。PITFALL[rv04] 无条目 → 省略 traps 字段。MNEM[rv04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv05", origin: 'card', year: 2023, school: "复旦大学 432 统计学真题 2023 年", no: "卡片 rv05", type: "dist", star: 4,
+      tags: ["rv05"],
+      stem: "设 $X\\sim N(0,1)$，$Y\\sim B(1,p)$，且 $X,Y$ 相互独立，求 $X+Y$ 的概率分布",
+      answer: "$Y$ 为 0-1 分布：$P(Y=0)=1-p,\\ P(Y=1)=p$。由全概率公式，$Z=X+Y$ 的分布函数\n$$F_Z(z)=(1-p)P(X\\le z)+p\\,P(X\\le z-1)=(1-p)\\Phi(z)+p\\,\\Phi(z-1)$$\n其密度为\n$$f_Z(z)=(1-p)\\,\\varphi(z)+p\\,\\varphi(z-1),\\qquad \\varphi(z)=\\frac{1}{\\sqrt{2\\pi}}e^{-z^{2}/2}$$\n（两个高斯波包的线性叠加），且 $\\int_{-\\infty}^{+\\infty}f_Z(z)\\,dz=(1-p)+p=1$。",
+      src: { card: "rv05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv05\"]）来源原文：2023 复旦大学 432 统计学真题。PITFALL[rv05] 无条目 → 省略 traps 字段。MNEM[rv05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv06", origin: 'card', year: 2020, school: "复旦大学 432 统计学真题 2020 年", no: "卡片 rv06", type: "dist", star: 5,
+      tags: ["rv06"],
+      stem: "甲有 21 个硬币，乙有 20 个硬币，两人同时抛出所有硬币，求甲朝上的硬币数多于乙的概率",
+      answer: "设 $X\\sim B(21,\\frac12)$，$Y\\sim B(20,\\frac12)$ 相互独立。令 $X'=21-X\\sim B(21,\\frac12)$，$Y'=20-Y\\sim B(20,\\frac12)$，则\n$$P(X>Y)=P(21-X'<21-Y)=P(X'\\le Y')$$\n由 $(X',Y')$ 与 $(X,Y)$ 同分布，$P(X'>Y')=P(X>Y)$，而 $P(X>Y)+P(X\\le Y)=1$，故 $P(X>Y)=\\dfrac12$。",
+      traps: "“至少 $k$ 次 / 至多 $k$ 次”优先取对立事件；$C_n^k$ 与 $p^k(1-p)^{n-k}$ 的指数别写反。",
+      hint: "二项分布记「$C_n^k$ 选 k 次成功，$p^k$ 成功、$(1-p)^{n-k}$ 失败」。",
+      src: { card: "rv06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv06\"]）来源原文：2020 复旦大学 432 统计学真题。traps 取自 PITFALL[rv06]。hint 取自 MNEM[rv06]。" }
+    },
+    {
+      id: "cv-st-rv07", origin: 'card', year: 2013, school: "人大 805 统计学真题 2013 年", no: "卡片 rv07", type: "dist", star: 5,
+      tags: ["rv07"],
+      stem: "某昆虫产在一片树叶上的虫卵数 $X$ 服从参数为 $\\lambda$ 的泊松分布，但只有虫卵数非零时才被记录。用 $Y$ 表示观察到的虫卵数，即 $P(Y=i)=P(X=i\\,|\\,X>0)$。求 $P(Y\\text{为偶数})$ 和 $E(Y)$",
+      answer: "$P(X>0)=1-e^{-\\lambda}$，故 $P(Y=i)=\\dfrac{\\lambda^{i}e^{-\\lambda}}{i!(1-e^{-\\lambda})}\\ (i=1,2,\\dots)$。\n$$E(Y)=E(X\\,|\\,X>0)=\\frac{E(X)}{P(X>0)}=\\frac{\\lambda}{1-e^{-\\lambda}}$$\n$P(Y\\text{为偶数})=\\dfrac{\\sum_{k\\ge1}P(X=2k)}{1-e^{-\\lambda}}=\\dfrac{e^{-\\lambda}(\\cosh\\lambda-1)}{1-e^{-\\lambda}}=\\dfrac{1-e^{-\\lambda}}{2}$。",
+      src: { card: "rv07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv07\"]）来源原文：2013 年人大 805 统计学真题。PITFALL[rv07] 无条目 → 省略 traps 字段。MNEM[rv07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv08", origin: 'card', year: 2025, school: "复旦大学 432 统计学真题 2025 年", no: "卡片 rv08", type: "dist", star: 3,
+      tags: ["rv08"],
+      stem: "打怪物会爆出装备 1 和装备 2：爆出装备 1 的概率为 0.2，爆出装备 2 的概率为 0.2，什么都不爆的概率为 0.6。设 $\\tau$ 为集齐两件装备所用的次数，求 $E\\tau$ 与 $Var\\,\\tau$",
+      answer: "记 $\\xi_1$ 为收集到第一件装备所需次数，$\\xi_1\\sim Ge(0.4)$（每把获得任一装备的概率为 $0.2+0.2=0.4$）；记 $\\xi_2$ 为收集到第一件后获得另一件所需次数，$\\xi_2\\sim Ge(0.2)$。由几何分布 $E\\xi=\\frac1p,\\ Var\\xi=\\frac{1-p}{p^2}$：\n$$E\\tau=E\\xi_1+E\\xi_2=\\frac{1}{0.4}+\\frac{1}{0.2}=2.5+5=7.5$$\n$$Var\\,\\tau=Var\\,\\xi_1+Var\\,\\xi_2=\\frac{0.6}{0.16}+\\frac{0.8}{0.04}=3.75+20=23.75$$",
+      src: { card: "rv08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv08\"]）来源原文：2025 复旦大学 432 统计学真题。PITFALL[rv08] 无条目 → 省略 traps 字段。MNEM[rv08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv09", origin: 'card', year: 2016, school: "复旦大学 432 统计学真题 2016 年", no: "卡片 rv09", type: "dist", star: 5,
+      tags: ["rv09"],
+      stem: "$X_1,X_2,X_3$ 是 i.i.d. 的服从 $U(0,1)$ 的随机变量，求次序统计量 $X_{(1)}=\\min\\{X_1,X_2,X_3\\}$ 的分布函数与期望",
+      answer: "由极值分布公式：\n$$F_{X_{(1)}}(x)=1-[1-F(x)]^{3}=1-(1-x)^{3},\\qquad 0<x<1$$\n密度 $f_{X_{(1)}}(x)=3(1-x)^{2}$，故\n$$E[X_{(1)}]=\\int_0^1 3x(1-x)^{2}\\,dx=\\frac14$$\n（一般地 $X_{(1)}\\sim Beta(1,3)$，$E=\\frac{1}{1+3}=\\frac14$。）",
+      src: { card: "rv09", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv09\"]）来源原文：2016 复旦大学 432 统计学真题。PITFALL[rv09] 无条目 → 省略 traps 字段。MNEM[rv09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv12", origin: 'card', year: 2016, school: "北京师范大学 432 统计学真题 2016 年", no: "卡片 rv12", type: "dist", star: 5,
+      tags: ["rv12"],
+      stem: "设 $X\\sim N(\\mu,\\sigma^{2})$，当 $\\sigma$ 增大时，概率 $P(|X-\\mu|<\\sigma)$ 如何变化？\\\\\nA. 增大　B. 减小　C. 不变　D. 无法确定",
+      answer: "选 C。标准化后与参数无关：\n$$P(|X-\\mu|<\\sigma)=P\\left(\\left|\\frac{X-\\mu}{\\sigma}\\right|<1\\right)=P(|Z|<1)\\approx0.6827$$\n其中 $Z\\sim N(0,1)$，故 $\\sigma$ 增大时概率不变。",
+      src: { card: "rv12", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv12\"]）来源原文：2016 北京师范大学 432 统计学真题。PITFALL[rv12] 无条目 → 省略 traps 字段。MNEM[rv12] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv13", origin: 'card', year: 2017, school: "复旦大学 432 统计学真题 2017 年", no: "卡片 rv13", type: "dist", star: 4,
+      tags: ["rv13"],
+      stem: "$X_1,X_2,X_3$ i.i.d. $\\sim N(0,1)$，求：(1) $P(X_1>X_2>X_3)$；(2) $P(X_1>X_2,\\ X_1>X_3)$",
+      answer: "(1) 由 $X_1,X_2,X_3$ 独立同分布且为连续型，其大小排序的 $3!=6$ 种情形等可能，故\n$$P(X_1>X_2>X_3)=\\frac{1}{3!}=\\frac16$$\n(2) 每个变量成为最大值的概率相等，故\n$$P(X_1>X_2,\\ X_1>X_3)=P(X_1\\ \\text{为最大值})=\\frac13$$",
+      src: { card: "rv13", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv13\"]）来源原文：2017 复旦大学 432 统计学真题。PITFALL[rv13] 无条目 → 省略 traps 字段。MNEM[rv13] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv14", origin: 'card', year: 2016, school: "南开大学 432 统计学真题 2016 年", no: "卡片 rv14", type: "dist", star: 4,
+      tags: ["rv14"],
+      stem: "设 $X$ 取 $-1,0,1$ 的概率分别为 $\\frac14,\\frac12,\\frac14$，求 $Z=X^{2}+1$ 的分布函数",
+      answer: "$Z$ 的分布律：$P(Z=2)=P(X=\\pm1)=\\frac14+\\frac14=\\frac12$，$P(Z=1)=P(X=0)=\\frac12$。故\n$$F_Z(z)=\\begin{cases}0,&z<1\\\\[2pt]\\frac12,&1\\le z<2\\\\[2pt]1,&z\\ge2\\end{cases}$$\n（在 $z=1,2$ 处右连续。）",
+      src: { card: "rv14", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv14\"]）来源原文：2016 南开大学 432 统计学真题。PITFALL[rv14] 无条目 → 省略 traps 字段。MNEM[rv14] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv15", origin: 'card', year: 2016, school: "复旦大学 432 统计学真题 2016 年", no: "卡片 rv15", type: "dist", star: 5,
+      tags: ["rv15"],
+      stem: "设 $X\\sim N(0,1)$，求 $Y=X^{2}$ 的密度函数",
+      answer: "对 $y>0$，$F_Y(y)=P(X^2\\le y)=P(-\\sqrt y\\le X\\le\\sqrt y)=2\\Phi(\\sqrt y)-1$。求导：\n$$f_Y(y)=2\\cdot\\frac{1}{\\sqrt{2\\pi}}e^{-y/2}\\cdot\\frac{1}{2\\sqrt y}=\\frac{1}{\\sqrt{2\\pi y}}\\,e^{-y/2},\\quad y>0$$\n即 $Y\\sim\\chi^{2}(1)$（自由度为 1 的卡方分布）。",
+      altAnswer: "💡巧解（卡方定义）：$X\\sim N(0,1)$ 时，由 $\\chi^2$ 分布定义直接得 $Y=X^2\\sim\\chi^2(1)$，密度为\n$$f_Y(y)=\\frac{1}{\\sqrt{2\\pi y}}\\,e^{-y/2}\\quad(y>0)$$\n免去分布函数法求导，一步到位。",
+      traps: "分布函数法求导时勿漏链式法则（$g(X)\\le y$ 的界对 $y$ 求导）；密度定义域要分段写出。",
+      src: { card: "rv15", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv15\"]）来源原文：2016 复旦大学 432 统计学真题。traps 取自 PITFALL[rv15]。MNEM[rv15] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv16", origin: 'card', year: 2026, school: "复旦大学 432 统计学真题 2026 年", no: "卡片 rv16", type: "dist", star: 4,
+      tags: ["rv16"],
+      stem: "设随机向量 $\\xi=(X,Y)^{T}\\sim N(0,\\Sigma)$，其中 $\\Sigma=\\begin{pmatrix}1&\\rho\\\\ \\rho&1\\end{pmatrix}$。考虑变换 $Z=\\dfrac{Y-\\rho X}{\\sqrt{1-\\rho^{2}}}$。(1) 求 $Z$ 的边缘分布；(2) 证明 $X$ 与 $Z$ 相互独立",
+      answer: "(1) $Z$ 是 $X,Y$ 的线性组合，正态线性变换仍为正态。$E(Z)=\\frac{0-\\rho\\cdot0}{\\sqrt{1-\\rho^{2}}}=0$，\n$$Var(Z)=\\frac{Var(Y)-2\\rho\\,Cov(X,Y)+\\rho^{2}Var(X)}{1-\\rho^{2}}=\\frac{1-2\\rho^{2}+\\rho^{2}}{1-\\rho^{2}}=1$$\n故 $Z\\sim N(0,1)$。\n(2) $Cov(X,Z)=\\dfrac{Cov(X,Y)-\\rho\\,Var(X)}{\\sqrt{1-\\rho^{2}}}=\\dfrac{\\rho-\\rho}{\\sqrt{1-\\rho^{2}}}=0$，而 $(X,Z)$ 服从二维正态分布，不相关即独立，故 $X$ 与 $Z$ 相互独立。",
+      src: { card: "rv16", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv16\"]）来源原文：2026 复旦大学 432 统计学真题。PITFALL[rv16] 无条目 → 省略 traps 字段。MNEM[rv16] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv17", origin: 'card', year: 2016, school: "南开大学 432 统计学真题 2016 年", no: "卡片 rv17", type: "dist", star: 3,
+      tags: ["rv17"],
+      stem: "有 2 个五分硬币、3 个二分硬币和 5 个一分硬币，随机抽取 5 个（不放回），求总和大于一角的概率",
+      answer: "不放回抽取属于超几何型计数。总和大于一角（$\\ge10$ 分）的可能情况：2 枚五分 + 3 枚其他；1 枚五分 + 3 枚二分 + 1 枚一分；1 枚五分 + 2 枚二分 + 2 枚一分。故\n$$P=\\frac{C_{2}^{2}C_{8}^{3}+C_{2}^{1}C_{3}^{3}C_{5}^{1}+C_{2}^{1}C_{3}^{2}C_{5}^{2}}{C_{10}^{5}}=\\frac{56+10+60}{252}=\\frac{126}{252}=\\frac12$$",
+      src: { card: "rv17", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv17\"]）来源原文：2016 南开大学 432 统计学真题。PITFALL[rv17] 无条目 → 省略 traps 字段。MNEM[rv17] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv18", origin: 'card', year: 2024, school: "中国科学技术大学 812 概率论与数理统计真题 2024 年", no: "卡片 rv18", type: "dist", star: 3,
+      tags: ["rv18"],
+      stem: "独立地多次抛掷一枚硬币，每次正面朝上的概率为 $p$，当出现连续 2 次正面朝上时停止抛掷。记 $n$ 为正整数，求抛掷过程中正面朝上的次数大于 $n$ 的概率",
+      answer: "设 $X$ 为停止时正面朝上的次数。停止发生在首次出现 $HH$ 时；若首次 $HH$ 是第 $j$ 个与第 $j+1$ 个正面，则 $X=j+1$，故 $X>n\\iff j\\ge n$，即第 $n$ 个正面之后紧跟着出现正面（而前 $n-1$ 个正面之后均跟反面）。由几何分布求和（负二项分布的正则性）：\n$$P(X>n)=\\sum_{j\\ge n}(1-p)^{j-1}p=(1-p)^{n-1}$$",
+      src: { card: "rv18", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv18\"]）来源原文：2024 中国科学技术大学 812 概率论与数理统计真题。PITFALL[rv18] 无条目 → 省略 traps 字段。MNEM[rv18] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv19", origin: 'card', year: 2023, school: "中山大学 432 统计学真题 2023 年", no: "卡片 rv19", type: "dist", star: 3,
+      tags: ["rv19"],
+      stem: "设 $X,Y$ 独立，均服从伽马分布 $\\Gamma(2,4)$，则 $X+Y$ 服从的分布是（  ）\\\\\nA. $\\Gamma(4,8)$　B. $\\Gamma(4,4)$　C. $\\Gamma(2,8)$　D. $\\Gamma(2,4)$",
+      answer: "选 B。伽马分布具有可加性：若 $X_i\\sim\\Gamma(\\alpha_i,\\lambda)$ 相互独立（比率参数 $\\lambda$ 相同），则\n$$\\sum_i X_i\\sim\\Gamma\\left(\\sum_i\\alpha_i,\\ \\lambda\\right)$$\n故 $X+Y\\sim\\Gamma(2+2,\\,4)=\\Gamma(4,4)$（形状参数相加，比率参数不变）。",
+      src: { card: "rv19", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv19\"]）来源原文：2023 中山大学 432 统计学真题。PITFALL[rv19] 无条目 → 省略 traps 字段。MNEM[rv19] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-rv20", origin: 'card', year: 2025, school: "考研数学三真题 2025 年", no: "卡片 rv20", type: "dist", star: 4,
+      tags: ["rv20"],
+      stem: "设 $X_1,\\dots,X_{20}$ 为来自总体 $B(1,0.1)$ 的简单随机样本，$T=\\sum_{i=1}^{20}X_i$。利用泊松分布近似二项分布的方法，求 $P\\{T\\le1\\}$ 的近似值（  ）\\\\\nA. $\\frac1{e^{2}}$　B. $\\frac2{e^{2}}$　C. $\\frac3{e^{2}}$　D. $\\frac4{e^{2}}$",
+      answer: "$T\\sim B(20,0.1)$，$n=20$ 大、$p=0.1$ 小，$np=2$。由泊松定理，$T\\ \\dot\\sim\\ P(2)$，故\n$$P(T\\le1)=P(T=0)+P(T=1)\\approx e^{-2}+2e^{-2}=\\frac{3}{e^{2}}$$\n选 C。",
+      src: { card: "rv20", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv20\"]）来源原文：2025 考研数学三真题。PITFALL[rv20] 无条目 → 省略 traps 字段。MNEM[rv20] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv01", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 mv01", type: "multi", star: 5,
+      tags: ["mv01"],
+      stem: "以下选项中，不是联合分布函数 $F_{X,Y}(x,y)$ 的性质的是（  ）\\\\\nA. 非负性　B. 单调性　C. 有界性　D. 左连续性",
+      answer: "选 D。二维分布函数 $F(x,y)$ 具有：单调不减性、有界性（$0\\le F\\le1$，且 $F(-\\infty,-\\infty)=0$，$F(+\\infty,+\\infty)=1$）、右连续性；而\\textbf{不是}左连续性。",
+      src: { card: "mv01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv01\"]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[mv01] 无条目 → 省略 traps 字段。MNEM[mv01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv02", origin: 'card', year: 2026, school: "北大光华 431 统计真题 2026 年", no: "卡片 mv02", type: "multi", star: 5,
+      tags: ["mv02"],
+      stem: "设二维随机变量 $(X,Y)$ 的联合密度为 $f(x,y)=kxy,\\ 0\\le y\\le x\\le1$（其余为 0）。求：(1) 常数 $k$；(2) 联合分布函数 $F(x,y)$；(3) 边缘密度 $f_X(x)$ 与 $f_Y(y)$",
+      answer: "(1) $1=\\int_0^1\\int_0^x kxy\\,dy\\,dx=k\\int_0^1 x\\cdot\\frac{x^2}{2}\\,dx=\\frac{k}{2}\\cdot\\frac14=\\frac k8$，故 $k=8$。\n(2) 当 $0\\le y\\le x\\le1$ 时$$F(x,y)=\\int_0^y\\int_v^x 8uv\\,du\\,dv=2x^2y^2-y^4$$当 $0\\le x<y\\le1$ 时 $F(x,y)=F_X(x)=x^4$；当 $x>1$ 时 $F(x,y)=F_Y(y)=2y^2-y^4\\ (0\\le y\\le1)$；$F(1,1)=1$。\n(3) $f_X(x)=\\int_0^x 8xy\\,dy=4x^3\\ (0<x<1)$；$f_Y(y)=\\int_y^1 8xy\\,dx=4y(1-y^2)\\ (0<y<1)$。",
+      traps: "边缘密度积分限由“另一变量”决定，不是常数区间；积分域没画对是最常见错误。",
+      src: { card: "mv02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv02\"]）来源原文：2026 北大光华 431 统计真题。traps 取自 PITFALL[mv02]。MNEM[mv02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv03", origin: 'card', year: 2020, school: "复旦大学 861 概率论与数理统计真题 2020 年", no: "卡片 mv03", type: "multi", star: 4,
+      tags: ["mv03"],
+      stem: "设 $X,Y$ 相互独立，均服从参数为 $p$ 的几何分布，记 $Z=\\max\\{X,Y\\}$。(1) 求 $(Z,X)$ 的联合分布；(2) 求 $X$ 关于 $Z$ 的条件分布",
+      answer: "几何分布 $P(X=k)=p(1-p)^{k-1}$，$P(X\\le z)=1-(1-p)^{z}$。\n(1) 当 $x<z$ 时，$Z=z$ 且 $X=x$ 需 $Y=z$：\n$$P(Z=z,\\ X=x)=P(X=x)P(Y=z)=p^{2}(1-p)^{x+z-2}$$\n当 $x=z$ 时：\n$$P(Z=z,\\ X=z)=P(X=z)P(Y\\le z)=p(1-p)^{z-1}\\left[1-(1-p)^{z}\\right]$$\n(2) 条件分布 $P(X=x\\,|\\,Z=z)=\\dfrac{P(Z=z,\\ X=x)}{P(Z=z)}$，其中\n$$P(Z=z)=1-P(X\\le z-1)P(Y\\le z-1)=1-\\left[1-(1-p)^{z-1}\\right]^{2}$$",
+      src: { card: "mv03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv03\"]）来源原文：2020 复旦大学 861 概率论与数理统计真题。PITFALL[mv03] 无条目 → 省略 traps 字段。MNEM[mv03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv04", origin: 'card', year: 2018, school: "北大光华 431 统计真题 2018 年", no: "卡片 mv04", type: "multi", star: 5,
+      tags: ["mv04"],
+      stem: "(1) 什么是随机变量 $X$ 和 $Y$ 的相关性？(2) 什么是 $X$ 和 $Y$ 的独立性？(3) 如果 $X$ 和 $Y$ 不相关，那么 $X$ 和 $Y$ 是否独立？请具体论述",
+      answer: "(1) 相关性指线性相关程度，用相关系数 $\\rho=\\dfrac{\\mathrm{Cov}(X,Y)}{\\sqrt{D(X)D(Y)}}$ 度量。\n(2) 独立性指一个变量的取值不影响另一个的分布：$F(x,y)=F_X(x)F_Y(y)$（连续型为 $f(x,y)=f_X(x)f_Y(y)$）。\n(3) 不相关不一定独立。独立 $\\Rightarrow$ 不相关（$\\mathrm{Cov}=0$），反之不成立：如 $X\\sim N(0,1)$，$Y=X^{2}$，则 $\\mathrm{Cov}(X,Y)=E(X^{3})=0$ 故不相关，但 $Y$ 完全由 $X$ 决定，二者不独立（仅二维正态分布等特殊场合两者等价）。",
+      src: { card: "mv04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv04\"]）来源原文：2018 北大光华 431 统计真题。PITFALL[mv04] 无条目 → 省略 traps 字段。MNEM[mv04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv05", origin: 'card', year: 2013, school: "人大 805 统计学真题 2013 年", no: "卡片 mv05", type: "multi", star: 4,
+      tags: ["mv05"],
+      stem: "设 $(X,Y)$ 服从二维正态分布 $N(\\mu_1,\\mu_2,\\sigma_1^{2},\\sigma_2^{2},\\rho)$。证明：$X$ 与 $Y$ 相互独立的充要条件是相关系数 $\\rho=0$",
+      answer: "二维正态联合密度为\n$$f(x,y)=\\frac{1}{2\\pi\\sigma_1\\sigma_2\\sqrt{1-\\rho^{2}}}\\exp\\left\\{-\\frac{1}{2(1-\\rho^{2})}\\left[\\frac{(x-\\mu_1)^{2}}{\\sigma_1^{2}}-2\\rho\\frac{(x-\\mu_1)(y-\\mu_2)}{\\sigma_1\\sigma_2}+\\frac{(y-\\mu_2)^{2}}{\\sigma_2^{2}}\\right]\\right\\}$$\n当 $\\rho=0$ 时交叉项消失，$f(x,y)=f_X(x)f_Y(y)$，故 $X,Y$ 独立；反之若 $X,Y$ 独立则 $\\mathrm{Cov}(X,Y)=0$，即 $\\rho=0$。",
+      altAnswer: "💡巧解（协方差矩阵 / 特征函数）：二维正态的联合特征函数\n$$\\varphi(s,t)=\\exp\\left\\{i(s\\mu_1+t\\mu_2)-\\tfrac12(s^2\\sigma_1^2+2\\rho st\\sigma_1\\sigma_2+t^2\\sigma_2^2)\\right\\}$$\n当 $\\rho=0$ 时 $\\varphi(s,t)=\\varphi_X(s)\\varphi_Y(t)$，由特征函数唯一性即得 $X,Y$ 独立（等价地：协方差矩阵 $\\Sigma$ 为对角阵）。",
+      src: { card: "mv05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv05\"]）来源原文：2013 年人大 805 统计学真题。PITFALL[mv05] 无条目 → 省略 traps 字段。MNEM[mv05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv06", origin: 'card', year: 2021, school: "北大光华 431 统计真题 2021 年", no: "卡片 mv06", type: "multi", star: 5,
+      tags: ["mv06"],
+      stem: "设 $(X,Y)$ 的联合密度为 $f(x,y)=2(x+y),\\ 0\\le x\\le y\\le1$（其余为 0）。求 $Z=X+Y$ 的密度函数",
+      answer: "由卷积公式（注意 $0\\le x\\le z-x\\le1$，即 $x\\le\\frac z2$ 且 $x\\ge z-1$）：\n当 $0<z<1$：$f_Z(z)=\\int_0^{z/2}2z\\,dx=z^2$；\n当 $1\\le z<2$：$f_Z(z)=\\int_{z-1}^{z/2}2z\\,dx=2z\\left(1-\\frac z2\\right)=2z-z^2$。\n故\n$$f_Z(z)=\\begin{cases}z^2,&0<z<1\\\\z-z^2,&1\\le z<2\\\\0,&\\text{其他}\\end{cases}$$",
+      src: { card: "mv06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv06\"]）来源原文：2021 北大光华 431 统计真题。PITFALL[mv06] 无条目 → 省略 traps 字段。MNEM[mv06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv07", origin: 'card', year: 2024, school: "北大光华 431 统计真题 2024 年", no: "卡片 mv07", type: "multi", star: 4,
+      tags: ["mv07"],
+      stem: "设 $X,Y$ 独立同分布于 $N(0,1)$，求 $E[\\max\\{X,Y\\}]$",
+      answer: "由 $\\max\\{X,Y\\}=\\dfrac{X+Y+|X-Y|}{2}$ 及 $E(X)=E(Y)=0$：\n$$E[\\max\\{X,Y\\}]=\\frac12 E|X-Y|$$\n$X-Y\\sim N(0,2)$，$E|X-Y|=\\sqrt2\\sqrt{\\dfrac2\\pi}=\\dfrac2{\\sqrt\\pi}$，故$$E[\\max\\{X,Y\\}]=\\frac{1}{\\sqrt\\pi}$$",
+      src: { card: "mv07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv07\"]）来源原文：2024 北大光华 431 统计真题。PITFALL[mv07] 无条目 → 省略 traps 字段。MNEM[mv07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv08", origin: 'card', year: 2016, school: "复旦大学 432 统计学真题 2016 年", no: "卡片 mv08", type: "multi", star: 4,
+      tags: ["mv08"],
+      stem: "从 $(0,1)$ 中随机地取两个数 $x,y$，求其积不小于 $\\frac3{16}$ 且其和不大于 $1$ 的概率",
+      answer: "$(x,y)$ 在单位正方形上均匀分布，所求为区域 $\\{xy\\ge\\frac3{16},\\ x+y\\le1\\}$ 的面积。曲线 $xy=\\frac3{16}$ 与 $x+y=1$ 交于 $x=\\frac14,\\frac34$：\n$$P=\\int_{1/4}^{3/4}\\int_{3/(16x)}^{1-x}dy\\,dx=\\int_{1/4}^{3/4}\\left(1-x-\\frac{3}{16x}\\right)dx=\\left[x-\\frac{x^2}{2}-\\frac{3}{16}\\ln x\\right]_{1/4}^{3/4}=\\frac14-\\frac{3}{16}\\ln 3\\approx0.044$$",
+      src: { card: "mv08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv08\"]）来源原文：2016 复旦大学 432 统计学真题。PITFALL[mv08] 无条目 → 省略 traps 字段。MNEM[mv08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv09", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "卡片 mv09", type: "multi", star: 4,
+      tags: ["mv09"],
+      stem: "设 $X_1,X_2$ i.i.d. $\\sim N(\\mu,\\sigma^{2})$，求 $E[\\max\\{X_1,X_2\\}]$",
+      answer: "利用 $\\max\\{X_1,X_2\\}=\\dfrac{X_1+X_2+|X_1-X_2|}{2}$：\n$$E[\\max\\{X_1,X_2\\}]=\\frac{E(X_1)+E(X_2)+E|X_1-X_2|}{2}=\\mu+\\frac12E|X_1-X_2|$$\n$X_1-X_2\\sim N(0,2\\sigma^{2})$，令 $Z=\\dfrac{X_1-X_2}{\\sqrt2\\,\\sigma}\\sim N(0,1)$，$E|Z|=\\sqrt{\\frac2\\pi}$，故\n$$E[\\max\\{X_1,X_2\\}]=\\mu+\\frac12\\cdot\\sqrt2\\,\\sigma\\cdot\\sqrt{\\frac2\\pi}=\\mu+\\frac{\\sigma}{\\sqrt\\pi}$$",
+      src: { card: "mv09", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv09\"]）来源原文：2019 复旦大学 432 统计学真题。PITFALL[mv09] 无条目 → 省略 traps 字段。MNEM[mv09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv10", origin: 'card', year: 2022, school: "南开大学 432 统计学真题 2022 年", no: "卡片 mv10", type: "multi", star: 4,
+      tags: ["mv10"],
+      stem: "$(X,Y)$ 服从由 $1<x<e^{2}$ 与 $0<y<\\frac1x$ 围成区域上的均匀分布，求 $f_{Y|X=3}(y)$",
+      answer: "区域面积 $S_D=\\int_1^{e^2}\\frac1x\\,dx=2$，故联合密度 $f(x,y)=\\frac12$。边缘密度\n$$f_X(x)=\\int_0^{1/x}\\frac12\\,dy=\\frac{1}{2x},\\qquad 1<x<e^{2}$$\n由条件密度公式：\n$$f_{Y|X}(y\\,|\\,x)=\\frac{f(x,y)}{f_X(x)}=\\frac{1/2}{1/(2x)}=x,\\qquad 0<y<\\frac1x$$\n代入 $x=3$ 得 $f_{Y|X=3}(y)=3,\\ 0<y<\\frac13$。",
+      src: { card: "mv10", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv10\"]）来源原文：2022 南开大学 432 统计学真题。PITFALL[mv10] 无条目 → 省略 traps 字段。MNEM[mv10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-mv11", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 mv11", type: "multi", star: 4,
+      tags: ["mv11"],
+      stem: "随机变量 $X_1,X_2$ 相互独立，分别服从 $P(\\lambda_1),P(\\lambda_2)$，求 $E(X_1\\,|\\,X_1+X_2=n)$",
+      answer: "由泊松分布的可加性 $X_1+X_2\\sim P(\\lambda_1+\\lambda_2)$，且给定 $X_1+X_2=n$ 时\n$$X_1\\,|\\,(X_1+X_2=n)\\sim B\\left(n,\\ \\frac{\\lambda_1}{\\lambda_1+\\lambda_2}\\right)$$\n（和的条件下条件分布为二项分布），故\n$$E(X_1\\,|\\,X_1+X_2=n)=n\\cdot\\frac{\\lambda_1}{\\lambda_1+\\lambda_2}$$",
+      src: { card: "mv11", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv11\"]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[mv11] 无条目 → 省略 traps 字段。MNEM[mv11] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc01", origin: 'card', year: 2023, school: "北大光华 431 统计真题 2023 年", no: "卡片 nc01", type: "numchar", star: 5,
+      tags: ["nc01"],
+      stem: "设 $X\\sim N(0,1)$，求 $E[X^{3}\\,|\\,X\\ge0]$",
+      answer: "由期望定义（条件期望）：\n$$E[X^{3}\\,|\\,X\\ge0]=\\frac{\\int_0^{\\infty}x^{3}\\varphi(x)\\,dx}{P(X\\ge0)}=\\frac{\\frac{1}{\\sqrt{2\\pi}}\\int_0^{\\infty}x^{3}e^{-x^{2}/2}\\,dx}{\\frac12}$$\n令 $t=x^{2}/2$（$x^{3}dx=2t\\,dt$），$\\int_0^{\\infty}x^{3}e^{-x^{2}/2}dx=2\\int_0^{\\infty}t\\,e^{-t}dt=2$，故\n$$E[X^{3}\\,|\\,X\\ge0]=\\frac{\\frac{1}{\\sqrt{2\\pi}}\\cdot2}{1/2}=\\frac{4}{\\sqrt{2\\pi}}=2\\sqrt{\\frac2\\pi}$$",
+      src: { card: "nc01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc01\"]）来源原文：2023 北大光华 431 统计真题。PITFALL[nc01] 无条目 → 省略 traps 字段。MNEM[nc01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc02", origin: 'card', year: 2020, school: "复旦大学 432 统计学真题 2020 年", no: "卡片 nc02", type: "numchar", star: 5,
+      tags: ["nc02"],
+      stem: "8 个男生、7 个女生坐成一排。设 $X_i=1$ 表示第 $i$ 个位置与第 $i+1$ 个位置坐的是异性，$X_i=0$ 表示同性，$\\xi=\\sum_{i=1}^{14}X_i$，求 $E\\xi$",
+      answer: "由期望的线性性质：\n$$E\\xi=\\sum_{i=1}^{14}E(X_i)=14\\,P(\\text{第 }i,i+1\\text{ 位为异性})$$\n$P(\\text{异性相邻})=\\frac{8}{15}\\cdot\\frac{7}{14}+\\frac{7}{15}\\cdot\\frac{8}{14}=\\frac{8}{15}$，故\n$$E\\xi=14\\times\\frac{8}{15}=\\frac{112}{15}$$",
+      src: { card: "nc02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc02\"]）来源原文：2020 复旦大学 432 统计学真题。PITFALL[nc02] 无条目 → 省略 traps 字段。MNEM[nc02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc03", origin: 'card', year: 2022, school: "复旦大学 432 统计学真题 2022 年", no: "卡片 nc03", type: "numchar", star: 5,
+      tags: ["nc03"],
+      stem: "离散型随机变量 $X$ 的分布列为 $P(X=a)=P(X=b)=P(X=a+1)=\\frac13$，其中 $a<b<a+1$，求 $D(X)$ 的取值范围",
+      answer: "方差平移不变，令 $c=b-a\\in(0,1)$，则 $X$ 取 $0,c,1$ 各 $\\frac13$：\n$$E(X)=\\frac{c+1}{3},\\qquad E(X^{2})=\\frac{c^{2}+1}{3}$$\n$$D(X)=E(X^{2})-[E(X)]^{2}=\\frac{2}{9}\\left[\\left(c-\\frac12\\right)^{2}+\\frac34\\right]\\in\\left[\\frac16,\\ \\frac29\\right)$$\n（最小值在 $c=\\frac12$ 时取到；$c\\to0$ 或 $1$ 时趋近 $\\frac29$ 但不取到。）",
+      src: { card: "nc03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc03\"]）来源原文：2022 复旦大学 432 统计学真题。PITFALL[nc03] 无条目 → 省略 traps 字段。MNEM[nc03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc04", origin: 'card', year: 2022, school: "北大光华 431 统计真题 2022 年", no: "卡片 nc04", type: "numchar", star: 5,
+      tags: ["nc04"],
+      stem: "设 $X$ 的密度函数为 $f(x)=c(1-x^2),\\ |x|\\le1$（其余为 0）。求：(1) 常数 $c$；(2) $E(X)$ 与 $D(X)$",
+      answer: "(1) $1=\\int_{-1}^{1}c(1-x^2)\\,dx=c\\cdot\\frac43$，故 $c=\\frac34$。\n(2) 由对称性 $E(X)=0$；$E(X^2)=\\int_{-1}^{1}\\frac34 x^2(1-x^2)\\,dx=\\frac34\\left(\\frac23-\\frac25\\right)=\\frac15$。\n故 $D(X)=E(X^2)-[E(X)]^2=\\frac15$。",
+      traps: "方差 $D(X)=E(X^2)-[E(X)]^2$，勿忘减去期望的平方；$E(X^2)\\ne[E(X)]^2$。",
+      src: { card: "nc04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc04\"]）来源原文：2022 北大光华 431 统计真题。traps 取自 PITFALL[nc04]。MNEM[nc04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc05", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 nc05", type: "numchar", star: 5,
+      tags: ["nc05"],
+      stem: "设 $E(X)=-2,\\ E(X^{2})=5$，则 $Var(100-3X)=$（  ）\\\\\nA. 9　B. 3　C. 1　D. 2",
+      answer: "由方差性质 $D(aX+b)=a^{2}D(X)$：\n$$Var(100-3X)=9\\,Var(X)=9\\left[E(X^{2})-[E(X)]^{2}\\right]=9(5-4)=9$$\n选 A。",
+      src: { card: "nc05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc05\"]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[nc05] 无条目 → 省略 traps 字段。MNEM[nc05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc06", origin: 'card', year: 2026, school: "北大光华 431 统计真题 2026 年", no: "卡片 nc06", type: "numchar", star: 5,
+      tags: ["nc06"],
+      stem: "设 $X\\sim U(0,1)$，$Z\\sim U(0,\\frac1{10})$，且 $X$ 与 $Z$ 相互独立，令 $Y=X+Z$。求 $\\mathrm{Cov}(X,Y)$ 与 $\\mathrm{Corr}(X,Y)$",
+      answer: "$D(X)=\\frac1{12}$，$D(Z)=\\frac{(1/10)^2}{12}=\\frac1{1200}$，且 $X,Z$ 独立。\n$$\\mathrm{Cov}(X,Y)=\\mathrm{Cov}(X,X+Z)=D(X)+\\mathrm{Cov}(X,Z)=\\frac1{12}$$\n$D(Y)=D(X)+D(Z)=\\frac1{12}+\\frac1{1200}=\\frac{101}{1200}$，故\n$$\\mathrm{Corr}(X,Y)=\\frac{\\mathrm{Cov}(X,Y)}{\\sqrt{D(X)D(Y)}}=\\frac{1/12}{\\sqrt{\\frac1{12}\\cdot\\frac{101}{1200}}}=\\frac{10}{\\sqrt{101}}\\approx0.995$$",
+      altAnswer: "💡巧解（协方差定义直接算）：$\\mathrm{Cov}(X,Y)=E(XY)-E(X)E(Y)$。由 $Y=X+Z$ 与 $X,Z$ 独立：\n$$E(XY)=E(X^2+XZ)=E(X^2)+E(X)E(Z)=\\frac13+\\frac12\\cdot\\frac1{20}=\\frac{43}{120}$$\n$E(X)=\\frac12$，$E(Y)=\\frac12+\\frac1{20}=\\frac{11}{20}$，故 $\\mathrm{Cov}=\\frac{43}{120}-\\frac12\\cdot\\frac{11}{20}=\\frac{10}{120}=\\frac1{12}$，与协方差线性性结果一致。",
+      src: { card: "nc06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc06\"]）来源原文：2026 北大光华 431 统计真题。PITFALL[nc06] 无条目 → 省略 traps 字段。MNEM[nc06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc08", origin: 'card', year: 2024, school: "考研数学三真题 2024 年", no: "卡片 nc08", type: "numchar", star: 4,
+      tags: ["nc08"],
+      stem: "设随机变量 $X$ 的概率密度为 $f(x)=6x(1-x),\\ 0<x<1$，则 $X$ 的三阶中心矩 $E(X-EX)^{3}=$（  ）\\\\\nA. $-\\frac1{32}$　B. 0　C. $\\frac1{10}$　D. $\\frac12$",
+      answer: "$E(X)=\\int_0^1 6x^{2}(1-x)\\,dx=6\\left(\\frac13-\\frac14\\right)=\\frac12$，且密度 $f(x)$ 关于 $x=\\frac12$ 对称。\n三阶中心矩 $\\mu_3=E[(X-\\frac12)^{3}]$，而 $(x-\\frac12)^{3}$ 为关于 $x=\\frac12$ 的奇函数，故\n$$E(X-EX)^{3}=0$$\n选 B。",
+      src: { card: "nc08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc08\"]）来源原文：2024 考研数学三真题。PITFALL[nc08] 无条目 → 省略 traps 字段。MNEM[nc08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc10", origin: 'card', year: 2013, school: "人大 805 统计学真题 2013 年", no: "卡片 nc10", type: "corr", star: 4,
+      tags: ["nc10"],
+      stem: "设 $(X_1,\\dots,X_n)$ 服从 $n$ 维正态分布。证明：各分量相互独立的充要条件是它们两两互不相关",
+      answer: "独立 $\\Rightarrow$ 不相关显然。反之，若两两不相关，则协方差矩阵 $\\Sigma$ 为对角阵，其逆 $\\Sigma^{-1}$ 亦为对角阵，联合密度 $f(\\mathbf{x})$ 的二次型中不含交叉项，可分解为各边缘正态密度之积，故各分量相互独立。",
+      traps: "不相关（$\\rho=0$）只说明无\\textbf{线性}关系，\\textbf{不等于}独立；独立必不相关，反之不成立。判定独立看联合分布是否分解 $f(x,y)=f_X(x)f_Y(y)$，而非相关系数。",
+      src: { card: "nc10", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc10\"][0]）来源原文：2013 年人大 805 统计学真题。traps 取自 PITFALL[nc10]。MNEM[nc10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc10-2", origin: 'card', year: 2016, school: "复旦大学 432 统计学真题 2016 年", no: "卡片 nc10-2", type: "corr", star: 4,
+      tags: ["nc10"],
+      stem: "对于两个都只取两个值的随机变量 $X,Y$，证明：$X$ 与 $Y$ 相互独立当且仅当它们不相关",
+      answer: "独立 $\\Rightarrow$ 不相关显然。反之，设 $X\\in\\{x_1,x_2\\}$、$Y\\in\\{y_1,y_2\\}$，记示性函数 $I_X=\\dfrac{X-x_1}{x_2-x_1}$、$I_Y=\\dfrac{Y-y_1}{y_2-y_1}$。$X,Y$ 都是其示性变量的线性函数，故 $\\mathrm{Cov}(X,Y)=0\\Rightarrow\\mathrm{Cov}(I_X,I_Y)=0\\Rightarrow P(X=x_2,Y=y_2)=P(X=x_2)P(Y=y_2)$；其余三种组合同理成立，故 $X,Y$ 独立。",
+      traps: "不相关（$\\rho=0$）只说明无\\textbf{线性}关系，\\textbf{不等于}独立；独立必不相关，反之不成立。判定独立看联合分布是否分解 $f(x,y)=f_X(x)f_Y(y)$，而非相关系数。",
+      src: { card: "nc10", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc10\"][1]）来源原文：2016 复旦大学 432 统计学真题。traps 取自 PITFALL[nc10]。MNEM[nc10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc11", origin: 'card', year: 2013, school: "人大 805 统计学真题 2013 年", no: "卡片 nc11", type: "numchar", star: 3,
+      tags: ["nc11"],
+      stem: "设 $X,Y$ 为两个相关的随机变量且二阶矩存在。验证条件方差分解公式 $\\mathrm{Var}(Y)=E[\\mathrm{Var}(Y\\,|\\,X)]+\\mathrm{Var}[E(Y\\,|\\,X)]$，并说明其含义",
+      answer: "由全期望公式 $E(Y)=E[E(Y|X)]$、$E(Y^{2})=E[E(Y^{2}|X)]$：\n$$E[\\mathrm{Var}(Y|X)]=E\\{E(Y^{2}|X)-[E(Y|X)]^{2}\\}=E(Y^{2})-E\\{[E(Y|X)]^{2}\\}$$\n$$\\mathrm{Var}[E(Y|X)]=E\\{[E(Y|X)]^{2}\\}-[E(Y)]^{2}$$\n两式相加得 $\\mathrm{Var}(Y)=E(Y^{2})-[E(Y)]^{2}$。含义：总方差 = 组内（条件）方差的期望 + 组间（条件期望的）方差。",
+      src: { card: "nc11", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc11\"]）来源原文：2013 年人大 805 统计学真题。PITFALL[nc11] 无条目 → 省略 traps 字段。MNEM[nc11] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc12", origin: 'card', year: 2025, school: "考研数学三真题 2025 年", no: "卡片 nc12", type: "numchar", star: 3,
+      tags: ["nc12"],
+      stem: "设 $X\\sim N(-1,1)$，$Y\\sim N(1,2)$，若 $X$ 与 $X+2Y$ 不相关，则 $X$ 与 $X-Y$ 的相关系数为（  ）\\\\\nA. $\\frac13$　B. $\\frac12$　C. $\\frac23$　D. $\\frac34$",
+      answer: "由协方差的线性性（双线性）：\n$$\\mathrm{Cov}(X,X+2Y)=D(X)+2\\mathrm{Cov}(X,Y)=0\\ \\Rightarrow\\ \\mathrm{Cov}(X,Y)=-\\frac12$$\n$$\\mathrm{Cov}(X,X-Y)=D(X)-\\mathrm{Cov}(X,Y)=1+\\frac12=\\frac32$$\n$$D(X-Y)=D(X)+D(Y)-2\\mathrm{Cov}(X,Y)=1+2+1=4$$\n$$\\rho(X,X-Y)=\\frac{3/2}{\\sqrt{1\\times4}}=\\frac34$$\n选 D。",
+      src: { card: "nc12", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc12\"]）来源原文：2025 考研数学三真题。PITFALL[nc12] 无条目 → 省略 traps 字段。MNEM[nc12] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc13", origin: 'card', year: 2018, school: "复旦大学 432 统计学真题 2018 年", no: "卡片 nc13", type: "numchar", star: 5,
+      tags: ["nc13"],
+      stem: "求二项分布、$(a,b)$ 上均匀分布、伽马分布的期望和方差",
+      answer: "二项分布 $B(n,p)$：$E=np$，$D=np(1-p)$；\n均匀分布 $U(a,b)$：$E=\\dfrac{a+b}{2}$，$D=\\dfrac{(b-a)^{2}}{12}$；\n伽马分布 $Ga(\\alpha,\\lambda)$（密度 $f(x)=\\frac{\\lambda^{\\alpha}}{\\Gamma(\\alpha)}x^{\\alpha-1}e^{-\\lambda x}$）：$E=\\dfrac{\\alpha}{\\lambda}$，$D=\\dfrac{\\alpha}{\\lambda^{2}}$。",
+      src: { card: "nc13", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc13\"]）来源原文：2018 复旦大学 432 统计学真题。PITFALL[nc13] 无条目 → 省略 traps 字段。MNEM[nc13] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc14", origin: 'card', year: 2023, school: "复旦大学 432 统计学真题 2023 年", no: "卡片 nc14", type: "numchar", star: 4,
+      tags: ["nc14"],
+      stem: "设 $Y$ 是非负随机变量，且 $0<Var(Y)<\\infty$，证明：$P(Y>0)\\ge\\dfrac{(EY)^{2}}{E(Y^{2})}$",
+      answer: "对 $Y\\cdot I\\{Y>0\\}$ 用柯西-施瓦茨不等式：\n$$EY=E[Y\\cdot I\\{Y>0\\}]\\le\\sqrt{E(Y^{2})}\\cdot\\sqrt{E[I\\{Y>0\\}^{2}]}=\\sqrt{E(Y^{2})\\,P(Y>0)}$$\n两边平方即得\n$$P(Y>0)\\ge\\frac{(EY)^{2}}{E(Y^{2})}$$\n（恰为马尔可夫型（帕莱-齐格蒙德）不等式的变形。）",
+      src: { card: "nc14", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc14\"]）来源原文：2023 复旦大学 432 统计学真题。PITFALL[nc14] 无条目 → 省略 traps 字段。MNEM[nc14] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc15", origin: 'card', year: 2022, school: "南开大学 432 统计学真题 2022 年", no: "卡片 nc15", type: "numchar", star: 3,
+      tags: ["nc15"],
+      stem: "设 $X\\sim N(\\mu,\\sigma^{2})$，求 $X$ 的特征函数",
+      answer: "由特征函数定义 $\\varphi(t)=E(e^{itX})$，对正态密度直接积分（指数配方）得\n$$\\varphi(t)=e^{i\\mu t-\\frac{\\sigma^{2}t^{2}}{2}}$$\n特例：$X\\sim N(0,1)$ 时 $\\varphi(t)=e^{-t^{2}/2}$。",
+      src: { card: "nc15", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc15\"]）来源原文：2022 南开大学 432 统计学真题。PITFALL[nc15] 无条目 → 省略 traps 字段。MNEM[nc15] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-nc16", origin: 'card', year: 2024, school: "中国科学技术大学 812 概率论与数理统计真题 2024 年", no: "卡片 nc16", type: "numchar", star: 3,
+      tags: ["nc16"],
+      stem: "设 $X$ 是标准正态随机变量，对 $t\\in\\mathbb{R}$ 定义 $g(x)=e^{tx}$。(1) 计算 $E(g(X))$；(2) 证明 $E(Xg(X))=E(g'(X))$",
+      answer: "(1) 由矩母函数定义 $M(t)=E(e^{tX})$，对 $X\\sim N(0,1)$ 指数配方：\n$$E(g(X))=E(e^{tX})=\\int_{-\\infty}^{\\infty}\\frac1{\\sqrt{2\\pi}}e^{tx-x^{2}/2}\\,dx=e^{t^{2}/2}$$\n(2) 对 $t$ 求导（或直接计算）：\n$$E(Xe^{tX})=\\frac{d}{dt}E(e^{tX})=\\frac{d}{dt}e^{t^{2}/2}=t\\,e^{t^{2}/2}=E(t\\,e^{tX})=E(g'(X))$$\n即 Stein 引理 $E[Xg(X)]=E[g'(X)]$ 在 $g(x)=e^{tx}$ 情形的验证。",
+      src: { card: "nc16", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc16\"]）来源原文：2024 中国科学技术大学 812 概率论与数理统计真题。PITFALL[nc16] 无条目 → 省略 traps 字段。MNEM[nc16] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ll01", origin: 'card', year: 2024, school: "复旦大学 432 统计学真题 2024 年", no: "卡片 ll01", type: "limit", star: 4,
+      tags: ["ll01"],
+      stem: "设独立随机变量序列满足 $P(\\xi_n=\\pm n^{\\delta})=\\frac12$。(1) 给出 $\\{\\xi_n\\}$ 服从大数定律的充要条件（即 $\\delta$ 的范围）；(2) 证明结论",
+      answer: "(1) 充要条件：$\\delta<\\frac12$。\n(2) $E(\\xi_n)=0$，$Var(\\xi_n)=n^{2\\delta}$。由马尔可夫条件（切比雪夫大数定律的一般形式），\n$$\\sum_{n=1}^{\\infty}\\frac{Var(\\xi_n)}{n^{2}}=\\sum_{n=1}^{\\infty}n^{2\\delta-2}$$\n收敛当且仅当 $2\\delta-2<-1$，即 $\\delta<\\frac12$。此时 $\\frac1n\\sum_{i=1}^{n}\\xi_i\\overset{P}{\\longrightarrow}0$（服从大数定律）；当 $\\delta\\ge\\frac12$ 时级数发散，大数定律不成立。",
+      src: { card: "ll01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ll01\"]）来源原文：2024 复旦大学 432 统计学真题。PITFALL[ll01] 无条目 → 省略 traps 字段。MNEM[ll01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ll02", origin: 'card', year: 2022, school: "复旦大学 432 统计学真题 2022 年", no: "卡片 ll02", type: "limit", star: 4,
+      tags: ["ll02"],
+      stem: "设 $X_1,X_2,\\dots$ 是 i.i.d. 的二阶矩存在的随机变量，$Y_n=\\sum_{i=1}^{n}X_i$。问 $\\left\\{\\dfrac{Y_n}{n^{2}}\\right\\}$ 是否服从大数定律？",
+      answer: "服从。由辛钦大数定律（二阶矩存在故期望存在），$\\dfrac{Y_n}{n}\\overset{P}{\\longrightarrow}E(X_1)$（实际上几乎必然收敛），于是\n$$\\frac{Y_n}{n^{2}}=\\frac1n\\cdot\\frac{Y_n}{n}\\overset{P}{\\longrightarrow}0\\cdot E(X_1)=0$$\n即 $\\left\\{\\frac{Y_n}{n^{2}}\\right\\}$ 依概率收敛于常数 $0$，服从大数定律。",
+      src: { card: "ll02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ll02\"]）来源原文：2022 复旦大学 432 统计学真题。PITFALL[ll02] 无条目 → 省略 traps 字段。MNEM[ll02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ll03", origin: 'card', year: 2017, school: "复旦大学 432 统计学真题 2017 年", no: "卡片 ll03", type: "limit", star: 4,
+      tags: ["ll03"],
+      stem: "设 $X_1,X_2,\\dots,X_n$ i.i.d. $\\sim F(x)$，记 $Y_n(x)=\\sum_{i=1}^{n}I\\{X_i\\le x\\}$，求 $\\lim_{n\\to\\infty}\\dfrac{Y_n(x)}{n}$",
+      answer: "对固定的 $x$，$I\\{X_i\\le x\\}$ 为 i.i.d. 的 0-1 变量（伯努利试验），$P(I\\{X_i\\le x\\}=1)=F(x)$。由伯努利大数定律（频率依概率收敛于概率）：\n$$\\frac{Y_n(x)}{n}\\ \\overset{P}{\\longrightarrow}\\ F(x)$$\n即经验分布函数依概率收敛于总体分布函数（格里文科定理的逐点版本）。",
+      src: { card: "ll03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ll03\"]）来源原文：2017 复旦大学 432 统计学真题。PITFALL[ll03] 无条目 → 省略 traps 字段。MNEM[ll03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ll05", origin: 'card', year: 2020, school: "北大光华 431 统计真题 2020 年", no: "卡片 ll05", type: "limit", star: 4,
+      tags: ["ll05"],
+      stem: "某调查员调查该地区成年人中购买某商品的比率 $\\theta$，随机调查 $n$ 个顾客（$n$ 较大），购买记为 $x_i=1$，否则 $x_i=0$。求样本比例 $\\bar{x}$ 的近似分布",
+      answer: "设 $X=\\sum_{i=1}^n x_i\\sim B(n,\\theta)$，由棣莫弗-拉普拉斯中心极限定理，当 $n$ 充分大时\n$$\\frac{\\bar x-\\theta}{\\sqrt{\\theta(1-\\theta)/n}}=\\frac{X-n\\theta}{\\sqrt{n\\theta(1-\\theta)}}\\ \\overset{d}{\\longrightarrow}\\ N(0,1)$$\n即 $\\bar{x}\\ \\dot\\sim\\ N\\left(\\theta,\\ \\dfrac{\\theta(1-\\theta)}{n}\\right)$。",
+      src: { card: "ll05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ll05\"]）来源原文：2020 北大光华 431 统计真题。PITFALL[ll05] 无条目 → 省略 traps 字段。MNEM[ll05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ll06", origin: 'card', year: 2020, school: "复旦大学 432 统计学真题 2020 年", no: "卡片 ll06", type: "limit", star: 3,
+      tags: ["ll06"],
+      stem: "举出一个期望趋于正无穷，却依概率收敛到 0 的随机变量序列 $\\{X_n\\}$",
+      answer: "取 $X_n=\\begin{cases}n^{2},& \\text{概率 }\\frac1n\\\\ 0,& \\text{概率 }1-\\frac1n\\end{cases}$。则\n$$E(X_n)=n^{2}\\cdot\\frac1n+0\\cdot\\left(1-\\frac1n\\right)=n\\to+\\infty$$\n而对任意 $\\varepsilon>0$，$P(|X_n-0|\\ge\\varepsilon)=P(X_n=n^{2})=\\frac1n\\to0$，故 $X_n\\overset{P}{\\longrightarrow}0$。\n这说明“期望趋于无穷”与“依概率收敛”刻画的是不同层面的性质（大数定律研究收敛性，与期望的大小无必然关系）。",
+      src: { card: "ll06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ll06\"]）来源原文：2020 复旦大学 432 统计学真题。PITFALL[ll06] 无条目 → 省略 traps 字段。MNEM[ll06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ll07", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 ll07", type: "limit", star: 3,
+      tags: ["ll07"],
+      stem: "设 $X\\sim P(\\lambda)$，以下判断正确的是（  ）\\\\\nA. $P(X>2\\lambda)\\le1-\\frac1\\lambda$　B. $P(X>2\\lambda)\\le\\frac1\\lambda$\\\\\nC. $P(X>2\\lambda)\\ge\\frac1\\lambda$　D. $P(X>2\\lambda)\\ge1-\\frac1\\lambda$",
+      answer: "选 B。泊松分布 $E(X)=D(X)=\\lambda$，由切比雪夫不等式（只需方差存在即可估计概率上界）：\n$$P(X>2\\lambda)=P(X-\\lambda>\\lambda)\\le P(|X-\\lambda|>\\lambda)\\le\\frac{D(X)}{\\lambda^{2}}=\\frac1\\lambda$$",
+      src: { card: "ll07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ll07\"]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[ll07] 无条目 → 省略 traps 字段。MNEM[ll07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm01", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 sm01", type: "sampdist", star: 4,
+      tags: ["sm01"],
+      stem: "调查镜片的曲率，据调查 500 个镜片的平均曲率为 0.5。则调查的总体是（  ）\\\\\nA. 抽查的 500 个镜片　B. 最近 500 个镜片\\\\\nC. 今天销售的所有镜片　D. 该厂生产的所有镜片",
+      answer: "选 D。总体是研究对象的全体（该厂生产的所有镜片的曲率），样本是其中被抽取观测的 500 个镜片；样本是总体的一个子集，二者不可混淆。",
+      src: { card: "sm01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm01\"]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[sm01] 无条目 → 省略 traps 字段。MNEM[sm01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm02", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "卡片 sm02", type: "sampdist", star: 5,
+      tags: ["sm02"],
+      stem: "根据沪深 300 指数 2020 年和 2023 年的年化日指数收益率：2020 年 $n_1=244$，均值 $26.5\\%$，标准差 $22.3\\%$；2023 年 $n_2=242$，均值 $-11.2\\%$，标准差 $10.1\\%$。将这两年的样本合并，求合并后的均值、标准差",
+      answer: "合并均值（按样本量加权）：\n$$\\bar{x}=\\frac{n_1\\bar{x}_1+n_2\\bar{x}_2}{n_1+n_2}=\\frac{244\\times0.265+242\\times(-0.112)}{486}\\approx0.077=7.7\\%$$\n合并标准差：$s^{2}=\\dfrac{(n_1-1)s_1^{2}+(n_2-1)s_2^{2}+n_1(\\bar{x}_1-\\bar{x})^{2}+n_2(\\bar{x}_2-\\bar{x})^{2}}{n_1+n_2-1}\\approx0.0656$，故 $s\\approx0.256=25.6\\%$。",
+      src: { card: "sm02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm02\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[sm02] 无条目 → 省略 traps 字段。MNEM[sm02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm03", origin: 'card', year: 2017, school: "复旦大学 432 统计学真题 2017 年", no: "卡片 sm03", type: "sampdist", star: 5,
+      tags: ["sm03"],
+      stem: "名词解释：样本均值、样本方差",
+      answer: "样本均值 $\\bar{X}=\\dfrac1n\\sum_{i=1}^{n}X_i$——样本观测值的算术平均，是总体均值 $\\mu$ 的估计；\n样本方差 $S^{2}=\\dfrac{1}{n-1}\\sum_{i=1}^{n}(X_i-\\bar{X})^{2}$——用 $n-1$ 作分母（自由度修正）使其成为总体方差 $\\sigma^{2}$ 的无偏估计：$E(S^{2})=\\sigma^{2}$。",
+      src: { card: "sm03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm03\"]）来源原文：2017 复旦大学 432 统计学真题。PITFALL[sm03] 无条目 → 省略 traps 字段。MNEM[sm03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm04", origin: 'card', year: 2016, school: "北京师范大学 432 统计学真题 2016 年", no: "卡片 sm04", type: "sampdist", star: 5,
+      tags: ["sm04"],
+      stem: "某校学生的成绩服从正态分布 $X\\sim N(\\mu,36)$，在显著性水平 $\\alpha=0.05$ 下，要使估计 $\\mu$ 的测量误差控制在 $\\pm1$ 之内，需要多大的样本量（  ）\\\\\nA. 139　B. 2238　C. 48　D. 934",
+      answer: "由 $\\bar{X}\\sim N(\\mu,\\frac{36}{n})$，误差 $\\pm1$ 对应置信区间半宽 $z_{0.025}\\dfrac{6}{\\sqrt n}=1$：\n$$\\sqrt n=1.96\\times6=11.76\\ \\Rightarrow\\ n\\approx138.3$$\n向上取整得 $n=139$，选 A。",
+      src: { card: "sm04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm04\"]）来源原文：2016 北京师范大学 432 统计学真题。PITFALL[sm04] 无条目 → 省略 traps 字段。MNEM[sm04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm05", origin: 'card', year: 2022, school: "复旦大学 432 统计学真题 2022 年", no: "卡片 sm05", type: "sampdist", star: 5,
+      tags: ["sm05"],
+      stem: "设 $X_1,\\dots,X_n$ 独立同分布于 $N(\\mu,\\sigma^2)$，$F$ 为其分布函数。求 $-2\\sum_{i=1}^{n}\\ln F(X_i)$ 的分布",
+      answer: "连续型随机变量经分布函数变换后均匀：$F(X_i)\\sim U(0,1)$。又 $-2\\ln U\\sim\\chi^2(2)$，故\n$$-2\\ln F(X_i)\\sim\\chi^2(2),\\qquad -2\\sum_{i=1}^{n}\\ln F(X_i)\\sim\\chi^2(2n)$$",
+      src: { card: "sm05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm05\"]）来源原文：2022 复旦大学 432 统计学真题。PITFALL[sm05] 无条目 → 省略 traps 字段。MNEM[sm05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm06", origin: 'card', year: 2016, school: "复旦大学 432 统计学真题 2016 年", no: "卡片 sm06", type: "sampdist", star: 5,
+      tags: ["sm06"],
+      stem: "设 $X_1,\\dots,X_{2n}$ 为来自总体 $X\\sim N(\\mu,\\sigma^2)$ 的样本，$\\bar X$ 为样本均值。求 $E\\left[\\sum_{i=1}^{n}\\left(X_i+X_{n+i}-2\\bar X\\right)^2\\right]$",
+      answer: "令 $Y_i=X_i+X_{n+i}$，则 $Y_1,\\dots,Y_n$ 独立同分布于 $N(2\\mu,2\\sigma^2)$，且 $\\bar Y=\\frac1n\\sum_{i=1}^n Y_i=2\\bar X$。于是\n$$\\sum_{i=1}^{n}\\left(X_i+X_{n+i}-2\\bar X\\right)^2=\\sum_{i=1}^{n}(Y_i-\\bar Y)^2=(n-1)S_Y^2$$\n由 $E\\left[(n-1)S_Y^2\\right]=(n-1)\\cdot(2\\sigma^2)$，得所求期望为 $2(n-1)\\sigma^2$。",
+      traps: "样本方差与卡方的自由度是 $n-1$（不是 $n$）；除以的是总体方差 $\\sigma^2$ 不是 $S^2$。",
+      src: { card: "sm06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm06\"]）来源原文：2016 复旦大学 432 统计学真题。traps 取自 PITFALL[sm06]。MNEM[sm06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm07", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "卡片 sm07", type: "sampdist", star: 5,
+      tags: ["sm07"],
+      stem: "设 $X_1,\\dots,X_n\\overset{iid}{\\sim}N(0,1)$，$S^2$ 为样本方差。求统计量 $T=\\dfrac{\\sqrt n\\,\\bar X}{S}$ 的分布",
+      answer: "$\\bar X\\sim N(0,\\frac1n)$，故 $\\sqrt n\\,\\bar X\\sim N(0,1)$；又 $\\dfrac{(n-1)S^2}{1}\\sim\\chi^2(n-1)$ 且与 $\\bar X$ 独立。由 $t$ 分布定义：\n$$T=\\frac{\\sqrt n\\,\\bar X}{S}=\\frac{\\sqrt n\\,\\bar X}{\\sqrt{\\dfrac{(n-1)S^2}{n-1}}}\\sim t(n-1)$$",
+      traps: "$t$ 分布中 $S^2$ 与 $\\bar X$ 独立仅对正态总体成立；非正态总体不可直接套用。",
+      src: { card: "sm07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm07\"]）来源原文：2025 北大光华 431 统计真题。traps 取自 PITFALL[sm07]。MNEM[sm07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm08", origin: 'card', year: 2017, school: "南开大学 432 统计学真题 2017 年", no: "卡片 sm08", type: "sampdist", star: 4,
+      tags: ["sm08"],
+      stem: "随机变量 $X\\sim F(n,n)$，求 $P(X<1)$",
+      answer: "若 $X\\sim F(n,n)$，则 $\\dfrac1X\\sim F(n,n)$（分子分母自由度互换后仍同分布），故\n$$P(X<1)=P\\left(\\frac1X>1\\right)=P(X>1)$$\n又 $P(X<1)+P(X>1)=1$（$X>0$），因此 $P(X<1)=\\dfrac12$。",
+      traps: "$F$ 分布两个自由度顺序不可颠倒：$F=\\dfrac{U/m}{V/n}\\sim F(m,n)$。左尾分位数用倒数关系 $F_{1-\\alpha}(m,n)=\\dfrac{1}{F_{\\alpha}(n,m)}$ 求得。",
+      src: { card: "sm08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm08\"]）来源原文：2017 南开大学 432 统计学真题。traps 取自 PITFALL[sm08]。MNEM[sm08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm09", origin: 'card', year: 2016, school: "中山大学 432 统计学真题 2016 年", no: "卡片 sm09", type: "sampdist", star: 4,
+      tags: ["sm09"],
+      stem: "$X_1,\\dots,X_n$ 为来自正态分布 $N(\\mu,1)$ 的简单随机样本。记 $z_{\\alpha}$ 为标准正态分布的 $100\\alpha\\%$ 分位数，则由此样本所构造的置信水平分别为 95% 与 90% 的双侧置信区间长度之比为（  ）",
+      answer: "$N(\\mu,1)$ 的\\textbf{单均值}（$\\sigma=1$ 已知）双侧置信区间长度为 $2z_{\\alpha/2}\\cdot\\dfrac{1}{\\sqrt n}$。\n95% 区间长 $=\\dfrac{2z_{0.975}}{\\sqrt n}$，90% 区间长 $=\\dfrac{2z_{0.95}}{\\sqrt n}$，故两者之比为\n$$\\frac{2z_{0.975}/\\sqrt n}{2z_{0.95}/\\sqrt n}=\\frac{z_{0.975}}{z_{0.95}}$$\n即选项 B。关键：区间长度比仅由分位数决定，与样本量 $n$ 无关。",
+      src: { card: "sm09", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm09\"]）来源原文：2016 中山大学 432 统计学真题。PITFALL[sm09] 无条目 → 省略 traps 字段。MNEM[sm09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm10", origin: 'card', year: 2020, school: "中山大学 432 统计学真题 2020 年", no: "卡片 sm10", type: "sampdist", star: 4,
+      tags: ["sm10"],
+      stem: "下列关于统计学常用分布的判断中，错误的是（  ）\\\\\nA. 若 $Z\\sim F(n_1,n_2)$，则 $\\frac1Z\\sim F(n_2,n_1)$\\\\\nB. 若 $T\\sim t(n)$，则 $T^{2}\\sim F(1,n)$\\\\\nC. 若 $X\\sim N(0,1)$，则 $X^{2}\\sim\\chi^{2}(1)$\\\\\nD. 若 $X\\sim N(0,1)$，$Y\\sim\\chi^{2}(n)$，则 $\\frac{X}{Y}\\sim t(n)$",
+      answer: "选 D。$t$ 分布的定义要求 $\\dfrac{X}{\\sqrt{Y/n}}\\sim t(n)$（需 $X,Y$ 独立且 $Y$ 除以自由度后开方），而不是 $X/Y$。A、B、C 均正确：\n$$F(n_1,n_2)\\ \\text{的倒数}\\ \\sim F(n_2,n_1);\\qquad T\\sim t(n)\\Rightarrow T^{2}\\sim F(1,n);\\qquad N(0,1)^{2}\\sim\\chi^{2}(1)$$",
+      src: { card: "sm10", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm10\"]）来源原文：2020 中山大学 432 统计学真题。PITFALL[sm10] 无条目 → 省略 traps 字段。MNEM[sm10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sm11", origin: 'card', year: 2017, school: "北京师范大学 432 统计学真题 2017 年", no: "卡片 sm11", type: "sampdist", star: 5,
+      tags: ["sm11"],
+      stem: "设有来自方差为 $\\sigma^{2}$ 的总体的随机样本 $X_1,\\dots,X_n$，定义样本均值 $\\bar X$，则 $Var(X_1-\\bar X)=$（  ）",
+      answer: "$Var(\\bar X)=\\dfrac{\\sigma^{2}}{n}$，且 $Cov(X_1,\\bar X)=\\dfrac{1}{n}Cov(X_1,X_1)=\\dfrac{\\sigma^{2}}{n}$，故\n$$Var(X_1-\\bar X)=Var(X_1)+Var(\\bar X)-2Cov(X_1,\\bar X)=\\sigma^{2}+\\frac{\\sigma^{2}}{n}-2\\frac{\\sigma^{2}}{n}=\\frac{n-1}{n}\\sigma^{2}$$\n选 D。核心：样本均值是各 $X_i$ 的线性组合，$Cov(X_i,\\bar X)=\\sigma^{2}/n$、$Var(\\bar X)=\\sigma^{2}/n$。",
+      src: { card: "sm11", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sm11\"]）来源原文：2017 北京师范大学 432 统计学真题。PITFALL[sm11] 无条目 → 省略 traps 字段。MNEM[sm11] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est01", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "卡片 est01", type: "estimate", star: 4,
+      tags: ["est01"],
+      stem: "下列说法正确的是（  ）\\\\\nA. 样本量的增加可以提高检验的显著水平\\\\\nB. 经验分布函数是单调增函数\\\\\nC. 样本容量越大，样本方差越小\\\\\nD. 统计量是样本的函数",
+      answer: "选 D（官方答案 D 或 BD）。统计量是根据样本数据计算得到的量，是样本的函数，这是点估计的基础（用统计量 $\\hat\\theta(X_1,\\dots,X_n)$ 估计总体参数）。\nA 错：样本量增大提高的是检验功效，显著性水平由研究者设定；C 错：方差反映数据的离散程度，不随样本量必然减小；B 有歧义：经验分布函数为非减右连续函数。",
+      src: { card: "est01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est01\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[est01] 无条目 → 省略 traps 字段。MNEM[est01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est02", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "卡片 est02", type: "estimate", star: 5,
+      tags: ["est02"],
+      stem: "$X_1,\\dots,X_n$ 为总体分布的简单随机样本，下列是总体均值 $\\mu$ 的无偏估计的有（  ）（不定项）\\\\\nA. $X_1$　B. $\\bar{X}$　C. $X_1-X_2+X_n$　D. $10X_1-9X_n$",
+      answer: "无偏性要求 $E(\\hat\\theta)=\\mu$：\nA：$E(X_1)=\\mu$ ✓；B：$E(\\bar X)=\\mu$ ✓；C：$E(X_1-X_2+X_n)=\\mu-\\mu+\\mu=\\mu$ ✓；D：$E(10X_1-9X_n)=10\\mu-9\\mu=\\mu$ ✓。\n故 A、B、C、D 均为 $\\mu$ 的无偏估计（线性无偏估计中系数之和为 1 即可）。",
+      src: { card: "est02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est02\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[est02] 无条目 → 省略 traps 字段。MNEM[est02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est03", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "卡片 est03", type: "estimate", star: 4,
+      tags: ["est03"],
+      stem: "设 $X_1,\\dots,X_n$ i.i.d. $\\sim N(\\mu,\\sigma^{2})$，$\\mu$ 已知。证明：(1) $\\dfrac1n\\sum_{i=1}^{n}(X_i-\\mu)^{2}$ 是 $\\sigma^{2}$ 的有效估计；(2) $\\dfrac1n\\sqrt{\\dfrac{\\pi}{2}}\\sum_{i=1}^{n}|X_i-\\mu|$ 是 $\\sigma$ 的无偏估计但不有效",
+      answer: "(1) 令 $Z_i=(X_i-\\mu)/\\sigma\\sim N(0,1)$，$\\hat\\sigma_1^{2}=\\frac{\\sigma^{2}}{n}\\sum Z_i^{2}$。$E(\\hat\\sigma_1^{2})=\\sigma^{2}$，$Var(\\hat\\sigma_1^{2})=\\frac{\\sigma^{4}}{n^{2}}\\cdot 2n=\\frac{2\\sigma^{4}}{n}$，达到 C-R 下界 $\\frac{2\\sigma^{4}}{n}$，故有效。\n(2) $E|Z_i|=\\sqrt{\\frac2\\pi}$，故 $E\\left[\\frac1n\\sqrt{\\frac\\pi2}\\sum|X_i-\\mu|\\right]=\\sqrt{\\frac\\pi2}\\cdot\\sigma\\sqrt{\\frac2\\pi}=\\sigma$ 无偏；但其方差大于 C-R 下界，故不有效。",
+      src: { card: "est03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est03\"][0]）来源原文：2019 复旦大学 432 统计学真题。PITFALL[est03] 无条目 → 省略 traps 字段。MNEM[est03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est03-2", origin: 'card', year: 2021, school: "南开大学 432 统计学真题 2021 年", no: "卡片 est03-2", type: "estimate", star: 4,
+      tags: ["est03"],
+      stem: "对于下述两个命题：命题 A：$\\hat\\theta$ 是 $\\theta$ 的有效估计；命题 B：$\\hat\\theta$ 是 $\\theta$ 的 UMVUE。下列结论正确的是（  ）",
+      answer: "有效估计 = 无偏且\\textbf{方差达到 C-R 下界}的估计量，故其方差在所有无偏估计中最小 $\\Rightarrow$ 必为 UMVUE，即 $A\\Rightarrow B$。\n反之，UMVUE 方差最小但不一定达到 C-R 下界（可因信息量未充分利用或非正则情形），故 $B\\not\\Rightarrow A$。选 (b) $A\\Rightarrow B,\\ B\\not\\Rightarrow A$。",
+      src: { card: "est03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est03\"][1]）来源原文：2021 南开大学 432 统计学真题。PITFALL[est03] 无条目 → 省略 traps 字段。MNEM[est03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est04", origin: 'card', year: 2016, school: "南开大学 432 统计学真题 2016 年", no: "卡片 est04", type: "estimate", star: 4,
+      tags: ["est04"],
+      stem: "有来自二阶矩存在总体 $X$ 的随机样本 $X_1,\\dots,X_n$，设 $S^{2}=\\frac{1}{n-1}\\sum(X_i-\\bar{X})^{2}$，则 $S$ 一定是总体标准差 $\\sigma$ 的（  ）\\\\\nA. UMVUE　B. 相合估计　C. 无偏估计　D. MLE",
+      answer: "选 B。$S^{2}$ 是 $\\sigma^{2}$ 的相合估计（$S^{2}\\overset{P}{\\to}\\sigma^{2}$），由相合性的连续性（$g$ 连续时 $g(\\hat\\theta_n)\\overset{P}{\\to}g(\\theta)$），$S=\\sqrt{S^{2}}$ 是 $\\sigma$ 的相合估计。但一般 $E(S)\\ne\\sigma$（不是无偏的），也不一定是 UMVUE 或 MLE。",
+      src: { card: "est04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est04\"]）来源原文：2016 南开大学 432 统计学真题。PITFALL[est04] 无条目 → 省略 traps 字段。MNEM[est04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est05", origin: 'card', year: 2021, school: "复旦大学 861 概率论与数理统计真题 2021 年", no: "卡片 est05", type: "estimate", star: 5,
+      tags: ["est05"],
+      stem: "设 $Y_1,\\dots,Y_n$ 独立同分布，密度 $f(y;\\theta)=\\dfrac1\\theta\\ (0\\le y\\le\\theta)$，$\\theta>0$ 未知。求 $\\theta$ 的矩估计量，并计算其均方误差（MSE）",
+      answer: "$E(Y)=\\dfrac\\theta2$，令 $\\bar Y=\\dfrac\\theta2$，得矩估计 $\\hat\\theta_1=2\\bar Y$。\n$E(\\hat\\theta_1)=2E(\\bar Y)=\\theta$（无偏），$D(\\hat\\theta_1)=4D(\\bar Y)=\\dfrac4n\\cdot\\dfrac{\\theta^{2}}{12}=\\dfrac{\\theta^{2}}{3n}$。\n$$\\mathrm{MSE}(\\hat\\theta_1)=D(\\hat\\theta_1)=\\dfrac{\\theta^{2}}{3n}$$",
+      altAnswer: "💡巧解（二阶矩法）：$E(Y^2)=\\dfrac{\\theta^2}{3}$，令样本二阶矩 $\\dfrac1n\\sum Y_i^2=\\dfrac{\\theta^2}{3}$，得另一矩估计 $\\hat\\theta=\\sqrt{\\dfrac3n\\sum Y_i^2}$，说明矩估计随所取矩的阶数不同而不同、不唯一。",
+      traps: "矩估计用低阶矩最简，但可能无解或多解；选择不同阶矩会得到不同的估计量。",
+      src: { card: "est05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est05\"][0]）来源原文：2021 复旦大学 861 概率论与数理统计真题。traps 取自 PITFALL[est05]。MNEM[est05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est05-2", origin: 'card', year: 2020, school: "复旦大学 432 统计学真题 2020 年", no: "卡片 est05-2", type: "estimate", star: 5,
+      tags: ["est05"],
+      stem: "设 $X_1,\\dots,X_n$ 来自总体 $X\\sim f(x)=\\theta x^{\\theta-1}\\,I\\{0<x<1\\}$，求 $\\theta$ 的矩估计",
+      answer: "$E(X)=\\int_0^1 x\\cdot\\theta x^{\\theta-1}\\,dx=\\frac{\\theta}{\\theta+1}$。令样本一阶矩等于总体一阶矩：\n$$\\bar X=\\frac{\\theta}{\\theta+1}\\ \\Rightarrow\\ \\hat\\theta_{M}=\\frac{\\bar X}{1-\\bar X}$$",
+      traps: "矩估计用低阶矩最简，但可能无解或多解；选择不同阶矩会得到不同的估计量。",
+      src: { card: "est05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est05\"][1]）来源原文：2020 复旦大学 432 统计学真题。traps 取自 PITFALL[est05]。MNEM[est05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est06", origin: 'card', year: 2021, school: "复旦大学 861 概率论与数理统计真题 2021 年", no: "卡片 est06", type: "estimate", star: 5,
+      tags: ["est06"],
+      stem: "设 $Y_1,\\dots,Y_n$ 独立同分布，密度 $f(y;\\theta)=\\dfrac1\\theta\\ (0\\le y\\le\\theta)$，$\\theta>0$ 未知。求 $\\theta$ 的最大似然估计量，并计算其 MSE",
+      answer: "似然 $L(\\theta)=\\prod_{i=1}^{n}\\dfrac1\\theta=\\dfrac1{\\theta^{n}}$（需 $0\\le y_i\\le\\theta$，即 $\\theta\\ge y_{(n)}$）。$L$ 关于 $\\theta$ 递减，故 $\\hat\\theta_2=Y_{(n)}=\\max_{1\\le i\\le n}Y_i$。\n$Y_{(n)}$ 的密度 $f(z)=\\dfrac{n z^{n-1}}{\\theta^{n}}\\ (0\\le z\\le\\theta)$，故 $E(Y_{(n)})=\\dfrac{n}{n+1}\\theta$，$E(Y_{(n)}^{2})=\\dfrac{n}{n+2}\\theta^{2}$。\n$$\\mathrm{MSE}(\\hat\\theta_2)=D+\\mathrm{Bias}^{2}=\\dfrac{n}{(n+2)(n+1)^{2}}\\theta^{2}+\\left(\\dfrac{\\theta}{n+1}\\right)^{2}=\\dfrac{2\\theta^{2}}{(n+1)(n+2)}$$",
+      traps: "对数似然求导后勿漏定义域/边界解（如均匀分布 $U(0,\\theta)$ 的 MLE 是 $Y_{(n)}$ 而非使导数为 0 的点）；似然在支撑集外为 0。",
+      src: { card: "est06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est06\"][0]）来源原文：2021 复旦大学 861 概率论与数理统计真题。traps 取自 PITFALL[est06]。MNEM[est06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est06-2", origin: 'card', year: 2020, school: "复旦大学 432 统计学真题 2020 年", no: "卡片 est06-2", type: "estimate", star: 5,
+      tags: ["est06"],
+      stem: "设 $X_1,\\dots,X_n$ 来自总体 $X\\sim f(x)=\\theta x^{\\theta-1}\\,I\\{0<x<1\\}$。求 $\\theta$ 的 MLE 并验证无偏性",
+      answer: "似然 $L(\\theta)=\\prod_{i=1}^{n}\\theta x_i^{\\theta-1}=\\theta^{n}\\left(\\prod x_i\\right)^{\\theta-1}$，对数似然\n$$\\ln L=n\\ln\\theta+(\\theta-1)\\sum_{i=1}^{n}\\ln x_i\\ \\Rightarrow\\ \\frac{\\partial\\ln L}{\\partial\\theta}=\\frac{n}{\\theta}+\\sum\\ln x_i=0$$\n得 $\\hat\\theta_{MLE}=-\\dfrac{n}{\\sum_{i=1}^{n}\\ln X_i}$。\n无偏性：$-\\ln X\\sim Exp(\\theta)$，故 $-\\sum_{i=1}^{n}\\ln X_i\\sim\\Gamma(n,\\theta)$，$E\\!\\left(\\dfrac{n}{-\\sum\\ln X_i}\\right)=\\dfrac{n\\theta}{n-1}\\ne\\theta$，即 $\\hat\\theta_{MLE}$ 有偏（偏差随 $n$ 增大趋于 0）。",
+      traps: "对数似然求导后勿漏定义域/边界解（如均匀分布 $U(0,\\theta)$ 的 MLE 是 $Y_{(n)}$ 而非使导数为 0 的点）；似然在支撑集外为 0。",
+      src: { card: "est06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est06\"][1]）来源原文：2020 复旦大学 432 统计学真题。traps 取自 PITFALL[est06]。MNEM[est06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est07", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 est07", type: "estimate", star: 5,
+      tags: ["est07"],
+      stem: "以下关于区间估计的说法正确的是（  ）\\\\\nA. 区间估计是指用一个区间来估计总体参数的真值\\\\\nB. 区间估计是指用一个点来估计总体参数的真值\\\\\nC. 区间估计是指用一个区间来估计样本统计量的真值\\\\\nD. 区间估计是指用一个点来估计样本统计量的真值",
+      answer: "选 A。区间估计在点估计的基础上，给出包含未知总体参数真值的一个区间 $(\\hat\\theta_1,\\hat\\theta_2)$，并配以置信水平 $1-\\alpha$（$P(\\hat\\theta_1<\\theta<\\hat\\theta_2)=1-\\alpha$）；它估计的是总体参数而非样本统计量。",
+      src: { card: "est07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est07\"]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[est07] 无条目 → 省略 traps 字段。MNEM[est07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est08", origin: 'card', year: 2013, school: "中央财经 432 统计学真题 2013 年", no: "卡片 est08", type: "estimate", star: 5,
+      tags: ["est08"],
+      stem: "从正态总体 $X\\sim N(\\mu,\\sigma^{2})$ 中抽得容量 $n=36$ 的样本，总体标准差 $\\sigma=6$ 已知，样本均值 $\\bar{x}=50$。求 $\\mu$ 的 95% 置信区间（$z_{0.025}=1.96$）",
+      answer: "$$\\bar{x}\\pm z_{\\alpha/2}\\frac{\\sigma}{\\sqrt{n}}=50\\pm1.96\\cdot\\frac{6}{6}=50\\pm1.96=(48.04,\\ 51.96)$$",
+      traps: "方差已知用 $z$、未知才用 $t$；别忘除以 $\\sqrt n$；分位数用 $z_{\\alpha/2}$（双侧）。",
+      src: { card: "est08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est08\"][0]）来源原文：2013 年中央财经 432 统计学真题。traps 取自 PITFALL[est08]。MNEM[est08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est08-2", origin: 'card', year: 2013, school: "北大光华 431 统计真题 2013 年", no: "卡片 est08-2", type: "estimate", star: 5,
+      tags: ["est08"],
+      stem: "某股票 100 天的数据，年化对数收益率为 15%，标准差为 9%。(1) 求年化对数收益率 95% 的置信区间；(2) 若当前股价为 10 元，求股价 95% 的置信区间",
+      answer: "(1) $\\mu$ 的 95% 置信区间：$0.15\\pm1.96\\cdot\\dfrac{0.09}{\\sqrt{100}}=0.15\\pm0.01764=(0.13236,\\ 0.16764)$，即 $(13.24\\%,\\ 16.76\\%)$。\n(2) 未来股价 $P=10\\,e^{r}$（$r$ 为对数收益率），故股价区间为 $(10e^{0.1324},\\ 10e^{0.1676})\\approx(11.42,\\ 11.82)$ 元。",
+      traps: "方差已知用 $z$、未知才用 $t$；别忘除以 $\\sqrt n$；分位数用 $z_{\\alpha/2}$（双侧）。",
+      src: { card: "est08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est08\"][1]）来源原文：2013 北大光华 431 统计真题。traps 取自 PITFALL[est08]。MNEM[est08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est09", origin: 'card', year: 2021, school: "北大光华 431 统计真题 2021 年", no: "卡片 est09", type: "estimate", star: 5,
+      tags: ["est09"],
+      stem: "为检验声波是否对心率有影响，对 9 位测试者测得有声波与无声波时的心率差 $d_i$（有声波－无声波）为 $6,7,-1,13,-5,13,6,2,4$。求心率差均值的 95% 置信区间（$t_{0.975}(8)=2.306$），并判断声波对心率是否有显著影响",
+      answer: "$\\bar d=\\frac{45}{9}=5$，$S_d^2=\\frac{280}{8}=35$（$S_d=\\sqrt{35}\\approx5.916$）。\n$$\\bar d\\pm t_{0.975}(8)\\frac{S_d}{\\sqrt n}=5\\pm2.306\\times\\frac{\\sqrt{35}}{3}\\approx5\\pm4.55=(0.45,\\ 9.55)$$\n区间不包含 $0$，故在 $\\alpha=0.05$ 下声波对心率有显著影响。",
+      traps: "方差未知的均值区间用 $t$ 分布、自由度 $n-1$；误用 $z$ 或自由度写成 $n$ 是高频错误。",
+      src: { card: "est09", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est09\"]）来源原文：2021 北大光华 431 统计真题。traps 取自 PITFALL[est09]。MNEM[est09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est10", origin: 'card', year: 2021, school: "北京师范大学 432 统计学真题 2021 年", no: "卡片 est10", type: "estimate", star: 4,
+      tags: ["est10"],
+      stem: "设 $X_1,\\dots,X_n$ 是 i.i.d. 的 $N(\\mu,\\sigma^{2})$，其中 $\\mu$ 已知、$\\sigma^{2}$ 未知。(1) 试用两种方法给出 $\\sigma^{2}$ 的置信区间；(2) 给出 $\\sigma^{4}$ 的置信区间",
+      answer: "(1) 方法一（用样本方差）：$\\dfrac{(n-1)S^{2}}{\\sigma^{2}}\\sim\\chi^{2}(n-1)$，得\n$$\\left(\\frac{(n-1)S^{2}}{\\chi^{2}_{\\alpha/2}(n-1)},\\ \\frac{(n-1)S^{2}}{\\chi^{2}_{1-\\alpha/2}(n-1)}\\right)$$\n方法二（$\\mu$ 已知）：$\\dfrac{\\sum_{i=1}^{n}(X_i-\\mu)^{2}}{\\sigma^{2}}\\sim\\chi^{2}(n)$，得\n$$\\left(\\frac{\\sum(X_i-\\mu)^{2}}{\\chi^{2}_{\\alpha/2}(n)},\\ \\frac{\\sum(X_i-\\mu)^{2}}{\\chi^{2}_{1-\\alpha/2}(n)}\\right)$$\n(2) 由 $a<\\sigma^{2}<b\\iff a^{2}<\\sigma^{4}<b^{2}$，将 (1) 中区间端点平方即可。",
+      traps: "方差置信区间用 $\\chi^{2}$ 分布，\\textbf{两端分位数顺序要反}：$\\left(\\dfrac{(n-1)S^{2}}{\\chi^{2}_{\\alpha/2}(n-1)},\\ \\dfrac{(n-1)S^{2}}{\\chi^{2}_{1-\\alpha/2}(n-1)}\\right)$，较小分位数放在分母较大的一端。",
+      src: { card: "est10", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est10\"]）来源原文：2021 北京师范大学 432 统计学真题。traps 取自 PITFALL[est10]。MNEM[est10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est11", origin: 'card', year: 2017, school: "中国科学技术大学 432 统计学真题 2017 年", no: "卡片 est11", type: "estimate", star: 4,
+      tags: ["est11"],
+      stem: "设 $X_1,\\dots,X_n$ 是从正态总体 $N(\\mu,\\sigma^{2})$ 中抽出的随机样本，证明样本方差 $S^{2}$ 与样本均值 $\\bar X$ 相互独立",
+      answer: "令 $\\bar X=\\frac1n\\sum X_i$，$S^{2}=\\frac{1}{n-1}\\sum(X_i-\\bar X)^{2}$。取正交阵 $A$（第一行 $A_{1\\cdot}=\\frac{1}{\\sqrt n}(1,\\dots,1)$），作变换 $Z=AX$，则 $Z_1=\\sqrt n\\,\\bar X$，且 $\\sum_{i=1}^{n}Z_i^{2}=\\sum_{i=1}^{n}X_i^{2}=\\sum_{i=1}^{n}(X_i-\\bar X)^{2}+n\\bar X^{2}=(n-1)S^{2}+Z_1^{2}$。\n由 $X_i$ 独立正态 $\\Rightarrow$ 正交变换下 $Z_1,\\dots,Z_n$ 相互独立。而 $\\sum_{i=2}^{n}Z_i^{2}=(n-1)S^{2}$，故 $Z_1=\\sqrt n\\bar X$ 与 $S^{2}$ 独立。这是后续 $t$、$F$ 分布等抽样分布推导的根基。",
+      src: { card: "est11", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est11\"]）来源原文：2017 中国科学技术大学 432 统计学真题。PITFALL[est11] 无条目 → 省略 traps 字段。MNEM[est11] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est12", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "卡片 est12", type: "estimate", star: 4,
+      tags: ["est12"],
+      stem: "$X_1,\\dots,X_n$ 为 $F(X,\\theta)$ 的简单随机样本，下列说法正确的是（  ）（不定项）\\\\\nA. 似然函数是 $\\theta$ 的函数\\\\\nB. 似然函数是 $X_1,\\dots,X_n$ 的函数\\\\\nC. $g(\\theta)$ 的极大似然估计是 $g(\\hat\\theta)$，其中 $\\hat\\theta$ 为 $\\theta$ 的 MLE\\\\\nD. 最大似然估计是似然函数的最大值",
+      answer: "选 A、C。A：给定样本后 $L(\\theta)=\\prod f(x_i;\\theta)$ 是参数 $\\theta$ 的函数，正确；B 错（是 $\\theta$ 的函数而非样本的函数）；C：MLE 的不变性（$g$ 连续时 $\\widehat{g(\\theta)}=g(\\hat\\theta)$），正确；D 错：最大似然估计是使似然函数取最大值的参数 $\\theta$ 的值，而非似然函数的最大值本身。",
+      src: { card: "est12", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est12\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[est12] 无条目 → 省略 traps 字段。MNEM[est12] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est13", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "卡片 est13", type: "estimate", star: 4,
+      tags: ["est13"],
+      stem: "有来自总体 $U(\\theta,2\\theta)$ 的随机样本 $X_1,\\dots,X_n$，求 $\\theta$ 的矩估计和 MLE，并验证无偏性和相合性",
+      answer: "矩估计：$E(X)=\\frac{3\\theta}{2}$，令 $\\bar X=\\frac{3\\theta}{2}$，得 $\\hat\\theta_M=\\frac{2}{3}\\bar X$。$E(\\hat\\theta_M)=\\theta$ 无偏；由辛钦大数定律 $\\bar X\\overset{P}{\\to}\\frac{3\\theta}{2}$，故 $\\hat\\theta_M\\overset{P}{\\to}\\theta$ 相合。\nMLE：$L(\\theta)=\\frac{1}{\\theta^{n}}$，约束 $\\theta\\le X_{(1)}\\le X_{(n)}\\le 2\\theta$，即 $\\frac{X_{(n)}}{2}\\le\\theta\\le X_{(1)}$。$L$ 关于 $\\theta$ 递减，故 $\\hat\\theta_{MLE}=X_{(1)}$。$E(X_{(1)})=\\theta+\\frac{\\theta}{n+1}\\ne\\theta$ 有偏；$X_{(1)}\\overset{P}{\\to}\\theta$ 相合。",
+      src: { card: "est13", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est13\"]）来源原文：2019 复旦大学 432 统计学真题。PITFALL[est13] 无条目 → 省略 traps 字段。MNEM[est13] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est14", origin: 'card', year: 2021, school: "复旦大学 432 统计学真题 2021 年", no: "卡片 est14", type: "estimate", star: 4,
+      tags: ["est14"],
+      stem: "有来自总体 $N(\\mu,1)$ 的 $n$ 个随机样本 $X_1,\\dots,X_n$，证明：$\\bar{X}$ 是充分统计量",
+      answer: "样本联合密度\n$$f(x_1,\\dots,x_n;\\mu)=\\frac{1}{(2\\pi)^{n/2}}\\exp\\left\\{-\\frac{1}{2}\\sum_{i=1}^{n}(x_i-\\mu)^{2}\\right\\}$$\n分解为\n$$=\\underbrace{\\frac{1}{(2\\pi)^{n/2}}e^{-\\frac12\\sum(x_i-\\bar x)^{2}}}_{h(x)}\\cdot\\underbrace{e^{-\\frac{n}{2}(\\bar x-\\mu)^{2}}}_{g(\\bar x,\\,\\mu)}$$\n由因子分解定理，$\\bar{X}$ 是 $\\mu$ 的充分统计量（给定 $\\bar X$ 后样本的条件分布与 $\\mu$ 无关）。",
+      src: { card: "est14", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est14\"]）来源原文：2021 复旦大学 432 统计学真题。PITFALL[est14] 无条目 → 省略 traps 字段。MNEM[est14] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est15", origin: 'card', year: 2024, school: "复旦大学 432 统计学真题 2024 年", no: "卡片 est15", type: "estimate", star: 4,
+      tags: ["est15"],
+      stem: "设有来自 $U(-\\theta,\\theta)$ 的简单随机样本 $X_1,\\dots,X_n$（$\\theta>0$）。(1) 证明 $T=\\max\\{|X_1|,\\dots,|X_n|\\}$ 是 $\\theta$ 的充分统计量；(2) 求 $\\theta$ 的 MLE",
+      answer: "(1) 联合密度\n$$f(x_1,\\dots,x_n;\\theta)=\\frac{1}{(2\\theta)^{n}}\\prod_{i=1}^{n}I\\{|x_i|\\le\\theta\\}=\\underbrace{\\frac{1}{(2\\theta)^{n}}I\\{\\max|x_i|\\le\\theta\\}}_{g(T,\\theta)}\\cdot 1$$\n由因子分解定理，$T=\\max\\{|X_i|\\}$ 是 $\\theta$ 的充分统计量。\n(2) 似然 $\\frac{1}{(2\\theta)^n}$ 关于 $\\theta$ 递减且约束 $\\theta\\ge T$，故 $\\hat\\theta_{MLE}=T=\\max\\{|X_1|,\\dots,|X_n|\\}$。",
+      src: { card: "est15", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est15\"]）来源原文：2024 复旦大学 432 统计学真题。PITFALL[est15] 无条目 → 省略 traps 字段。MNEM[est15] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est16", origin: 'card', year: 2020, school: "复旦大学 861 概率论与数理统计真题 2020 年", no: "卡片 est16", type: "estimate", star: 5,
+      tags: ["est16"],
+      stem: "$X_1,\\dots,X_n$ 是来自参数为 $\\lambda$ 的指数分布总体的随机样本（密度 $f(x)=\\lambda e^{-\\lambda x},\\ x>0$）。(1) 求 $G=2\\lambda\\sum_{i=1}^{n}X_i$ 的分布；(2) 基于枢轴量 $G$ 给出 $\\lambda$ 的 $1-\\alpha$ 置信水平的置信区间",
+      answer: "(1) $\\lambda X_i\\sim Exp(1)$，且 $2\\lambda X_i\\sim\\chi^{2}(2)$，故 $G=2\\lambda\\sum X_i\\sim\\chi^{2}(2n)$。\n(2) $G$ 为枢轴量（分布与 $\\lambda$ 无关）。由 $\\chi^{2}_{1-\\alpha/2}(2n)\\le G\\le\\chi^{2}_{\\alpha/2}(2n)$ 反解 $\\lambda$：\n$$\\frac{\\chi^{2}_{1-\\alpha/2}(2n)}{2\\sum X_i}\\le\\lambda\\le\\frac{\\chi^{2}_{\\alpha/2}(2n)}{2\\sum X_i}$$\n即 $\\lambda$ 的 $1-\\alpha$ 置信区间为 $\\left(\\dfrac{\\chi^{2}_{1-\\alpha/2}(2n)}{2\\sum X_i},\\ \\dfrac{\\chi^{2}_{\\alpha/2}(2n)}{2\\sum X_i}\\right)$。",
+      src: { card: "est16", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est16\"]）来源原文：2020 复旦大学 861 概率论与数理统计真题。PITFALL[est16] 无条目 → 省略 traps 字段。MNEM[est16] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est17", origin: 'card', year: 2017, school: "上海交通大学 432 统计学真题 2017 年", no: "卡片 est17", type: "estimate", star: 4,
+      tags: ["est17"],
+      stem: "设总体 $X\\sim N(\\mu_1,\\sigma_0^{2})$、$Y\\sim N(\\mu_2,\\sigma_1^{2})$ 相互独立，$\\sigma_0^{2}$ 已知，样本量分别为 $n_1,n_2$。若 $\\sigma_0^{2}=\\sigma_1^{2}$，写出 $\\mu_1-\\mu_2$ 的 $1-\\alpha$ 置信区间",
+      answer: "两均值差且\\textbf{方差异已知} $\\Rightarrow$ 用 $z$ 型枢轴量\n$$Z=\\frac{\\bar X-\\bar Y-(\\mu_1-\\mu_2)}{\\sqrt{\\sigma_0^{2}/n_1+\\sigma_1^{2}/n_2}}\\sim N(0,1)$$\n故 $\\mu_1-\\mu_2$ 的 $1-\\alpha$ 置信区间为\n$$\\bar X-\\bar Y\\pm z_{\\alpha/2}\\sqrt{\\frac{\\sigma_0^{2}}{n_1}+\\frac{\\sigma_1^{2}}{n_2}}=\\bar X-\\bar Y\\pm z_{\\alpha/2}\\,\\sigma_0\\sqrt{\\frac1{n_1}+\\frac1{n_2}}$$",
+      src: { card: "est17", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est17\"]）来源原文：2017 上海交通大学 432 统计学真题。PITFALL[est17] 无条目 → 省略 traps 字段。MNEM[est17] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est18", origin: 'card', year: 2002, school: "北京大学光华 统计学真题 2002 年", no: "卡片 est18", type: "estimate", star: 4,
+      tags: ["est18"],
+      stem: "设 $X_1,\\dots,X_n$ 与 $Y_1,\\dots,Y_m$ 分别是来自正态总体 $N(\\mu_x,\\sigma_x^{2})$ 与 $N(\\mu_y,\\sigma_y^{2})$ 的随机样本，当 $\\sigma_x,\\sigma_y$ 未知时，给出 $\\mu_x-\\mu_y$ 的 95% 置信区间",
+      answer: "方差未知（视为相等）时用合并方差 $S_p^{2}=\\dfrac{(n-1)S_x^{2}+(m-1)S_y^{2}}{n+m-2}$，枢轴量\n$$T=\\frac{\\bar X-\\bar Y-(\\mu_x-\\mu_y)}{S_p\\sqrt{\\frac1n+\\frac1m}}\\sim t(n+m-2)$$\n故 $\\mu_x-\\mu_y$ 的 95% 置信区间为\n$$\\bar X-\\bar Y\\pm t_{0.025}(n+m-2)\\,S_p\\sqrt{\\frac1n+\\frac1m}$$",
+      src: { card: "est18", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est18\"][0]）来源原文：2002 北京大学光华 统计学真题。PITFALL[est18] 无条目 → 省略 traps 字段。MNEM[est18] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est18-2", origin: 'card', year: 2021, school: "上海交通大学 432 统计学真题 2021 年", no: "卡片 est18-2", type: "estimate", star: 4,
+      tags: ["est18"],
+      stem: "为估计两种方法组装产品所需时间的差异，分别给两种方法各随机安排 $12$ 名工人。方法一用时：$28.3,30.1,29.0,37.6,32.1,28.8,36.0,37.2,38.5,34.4,28.0,30.0$；方法二用时：$27.6,22.2,31.0,33.8,20.0,30.2,31.7,26.0,32.0,31.2,33.4,26.5$。假定两组均服从正态分布且方差相等。(1) 以 95% 置信水平建立两种方法平均时间之差的置信区间；(2) 两种方法有无显著差别",
+      answer: "$\\bar x=32.5$，$\\sum(x-\\bar x)^{2}=175.96$；$\\bar y=28.8$，$\\sum(y-\\bar y)^{2}=212.94$。合并方差\n$$S_p^{2}=\\frac{175.96+212.94}{12+12-2}=17.68,\\qquad S_p\\approx4.205$$\n均值差 $\\bar x-\\bar y=3.7$，$S_p\\sqrt{\\frac1{12}+\\frac1{12}}=4.205\\sqrt{\\frac16}\\approx1.72$，$df=22$，$t_{0.025}(22)=2.074$。\n(1) 95% 置信区间：$3.7\\pm2.074\\times1.72=(0.14,\\ 7.26)$。\n(2) $t=\\dfrac{3.7}{1.72}=2.156>t_{0.025}(22)=2.074$，拒绝 $H_0:\\mu_1=\\mu_2$，认为两种方法组装时间有显著差别（方法一更慢）。",
+      src: { card: "est18", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est18\"][1]）来源原文：2021 上海交通大学 432 统计学真题。PITFALL[est18] 无条目 → 省略 traps 字段。MNEM[est18] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est19", origin: 'card', year: 2017, school: "中国科学技术大学 432 统计学真题 2017 年", no: "卡片 est19", type: "estimate", star: 3,
+      tags: ["est19"],
+      stem: "$X_1,\\dots,X_6$ 是来自 $N(0,\\sigma_1^{2})$ 的样本，$Y_1,\\dots,Y_9$ 是来自 $N(0,\\sigma_2^{2})$ 的独立样本，$\\sigma_1^{2},\\sigma_2^{2}$ 未知。已知 $\\sum_{i=1}^{6}X_i^{2}/\\sum_{j=1}^{9}Y_j^{2}=1.94$。在 $\\alpha=0.05$ 下检验 $H_0:\\sigma_1^{2}\\le\\sigma_2^{2}$ 对 $H_1:\\sigma_1^{2}>\\sigma_2^{2}$",
+      answer: "两总体\\textbf{方差比}用 $F$：$\\dfrac{\\sum X_i^{2}}{\\sigma_1^{2}}\\sim\\chi^{2}(6)$、$\\dfrac{\\sum Y_j^{2}}{\\sigma_2^{2}}\\sim\\chi^{2}(9)$，当 $\\sigma_1^{2}=\\sigma_2^{2}$ 时\n$$F=\\frac{\\sum X_i^{2}/6}{\\sum Y_j^{2}/9}=\\frac{1.94\\times9}{6}=2.91\\sim F(6,9)$$\n拒绝域 $F>F_{0.05}(6,9)$。由 $F$ 分布表 $F_{0.05}(6,9)\\approx3.37$，因 $2.91<3.37$，不拒绝 $H_0$，无充分证据表明 $\\sigma_1^{2}>\\sigma_2^{2}$。",
+      src: { card: "est19", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est19\"]）来源原文：2017 中国科学技术大学 432 统计学真题。PITFALL[est19] 无条目 → 省略 traps 字段。MNEM[est19] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est20", origin: 'card', year: 2023, school: "复旦大学 432 统计学真题 2023 年", no: "卡片 est20", type: "estimate", star: 3,
+      tags: ["est20"],
+      stem: "设有来自 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$ 的 i.i.d. 样本 $X_1,\\dots,X_n$。(1) 求 $g(\\theta)=\\frac1\\theta$ 的 MLE；(2) 该 MLE 是否为有效估计？",
+      answer: "(1) 由 $\\hat\\theta_{MLE}=-\\frac{n}{\\sum\\ln X_i}$ 及 MLE 的不变性，$\\hat g_{MLE}=\\dfrac1{\\hat\\theta_{MLE}}=-\\dfrac{\\sum_{i=1}^{n}\\ln X_i}{n}$。\n(2) 计算费希尔信息量：$\\ln f=\\ln\\theta+(\\theta-1)\\ln x$，$\\frac{\\partial\\ln f}{\\partial\\theta}=\\frac1\\theta+\\ln x$，而 $-\\ln X\\sim Exp(\\theta)$ 故 $E(\\ln X)=-\\frac1\\theta$、$Var(\\ln X)=\\frac{1}{\\theta^{2}}$，所以\n$$I(\\theta)=E\\left[\\left(\\frac1\\theta+\\ln X\\right)^{2}\\right]=Var(\\ln X)=\\frac{1}{\\theta^{2}}$$\n$E(\\hat g)=\\frac1\\theta$ 无偏，$Var(\\hat g)=\\frac{1}{n}Var(-\\ln X)=\\frac{1}{n\\theta^{2}}=\\dfrac{1}{nI(\\theta)}$ 达到 C-R 下界，故为有效估计。",
+      src: { card: "est20", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est20\"]）来源原文：2023 复旦大学 432 统计学真题。PITFALL[est20] 无条目 → 省略 traps 字段。MNEM[est20] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est21", origin: 'card', year: 2021, school: "复旦大学 432 统计学真题 2021 年", no: "卡片 est21", type: "estimate", star: 3,
+      tags: ["est21"],
+      stem: "叙述 C-R 不等式",
+      answer: "在正则条件下（$\\frac{\\partial}{\\partial\\theta}\\ln f(x;\\theta)$ 存在、积分与求导可交换等），设 $X_1,\\dots,X_n$ 为来自 $f(x;\\theta)$ 的样本，$\\hat\\theta$ 为 $\\theta$ 的任一无偏估计，则\n$$D(\\hat\\theta)\\ge\\frac{1}{n\\,I(\\theta)},\\qquad I(\\theta)=E\\left[\\left(\\frac{\\partial}{\\partial\\theta}\\ln f(X;\\theta)\\right)^{2}\\right]=-E\\left[\\frac{\\partial^{2}}{\\partial\\theta^{2}}\\ln f(X;\\theta)\\right]$$\n达到下界的无偏估计称为有效估计。",
+      src: { card: "est21", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est21\"]）来源原文：2021 复旦大学 432 统计学真题。PITFALL[est21] 无条目 → 省略 traps 字段。MNEM[est21] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test01", origin: 'card', year: 2025, school: "复旦大学 432 统计学真题 2025 年", no: "卡片 test01", type: "testing", star: 5,
+      tags: ["test01"],
+      stem: "设随机变量 $X$ 的概率密度为 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$，$X_1,X_2$ 为来自该总体的样本。考虑假设检验问题 $H_0:\\theta=1$ 对 $H_1:\\theta=2$，否定域 $W=\\{(X_1,X_2)\\,|\\,X_1X_2>\\frac34\\}$，求第一、二类错误的概率",
+      answer: "第一类错误（弃真）：$\\theta=1$ 时 $X\\sim U(0,1)$，\n$$\\alpha=P\\left(X_1X_2>\\frac34\\right)=\\int_{3/4}^{1}\\int_{3/(4x_1)}^{1}dx_2\\,dx_1=\\frac14+\\frac34\\ln\\frac34\\approx0.034$$\n第二类错误（取伪）：$\\theta=2$ 时 $f(x)=2x$，\n$$\\beta=P\\left(X_1X_2\\le\\frac34\\right)=\\int_0^{3/4}2x_1\\,dx_1+\\int_{3/4}^{1}\\frac{9}{8x_1}\\,dx_1=\\frac{9}{16}-\\frac98\\ln\\frac34\\approx0.886$$\n（小概率原理：$\\alpha$ 很小，样本落入否定域即拒绝 $H_0$。）",
+      src: { card: "test01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test01\"][0]）来源原文：2025 复旦大学 432 统计学真题。PITFALL[test01] 无条目 → 省略 traps 字段。MNEM[test01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test01-2", origin: 'card', year: 2021, school: "复旦大学 432 统计学真题 2021 年", no: "卡片 test01-2", type: "testing", star: 5,
+      tags: ["test01"],
+      stem: "有来自总体 $P(\\theta)$（泊松）的 $n$ 个随机样本，考虑检验问题 $H_0:\\theta=2$ 对 $H_1:\\theta=3$，拒绝域 $W=\\{\\bar x\\ge2.8\\}$。(1) $n=5$ 时求两类错误的概率；(2) $n\\to\\infty$ 时两类错误将如何变化",
+      answer: "(1) 由泊松可加性 $\\sum_{i=1}^{n}X_i\\sim P(n\\theta)$。\n第一类错误（$\\theta=2$）：$\\alpha=P(\\bar X\\ge2.8\\,|\\,\\theta=2)=P(\\sum X_i\\ge14\\ |\\ \\sum X_i\\sim P(10))$；\n第二类错误（$\\theta=3$）：$\\beta=P(\\bar X<2.8\\,|\\,\\theta=3)=P(\\sum X_i\\le13\\ |\\ \\sum X_i\\sim P(15))$（用泊松分布表或递推求值，$\\bar X\\ge2.8\\iff\\sum X_i\\ge14$）。\n(2) 由大数定律 $\\bar X\\overset{P}{\\to}\\theta$，随 $n\\to\\infty$，$\\alpha\\to0$、$\\beta\\to0$（样本越大两类错误都趋于 0，二者的权衡随 $n$ 增大而消失）。",
+      src: { card: "test01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test01\"][1]）来源原文：2021 复旦大学 432 统计学真题。PITFALL[test01] 无条目 → 省略 traps 字段。MNEM[test01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test02", origin: 'card', year: 2016, school: "北京大学光华 431 统计真题 2016 年", no: "卡片 test02", type: "testing", star: 5,
+      tags: ["test02"],
+      stem: "收集同一公司两个市场 A、B 的日回报率 $(x_1,\\dots,x_n)$、$(y_1,\\dots,y_n)$。请描述如何检验 A 的回报率是否比 B 的高",
+      answer: "同一公司同日的 A、B 市场回报构成配对数据，令 $d_i=x_i-y_i$。提出假设\n$$H_0:\\mu_d\\le0\\quad\\text{对}\\quad H_1:\\mu_d>0$$\n（把“欲证”的 A 比 B 高放在备择假设）。用配对 $t$ 检验：\n$$t=\\frac{\\bar d}{S_d/\\sqrt n}\\sim t(n-1)$$\n当 $t>t_{\\alpha}(n-1)$ 时拒绝 $H_0$，认为 A 市场回报率显著高于 B。",
+      src: { card: "test02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test02\"][0]）来源原文：2016 北京大学光华 431 统计真题。PITFALL[test02] 无条目 → 省略 traps 字段。MNEM[test02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test02-2", origin: 'card', year: 2021, school: "中国科学技术大学 432 统计学真题 2021 年", no: "卡片 test02-2", type: "testing", star: 5,
+      tags: ["test02"],
+      stem: "甲化肥是某厂研制的畅销款，现研制出改进品种乙化肥，为探究乙化肥是否优于甲化肥。第一组选取 $13$ 块稻田施甲化肥，亩产均值 $12.3$、样本方差 $10$；第二组选取 $11$ 块稻田施乙化肥，亩产均值 $14.4$、样本方差 $7.8$。假设亩产服从正态分布，在 $\\alpha=0.1$ 下：(1) 能否认为两组方差相等？(2) 能否认为乙化肥的均值高于甲化肥？",
+      answer: "(1) 两总体方差比用 $F$：$H_0:\\sigma_1^{2}=\\sigma_2^{2}$，$F=\\dfrac{S_1^{2}}{S_2^{2}}=\\dfrac{10}{7.8}\\approx1.28\\sim F(12,10)$。取 $F_{0.05}(12,10)$ 与 $F_{0.95}(12,10)$ 为双侧临界值，$1.28$ 落在其中，不拒绝 $H_0$，可认为方差相等。\n(2) 方差相等（合并）作\\textbf{单侧} $t$ 检验：$H_0:\\mu_1\\ge\\mu_2$ 对 $H_1:\\mu_1<\\mu_2$（欲证“乙更高”）。合并方差\n$$S_p^{2}=\\frac{12\\times10+10\\times7.8}{13+11-2}=\\frac{198}{22}=9.0,\\qquad t=\\frac{\\bar x_1-\\bar x_2}{S_p\\sqrt{\\frac1{13}+\\frac1{11}}}=\\frac{12.3-14.4}{3.0\\times0.4097}\\approx-1.71$$\n$df=22$，$t_{0.1}(22)\\approx1.32$，因 $t=-1.71<-1.32$，拒绝 $H_0$，有理由认为乙化肥亩产均值高于甲。",
+      src: { card: "test02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test02\"][1]）来源原文：2021 中国科学技术大学 432 统计学真题。PITFALL[test02] 无条目 → 省略 traps 字段。MNEM[test02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test03", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "卡片 test03", type: "testing", star: 5,
+      tags: ["test03"],
+      stem: "设 $X_1,\\dots,X_n$ 来自 $N(\\mu,1)$，检验 $H_0:\\mu=1$ 对 $H_1:\\mu=2$，拒绝域 $W=\\{\\bar X>1.6\\}$。求：(1) 两类错误的概率 $\\alpha,\\beta$；(2) 要求 $\\beta\\le0.01$，求样本量 $n$ 的范围",
+      answer: "(1) $\\alpha=P(\\bar X>1.6\\,|\\,\\mu=1)=1-\\Phi\\left(\\frac{1.6-1}{1/\\sqrt n}\\right)=1-\\Phi(0.6\\sqrt n)$；\n$$\\beta=P(\\bar X\\le1.6\\,|\\,\\mu=2)=\\Phi\\left(\\frac{1.6-2}{1/\\sqrt n}\\right)=\\Phi(-0.4\\sqrt n)$$\n(2) 要求 $\\Phi(-0.4\\sqrt n)\\le0.01$，即 $0.4\\sqrt n\\ge z_{0.01}=2.326$，得 $n\\ge\\left(\\frac{2.326}{0.4}\\right)^2\\approx33.8$，故 $n\\ge34$。",
+      src: { card: "test03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test03\"]）来源原文：2019 复旦大学 432 统计学真题。PITFALL[test03] 无条目 → 省略 traps 字段。MNEM[test03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test04", origin: 'card', year: 2018, school: "复旦大学 861 概率论与数理统计真题 2018 年", no: "卡片 test04", type: "testing", star: 4,
+      tags: ["test04"],
+      stem: "设 $X_1,\\dots,X_n$ 是来自均匀分布 $U(0,\\theta)$ 的简单随机样本，检验 $H_0:\\theta\\le\\frac12$ 对 $H_1:\\theta>\\frac12$，拒绝域 $W=\\{x_{(n)}>c\\}$。(1) 求该检验的功效函数；(2) 找出最小的常数 $c$，使得该检验犯第一类错误的概率不超过 0.05",
+      answer: "(1) 功效函数 $\\rho(\\theta)=P_{\\theta}(x_{(n)}>c)=1-\\left(\\dfrac{\\min(c,\\theta)}{\\theta}\\right)^{n}$，即 $\\theta>c$ 时 $\\rho(\\theta)=1-(c/\\theta)^{n}$，$\\theta\\le c$ 时 $\\rho(\\theta)=0$。\n(2) 显著性水平 $\\alpha=\\sup_{\\theta\\le1/2}\\rho(\\theta)$。$\\rho(\\theta)$ 在 $\\theta\\in(c,\\frac12]$ 上关于 $\\theta$ 单调增，故最大值在 $\\theta=\\frac12$ 处取得：要求 $1-(2c)^{n}\\le0.05$，即 $c\\ge\\frac12\\cdot(0.95)^{1/n}$，最小的 $c=\\frac12(0.95)^{1/n}$。",
+      traps: "$\\alpha$ 是犯第一类错误的概率上限，与第二类错误 $\\beta$（及功效 $1-\\beta$）此消彼长；它与 $p$ 值、置信水平 $1-\\alpha$ 均不是一回事。",
+      src: { card: "test04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test04\"]）来源原文：2018 复旦大学 861 概率论与数理统计真题。traps 取自 PITFALL[test04]。MNEM[test04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test05", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 test05", type: "testing", star: 4,
+      tags: ["test05"],
+      stem: "某调查员想检验一种 coffee 包装是否少于 500g，那么他采取的假设检验应该为（  ）\\\\\nA. 双侧检验　B. 单侧且备择假设为小于 500g\\\\\nC. 单侧且备择假设为大于 500g　D. 单双侧检验均可",
+      answer: "选 B。调查员关心的是“是否少于 500g”，即怀疑 $\\mu<500$，故用单侧检验，把欲证结论放在备择假设：\n$$H_0:\\mu\\ge500\\quad\\text{对}\\quad H_1:\\mu<500$$\n（若用双侧 $H_1:\\mu\\ne500$ 则不够针对问题、功效较低。）",
+      src: { card: "test05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test05\"]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[test05] 无条目 → 省略 traps 字段。MNEM[test05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test06", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 test06", type: "testing", star: 5,
+      tags: ["test06"],
+      stem: "某产品尺寸 $X\\sim N(4.55,0.108^2)$，抽查 $n=9$ 件得平均尺寸 $\\bar x=4.84$。若方差未改变，在 $\\alpha=0.05$ 下检验 $H_0:\\mu=4.55$ 对 $H_1:\\mu\\ne4.55$（$z_{0.025}=1.96$）",
+      answer: "$Z=\\dfrac{\\bar x-\\mu_0}{\\sigma/\\sqrt n}=\\dfrac{4.84-4.55}{0.108/3}=\\dfrac{0.29}{0.036}\\approx8.06$。因 $|Z|=8.06>z_{0.025}=1.96$，落入拒绝域，拒绝 $H_0$，认为现在生产的产品平均尺寸已显著异于 4.55。",
+      altAnswer: "💡巧解（$p$ 值法）：双侧 $p$ 值 $=2P(Z>|8.06|)=2[1-\\Phi(8.06)]\\approx0$。因 $p\\ll\\alpha=0.05$，拒绝 $H_0$，结论与临界值法一致。",
+      traps: "区分单双侧：双侧拒绝域 $|Z|>z_{\\alpha/2}$，单侧用 $z_\\alpha$ 且方向要与 $H_1$ 一致；$p$ 值与显著性水平 $\\alpha$ 别混淆。",
+      src: { card: "test06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test06\"]）来源原文：2023 上海财经大学 432 统计学真题。traps 取自 PITFALL[test06]。MNEM[test06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test07", origin: 'card', year: 2024, school: "北大光华 431 统计真题 2024 年", no: "卡片 test07", type: "testing", star: 5,
+      tags: ["test07"],
+      stem: "某培训对 10 位分析师预测误差（培训前－培训后）的影响，差值 $d_i$ 为 $0.5,0.3,0.3,0.4,0.2,0.3,0.2,0.4,0.4,0.4$。在 $\\alpha=0.05$ 下用配对 $t$ 检验判断培训是否显著降低预测误差（$t_{0.025}(9)=2.262$）",
+      answer: "$\\bar d=0.34$，$S_d^2=\\dfrac{\\sum d_i^2-(\\sum d_i)^2/n}{n-1}=\\dfrac{1.24-1.156}{9}=0.00933$（$S_d\\approx0.0966$）。\n$$t=\\frac{\\bar d}{S_d/\\sqrt n}=\\frac{0.34}{0.0966/\\sqrt{10}}\\approx11.13$$\n因 $|t|=11.13>t_{0.025}(9)=2.262$，拒绝 $H_0$，培训显著降低了预测误差。",
+      altAnswer: "💡巧解（置信区间法）：$d$ 的 95% 置信区间为\n$$\\bar d\\pm t_{0.025}(9)\\frac{S_d}{\\sqrt n}=0.34\\pm2.262\\times\\frac{0.0966}{\\sqrt{10}}\\approx(0.271,\\ 0.409)$$\n区间不含 $0$，故在 $\\alpha=0.05$ 下拒绝 $H_0$，与 $t$ 检验结论一致。",
+      src: { card: "test07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test07\"]）来源原文：2024 北大光华 431 统计真题。PITFALL[test07] 无条目 → 省略 traps 字段。MNEM[test07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test08", origin: 'card', year: 2024, school: "中国科学技术大学 432 统计学真题 2024 年", no: "卡片 test08", type: "testing", star: 4,
+      tags: ["test08"],
+      stem: "经调查，健康成年男子脉搏服从正态分布 $N(72,11^{2})$，现测得 16 位慢性铅中毒患者脉搏平均为 67、标准差为 7。在 0.05 置信水平下检验与正常男子脉搏是否有差异（对均值与方差均作检验）。（$t_{0.025}(15)=2.131$，$\\chi^{2}_{0.975}(15)=6.262$，$\\chi^{2}_{0.025}(15)=27.488$）",
+      answer: "先检验方差 $H_0:\\sigma=11$ 对 $H_1:\\sigma\\ne11$：\n$$\\chi^{2}=\\frac{(n-1)s^{2}}{\\sigma_0^{2}}=\\frac{15\\times7^{2}}{11^{2}}=\\frac{735}{121}\\approx6.07$$\n拒绝域 $\\chi^{2}>27.488$ 或 $\\chi^{2}<6.262$。因 $6.07<6.262$，拒绝 $H_0$，认为方差有差异。\n再检验均值（方差未知用 $t$ 检验）$H_0:\\mu=72$ 对 $H_1:\\mu\\ne72$：\n$$t=\\frac{\\sqrt n(\\bar x-\\mu_0)}{s}=\\frac{4(67-72)}{7}\\approx-2.857$$\n$|t|=2.857>t_{0.025}(15)=2.131$，拒绝 $H_0$，认为脉搏均值也有差异。",
+      src: { card: "test08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test08\"]）来源原文：2024 中国科学技术大学 432 统计学真题。PITFALL[test08] 无条目 → 省略 traps 字段。MNEM[test08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test09", origin: 'card', year: 2001, school: "北京大学光华 统计学真题 2001 年", no: "卡片 test09", type: "testing", star: 4,
+      tags: ["test09"],
+      stem: "对单个总体均值的 $t$ 检验，软件给出 $p$ 值 0.074。(1) 解释 $p$ 值的含义；(2) 若样本均值 $\\bar x>\\mu_0$，如何判断总体均值是否也大于 $\\mu_0$？能得出什么结论？",
+      answer: "(1) 0.074 表示在 $H_0:\\mu=\\mu_0$ 成立时，得到当前或更极端（双侧）结果的概率。\n(2) 判断 $\\mu>\\mu_0$ 需用单侧检验：由 $\\bar x>\\mu_0$ 知 $t>0$，单侧 $p$ 值 $=\\dfrac{0.074}{2}=0.037$。在 $\\alpha=0.05$ 下 $0.037<0.05$，拒绝 $H_0$，有充分理由认为 $\\mu>\\mu_0$。",
+      traps: "$p$ 值是 $H_{0}$ 为真时得到当前或更极端结果的概率，\\textbf{不是} $H_{0}$ 为真的概率；单侧检验的 $p$ 值通常是双侧 $p$ 值之半，且与“发生的概率”无关。",
+      src: { card: "test09", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test09\"]）来源原文：2001 北京大学光华 统计学真题。traps 取自 PITFALL[test09]。MNEM[test09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test10", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 test10", type: "testing", star: 4,
+      tags: ["test10"],
+      stem: "设 $X\\sim N(\\mu,1)$，考虑假设检验问题 $H_0:\\mu=1$ 对 $H_1:\\mu=2$，拒绝域为 $W=\\{\\bar x>c\\}$，则下列说法不正确的是（  ）\\\\\nA. 功效函数随 $\\mu$ 单调增　B. 功效函数随 $c$ 单调增\\\\\nC. 第一类错误的概率等于 $1-\\Phi(\\sqrt n(c-1))$　D. 第二类错误的概率等于 $\\Phi(\\sqrt n(c-2))$",
+      answer: "选 B。功效函数 $\\rho(\\mu)=P_{\\mu}(\\bar X>c)=1-\\Phi(\\sqrt n(c-\\mu))$：随 $\\mu$ 增大而增大（A 对）；随 $c$ 增大而\\textbf{减小}（B 错）。\n$\\alpha=1-\\Phi(\\sqrt n(c-1))$（C 对）；$\\beta=\\Phi(\\sqrt n(c-2))$（D 对）。",
+      src: { card: "test10", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test10\"]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[test10] 无条目 → 省略 traps 字段。MNEM[test10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test11", origin: 'card', year: 2023, school: "北京大学光华 431 统计真题 2023 年", no: "卡片 test11", type: "testing", star: 4,
+      tags: ["test11"],
+      stem: "设两组独立样本 $x_1,\\dots,x_n\\sim N(\\mu_1,\\sigma_1^{2})$、$y_1,\\dots,y_m\\sim N(\\mu_2,\\sigma_2^{2})$，$\\sigma_1,\\sigma_2$ 已知，记 $\\theta=\\mu_1-\\mu_2$。求：(1) $\\theta$ 的 MLE；(2) 总样本量 $N=n+m$ 固定时使 $\\hat\\theta$ 均方误差最小的 $n,m$；(3) 检验 $H_0:\\theta=0$ 对 $H_1:\\theta\\ne0$ 在水平 $\\alpha$ 下的拒绝域",
+      answer: "(1) $\\hat\\theta=\\bar x-\\bar y$，其方差（均方误差）为 $\\dfrac{\\sigma_1^{2}}{n}+\\dfrac{\\sigma_2^{2}}{m}$。\n(2) 令 $m=N-n$，对 $n$ 求导并令 0：$\\dfrac{\\sigma_1^{2}}{n^{2}}=\\dfrac{\\sigma_2^{2}}{(N-n)^{2}}\\Rightarrow\\dfrac{n}{m}=\\dfrac{\\sigma_1}{\\sigma_2}$（按标准差之比分配样本，即内曼分配）。\n(3) 统计量 $Z=\\dfrac{\\bar x-\\bar y}{\\sqrt{\\sigma_1^{2}/n+\\sigma_2^{2}/m}}\\sim N(0,1)$，拒绝域 $|Z|>z_{\\alpha/2}$。",
+      src: { card: "test11", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test11\"]）来源原文：2023 北京大学光华 431 统计真题。PITFALL[test11] 无条目 → 省略 traps 字段。MNEM[test11] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test12", origin: 'card', year: 2017, school: "北大光华 431 统计真题 2017 年", no: "卡片 test12", type: "testing", star: 5,
+      tags: ["test12"],
+      stem: "公司甲同时在 A 股、H 股上市，$X_i,Y_i$ 为两市场过去一年每天的回报观测。(1) 给出两种检验方法检验两市场回报均值是否相等；(2) 讨论两种检验的假设条件，哪种更合理？",
+      answer: "(1) 方法一（配对 $t$ 检验）：令 $d_i=X_i-Y_i$，$H_0:\\mu_d=0$，$$t=\\frac{\\bar d}{S_d/\\sqrt n}\\sim t(n-1)$$方法二（两独立样本 $t$ 检验）：视 $X,Y$ 为独立样本且方差相等，$$t=\\frac{\\bar X-\\bar Y}{S_p\\sqrt{1/n+1/n}}\\sim t(2n-2)$$\n(2) 配对检验需两市场数据成对且 $d_i$ 独立正态；两样本检验需两总体独立、方差齐。同一公司同一日的两市场回报受共同市场因素影响，配对检验利用了成对结构、消除了共同因素干扰，功效更高，更合理。",
+      traps: "配对样本与两独立样本检验别混用：配对用差值的 $t$ 检验（$d_i=X_i-Y_i$），两独立等方差才合并方差 $S_p^2$。",
+      src: { card: "test12", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test12\"]）来源原文：2017 北大光华 431 统计真题。traps 取自 PITFALL[test12]。MNEM[test12] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test13", origin: 'card', year: 2010, school: "北大光华金融硕士统计真题 2010 年", no: "卡片 test13", type: "testing", star: 4,
+      tags: ["test13"],
+      stem: "甲乙两台机床加工同种零件，直径分别服从 $N(\\mu_1,\\sigma_1^{2})$ 与 $N(\\mu_2,\\sigma_2^{2})$。各抽样本得 $n_1=10,\\ s_1^{2}=0.96$；$n_2=8,\\ s_2^{2}=0.30$。在 $\\alpha=0.05$ 下检验 $H_0:\\sigma_1^{2}=\\sigma_2^{2}$ 对 $H_1:\\sigma_1^{2}\\ne\\sigma_2^{2}$（$F_{0.025}(9,7)=4.82$）",
+      answer: "统计量 $F=\\dfrac{s_1^{2}}{s_2^{2}}=\\dfrac{0.96}{0.30}=3.2\\sim F(9,7)$。拒绝域 $F>F_{0.025}(9,7)=4.82$ 或 $F<F_{0.975}(9,7)$。因 $3.2<4.82$，不拒绝 $H_0$，无充分证据表明两总体方差不等。",
+      src: { card: "test13", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test13\"][0]）来源原文：2010 年北大光华金融硕士统计真题。PITFALL[test13] 无条目 → 省略 traps 字段。MNEM[test13] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test13-2", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "卡片 test13-2", type: "testing", star: 4,
+      tags: ["test13"],
+      stem: "根据沪深 300 指数 2020 年和 2023 年的日指数收益率数据（$n_1=244,\\ s_1=22.3\\%$；$n_2=242,\\ s_2=10.1\\%$），说明如何检验这两年的日指数收益率的标准差是否存在显著差异",
+      answer: "两正态总体方差比用 $F$ 检验：$H_0:\\sigma_1^{2}=\\sigma_2^{2}$ 对 $H_1:\\sigma_1^{2}\\ne\\sigma_2^{2}$，统计量\n$$F=\\frac{S_1^{2}}{S_2^{2}}=\\left(\\frac{0.223}{0.101}\\right)^{2}\\approx4.87\\sim F(n_1-1,\\ n_2-1)=F(243,241)$$\n当 $F>F_{\\alpha/2}(243,241)$ 或 $F<F_{1-\\alpha/2}(243,241)$ 时拒绝 $H_0$，认为两年日收益率的标准差存在显著差异。",
+      src: { card: "test13", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test13\"][1]）来源原文：2025 北大光华 431 统计真题。PITFALL[test13] 无条目 → 省略 traps 字段。MNEM[test13] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test14", origin: 'card', year: 2010, school: "北大光华金融硕士统计真题 2010 年", no: "卡片 test14", type: "chi", star: 4,
+      tags: ["test14"],
+      stem: "用 $\\chi^{2}$ 检验判断两个分类变量是否独立（列联表独立性检验）。对 $r\\times c$ 列联表写出检验统计量、自由度与拒绝域",
+      answer: "统计量 $\\chi^{2}=\\sum_{i=1}^{r}\\sum_{j=1}^{c}\\dfrac{(n_{ij}-\\hat e_{ij})^{2}}{\\hat e_{ij}}$，期望频数 $\\hat e_{ij}=\\dfrac{n_{i\\cdot}\\,n_{\\cdot j}}{n}$。自由度 $(r-1)(c-1)$。当 $\\chi^{2}>\\chi^{2}_{\\alpha}((r-1)(c-1))$ 时拒绝独立性假设 $H_0$。",
+      src: { card: "test14", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test14\"][0]）来源原文：2010 年北大光华金融硕士统计真题。PITFALL[test14] 无条目 → 省略 traps 字段。MNEM[test14] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test14-2", origin: 'card', year: 2019, school: "北大光华 431 统计真题 2019 年", no: "卡片 test14-2", type: "chi", star: 4,
+      tags: ["test14"],
+      stem: "某公司调查 210 名员工对奖励制度的满意度，按性别整理：男 30 满意、70 不满（共 100），女 45 满意、65 不满（共 110）。在 $\\alpha=0.05$ 下分析男女看法是否有显著差异（$\\chi^2_{0.05}(1)=3.84$）",
+      answer: "期望频数：男满意 $\\dfrac{100\\times75}{210}=35.71$、男不满 $64.29$、女满意 $39.29$、女不满 $70.71$。\n$$\\chi^2=\\frac{(30-35.71)^2}{35.71}+\\frac{(70-64.29)^2}{64.29}+\\frac{(45-39.29)^2}{39.29}+\\frac{(65-70.71)^2}{70.71}\\approx2.71$$\n$2.71<\\chi^2_{0.05}(1)=3.84$，不拒绝 $H_0$，无充分证据表明男女对奖励制度的看法存在显著差异。",
+      src: { card: "test14", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test14\"][1]）来源原文：2019 北大光华 431 统计真题。PITFALL[test14] 无条目 → 省略 traps 字段。MNEM[test14] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test15", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "卡片 test15", type: "testing", star: 3,
+      tags: ["test15"],
+      stem: "关于假设检验中的概念，以下说法正确的是（  ）\\\\\nA. 第一类错误是指 $H_0$ 为假时接受备择假设\\\\\nB. 第二类错误是指 $H_1$ 为假时接受原假设\\\\\nC. 检验功效是指 $H_0$ 为假时，假设检验拒绝原假设的概率\\\\\nD. 检验功效是指 $H_1$ 为假时，假设检验接受原假设的概率",
+      answer: "选 C。检验功效（势）$=1-\\beta=P(\\text{拒绝 }H_0\\,|\\,H_0\\text{ 假})$，即 $H_0$ 为假（$H_1$ 为真）时正确拒绝原假设的概率。\nA、B 对两类错误的表述混乱：第一类错误是 $H_0$ 为真时拒绝 $H_0$（弃真），第二类错误是 $H_0$ 为假时接受 $H_0$（取伪）。",
+      src: { card: "test15", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test15\"][0]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[test15] 无条目 → 省略 traps 字段。MNEM[test15] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test15-2", origin: 'card', year: 2016, school: "中国科学技术大学 432 统计学真题 2016 年", no: "卡片 test15-2", type: "testing", star: 3,
+      tags: ["test15"],
+      stem: "设总体 $X$ 的概率密度为 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$。又设 $X_1,X_2$ 是取自该总体的简单样本，考虑假设检验 $H_0:\\theta=1$ 对 $H_1:\\theta=2$，其否定域为 $\\{(X_1,X_2):3X_1\\le4X_2\\}$。求此检验的功效函数及两类错误的概率",
+      answer: "功效函数 $\\rho(\\theta)=P_{\\theta}(3X_1\\le4X_2)$。\n$H_0$（$\\theta=1$，$X\\sim U(0,1)$）：$\\alpha=\\rho(1)=\\displaystyle\\int_0^{3/4}\\frac{4x_2}{3}\\,dx_2+\\int_{3/4}^{1}1\\,dx_2=\\frac{5}{8}$。\n$H_1$（$\\theta=2$，$f(x)=2x$）：$\\rho(2)=4\\displaystyle\\int_0^{3/4}\\frac{(4x_2/3)^{2}}{2}\\,x_2\\,dx_2+4\\int_{3/4}^{1}\\frac{x_2}{2}\\,dx_2=\\frac{23}{32}$，故 $\\beta=1-\\frac{23}{32}=\\frac{9}{32}$。\n即 $\\rho(1)=\\frac58$、$\\rho(2)=\\frac{23}{32}$；第一类错误 $\\alpha=\\frac58$，第二类错误 $\\beta=\\frac{9}{32}$。",
+      src: { card: "test15", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test15\"][1]）来源原文：2016 中国科学技术大学 432 统计学真题。PITFALL[test15] 无条目 → 省略 traps 字段。MNEM[test15] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-test16", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "卡片 test16", type: "testing", star: 3,
+      tags: ["test16"],
+      stem: "根据沪深 300 指数 2020 年与 2023 年的年化日指数收益率（2020：$n=244$，均值 $26.5\\%$，标准差 $22.3\\%$，偏度 $-0.84$；2023：$n=242$，均值 $-11.2\\%$，标准差 $10.1\\%$，偏度 $0.34$），简要说明这两年日指数收益率分布的差异",
+      answer: "分布形态：2020 年偏度为 $-0.84$（明显左偏、厚左尾），2023 年偏度为 $0.34$（略右偏、接近对称）。由偏度系数（正态分布的偏度为 0）可初步判断两年收益率均不严格服从正态分布，且 2020 年偏离对称性更远。\n数值特征：2020 年均值（$26.5\\%$）与标准差（$22.3\\%$）均大于 2023 年（$-11.2\\%$、$10.1\\%$），说明 2020 年收益率整体更高但波动也更大。（可进一步用偏度-峰度检验或 Q-Q 图作正态性检验。）",
+      src: { card: "test16", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test16\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[test16] 无条目 → 省略 traps 字段。MNEM[test16] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-reg01", origin: 'card', year: 2018, school: "上海交通大学 432 统计学真题 2018 年", no: "卡片 reg01", type: "regress", star: 4,
+      tags: ["reg01"],
+      stem: "为研究三种饲料配方的增肥效果，各喂养 10 只母雏鸡并于 60 天后观测重量（三种饲料各 10 个数据，共 30 个观测）。请对本例进行方差分析，在 $\\alpha=0.05$ 的前提下给出你的结论。（$F_{0.95}(2,27)=3.35$）",
+      answer: "单因素方差分析：$H_0:\\mu_1=\\mu_2=\\mu_3$（三种饲料增肥效果无差异）对 $H_1$：不全相等。平方和分解 $SST=SSA+SSE$，计算得 $SSA=11675$、$SSE=5568$、$df_A=2$、$df_E=27$：\n$$F=\\frac{SSA/2}{SSE/27}=\\frac{5837.5}{206.2}\\approx28.3$$\n因 $F=28.3>F_{0.95}(2,27)=3.35$，拒绝 $H_0$，认为三种饲料配方对鸡增肥的效果存在显著差异。",
+      src: { card: "reg01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"reg01\"]）来源原文：2018 上海交通大学 432 统计学真题。PITFALL[reg01] 无条目 → 省略 traps 字段。MNEM[reg01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-reg02", origin: 'card', year: 2023, school: "中山大学 432 统计学真题 2023 年", no: "卡片 reg02", type: "regress", star: 4,
+      tags: ["reg02"],
+      stem: "现有三组数据进行方差分析，样本量均为 $n$，试用每一组的样本方差 $S_i^{2}\\ (i=1,2,3)$、组内均值 $\\bar Y_i$ 与总均值 $\\bar{\\bar Y}$ 给出组内均方 (MSW) 和组间均方 (MSB) 的表达式",
+      answer: "组内平方和 $SSW=\\sum_{i=1}^{3}\\sum_{j=1}^{n}(Y_{ij}-\\bar Y_i)^{2}=(n-1)\\sum_{i=1}^{3}S_i^{2}$，自由度 $df_W=3n-3$，故\n$$MSW=\\frac{SSW}{3n-3}=\\frac{(n-1)\\sum S_i^{2}}{3(n-1)}=\\frac{S_1^{2}+S_2^{2}+S_3^{2}}{3}$$\n组间平方和 $SSB=n\\sum_{i=1}^{3}(\\bar Y_i-\\bar{\\bar Y})^{2}$，自由度 $df_B=3-1=2$，故\n$$MSB=\\frac{n\\sum_{i=1}^{3}(\\bar Y_i-\\bar{\\bar Y})^{2}}{2}$$\n（平方和分解 $SST=SSB+SSW$。）",
+      src: { card: "reg02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"reg02\"]）来源原文：2023 中山大学 432 统计学真题。PITFALL[reg02] 无条目 → 省略 traps 字段。MNEM[reg02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-reg03", origin: 'card', year: 2011, school: "北大光华金融硕士统计真题 2011 年", no: "卡片 reg03", type: "regress", star: 4,
+      tags: ["reg03"],
+      stem: "单因素方差分析中 $k$ 个水平的样本量分别为 $n_1,\\dots,n_k$（共 $n$ 个观测）。写出组间、组内平方和及检验 $H_0:\\mu_1=\\cdots=\\mu_k$ 的 $F$ 统计量",
+      answer: "$SSA=\\sum_{j}n_j(\\bar x_j-\\bar x)^{2}$（组间），$SSE=\\sum_{j}\\sum_{i}(x_{ij}-\\bar x_j)^{2}$（组内），$SST=SSA+SSE$。\n$$F=\\frac{SSA/(k-1)}{SSE/(n-k)}\\sim F(k-1,\\ n-k)$$\n当 $F$ 显著大时拒绝 $H_0$，认为各总体均值不全相等。",
+      src: { card: "reg03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"reg03\"]）来源原文：2011 年北大光华金融硕士统计真题。PITFALL[reg03] 无条目 → 省略 traps 字段。MNEM[reg03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-reg04", origin: 'card', year: 2011, school: "北大光华金融硕士统计真题 2011 年", no: "卡片 reg04", type: "regress", star: 4,
+      tags: ["reg04"],
+      stem: "一元线性回归 $y_i=\\alpha+\\beta x_i+\\varepsilon_i$ 中，若存在异方差且 $\\mathrm{Var}(\\varepsilon_i)=\\sigma^{2}x_i$（比例形式、已知）。说明如何用加权最小二乘（GLS）估计 $\\beta$",
+      answer: "取权重 $w_i=1/x_i$，最小化 $\\sum w_i(y_i-\\alpha-\\beta x_i)^{2}$，即对变换模型\n$$\\frac{y_i}{\\sqrt{x_i}}=\\alpha\\frac{1}{\\sqrt{x_i}}+\\beta\\sqrt{x_i}+\\frac{\\varepsilon_i}{\\sqrt{x_i}}$$\n做 OLS，此时 $\\mathrm{Var}(\\varepsilon_i/\\sqrt{x_i})=\\sigma^{2}$ 满足同方差。方差形式未知时可用怀特（White）检验诊断异方差。",
+      src: { card: "reg04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"reg04\"]）来源原文：2011 年北大光华金融硕士统计真题。PITFALL[reg04] 无条目 → 省略 traps 字段。MNEM[reg04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-reg05", origin: 'card', year: 2010, school: "北大光华金融硕士统计真题 2010 年", no: "卡片 reg05", type: "regress", star: 5,
+      tags: ["reg05"],
+      stem: "对一元线性回归 $y_i=\\alpha+\\beta x_i+\\varepsilon_i\\ (\\varepsilon_i\\overset{iid}{\\sim}N(0,\\sigma^{2}))$，用最小二乘法求 $\\alpha,\\beta$ 的估计，并给出 $\\hat\\beta$ 的期望与方差",
+      answer: "最小化 $\\sum(y_i-\\alpha-\\beta x_i)^{2}$，令偏导为 0 得\n$$\\hat{\\beta}=\\frac{\\sum(x_i-\\bar{x})(y_i-\\bar{y})}{\\sum(x_i-\\bar{x})^{2}},\\qquad \\hat{\\alpha}=\\bar{y}-\\hat{\\beta}\\bar{x}$$\n$\\hat\\beta$ 为 $y_i$ 的线性组合且 $\\sum(x_i-\\bar{x})=0$，故 $E(\\hat\\beta)=\\beta$，$D(\\hat\\beta)=\\dfrac{\\sigma^{2}}{\\sum(x_i-\\bar{x})^{2}}$。",
+      src: { card: "reg05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"reg05\"]）来源原文：2010 年北大光华金融硕士统计真题。PITFALL[reg05] 无条目 → 省略 traps 字段。MNEM[reg05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-reg06", origin: 'card', year: 2017, school: "北大光华 431 统计真题 2017 年", no: "卡片 reg06", type: "regress", star: 4,
+      tags: ["reg06"],
+      stem: "研究者用 50 家公司数据估计 CEO 年薪回归模型 $y=\\beta_0+\\beta_1x_1+\\cdots+\\beta_5x_5+\\varepsilon$，得 $\\hat\\beta_1=0.3$，相应 $t$ 统计量为 1.5。若进一步随机收集到更多数据共 200 家并重新估计，请判断系数的估计值是否会改变、$t$ 统计量大概会是多少、模型的调整 $R^{2}$ 是否会改变，若改变给出变化关系",
+      answer: "估计值会改变：新样本对应新的最小二乘解，$\\hat\\beta$ 一般不同。\n$t$ 统计量：$t=\\frac{\\hat\\beta}{s(\\hat\\beta)}$，而 $s(\\hat\\beta)\\approx\\frac{\\sigma}{\\sqrt{\\sum(x_i-\\bar x)^2}}\\propto\\frac1{\\sqrt n}$（新样本与旧样本分布相似时），样本量由 50 增至 200（约 4 倍），$t$ 统计量约增大 $\\sqrt4=2$ 倍，即约 $t\\approx3$。\n调整 $R^{2}$：$\\bar R^{2}=1-\\frac{SSE/(n-k-1)}{SST/(n-1)}$，样本量增大主要减小估计的方差而非改变拟合优度，$\\bar R^{2}$ 变化不大（新增数据同分布时趋于稳定）。",
+      src: { card: "reg06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"reg06\"]）来源原文：2017 北大光华 431 统计真题。PITFALL[reg06] 无条目 → 省略 traps 字段。MNEM[reg06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-reg07", origin: 'card', year: 2018, school: "北大光华 431 统计真题 2018 年", no: "卡片 reg07", type: "regress", star: 4,
+      tags: ["reg07"],
+      stem: "设模型 $y_i=b x_i+\\varepsilon_i$（无截距），$\\varepsilon_i\\overset{iid}{\\sim}N(0,\\sigma^2)$（$\\sigma^2$ 未知）。求：(1) $b$ 的最小二乘估计 $\\hat b$；(2) $\\hat b$ 的期望、方差与分布；(3) 检验 $H_0:b=0$ 对 $H_1:b>0$ 的检验法",
+      answer: "(1) 最小化 $\\sum(y_i-bx_i)^2$ 得 $\\hat b=\\dfrac{\\sum x_i y_i}{\\sum x_i^2}$。\n(2) $E(\\hat b)=b$，$D(\\hat b)=\\dfrac{\\sigma^2}{\\sum x_i^2}$，$\\hat b\\sim N\\left(b,\\dfrac{\\sigma^2}{\\sum x_i^2}\\right)$。\n(3) 用 $t$ 检验：$t=\\dfrac{\\hat b}{s/\\sqrt{\\sum x_i^2}}\\sim t(n-1)$，其中 $s^2=\\dfrac{\\sum(y_i-\\hat b x_i)^2}{n-1}$；当 $t>t_{\\alpha}(n-1)$ 时拒绝 $H_0$。",
+      src: { card: "reg07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"reg07\"]）来源原文：2018 北大光华 431 统计真题。PITFALL[reg07] 无条目 → 省略 traps 字段。MNEM[reg07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-reg08", origin: 'card', year: 2016, school: "北大光华 431 统计真题 2016 年", no: "卡片 reg08", type: "regress", star: 4,
+      tags: ["reg08"],
+      stem: "对回归模型 $grade=\\alpha_0+\\alpha_1 CGPA+\\alpha_2 Skipped+\\varepsilon$，样本量 $n=141$，$R^2=0.234$。在显著性水平 1% 下检验 $H_0:\\alpha_1=\\alpha_2=0$（即 CGPA 与 Skipped 同时无影响）",
+      answer: "整体显著性用 $F$ 检验（$k=2$ 个解释变量）：\n$$F=\\frac{R^2/k}{(1-R^2)/(n-k-1)}=\\frac{0.234/2}{0.766/138}\\approx21.1\\sim F(2,138)$$\n因 $F\\approx21.1>F_{0.01}(2,138)\\approx4.79$，拒绝 $H_0$，认为 CGPA 与 Skipped 对 grade 的影响不全为零（单个系数在 1% 下可能不显著，但联合检验显著）。",
+      src: { card: "reg08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"reg08\"]）来源原文：2016 北大光华 431 统计真题。PITFALL[reg08] 无条目 → 省略 traps 字段。MNEM[reg08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-reg09", origin: 'card', year: 2022, school: "北京大学叉院 849 统计学真题 2022 年", no: "卡片 reg09", type: "regress", star: 3,
+      tags: ["reg09"],
+      stem: "对于线性回归模型 $y_i=\\beta x_i+\\varepsilon_i$，其中 $\\varepsilon_i$ 独立同服从 $N(0,\\sigma^{2})$。现有 $n$ 个观测数据。(1) 求 $\\beta$ 的最小二乘估计 $\\hat\\beta$ 及 $\\sigma^{2}$ 的无偏估计；(2) 求 $\\beta$ 的 $1-\\alpha$ 置信区间；(3) 给定 $x_0$，求 $y_0$ 的预测区间",
+      answer: "(1) $\\hat\\beta=\\dfrac{\\sum x_i y_i}{\\sum x_i^{2}}$，$E(\\hat\\beta)=\\beta$，$Var(\\hat\\beta)=\\dfrac{\\sigma^{2}}{\\sum x_i^{2}}$；$\\sigma^{2}$ 的无偏估计 $\\hat\\sigma^{2}=\\dfrac{1}{n-1}\\sum_{i}(y_i-\\hat\\beta x_i)^{2}$。\n(2) $\\dfrac{\\hat\\beta-\\beta}{\\hat\\sigma/\\sqrt{\\sum x_i^{2}}}\\sim t(n-1)$，故 $\\beta$ 的 $1-\\alpha$ 置信区间为 $\\hat\\beta\\pm t_{\\alpha/2}(n-1)\\,\\hat\\sigma/\\sqrt{\\sum x_i^{2}}$。\n(3) 对 $x_0$，预测值 $\\hat y_0=\\hat\\beta x_0$，$y_0-\\hat y_0\\sim N(0,\\sigma^{2}(1+\\frac{x_0^{2}}{\\sum x_i^{2}}))$，故 $y_0$ 的 $1-\\alpha$ \\textbf{预测}区间为\n$$\\hat y_0\\pm t_{\\alpha/2}(n-1)\\,\\hat\\sigma\\sqrt{1+\\frac{x_0^{2}}{\\sum x_i^{2}}}$$（比置信区间多出“$+1$”的个体随机项，故更宽。）",
+      src: { card: "reg09", note: "卡片例题（data/stats.js 的 EXAMPLE[\"reg09\"]）来源原文：2022 北京大学叉院 849 统计学真题。PITFALL[reg09] 无条目 → 省略 traps 字段。MNEM[reg09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-reg10", origin: 'card', year: 2024, school: "北京大学数院 431 金融学综合真题 2024 年", no: "卡片 reg10", type: "regress", star: 4,
+      tags: ["reg10"],
+      stem: "设 $(X_i,Y_i)^{T}$ i.i.d. 服从二元正态 $N_2(\\mu,\\Sigma)$，$i=1,\\dots,n$，$\\Sigma=\\begin{pmatrix}\\sigma_1^{2}&\\rho\\sigma_1\\sigma_2\\\\\\rho\\sigma_1\\sigma_2&\\sigma_2^{2}\\end{pmatrix}$。(1) 考虑检验问题 $H_0:\\rho=0$，给出其似然比检验并指出检验统计量 $T$；(2) 基于 $T$ 构造水平为 $\\alpha$ 的拒绝域",
+      answer: "$H_0:\\rho=0$ 即两变量独立。二元正态的极大似然估计给出 $\\hat\\rho=r$（样本相关系数），似然比检验等价于对 $r$ 检验。在 $H_0$ 下\n$$T=\\frac{r\\sqrt{n-2}}{\\sqrt{1-r^{2}}}\\sim t(n-2)$$\n(2) $T$ 是 $r$ 的单调递增函数，故拒绝域为 $|T|>t_{\\alpha/2}(n-2)$（等价于 $|r|>r_{\\alpha}$；亦可用 Fisher 变换 $z=\\frac12\\ln\\frac{1+r}{1-r}\\approx N(0,\\frac{1}{n-3})$ 作近似正态检验）。",
+      src: { card: "reg10", note: "卡片例题（data/stats.js 的 EXAMPLE[\"reg10\"]）来源原文：2024 北京大学数院 431 金融学综合真题。PITFALL[reg10] 无条目 → 省略 traps 字段。MNEM[reg10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sx01", origin: 'card', year: 2016, school: "北京大学光华 431 统计真题 2016 年", no: "卡片 sx01", type: "testing", star: 4,
+      tags: ["sx01"],
+      stem: "收集同一公司两个市场 A、B 的日回报率，$(x_1,\\dots,x_n)$ 为 A 市场回报率，$(y_1,\\dots,y_n)$ 为 B 市场回报率。如何检验 A 与 B 的股票日回报是否相关？",
+      answer: "计算样本相关系数 $r=\\dfrac{\\sum(x_i-\\bar x)(y_i-\\bar y)}{\\sqrt{\\sum(x_i-\\bar x)^2\\sum(y_i-\\bar y)^2}}$，检验 $H_0:\\rho=0$ 对 $H_1:\\rho\\ne0$。在 $H_0$ 下$$t=\\frac{r\\sqrt{n-2}}{\\sqrt{1-r^2}}\\sim t(n-2)$$若 $|t|>t_{\\alpha/2}(n-2)$ 则拒绝 $H_0$，认为两市场日回报显著相关。（也可用 Fisher $z$ 变换 $z=\\frac12\\ln\\frac{1+r}{1-r}$ 构造近似正态检验。）",
+      src: { card: "sx01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sx01\"]）来源原文：2016 北京大学光华 431 统计真题。PITFALL[sx01] 无条目 → 省略 traps 字段。MNEM[sx01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sx02", origin: 'card', year: 2016, school: "北京大学光华 431 统计真题 2016 年", no: "卡片 sx02", type: "dist", star: 3,
+      tags: ["sx02"],
+      stem: "两只股票收益率 $\\varepsilon\\sim N(\\mu_1,\\sigma^2)$、$\\theta\\sim N(\\mu_2,\\sigma^2)$ 独立且方差相等，样本为 $(\\varepsilon_1,\\dots,\\varepsilon_n)$、$(\\theta_1,\\dots,\\theta_m)$。求 $\\dfrac{\\sum_{i=1}^{n}(\\varepsilon_i-\\bar\\varepsilon)^2}{\\sum_{i=1}^{n}(\\varepsilon_i-\\bar\\varepsilon)^2+\\sum_{j=1}^{m}(\\theta_j-\\bar\\theta)^2}$ 的概率分布。",
+      answer: "令 $U=\\dfrac{\\sum_{i}(\\varepsilon_i-\\bar\\varepsilon)^2}{\\sigma^2}\\sim\\chi^2(n-1)$，$V=\\dfrac{\\sum_{j}(\\theta_j-\\bar\\theta)^2}{\\sigma^2}\\sim\\chi^2(m-1)$，且 $U,V$ 独立。故$$\\frac{\\sum_i(\\varepsilon_i-\\bar\\varepsilon)^2}{\\sum_i(\\varepsilon_i-\\bar\\varepsilon)^2+\\sum_j(\\theta_j-\\bar\\theta)^2}=\\frac{U}{U+V}\\sim\\mathrm{Beta}\\left(\\frac{n-1}{2},\\ \\frac{m-1}{2}\\right)$$",
+      src: { card: "sx02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sx02\"]）来源原文：2016 北京大学光华 431 统计真题。PITFALL[sx02] 无条目 → 省略 traps 字段。MNEM[sx02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sx03", origin: 'card', year: 2023, school: "复旦大学 432 统计学真题 2023 年", no: "卡片 sx03", type: "estimate", star: 4,
+      tags: ["sx03"],
+      stem: "(1) 叙述充分统计量的定义；(2) 设 $X_1,\\dots,X_n$ 为来自 $f(x;\\theta)=\\theta(1-\\theta)^x\\ (x=0,1,\\dots)$ 的 i.i.d. 样本，判断 $T=\\sum_{k=1}^{n}X_k$ 是否为充分统计量。",
+      answer: "(1) 若给定 $T$ 后样本的条件分布与 $\\theta$ 无关，则 $T$ 为充分统计量。(2) 联合分布$$f(x_1,\\dots,x_n;\\theta)=\\theta^n(1-\\theta)^{\\sum x_i}=\\underbrace{\\theta^n(1-\\theta)^T}_{g(T,\\theta)}\\cdot\\underbrace{1}_{h(x)}$$由因子分解定理，$T=\\sum_{k=1}^n X_k$ 是 $\\theta$ 的充分统计量。",
+      src: { card: "sx03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sx03\"]）来源原文：2023 复旦大学 432 统计学真题。PITFALL[sx03] 无条目 → 省略 traps 字段。MNEM[sx03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sx04", origin: 'card', year: 2023, school: "复旦大学 432 统计学真题 2023 年", no: "卡片 sx04", type: "estimate", star: 3,
+      tags: ["sx04"],
+      stem: "设总体 $X\\sim U(\\theta,\\theta+1)$，$\\theta$ 的先验分布为 $U(5,8)$，现有观测值 $6.1,6.5,6.7,6.9$。求 $\\theta$ 的后验分布。",
+      answer: "似然：需 $\\theta\\le x_i\\le\\theta+1$（$i=1,\\dots,4$），即 $\\theta\\le\\min x_i=6.1$ 且 $\\theta\\ge\\max x_i-1=6.9-1=5.9$，故 $\\theta\\in[5.9,6.1]$ 时似然为常数、否则为 0。先验 $U(5,8)$ 密度为 $\\frac13$。后验$$\\pi(\\theta\\,|\\,x)\\propto \\pi(\\theta)\\,L(\\theta;x)\\propto I_{[5.9,6.1]}(\\theta)$$故 $\\theta\\,|\\,x\\sim U(5.9,\\ 6.1)$。",
+      src: { card: "sx04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sx04\"]）来源原文：2023 复旦大学 432 统计学真题。PITFALL[sx04] 无条目 → 省略 traps 字段。MNEM[sx04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sy01", origin: 'card', year: 2014, school: "北大光华 431 统计真题 2014 年", no: "卡片 sy01", type: "estimate", star: 4,
+      tags: ["sy01"],
+      stem: "设 $X\\sim P(\\lambda)$，$x_1,\\dots,x_n$ 为简单随机样本，求 $\\lambda$ 的 95% 置信水平下的置信区间",
+      answer: "由中心极限定理 $\\dfrac{\\bar X-\\lambda}{\\sqrt{\\lambda/n}}\\ \\dot\\sim\\ N(0,1)$，用 $\\bar X$ 估计方差，$\\lambda$ 的近似 95% 置信区间为$$\\bar X\\pm 1.96\\sqrt{\\frac{\\bar X}{n}}$$",
+      src: { card: "sy01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy01\"]）来源原文：2014 北大光华 431 统计真题。PITFALL[sy01] 无条目 → 省略 traps 字段。MNEM[sy01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sy02", origin: 'card', year: 2019, school: "北大光华 431 统计真题 2019 年", no: "卡片 sy02", type: "estimate", star: 5,
+      tags: ["sy02"],
+      stem: "一家连锁店向其 100 名信用卡顾客分发赠券，结果 13 人使用。(1) 求赠券使用率的 90% 置信区间；(2) 若使用率超过 10% 认为促销成功，在 $\\alpha=0.05$ 下是否应全国推广？（$z_{0.05}=1.645$）",
+      answer: "$\\hat p=\\frac{13}{100}=0.13$。\n(1) $0.13\\pm1.645\\sqrt{\\frac{0.13\\times0.87}{100}}=0.13\\pm0.055\\approx(0.075,\\ 0.185)$。\n(2) $H_0:p\\le0.10$ 对 $H_1:p>0.10$，$Z=\\frac{0.13-0.10}{\\sqrt{0.10\\times0.90/100}}=\\frac{0.03}{0.03}=1<z_{0.05}=1.645$，不拒绝 $H_0$，暂无充分证据认为使用率超过 10%，不宜贸然全国推广。",
+      src: { card: "sy02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy02\"]）来源原文：2019 北大光华 431 统计真题。PITFALL[sy02] 无条目 → 省略 traps 字段。MNEM[sy02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sy03", origin: 'card', year: 2017, school: "北大光华 431 统计真题 2017 年", no: "卡片 sy03", type: "regress", star: 4,
+      tags: ["sy03"],
+      stem: "给定模型 $\\ln y=\\alpha+\\beta\\ln x+\\varepsilon$ 和观测 $(x_i,y_i)_{i=1}^n$。(1) 给出 $\\beta$ 的经济学含义；(2) 给出 $\\beta$ 的一个估计；(3) 验证其无偏性（需给出假设条件）",
+      answer: "(1) $\\beta$ 为 $y$ 对 $x$ 的弹性：$x$ 增加 $1\\%$，$y$ 平均增加 $\\beta\\%$。\n(2) 令 $\\tilde x_i=\\ln x_i,\\ \\tilde y_i=\\ln y_i$，$\\hat\\beta=\\dfrac{\\sum(\\tilde x_i-\\bar{\\tilde x})(\\tilde y_i-\\bar{\\tilde y})}{\\sum(\\tilde x_i-\\bar{\\tilde x})^2}$。\n(3) 在 $E(\\varepsilon\\,|\\,\\tilde x)=0$ 且 $\\tilde x$ 与 $\\varepsilon$ 不相关（外生）条件下，$\\hat\\beta$ 是 $y$ 的线性组合且 $E(\\hat\\beta)=\\beta$，故无偏。",
+      src: { card: "sy03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy03\"]）来源原文：2017 北大光华 431 统计真题。PITFALL[sy03] 无条目 → 省略 traps 字段。MNEM[sy03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sy04", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "卡片 sy04", type: "sampdist", star: 4,
+      tags: ["sy04"],
+      stem: "设取值为非负整数的总体，样本容量 $n=800$，取值 $0,1,2,3,4,5$ 的频数分别为 $250,200,180,100,50,20$。(1) 求经验分布函数；(2) 求 $P(X=0)$ 与 $P(2<X\\le4)$",
+      answer: "(1) $F_n(x)=\\dfrac{1}{800}\\sum_{i=1}^{800}I\\{X_i\\le x\\}$，在 $0,1,2,3,4,5$ 处依次取值 $0.3125,0.5625,0.7875,0.9125,0.975,1$。\n(2) $P(X=0)=\\dfrac{250}{800}=0.3125$；$P(2<X\\le4)=\\dfrac{100+50}{800}=0.1875$。",
+      src: { card: "sy04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy04\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[sy04] 无条目 → 省略 traps 字段。MNEM[sy04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sy05", origin: 'card', year: 2026, school: "北大光华 431 统计真题 2026 年", no: "卡片 sy05", type: "numchar", star: 4,
+      tags: ["sy05"],
+      stem: "设 $X\\sim P(\\lambda)$。(1) 对期望存在的 $g$，证明 $E[X\\,g(X)]=\\lambda E[g(X+1)]$；(2) 求 $E[X^3]$ 与 $E[X^4]$",
+      answer: "(1) $E[Xg(X)]=\\sum_{k\\ge1}k g(k)\\frac{\\lambda^k}{k!}e^{-\\lambda}=\\lambda\\sum_{j\\ge0}g(j+1)\\frac{\\lambda^j}{j!}e^{-\\lambda}=\\lambda E[g(X+1)]$。\n(2) $E[X^2]=\\lambda^2+\\lambda$，$E[X^3]=\\lambda E[(X+1)^2]=\\lambda(\\lambda^2+3\\lambda+1)=\\lambda^3+3\\lambda^2+\\lambda$；$E[X^4]=\\lambda E[(X+1)^3]=\\lambda[(\\lambda^3+3\\lambda^2+\\lambda)+3(\\lambda^2+\\lambda)+3\\lambda+1]=\\lambda^4+6\\lambda^3+7\\lambda^2+\\lambda$。",
+      altAnswer: "💡巧解（矩母函数）：$X\\sim P(\\lambda)$ 的矩母函数 $M(t)=e^{\\lambda(e^t-1)}$。逐阶求导：\n$$E[X]=M'(0)=\\lambda,\\quad E[X^2]=M''(0)=\\lambda^2+\\lambda,\\quad E[X^3]=\\lambda^3+3\\lambda^2+\\lambda,\\quad E[X^4]=\\lambda^4+6\\lambda^3+7\\lambda^2+\\lambda$$\n与 Stein 等式递推结果一致，且更便于机械化求高阶矩。",
+      src: { card: "sy05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy05\"]）来源原文：2026 北大光华 431 统计真题。PITFALL[sy05] 无条目 → 省略 traps 字段。MNEM[sy05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sy06", origin: 'card', year: 2020, school: "北大光华 431 统计真题 2020 年", no: "卡片 sy06", type: "dist", star: 4,
+      tags: ["sy06"],
+      stem: "$X_1,X_2$ 独立同分布的泊松随机变量，均值分别为 $\\mu_1,\\mu_2$。(1) 写出 $X_1$ 的分布列；(2) 写出 $X_1+X_2$ 的分布列；(3) $2X_1$ 还服从泊松分布吗？",
+      answer: "(1) $P(X_1=k)=\\dfrac{\\mu_1^k}{k!}e^{-\\mu_1},\\ k=0,1,\\dots$\n(2) $X_1+X_2\\sim P(\\mu_1+\\mu_2)$，$P(X_1+X_2=k)=\\dfrac{(\\mu_1+\\mu_2)^k}{k!}e^{-(\\mu_1+\\mu_2)}$。\n(3) 不是。$2X_1$ 只在偶数点取值，$P(2X_1=1)=0$，不满足泊松分布。",
+      src: { card: "sy06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy06\"]）来源原文：2020 北大光华 431 统计真题。PITFALL[sy06] 无条目 → 省略 traps 字段。MNEM[sy06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sy07", origin: 'card', year: 2022, school: "北大光华 431 统计真题 2022 年", no: "卡片 sy07", type: "estimate", star: 4,
+      tags: ["sy07"],
+      stem: "灯泡寿命 $X\\sim N(\\mu,1000^2)$。(1) 使 95% 置信区间误差控制在 $\\pm200$ 小时，需多少样本？(2) 置信水平改为 99%；(3) 误差改为 $\\pm100$ 小时（$z_{0.025}=1.96,\\ z_{0.005}=2.576$）",
+      answer: "$n\\ge\\left(\\dfrac{z_{\\alpha/2}\\sigma}{d}\\right)^2$。\n(1) $n\\ge\\left(\\dfrac{1.96\\times1000}{200}\\right)^2=9.8^2=96.04$，取 $n=97$。\n(2) $n\\ge\\left(\\dfrac{2.576\\times1000}{200}\\right)^2=12.88^2=165.9$，取 $n=166$。\n(3) $n\\ge\\left(\\dfrac{1.96\\times1000}{100}\\right)^2=19.6^2=384.2$，取 $n=385$。",
+      src: { card: "sy07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy07\"]）来源原文：2022 北大光华 431 统计真题。PITFALL[sy07] 无条目 → 省略 traps 字段。MNEM[sy07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sy08", origin: 'card', year: 2026, school: "复旦大学 432 统计学真题 2026 年", no: "卡片 sy08", type: "numchar", star: 3,
+      tags: ["sy08"],
+      stem: "设 $\\xi$ 为随机变量，$E\\xi=0,\\ D\\xi=\\sigma^2<\\infty$，证明对任意 $a>0$，$P\\{\\xi\\ge a\\}\\le\\dfrac{\\sigma^2}{\\sigma^2+a^2}$",
+      answer: "对 $t>0$，由马尔可夫不等式：\n$$P(\\xi\\ge a)=P(\\xi+t\\ge a+t)\\le\\frac{E(\\xi+t)^2}{(a+t)^2}=\\frac{\\sigma^2+t^2}{(a+t)^2}$$\n取 $t=\\dfrac{\\sigma^2}{a}$，得\n$$P(\\xi\\ge a)\\le\\frac{\\sigma^2+\\sigma^4/a^2}{(a+\\sigma^2/a)^2}=\\frac{\\sigma^2}{\\sigma^2+a^2}$$",
+      src: { card: "sy08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy08\"]）来源原文：2026 复旦大学 432 统计学真题。PITFALL[sy08] 无条目 → 省略 traps 字段。MNEM[sy08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-sy09", origin: 'card', year: 2017, school: "复旦大学 432 统计学真题 2017 年", no: "卡片 sy09", type: "dist", star: 3,
+      tags: ["sy09"],
+      stem: "$X_1,X_2\\overset{iid}{\\sim}N(0,1)$，求 $\\dfrac{X_1}{X_2}$ 的概率分布",
+      answer: "作变换 $u=x_1,\\ v=x_1/x_2$（则 $x_2=u/v$），雅可比 $|J|=\\dfrac{|u|}{v^2}$，联合密度变为 $\\dfrac{1}{2\\pi}e^{-u^2(1+1/v^2)/2}\\cdot\\dfrac{|u|}{v^2}$。对 $u$ 积分（$\\int_{-\\infty}^{+\\infty}|u|e^{-a u^2}du=\\dfrac1a$，$a=\\dfrac{1+1/v^2}{2}$）得\n$$f(v)=\\frac{1}{\\pi(1+v^2)}$$\n即 $\\dfrac{X_1}{X_2}\\sim\\mathrm{Cauchy}(0,1)$（等价于 $t(1)$ 分布）。",
+      src: { card: "sy09", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy09\"]）来源原文：2017 复旦大学 432 统计学真题。PITFALL[sy09] 无条目 → 省略 traps 字段。MNEM[sy09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ts01", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "卡片 ts01", type: "prob", star: 5,
+      tags: ["ts01"],
+      stem: "设二维随机变量 $(X,Y)$ 的联合密度为 $f(x,y)=A\\,e^{-(2x+3y)}\\,I\\{x>0,\\ y>0\\}$。求：(1) 常数 $A$；(2) $P(X<2,\\ Y<1)$；(3) $X$ 的边缘密度；(4) $P(X<3\\,|\\,Y<1)$；(5) 条件密度 $f(x\\,|\\,y)$",
+      answer: "识别分布：$f(x,y)=(2e^{-2x})(3e^{-3y})$ 恰为两独立指数密度之积，故 $X\\sim E(2)$、$Y\\sim E(3)$ 且相互独立。\n(1) 归一化：$1=\\int_0^\\infty\\int_0^\\infty A e^{-2x}e^{-3y}\\,dx\\,dy=A\\cdot\\frac12\\cdot\\frac13=\\frac A6$，故 $A=6$。\n(2) $P(X<2,Y<1)=P(X<2)P(Y<1)=(1-e^{-4})(1-e^{-3})$。\n(3) $f_X(x)=\\int_0^\\infty 6e^{-2x}e^{-3y}\\,dy=2e^{-2x}\\ (x>0)$。\n(4) 由独立性 $P(X<3\\,|\\,Y<1)=P(X<3)=1-e^{-6}$。\n(5) 由独立性 $f(x\\,|\\,y)=f_X(x)=2e^{-2x}\\ (x>0)$。",
+      src: { card: "ts01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ts01\"]）来源原文：2019 复旦大学 432 统计学真题。PITFALL[ts01] 无条目 → 省略 traps 字段。MNEM[ts01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ts02", origin: 'card', year: 2016, school: "复旦大学 432 统计学真题 2016 年", no: "卡片 ts02", type: "numchar", star: 5,
+      tags: ["ts02"],
+      stem: "记 $(0,1),(1,0),(0,0)$ 三点围成的区域为 $D$，$(X,Y)$ 服从 $D$ 上的均匀分布。求：(1) $E(X+Y)$ 与 $\\mathrm{Var}(X+Y)$；(2) $X,Y$ 的相关系数",
+      answer: "区域 $D=\\{x\\ge0,\\ y\\ge0,\\ x+y\\le1\\}$，面积 $S=\\frac12$，故 $f(x,y)=2$。\n$E(X)=2\\int_0^1 x(1-x)\\,dx=\\frac13$，同理 $E(Y)=\\frac13$，故 $E(X+Y)=\\frac23$。\n$E(X^2)=2\\int_0^1 x^2(1-x)\\,dx=\\frac16$，同理 $E(Y^2)=\\frac16$；$E(XY)=2\\int_0^1\\int_0^{1-x}xy\\,dy\\,dx=\\int_0^1 x(1-x)^2\\,dx=\\frac1{12}$。\n故 $E[(X+Y)^2]=E(X^2)+2E(XY)+E(Y^2)=\\frac16+\\frac16+\\frac16=\\frac12$，\n$$\\mathrm{Var}(X+Y)=E[(X+Y)^2]-[E(X+Y)]^2=\\frac12-\\frac49=\\frac1{18}$$\n$\\mathrm{Cov}(X,Y)=E(XY)-E(X)E(Y)=\\frac1{12}-\\frac19=-\\frac1{36}$；$\\mathrm{Var}(X)=\\frac16-\\frac19=\\frac1{18}$，同理 $\\mathrm{Var}(Y)=\\frac1{18}$。\n$$\\rho=\\frac{\\mathrm{Cov}(X,Y)}{\\sqrt{\\mathrm{Var}(X)\\,\\mathrm{Var}(Y)}}=\\frac{-1/36}{1/18}=-\\frac12$$",
+      src: { card: "ts02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ts02\"]）来源原文：2016 复旦大学 432 统计学真题。PITFALL[ts02] 无条目 → 省略 traps 字段。MNEM[ts02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ts03", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "卡片 ts03", type: "estimate", star: 5,
+      tags: ["ts03"],
+      stem: "设总体为 $(a,b)$ 上的均匀分布（$a<b$），$X_1,\\dots,X_n$ 为该总体的简单随机样本，$a,b$ 为未知参数。(1) 求 $a,b$ 的矩估计；(2) 求 $a,b$ 的极大似然估计；(3) 关于 $a$ 的两个估计量是否无偏？若不是，说明是否存在无偏估计",
+      answer: "$E(X)=\\dfrac{a+b}{2}$，$D(X)=\\dfrac{(b-a)^2}{12}$。\n(1) 令 $\\bar X=\\dfrac{a+b}{2}$、$S^2=\\dfrac{(b-a)^2}{12}$（$S$ 为样本标准差），解得$$\\hat a_M=\\bar X-\\sqrt3\\,S,\\qquad \\hat b_M=\\bar X+\\sqrt3\\,S$$\n(2) 似然 $L(a,b)=\\dfrac{1}{(b-a)^n}$，需满足支撑集约束 $a\\le X_{(1)}\\le X_{(n)}\\le b$。$L$ 关于 $b-a$ 递减，故 $b-a$ 取最小：$$\\hat a_{MLE}=X_{(1)},\\qquad \\hat b_{MLE}=X_{(n)}$$\n(3) $E(X_{(1)})=a+\\dfrac{b-a}{n+1}\\ne a$，故 $\\hat a_{MLE}=X_{(1)}$ 有偏；$\\hat a_M=\\bar X-\\sqrt3\\,S$ 一般也有偏。但存在无偏估计$$\\tilde a=\\frac{nX_{(1)}-X_{(n)}}{n-1}$$其期望 $=\\dfrac{n\\left(a+\\frac{b-a}{n+1}\\right)-\\left(b-\\frac{b-a}{n+1}\\right)}{n-1}=a$。",
+      src: { card: "ts03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ts03\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[ts03] 无条目 → 省略 traps 字段。MNEM[ts03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ts04", origin: 'card', year: 2021, school: "北大光华 431 统计真题 2021 年", no: "卡片 ts04", type: "testing", star: 5,
+      tags: ["ts04"],
+      stem: "某电视台考虑缩短广告时间以节约成本，但担心影响广告效果，收集数据如下（$n=200$）：20s 广告有印象 16 人、无印象 44 人；25s 广告有印象 32 人、无印象 38 人；30s 广告有印象 12 人、无印象 58 人。(1) 写出 $H_0$ 与 $H_1$；(2) 求各单元格期望频数；(3) 给出检验结果（$\\chi^2_{0.05}(2)=5.99$）；(4) 给出建议",
+      answer: "(1) $H_0$：广告时长与是否有印象相互独立（无关）；$H_1$：两者不独立（有关）。\n(2) 期望频数 $\\hat e_{ij}=\\dfrac{\\text{行合计}\\times\\text{列合计}}{n}$：有印象 60、无印象 140；20s 合计 60、25s 合计 70、30s 合计 70。\n20s 有印象 $18$、无印象 $42$；25s 有印象 $21$、无印象 $49$；30s 有印象 $21$、无印象 $49$。\n(3) $$\\chi^2=\\sum\\frac{(n_{ij}-\\hat e_{ij})^2}{\\hat e_{ij}}=\\frac{(16-18)^2}{18}+\\frac{(44-42)^2}{42}+\\frac{(32-21)^2}{21}+\\frac{(38-49)^2}{49}+\\frac{(12-21)^2}{21}+\\frac{(58-49)^2}{49}\\approx14.06$$\n自由度 $df=(3-1)(2-1)=2$，因 $14.06>\\chi^2_{0.05}(2)=5.99$，拒绝 $H_0$，广告时长与印象显著相关。\n(4) 建议：25s 广告有印象比例最高（$32/70\\approx45.7\\%$），缩短广告时间可能明显降低广告效果，应结合成本与效果权衡后再决定是否缩短。",
+      src: { card: "ts04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ts04\"]）来源原文：2021 北大光华 431 统计真题。PITFALL[ts04] 无条目 → 省略 traps 字段。MNEM[ts04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ts05", origin: 'card', year: 2017, school: "北大光华 431 统计真题 2017 年", no: "卡片 ts05", type: "estimate", star: 5,
+      tags: ["ts05"],
+      stem: "从 Wind 资讯随机选取 16 家同时在 A 股、H 股上市的公司股价，经计算 16 家公司 A 股均价为 12.88 元、标准差 10.15 元；H 股均价 10.33 元、标准差 8.36 元。求两个市场股票价格均值的 95% 置信区间（$t_{0.025}(15)=2.131$）",
+      answer: "方差未知，用 $t$ 分布，自由度 $df=n-1=15$，枢轴量 $\\dfrac{\\bar X-\\mu}{S/\\sqrt n}\\sim t(15)$。\nA 股：$12.88\\pm2.131\\times\\dfrac{10.15}{\\sqrt{16}}=12.88\\pm5.41$，即 $(7.47,\\ 18.29)$。\nH 股：$10.33\\pm2.131\\times\\dfrac{8.36}{\\sqrt{16}}=10.33\\pm4.45$，即 $(5.88,\\ 14.78)$。\n两区间重叠较大，仅从均值区间看不足以断言两市场定价存在显著差异（严格判断需作两样本或配对均值检验）。",
+      src: { card: "ts05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ts05\"]）来源原文：2017 北大光华 431 统计真题。PITFALL[ts05] 无条目 → 省略 traps 字段。MNEM[ts05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ts06", origin: 'card', year: 2015, school: "北京大学光华 431 统计真题 2015 年", no: "卡片 ts06", type: "regress", star: 5,
+      tags: ["ts06"],
+      stem: "政府收集 20 个省市的数据研究居民生活水平的影响因素，得到模型 $Y=0.5+0.0976\\,\\mathrm{Income}+0.056\\,\\mathrm{Interest}$（括号内为标准误 $(0.0034)\\ (0.0067)$），$R^2=0.7$。(1) 在显著性水平 10% 下对 Income 的系数作显著性检验；(2) 检验 Income 与 Interest 是否同时为 0（$t_{0.05}(17)=1.740$，$F_{0.10}(2,17)\\approx2.64$）",
+      answer: "(1) $H_0:\\beta_{\\mathrm{Income}}=0$ 对 $H_1:\\beta_{\\mathrm{Income}}\\ne0$。$$t=\\frac{0.0976}{0.0034}\\approx28.7$$自由度 $df=n-k-1=20-2-1=17$，因 $|t|=28.7>t_{0.05}(17)=1.740$，拒绝 $H_0$，Income 对 Y 有显著影响。\n(2) $H_0:\\beta_{\\mathrm{Income}}=\\beta_{\\mathrm{Interest}}=0$（联合检验）对 $H_1$：至少一个不为 0。$$F=\\frac{R^2/k}{(1-R^2)/(n-k-1)}=\\frac{0.7/2}{0.3/17}\\approx19.8$$因 $19.8>F_{0.10}(2,17)\\approx2.64$，拒绝 $H_0$，Income 与 Interest 对 Y 的影响不全为零。",
+      src: { card: "ts06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ts06\"]）来源原文：2015 北京大学光华 431 统计真题。PITFALL[ts06] 无条目 → 省略 traps 字段。MNEM[ts06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ts07", origin: 'card', year: 2023, school: "复旦大学 432 统计学真题 2023 年", no: "卡片 ts07", type: "dist", star: 5,
+      tags: ["ts07"],
+      stem: "(1) 写出 $P(\\lambda)$ 的分布列；(2) 证明 $P(\\lambda)$ 的可加性；(3) 利用中心极限定理证明：$\\lim_{n\\to\\infty}e^{-n}\\sum_{k=0}^{n}\\frac{n^{k}}{k!}=\\frac12$",
+      answer: "(1) $P(X=k)=\\dfrac{\\lambda^{k}}{k!}e^{-\\lambda}$，$k=0,1,2,\\dots$，$E(X)=D(X)=\\lambda$。\n(2) 设 $X\\sim P(\\lambda_1)$，$Y\\sim P(\\lambda_2)$ 独立，由卷积：\n$$P(X+Y=k)=\\sum_{i=0}^{k}\\frac{\\lambda_1^{i}}{i!}e^{-\\lambda_1}\\cdot\\frac{\\lambda_2^{k-i}}{(k-i)!}e^{-\\lambda_2}=\\frac{e^{-(\\lambda_1+\\lambda_2)}}{k!}\\sum_{i=0}^{k}C_k^i\\lambda_1^{i}\\lambda_2^{k-i}=\\frac{(\\lambda_1+\\lambda_2)^{k}}{k!}e^{-(\\lambda_1+\\lambda_2)}$$\n即 $X+Y\\sim P(\\lambda_1+\\lambda_2)$。\n(3) 设 $X_1,\\dots,X_n$ i.i.d. $\\sim P(1)$，则 $S_n=\\sum X_i\\sim P(n)$，$P(S_n\\le n)=e^{-n}\\sum_{k=0}^{n}\\frac{n^k}{k!}$。由中心极限定理 $\\frac{S_n-n}{\\sqrt n}\\overset{d}{\\to}N(0,1)$：\n$$\\lim_{n\\to\\infty}e^{-n}\\sum_{k=0}^{n}\\frac{n^{k}}{k!}=\\lim_{n\\to\\infty}P(S_n\\le n)=\\Phi(0)=\\frac12$$",
+      src: { card: "ts07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ts07\"]）来源原文：2023 复旦大学 432 统计学真题。PITFALL[ts07] 无条目 → 省略 traps 字段。MNEM[ts07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ts08", origin: 'card', year: 2025, school: "复旦大学 432 统计学真题 2025 年", no: "卡片 ts08", type: "multi", star: 5,
+      tags: ["ts08"],
+      stem: "给定二元函数 $f(x,y)=c\\left(e^{-\\frac{x^{2}+y^{2}}{2}}+xy(x^{2}-y^{2})\\sqrt e\\ I_D(x,y)\\right)$，其中 $D=\\{(x,y)\\,|\\,x^{2}+y^{2}\\le1\\}$，$c>0$。(1) 证明 $f(x,y)>0$；(2) 设 $(X,Y)$ 的联合密度为 $f(x,y)$，求 $c$；(3) 求 $X,Y$ 的边缘分布、$Cov(X,Y)$，并判断 $X,Y$ 是否独立",
+      answer: "(1) 在 $D$ 外 $f>0$；在 $D$ 内令 $x=\\rho\\cos\\theta,\\ y=\\rho\\sin\\theta$，则 $xy(x^{2}-y^{2})=\\rho^{4}\\cdot\\frac14\\sin4\\theta$：\n$$f/c=e^{-\\rho^{2}/2}+\\frac{\\rho^{4}}{4}\\sin4\\theta\\,\\sqrt e\\ge e^{-\\rho^{2}/2}-\\frac{\\rho^{4}\\sqrt e}{4}>1-\\frac{\\rho^{2}}{2}-\\frac{\\rho^{4}\\sqrt e}{4}\\ge1-\\frac12-\\frac{\\sqrt e}{4}>0$$\n(2) $xy(x^{2}-y^{2})$ 关于各变量为奇函数，$\\iint_D xy(x^{2}-y^{2})\\,dx\\,dy=0$，故\n$$1=c\\int_{\\mathbb R^2}e^{-\\frac{x^{2}+y^{2}}{2}}dx\\,dy=c\\cdot2\\pi\\ \\Rightarrow\\ c=\\frac1{2\\pi}$$\n(3) 边缘密度 $f_X(x)=\\frac{1}{\\sqrt{2\\pi}}e^{-x^{2}/2}$，$f_Y(y)=\\frac{1}{\\sqrt{2\\pi}}e^{-y^{2}/2}$（标准正态）；但 $f(x,y)\\ne f_X(x)f_Y(y)$，故 $X,Y$ 不独立。又 $E(XY)=\\iint xy\\,f(x,y)\\,dx\\,dy=0$（奇函数）、$E(X)=E(Y)=0$，故 $Cov(X,Y)=0$（不相关但不独立）。",
+      src: { card: "ts08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ts08\"]）来源原文：2025 复旦大学 432 统计学真题。PITFALL[ts08] 无条目 → 省略 traps 字段。MNEM[ts08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-ts09", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "卡片 ts09", type: "limit", star: 5,
+      tags: ["ts09"],
+      stem: "设 $EX=0,\\ Var(X)=\\sigma^{2}$，证明对任意 $\\varepsilon>0$：(1) $P(|X|>\\varepsilon)\\le\\dfrac{\\sigma^{2}}{\\varepsilon^{2}}$；(2) $P(X>\\varepsilon)\\le\\dfrac{\\sigma^{2}}{\\sigma^{2}+\\varepsilon^{2}}$",
+      answer: "(1) 切比雪夫不等式（马尔可夫不等式取 $g(x)=x^{2}$）：\n$$P(|X|>\\varepsilon)=P(X^{2}>\\varepsilon^{2})\\le\\frac{E(X^{2})}{\\varepsilon^{2}}=\\frac{\\sigma^{2}}{\\varepsilon^{2}}$$\n(2) 单边切比雪夫（坎特利不等式）：对 $t>0$，由 $X>\\varepsilon\\iff X+t>\\varepsilon+t$，\n$$P(X>\\varepsilon)=P(X+t>\\varepsilon+t)\\le\\frac{E(X+t)^{2}}{(\\varepsilon+t)^{2}}=\\frac{\\sigma^{2}+t^{2}}{(\\varepsilon+t)^{2}}$$\n取 $t=\\frac{\\sigma^{2}}{\\varepsilon}$ 使右端最小，得 $P(X>\\varepsilon)\\le\\dfrac{\\sigma^{2}}{\\sigma^{2}+\\varepsilon^{2}}$。",
+      src: { card: "ts09", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ts09\"]）来源原文：2019 复旦大学 432 统计学真题。PITFALL[ts09] 无条目 → 省略 traps 字段。MNEM[ts09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xr01", origin: 'card', year: 2018, school: "复旦大学 432 统计学真题 2018 年", no: "卡片 xr01", type: "dist", star: 4,
+      tags: ["xr01"],
+      stem: "$X_1,X_2,X_3$ 是取自期望为 $\\alpha$ 的指数分布的随机样本。求：(1) $P(X_1<X_2<X_3)$；(2) $X_{(1)}$ 的概率密度",
+      answer: "(1) 对 i.i.d. 连续型随机变量，三者次序等可能，故 $P(X_1<X_2<X_3)=\\frac{1}{3!}=\\frac16$。\n(2) 期望为 $\\alpha$ 的指数分布 $X\\sim Exp(\\frac1\\alpha)$，其生存函数 $P(X>x)=e^{-x/\\alpha}$。最小次序统计量 $X_{(1)}$：\n$$P(X_{(1)}>x)=\\left[P(X>x)\\right]^{3}=e^{-3x/\\alpha}$$\n故 $X_{(1)}\\sim Exp(\\frac3\\alpha)$，密度 $f_{X_{(1)}}(x)=\\frac3\\alpha e^{-3x/\\alpha}\\ (x>0)$。",
+      src: { card: "xr01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xr01\"]）来源原文：2018 复旦大学 432 统计学真题。PITFALL[xr01] 无条目 → 省略 traps 字段。MNEM[xr01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xr02", origin: 'card', year: 2021, school: "清华大学 432 统计学真题 2021 年", no: "卡片 xr02", type: "testing", star: 4,
+      tags: ["xr02"],
+      stem: "设有来自总体 $B(1,\\theta)$ 的 $2n$ 个独立样本 $X_1,\\dots,X_{2n}$，其中 $\\theta\\in[\\frac12,1)$。用似然比检验法给出假设检验问题 $H_0:\\theta=\\frac12$ 对 $H_1:\\theta>\\frac12$ 的拒绝域",
+      answer: "令 $T=\\sum_{i=1}^{2n}X_i$，则 $T\\sim B(2n,\\theta)$，似然\n$$L(\\theta)=\\theta^{T}(1-\\theta)^{2n-T}$$\n$H_0$ 下 $\\hat\\theta_0=\\frac12$；全空间（$\\theta\\ge\\frac12$）下 $\\hat\\theta=\\max\\{\\frac12,\\ \\bar X\\}$（$\\bar X=\\frac{T}{2n}$）。似然比为\n$$\\Lambda=\\frac{L(\\frac12)}{L(\\hat\\theta)}=\\frac{(1/2)^{2n}}{\\hat\\theta^{T}(1-\\hat\\theta)^{2n-T}}\\le1$$\n$\\Lambda$ 是 $\\bar X$ 的单调下降函数，故拒绝域 $\\Lambda<c$ 等价于 $\\bar X>c'$（似然比单峰族，由单调似然比性质为一致最优）。渐近地\n$$-2\\ln\\Lambda\\ \\overset{d}{\\longrightarrow}\\ \\chi^{2}(1)$$\n故也可取拒绝域 $\\{-2\\ln\\Lambda>\\chi^{2}_{\\alpha}(1)\\}$，即 $\\bar X$ 足够大时拒绝 $H_0:\\theta=\\frac12$。",
+      src: { card: "xr02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xr02\"]）来源原文：2021 清华大学 432 统计学真题。PITFALL[xr02] 无条目 → 省略 traps 字段。MNEM[xr02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xr03", origin: 'card', year: 2017, school: "中国科学技术大学 432 统计学真题 2017 年", no: "卡片 xr03", type: "estimate", star: 5,
+      tags: ["xr03"],
+      stem: "测量一个物体的重量，测量值服从 $N(\\mu,\\sigma^{2})$。独立测量 $10$ 次得样本均值 $\\bar x=10.48$、样本标准差 $s=1.36$。求：(1) 该物体重量 $\\mu$ 的 90% 置信区间；(2) 测量标准差 $\\sigma$ 的 95% 置信区间",
+      answer: "$\\sigma^{2}$ 未知，求\\textbf{单均值} $\\mu$ 的区间 $\\Rightarrow$ 用 $t$：枢轴量 $\\dfrac{\\bar X-\\mu}{S/\\sqrt n}\\sim t(n-1)$，$n-1=9$，$t_{0.05}(9)=1.833$。\n$$\\bar x\\pm t_{0.05}(9)\\frac{s}{\\sqrt{10}}=10.48\\pm1.833\\times\\frac{1.36}{\\sqrt{10}}\\approx10.48\\pm0.79=(9.69,\\ 11.27)$$\n求\\textbf{方差/标准差}区间 $\\Rightarrow$ 用 $\\chi^{2}$：$\\dfrac{(n-1)S^{2}}{\\sigma^{2}}\\sim\\chi^{2}(n-1)$，$\\chi^{2}_{0.975}(9)=2.70$、$\\chi^{2}_{0.025}(9)=19.02$：\n$$\\left(\\frac{9\\times1.36^{2}}{19.02},\\ \\frac{9\\times1.36^{2}}{2.70}\\right)\\approx(0.875,\\ 6.17)\\ \\Rightarrow\\ \\sigma\\in(0.94,\\ 2.48)$$\n口诀：\\textbf{均值用 $t$、方差用 $\\chi^{2}$}，二者共用同一“枢轴量反解参数”的流程。",
+      src: { card: "xr03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xr03\"]）来源原文：2017 中国科学技术大学 432 统计学真题。PITFALL[xr03] 无条目 → 省略 traps 字段。MNEM[xr03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt01", origin: 'card', year: 2023, school: "中国科学技术大学 812 概率论与数理统计真题 2023 年", no: "卡片 xt01", type: "multi", star: 4,
+      tags: ["xt01"],
+      stem: "设总体的分布是 $f(x)=3x^{2},\\ 0<x<1$，从中抽取 i.i.d. 样本 $x_1,\\dots,x_n$。求 $(x_{(1)},\\dots,x_{(n)})$ 即次序统计量的密度函数",
+      answer: "样本联合密度 $f(x_1,\\dots,x_n)=3^{n}\\prod_{i=1}^{n}x_i^{2}$。由次序统计量密度公式（$n!$ 因子来自全排列）：\n$$p(x_{(1)},\\dots,x_{(n)})=n!\\,3^{n}\\prod_{i=1}^{n}x_{(i)}^{2},\\qquad 0<x_{(1)}<\\cdots<x_{(n)}<1$$",
+      traps: "次序统计量密度公式易漏 $n!$ 因子；且须在 $x_{(1)}<\\cdots<x_{(n)}$ 的\\textbf{有序}区域上写，区间序写错（如写成 $x_{(1)}>x_{(2)}$）会直接出错。",
+      hint: "次序统计量 = 「排列数 × 落在 x 附近一个 × 左边 $k-1$ 个、右边 $n-k$ 个」：$\\frac{n!}{(k-1)!1!(n-k)!}F^{k-1}(1-F)^{n-k}f$。",
+      src: { card: "xt01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt01\"]）来源原文：2023 中国科学技术大学 812 概率论与数理统计真题。traps 取自 PITFALL[xt01]。hint 取自 MNEM[xt01]。" }
+    },
+    {
+      id: "cv-st-xt02", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "卡片 xt02", type: "multi", star: 4,
+      tags: ["xt02"],
+      stem: "设总体的分布函数 $F(x)$ 连续单增，$X_{(1)},\\dots,X_{(n)}$ 是来自该总体的随机样本的次序统计量，$Y_i=F(X_{(i)})$。求 $E(Y_i)$、$\\mathrm{Var}(Y_i)$ 与 $(Y_1,\\dots,Y_n)^{T}$ 的协方差矩阵",
+      answer: "因 $F(X)\\sim U(0,1)$，故 $Y_i=F(X_{(i)})$ 恰为 $U(0,1)$ 样本的第 $i$ 个次序统计量，$Y_i\\sim\\mathrm{Beta}(i,\\ n-i+1)$：\n$$E(Y_i)=\\frac{i}{n+1},\\qquad \\mathrm{Var}(Y_i)=\\frac{i(n-i+1)}{(n+1)^{2}(n+2)}$$\n$(Y_i,Y_j)$（$i<j$）的联合密度为 $f_{ij}(x,y)=\\dfrac{n!}{(i-1)!(j-i-1)!(n-j)!}x^{i-1}(y-x)^{j-i-1}(1-y)^{n-j}$，据此积分得协方差矩阵元素。",
+      traps: "$U(0,1)$ 的第 $k$ 个次序统计量是 $\\mathrm{Beta}(k,\\ n-k+1)$，\\textbf{不是} $\\mathrm{Beta}(k,\\ n-k)$；期望 $E=\\frac{k}{n+1}$ 而非 $\\frac{k}{n}$。",
+      src: { card: "xt02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt02\"]）来源原文：2019 复旦大学 432 统计学真题。traps 取自 PITFALL[xt02]。MNEM[xt02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt03", origin: 'card', year: 2023, school: "中国科学技术大学 812 概率论与数理统计真题 2023 年", no: "卡片 xt03", type: "multi", star: 4,
+      tags: ["xt03"],
+      stem: "设总体分布为 $f(x)=3x^{2},\\ 0<x<1$，样本 i.i.d.。证明：$\\dfrac{X_{(i)}}{X_{(j)}}$ 与 $X_{(j)}$ 相互独立，其中 $1\\le i<j\\le n$",
+      answer: "由次序统计量公式，$(X_{(i)},X_{(j)})$ 的联合密度为\n$$p_{ij}(u,v)=C\\,u^{3i-1}v^{2}(v^{3}-u^{3})^{j-i-1}(1-v^{3})^{n-j},\\quad 0<u<v<1$$\n作变换 $Z=\\dfrac{u}{v}$、$V=v$（雅可比 $=V$），化简后密度可分离为 $f_Z(z)\\cdot f_V(v)$，其中 $f_V$ 即 $X_{(j)}$ 的边缘密度，故 $Z$ 与 $V=X_{(j)}$ 独立。",
+      src: { card: "xt03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt03\"]）来源原文：2023 中国科学技术大学 812 概率论与数理统计真题。PITFALL[xt03] 无条目 → 省略 traps 字段。MNEM[xt03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt04", origin: 'card', year: 2023, school: "复旦大学 432 统计学真题 2023 年", no: "卡片 xt04", type: "estimate", star: 4,
+      tags: ["xt04"],
+      stem: "设 $X_1,\\dots,X_n$ 为来自总体 $f(x;\\theta)$ 的简单随机样本。叙述充分统计量的定义，并判断 $T=\\sum_{k=1}^{n}X_k$ 是否为 $\\theta$ 的充分统计量（其中 $f(x;\\theta)=\\theta(1-\\theta)^{x},\\ x=0,1,\\dots$）",
+      answer: "充分统计量：若给定 $T$ 后样本的条件分布与 $\\theta$ 无关，则 $T$ 为充分统计量。\n$f(x;\\theta)=\\theta(1-\\theta)^{x}$ 的样本联合分布：\n$$f(x_1,\\dots,x_n;\\theta)=\\theta^{n}(1-\\theta)^{\\sum x_i}=\\underbrace{\\theta^{n}(1-\\theta)^{T}}_{g(T,\\theta)}\\cdot\\underbrace{1}_{h(x)}$$\n由因子分解定理，$T=\\sum_{k=1}^{n}X_k$ 是 $\\theta$ 的充分统计量。",
+      traps: "因子分解定理注意 $g$ 与 $h$ 的划分：$g$ 只能是“$T$ 与 $\\theta$”的函数、$h$ 是“仅样本、不含 $\\theta$”的函数，二者别放反。",
+      src: { card: "xt04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt04\"]）来源原文：2023 复旦大学 432 统计学真题。traps 取自 PITFALL[xt04]。MNEM[xt04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt05", origin: 'card', year: 2024, school: "复旦大学 432 统计学真题 2024 年", no: "卡片 xt05", type: "estimate", star: 4,
+      tags: ["xt05"],
+      stem: "设 $X_1,X_2,X_3$ 是取自 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$ 的简单随机样本，$T=\\sum_{i=1}^{n}\\ln X_i$。叙述并运用充分完备统计量判断（或求 UMVUE）",
+      answer: "$X\\sim\\mathrm{Beta}(\\theta,1)$ 为指数族，故 $T'=\\sum\\ln X_i$（等价地 $-\\sum\\ln X_i$）是充分完备统计量。又 $Y=-\\ln X\\sim Exp(\\theta)$，$\\sum Y_i\\sim\\Gamma(n,\\theta)$，可由此构造 $\\theta$ 的无偏、基于充分完备统计量的估计，由 Lehmann-Scheffé 定理即得其 UMVUE。",
+      altAnswer: "💡巧解（指数族结论直接判完备）：凡形如 $f(x;\\theta)=h(x)\\exp\\{c(\\theta)T(x)+d(\\theta)\\}$ 的单参指数族，其 $T=\\sum T(x_i)$ 自动满足“充分 $+$ 完备”，无需从头证完备性。",
+      hint: "指数族「充分+完备」：形如 $h(x)e^{c(\\theta)T(x)+d(\\theta)}$，其 $T=\\sum T(x_i)$ 自动既充分又完备，免去冗长证明。",
+      src: { card: "xt05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt05\"]）来源原文：2024 复旦大学 432 统计学真题。PITFALL[xt05] 无条目 → 省略 traps 字段。hint 取自 MNEM[xt05]。" }
+    },
+    {
+      id: "cv-st-xt06", origin: 'card', year: 2018, school: "中国科学技术大学 812 概率论与数理统计真题 2018 年", no: "卡片 xt06", type: "estimate", star: 5,
+      tags: ["xt06"],
+      stem: "设 $X_1,\\dots,X_n$ 是从参数 $\\lambda$ 的 Poisson 分布总体中抽取的一组随机样本，$\\lambda$ 未知。(1) 求 $\\lambda$ 的充分完备统计量；(2) 求 $g_1(\\lambda)=\\lambda^{3}$ 的最小方差无偏估计（UMVUE）",
+      answer: "(1) $X\\sim P(\\lambda)$ 为指数族，$T=\\sum_{i=1}^{n}X_i$ 是 $\\lambda$ 的充分完备统计量（且 $T\\sim P(n\\lambda)$）。\n(2) 由 $E\\left[\\frac{T(T-1)(T-2)}{n^{3}}\\right]=\\lambda^{3}$（利用 $E[T^{(3)}]=(n\\lambda)^{3}$ 阶乘矩），故\n$$\\hat g_1(T)=\\frac{T(T-1)(T-2)}{n^{3}}$$\n是基于充分完备统计量的无偏估计，由 Lehmann-Scheffé 定理为 $\\lambda^{3}$ 的 UMVUE。",
+      hint: "UMVUE 三招：① 充分完备统计量 $+$ L-S 定理（首选）；② 方差达 C-R 下界；③ 与一切零无偏估计不相关。",
+      src: { card: "xt06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt06\"]）来源原文：2018 中国科学技术大学 812 概率论与数理统计真题。PITFALL[xt06] 无条目 → 省略 traps 字段。hint 取自 MNEM[xt06]。" }
+    },
+    {
+      id: "cv-st-xt07", origin: 'card', year: 2021, school: "南开大学 432 统计学真题 2021 年", no: "卡片 xt07", type: "numchar", star: 4,
+      tags: ["xt07"],
+      stem: "已知命题 $p$：随机变量 $X$ 与 $Y$ 相互独立；命题 $q$：$X+Y$ 的特征函数是 $X$ 与 $Y$ 特征函数的乘积。则（  ）\\\\\nA. $p$ 成立可推出 $q$ 成立，但反之不行\\\\\nB. $q$ 成立可推出 $p$ 成立，但反之不行\\\\\nC. 它们互为充要条件\\\\\nD. 以上说法都不对",
+      answer: "选 A。\n$p\\Rightarrow q$ 显然：独立时 $\\varphi_{X+Y}(t)=\\varphi_X(t)\\varphi_Y(t)$。\n但 $q\\not\\Rightarrow p$：取 $X=Y\\sim\\mathrm{Cauchy}(0,1)$，则 $\\varphi_{X+Y}(t)=e^{-2|t|}=\\varphi_X(t)\\varphi_Y(t)$，而 $X,Y$ 显然不独立。判断独立性须用\\textbf{联合}特征函数 $\\varphi_{X,Y}(s,t)=\\varphi_X(s)\\varphi_Y(t)$。",
+      traps: "$\\varphi_{X+Y}=\\varphi_X\\varphi_Y$ \\textbf{推不出} $X,Y$ 独立（反例 $X=Y\\sim$ Cauchy）；真正判定独立须用\\textbf{联合}特征函数 $\\varphi_{X,Y}(s,t)=\\varphi_X(s)\\varphi_Y(t)$。",
+      src: { card: "xt07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt07\"]）来源原文：2021 南开大学 432 统计学真题。traps 取自 PITFALL[xt07]。MNEM[xt07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt08", origin: 'card', year: 2018, school: "北京大学数院 431 金融学综合真题 2018 年", no: "卡片 xt08", type: "dist", star: 4,
+      tags: ["xt08"],
+      stem: "$\\{N(t),t\\ge0\\}$ 是强度为 $\\lambda$ 的泊松过程，当 $0<t<s$ 时，计算 $E[N(s)\\,|\\,N(t)]$ 以及当 $N(s)=n$ 时 $N(t)$ 的条件分布",
+      answer: "由独立增量性与增量分布 $N(s)-N(t)\\sim P(\\lambda(s-t))$：\n$$E[N(s)\\,|\\,N(t)]=E[N(t)+N(s)-N(t)\\,|\\,N(t)]=N(t)+\\lambda(s-t)$$\n（条件期望中 $N(t)$ 已知、增量期望为 $\\lambda(s-t)$。）\n$N(t)\\,|\\,N(s)=n\\ \\sim\\ B\\!\\left(n,\\ \\frac{t}{s}\\right)$，因为 $[0,s]$ 内 $n$ 个到达时刻独立均匀分布，落入 $[0,t]$ 的概率为 $\\dfrac{t}{s}$。",
+      altAnswer: "💡巧解（条件分布二项）：把 $N(t)$ 看作 $N(s)$ 个点中落入前 $t$ 段的个数，逐点独立同概率 $p=t/s$，故 $N(t)\\,|\\,N(s)=n\\sim B(n,t/s)$。",
+      src: { card: "xt08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt08\"]）来源原文：2018 北京大学数院 431 金融学综合真题。PITFALL[xt08] 无条目 → 省略 traps 字段。MNEM[xt08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt09", origin: 'card', year: 2021, school: "南开大学 432 统计学真题 2021 年", no: "卡片 xt09", type: "limit", star: 4,
+      tags: ["xt09"],
+      stem: "有随机变量序列 $\\{X_n\\}$，记 $Y_n=\\frac{1}{n}\\sum_{i=1}^{n}X_i$，$a_n=E(Y_n)$。证明：$\\{X_n\\}$ 服从大数定律的充要条件是 $\\lim_{n\\to\\infty}E\\left[\\dfrac{(Y_n-a_n)^{2}}{1+(Y_n-a_n)^{2}}\\right]=0$",
+      answer: "令 $\\Delta_n=Y_n-a_n$。大数定律即 $\\Delta_n\\overset{P}{\\to}0$。\n必要性：若 $\\Delta_n\\overset{P}{\\to}0$，因为 $\\dfrac{\\Delta_n^{2}}{1+\\Delta_n^{2}}\\le1$ 且收敛到 $0$，由控制收敛定理极限为 $0$。\n充分性：$<\\Delta_n^{2}/(1+\\Delta_n^{2})\\to0$ 蕴含依概率收敛（该有界函数刻画“$\\Delta_n$ 不趋 0”的概率趋于 $0$），即 $\\Delta_n\\overset{P}{\\to}0$。此式对$\\mathrm{Var}$ 无穷（仅一阶矩）的情形也适用。",
+      src: { card: "xt09", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt09\"]）来源原文：2021 南开大学 432 统计学真题。PITFALL[xt09] 无条目 → 省略 traps 字段。MNEM[xt09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt10", origin: 'card', year: 2024, school: "北京大学数院 431 金融学综合真题 2024 年", no: "卡片 xt10", type: "regress", star: 4,
+      tags: ["xt10"],
+      stem: "考虑多元回归模型 $Z=Y\\beta+e$，其中 $Y=(Y_1^{T},\\dots,Y_n^{T})^{T}$，$Y_i\\in\\mathbb R^{d}$，$E(e)=0$，$\\mathrm{Var}(e)=\\sigma^{2}I_n$，$Y$ 已知且列满秩。若 $\\hat\\beta$ 是 $\\beta$ 的最小二乘估计。(1) 证明 $\\mathrm{Var}(\\hat\\beta)=\\sigma^{2}(Y^{T}Y)^{-1}$；(2) 证明残差平方和 $Q(\\hat\\beta)$ 的期望为 $(n-d)\\sigma^{2}$",
+      answer: "(1) $\\hat\\beta=(Y^{T}Y)^{-1}Y^{T}Z$，由 $\\mathrm{Var}(Z)=\\sigma^{2}I_n$：\n$$\\mathrm{Var}(\\hat\\beta)=(Y^{T}Y)^{-1}Y^{T}\\mathrm{Var}(Z)Y(Y^{T}Y)^{-1}=\\sigma^{2}(Y^{T}Y)^{-1}$$\n(2) 残差 $Z-Y\\hat\\beta=(I_n-H)Z$，$H=Y(Y^{T}Y)^{-1}Y^{T}$ 为幂等投影阵且 $\\mathrm{tr}(H)=d$，故 $E\\left[Q(\\hat\\beta)\\right]=\\sigma^{2}\\mathrm{tr}(I_n-H)=\\sigma^{2}(n-d)$。",
+      src: { card: "xt10", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt10\"]）来源原文：2024 北京大学数院 431 金融学综合真题。PITFALL[xt10] 无条目 → 省略 traps 字段。MNEM[xt10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt11", origin: 'card', year: 2023, school: "中国科学技术大学 432 统计学真题 2023 年", no: "卡片 xt11", type: "regress", star: 4,
+      tags: ["xt11"],
+      stem: "叙述题：(1) 叙述多重共线性的定义；(2) 如何判断多重共线性；(3) 如何消除多重共线性",
+      answer: "(1) 多元回归中自变量间存在（近似）线性相关，使 $X^{T}X$ 接近奇异、$\\hat\\beta$ 方差被放大。\n(2) 判断：自变量两两相关系数高；$VIF_j=\\frac{1}{1-R_j^{2}}>10$；$X^{T}X$ 最小特征值接近 0；整体 $F$ 显著但各系数 $t$ 不显著。\n(3) 消除：删除/合并高相关变量；逐步回归筛选；主成分回归；岭回归；增加样本量。",
+      src: { card: "xt11", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt11\"]）来源原文：2023 中国科学技术大学 432 统计学真题。PITFALL[xt11] 无条目 → 省略 traps 字段。MNEM[xt11] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt12", origin: 'card', year: 2011, school: "北京大学光华 431 金融学综合真题 2011 年", no: "卡片 xt12", type: "regress", star: 4,
+      tags: ["xt12"],
+      stem: "假设 $y_1,\\dots,y_n$ 独立同服从下述异方差线性回归模型：$y_i=\\beta_0+\\beta_1x_i+\\varepsilon_i$，其中 $\\varepsilon_i\\sim N(0,i^{2})$，$x_1,\\dots,x_n$ 是已知数。(1) 求对数似然函数；(2) 写出 $(\\beta_0,\\beta_1)$ 极大似然估计的数学公式（等价于加权最小二乘）",
+      answer: "$\\varepsilon_i\\sim N(0,i^{2})$，$\\mathrm{Var}(\\varepsilon_i)=i^{2}$ 为异方差。对数似然\n$$\\ell(\\beta_0,\\beta_1)=-\\frac{n}{2}\\ln 2\\pi-\\sum_{i=1}^{n}\\ln i-\\frac{1}{2}\\sum_{i=1}^{n}\\frac{(y_i-\\beta_0-\\beta_1x_i)^{2}}{i^{2}}$$\n对 $\\beta$ 求导为 0，得 MLE（即加权最小二乘，权重 $w_i=1/i^{2}$）满足\n$$\\sum\\frac{y_i-\\hat\\beta_0-\\hat\\beta_1x_i}{i^{2}}=0,\\quad \\sum\\frac{x_i(y_i-\\hat\\beta_0-\\hat\\beta_1x_i)}{i^{2}}=0$$\n即对变换 $\\dfrac{y_i}{i}=\\beta_0\\frac1i+\\beta_1\\frac{x_i}{i}+\\dfrac{\\varepsilon_i}{i}$ 做 OLS。",
+      altAnswer: "💡巧解（White 检验对应）：若方差具体形式 $\\mathrm{Var}(\\varepsilon_i)=i^{2}$ 已知，直接用 WLS（等价 GLS）；若未知，则用 White 检验 $W=nR^{2}\\sim\\chi^{2}(p)$ 诊断异方差后取稳健标准误。",
+      traps: "White 检验统计量是 $W=nR^{2}\\sim\\chi^{2}(p)$（$R^{2}$ 为残差平方对解释变量及其平方/交叉的辅助回归判定系数），别把 $R^{2}$ 当原回归判定系数；异方差下 OLS 依然\\textbf{无偏}，只是方差估计有偏。",
+      src: { card: "xt12", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt12\"]）来源原文：2011 北京大学光华 431 金融学综合真题。traps 取自 PITFALL[xt12]。MNEM[xt12] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt13", origin: 'card', year: 2017, school: "北京大学光华 431 金融学综合真题 2017 年", no: "卡片 xt13", type: "testing", star: 4,
+      tags: ["xt13"],
+      stem: "公司甲同时在大陆 A 股及香港 H 股上市，现有它在 A 股市场和 H 股市场上过去一年每天的回报观测 $X_i,Y_i$。请给出两种检验方法，检验该股票在 A 股和 H 股上的回报均值（分布）是否相等，并讨论其假设条件",
+      answer: "方法一：\\textbf{配对样本 $t$ 检验}。令 $D_i=X_i-Y_i$，$H_0:\\mu_D=0$，$t=\\dfrac{\\bar D}{S_D/\\sqrt n}\\sim t(n-1)$。\n方法二：$n_1,n_2$ 较大时。方法三（\\textbf{非参数——Wilcoxon 秩和检验}，不要求正态）：合并两样本升序排秩 $R_i$，$W_X=\\sum R(X_i)$，\n$$E(W_X)=\\frac{n_1(n_1+n_2+1)}{2},\\quad \\mathrm{Var}(W_X)=\\frac{n_1n_2(n_1+n_2+1)}{12},\\quad Z=\\frac{W_X-E(W_X)}{\\sqrt{\\mathrm{Var}(W_X)}}\\dot\\sim N(0,1)$$\n$|Z|>z_{\\alpha/2}$ 拒绝 $H_0$。\\textbf{讨论}：配对 $t$ 需差 $D_i$ 正态；秩和检验不需要正态（更稳健），但只利用相对次序、损失部分数值信息。本例为明显配对样本，配对 $t$ 检验利用成对结构消除共同因素、更合理。",
+      src: { card: "xt13", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt13\"]）来源原文：2017 北京大学光华 431 金融学综合真题。PITFALL[xt13] 无条目 → 省略 traps 字段。MNEM[xt13] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-xt14", origin: 'card', year: 2016, school: "中国科学技术大学 812 概率论与数理统计真题 2016 年", no: "卡片 xt14", type: "testing", star: 4,
+      tags: ["xt14"],
+      stem: "设总体 $X$ 的概率分布为：$P(X=-1)=2p$，$P(X=0)=1-5p$，$P(X=1)=3p$，其中 $p>0$ 为未知参数。现有一样本容量 $n=60$ 的简单随机样本，其中 0 出现了 30 次，1 和 -1 均出现 15 次。(1) 求 $p$ 的极大似然估计 $\\hat p$；(2) 在显著性水平 $\\alpha=0.05$ 下，用 $\\hat p$ 和拟合优度检验判断该组样本是否来自总体 $X$",
+      answer: "(1) 似然 $L(p)\\propto(3p)^{15}(1-5p)^{30}(2p)^{15}$，$\\ln L=30\\ln p+30\\ln(1-5p)+\\text{const}$，令 $\\frac{d}{dp}=0$：\n$$\\frac{30}{p}-\\frac{150}{1-5p}=0\\Rightarrow\\hat p=\\frac{1}{10}=0.1$$\n（$1-5p=0.5\\ge0$ 成立）。\n(2) $\\chi^{2}$ 拟合优度检验：期望频数 $np_i$ 为 $(2\\hat p\\cdot60,\\ (1-5\\hat p)\\cdot60,\\ 3\\hat p\\cdot60)=(12,30,18)$，观测为 $(15,30,15)$：\n$$\\chi^{2}=\\frac{(15-12)^{2}}{12}+\\frac{(30-30)^{2}}{30}+\\frac{(15-18)^{2}}{18}=\\frac{9}{12}+\\frac{9}{18}=1.25$$\n自由度 $=3-1-1=1$（估计了 $p$），$\\chi^{2}_{0.05}(1)=3.84$，因 $1.25<3.84$，\\textbf{不拒绝} $H_0$，可以认为该组样本来自总体 $X$。",
+      altAnswer: "💡巧解（K-S/经验分布印证）：拟合优度亦可比较经验分布 $F_n$ 与理论分布 $F_0$（$K$-$S$ 统计量 $D_n=\\sup|F_n-F_0|$），此处用 $\\chi^{2}$ 组合更简单高效。",
+      traps: "$\\chi^{2}$ 拟合优度自由度是 $k-1-r$（$r$ 为\\textbf{估计的}参数个数），不是 $k-1$；$K$-$S$ 检验要求 $F_0$ 参数完全已知，参数需估计时必需 Lilliefors 修正。",
+      hint: "拟合优度选型：分布已知、小样本、连续 → $K$-$S$；大样本、分类、含估计参数 → $\\chi^{2}$（自由度 $k-1-r$）。",
+      src: { card: "xt14", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt14\"]）来源原文：2016 中国科学技术大学 812 概率论与数理统计真题。traps 取自 PITFALL[xt14]。hint 取自 MNEM[xt14]。" }
+    },
+    {
+      id: "cv-st-xt15", origin: 'card', year: 2020, school: "中国科学技术大学 432 统计学真题 2020 年", no: "卡片 xt15", type: "chi", star: 4,
+      tags: ["xt15"],
+      stem: "叙述 $2\\times2$ 的列联表独立性检验原理",
+      answer: "设有两个分类变量 $X,Y$，各取 $m,n$ 种值，观测频数 $N_{ij}$，行合计 $N_{i\\cdot}$、列合计 $N_{\\cdot j}$、总 $N$。$H_0$：$X$ 与 $Y$ 相互独立。\n独立时 $\\dfrac{N_{ij}}{N}\\approx\\dfrac{N_{i\\cdot}}{N}\\cdot\\dfrac{N_{\\cdot j}}{N}$，即期望频数 $\\hat e_{ij}=\\dfrac{N_{i\\cdot}N_{\\cdot j}}{N}$。以 $\\dfrac{1}{N_{i\\cdot}N_{\\cdot j}}$ 为权重标准化偏离，得\n$$\\chi^{2}=\\sum_{i=1}^{m}\\sum_{j=1}^{n}\\frac{(N_{ij}-\\hat e_{ij})^{2}}{\\hat e_{ij}}\\sim\\chi^{2}((m-1)(n-1))$$\n$\\chi^{2}>\\chi^{2}_{\\alpha}((m-1)(n-1))$ 则拒绝 $H_0$，认为 $X,Y$ 不独立。对 $2\\times2$ 表自由度 $=1$，可用 Yates 连续性校正：$\\chi^{2}_{c}=\\sum\\dfrac{(|N_{ij}-\\hat e_{ij}|-\\frac12)^{2}}{\\hat e_{ij}}$。",
+      src: { card: "xt15", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt15\"]）来源原文：2020 中国科学技术大学 432 统计学真题。PITFALL[xt15] 无条目 → 省略 traps 字段。MNEM[xt15] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-jj01", origin: 'card', year: 2021, school: "南开大学-432 统计学 2021 年", no: "卡片 jj01", type: "prob", star: 4,
+      tags: ["jj01"],
+      stem: "一条线段随机分成三段，求能组成三角形的概率。",
+      answer: "等价于在 $[0,1]$ 上取两个均匀随机点（将其排序后得到三段），即三段长度 $(X_1,X_2,X_3)$、$X_1+X_2+X_3=1$ 在\\textbf{单纯形}上均匀分布。能成三角形 $\\Leftrightarrow$ 最长段 $<\\frac12$，即\\textbf{同时} $X_1,X_2,X_3<\\frac12$。\n在单纯形中 $\\{X_1\\ge\\frac12\\}$ 的“面积”占 $\\frac14$（三个角各 $\\frac14$），故\n$$P(\\text{能成三角形})=1-3\\times\\frac14=\\frac14$$\n答案：$\\frac14$（B）。",
+      traps: "几何概型要求样本点在 $\\Omega$ 上\\textbf{均匀/等可能}；若取点密度 $f$ 非常数（非均匀），不能直接用面积比，须按 $P(A)=\\int_A f\\,d\\mu$。且“线段分成三段”、“圆周取点”等须先化为均匀等价模型。",
+      src: { card: "jj01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"jj01\"]）来源原文：南开大学-432 统计学-2021 年。traps 取自 PITFALL[jj01]。MNEM[jj01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-jj06", origin: 'card', year: 2016, school: "中国科学技术大学-432 统计学 2016 年", no: "卡片 jj06", type: "regress", star: 4,
+      tags: ["jj06"],
+      stem: "考虑一元线性回归模型 $Y_i=\\beta x_i+\\varepsilon_i$，$i=1,\\dots,n$，其中 $E(\\varepsilon_i)=0$，$\\mathrm{Var}(\\varepsilon_i)=\\sigma^2$，$\\mathrm{Cov}(\\varepsilon_i,\\varepsilon_j)=0\\ (i\\ne j)$。求 $\\beta$ 的最小二乘估计 $\\hat\\beta$，并证明 $\\hat\\beta$ 为 $\\beta$ 的无偏估计。",
+      answer: "OLS：最小化 $\\sum(Y_i-\\beta x_i)^2$，对 $\\beta$ 求导并令为 0：\n$$\\hat\\beta=\\frac{\\sum x_iY_i}{\\sum x_i^2}$$\n无偏性：由 $E(Y_i)=\\beta x_i$，$E(\\hat\\beta)=\\frac{\\sum x_iE(Y_i)}{\\sum x_i^2}=\\frac{\\sum x_i\\cdot\\beta x_i}{\\sum x_i^2}=\\beta$，故 $\\hat\\beta$ 是 $\\beta$ 的无偏估计。又 $\\mathrm{Var}(\\hat\\beta)=\\frac{\\sigma^2}{\\sum x_i^2}$；在题给的“同方差、无自相关、外生（$E(\\varepsilon_i)=0$）”条件下，由 Gauss-Markov 定理知 $\\hat\\beta$ 是 $\\beta$ 的 BLUE。",
+      traps: "Gauss-Markov 定理\\textbf{不要求正态性}；“最优”仅在\\textbf{线性无偏}类内（BLUE）。若内生（$E(\\varepsilon|X)\\ne0$）则 OLS $\\Rightarrow$ 有偏不一致；若异方差/自相关则仍无偏但\\textbf{不有效}。",
+      hint: "Gauss-Markov = 「线性无偏里最省方差」：外生 + 同方差 + 无自相关 ⇒ OLS 是 BLUE，且\\textbf{不需要正态}。",
+      src: { card: "jj06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"jj06\"]）来源原文：中国科学技术大学-432 统计学-2016 年。traps 取自 PITFALL[jj06]。hint 取自 MNEM[jj06]。" }
+    },
+    {
+      id: "cv-st-jj11", origin: 'card', year: 2020, school: "上海交通大学-432 统计学 2020 年", no: "卡片 jj11", type: "regress", star: 4,
+      tags: ["jj11"],
+      stem: "为研究旅游购物金额 $Y$（美元）与性别 $D$ 的关系，同时纳入月收入 $X$ 及交互项 $X:D$，回归结果（$D=1$ 女、$D=0$ 男，$\\alpha=0.05$，各系数均显著）：Intercept=$57.61$，$X$=$0.0118$，$D$=$31.87$，$X:D$=$-0.0088$。(1) 解释 $D$ 的回归系数；(2) 解释 $X:D$ 的回归系数。",
+      answer: "模型 $\\hat Y=57.61+0.0118X+31.87D-0.0088(X\\cdot D)$。\n男（$D=0$）：$\\hat Y=57.61+0.0118X$；女（$D=1$）：$\\hat Y=89.48+0.0030X$。\n(1) $D$ 的系数 $31.87$：女性比男性的基础购物支出（截距）高 $31.87$ 美元；$|t|=8.32>t_{0.025}$，显著，说明性别在截距上有显著差异。\n(2) $X:D$ 的系数 $-0.0088$：收入的边际影响在女性中比男性低 $0.0088$——每增加 1 美元收入，男性购物增加 $0.0118$，女性仅增加 $0.0118-0.0088=0.0030$；$|t|=6.69>t_{0.025}$，显著，说明组间斜率有系统差异（交互效应存在）。",
+      src: { card: "jj11", note: "卡片例题（data/stats.js 的 EXAMPLE[\"jj11\"]）来源原文：上海交通大学-432 统计学-2020 年。PITFALL[jj11] 无条目 → 省略 traps 字段。MNEM[jj11] 无条目 → 省略 hint 字段。" }
+    },
+  // ==== END GENERATED card-questions (t32) ====
   ];
 
   window.BANK = window.BANK || {};
@@ -170,7 +1429,7 @@
     id: 'stats',
     name: '统计学',
     subjectId: 'stats',
-    sourceNote: 'POC 首批 16 题取自北大光华-431 统计 2016–2020 真题（JYSG 真题册与解析册文字层完整可读，含 2020 年列联表题）。本部真题册含 2016–2026，2021–2026 与复旦/北师大/中科大等院校块本波次未收录（按 15 题配额优先收录 2016–2020 的代表题型）。',
+    sourceNote: "POC 首批 16 题取自北大光华-431 统计 2016–2020 真题（JYSG 真题册与解析册文字层完整可读）。t32 追加 170 条卡片派生题：data/stats.js 的 EXAMPLE 共 166 键 177 条，其中 7 条因例题 src 无四位年份（例题仅真题红线，不编造年份）被排除；这些题目的 src 为卡片例题自带来源（各校 432/431/805/849/861 统计学真题与考研数学三真题），字段口径见 docs/DATA_SCHEMA.md 的 Question 字段表（origin=card：traps/hint 允许省略、溯源主体为 src.card/src.note）。",
     types: TYPES,
     questions: DATA
   };

@@ -32,6 +32,7 @@ vm.runInNewContext(block + '\n' + [
   'this.quizDefaultConfig = quizDefaultConfig;',
   'this.quizShuffle = quizShuffle;',
   'this.quizClampNum = quizClampNum;',
+  'this.quizStarNorm = quizStarNorm;',
   'this.quizSanitizeRange = quizSanitizeRange;',
   'this.quizSanitizeConfig = quizSanitizeConfig;',
   'this.quizFilterEntries = quizFilterEntries;',
@@ -68,33 +69,33 @@ function seqRnd(seq) {
 function mkEntry(id, cat, diff, mastery) {
   return { id: id, cat: cat, diff: diff, mastery: mastery, label: 'L-' + id, prompt: 'P-' + id };
 }
-// 8 张候选：4 张「经济学」/4 张「统计学」，难度 1–8，掌握度 10–80
+// 8 张候选：4 张「经济学」/4 张「统计学」，难度＝知识卡难度标签 ★1–5，掌握度 10–80
 const ENTRIES = [
-  mkEntry('e1', '经济学', 1, 10), mkEntry('e2', '经济学', 3, 30),
-  mkEntry('e3', '经济学', 5, 50), mkEntry('e4', '经济学', 8, 80),
-  mkEntry('s1', '统计学', 2, 20), mkEntry('s2', '统计学', 4, 40),
-  mkEntry('s3', '统计学', 6, 60), mkEntry('s4', '统计学', 7, 70)
+  mkEntry('e1', '经济学', 1, 10), mkEntry('e2', '经济学', 2, 30),
+  mkEntry('e3', '经济学', 5, 50), mkEntry('e4', '经济学', 4, 80),
+  mkEntry('s1', '统计学', 2, 20), mkEntry('s2', '统计学', 5, 40),
+  mkEntry('s3', '统计学', 3, 60), mkEntry('s4', '统计学', 4, 70)
 ];
 
-test('常量与默认配置（阈值/边界对外可见）', () => {
+test('常量与默认配置（阈值/边界对外可见；难度＝知识卡星标 ★1–5）', () => {
   assert.equal(sandbox.QUIZ_WEAK_ACC, 60, '表现差阈值必须是 60%');
   assert.equal(sandbox.QUIZ_MAX_COUNT, 50);
   assert.equal(sandbox.QUIZ_DEFAULT_COUNT, 10);
-  assert.equal(sandbox.QUIZ_DIFF_MIN, 1);
-  assert.equal(sandbox.QUIZ_DIFF_MAX, 10);
-  assert.equal(sandbox.QUIZ_DEFAULT_DIFF, 5);
+  assert.equal(sandbox.QUIZ_DIFF_MIN, 1, '难度维度下限＝★1');
+  assert.equal(sandbox.QUIZ_DIFF_MAX, 5, '难度维度上限＝★5（知识卡难度标签，不再是 FSRS D 的 1–10）');
+  assert.equal(sandbox.QUIZ_DEFAULT_DIFF, 3, '没有星标标记的卡按缺省 ★3 计（与 learn.mjs 的 metaOf 缺省一致）');
   assert.equal(sandbox.QUIZ_UNCATED, '未关联');
-  assert.deepEqual(clean(sandbox.quizDefaultConfig()), { count: 10, cats: [], diff: [1, 10], mastery: [0, 100] });
+  assert.deepEqual(clean(sandbox.quizDefaultConfig()), { count: 10, cats: [], diff: [1, 5], mastery: [0, 100] });
 });
 
 test('配置净化：四维边界校验（越界夹取 / 非法回落 / 上下限自动交换）', () => {
   const S = (r, allCats) => clean(sandbox.quizSanitizeConfig(r, allCats));
 
   // 默认与非法输入
-  assert.deepEqual(S(undefined), { count: 10, cats: [], diff: [1, 10], mastery: [0, 100] });
-  assert.deepEqual(S(null), { count: 10, cats: [], diff: [1, 10], mastery: [0, 100] });
-  assert.deepEqual(S({}), { count: 10, cats: [], diff: [1, 10], mastery: [0, 100] });
-  assert.deepEqual(S('nonsense'), { count: 10, cats: [], diff: [1, 10], mastery: [0, 100] });
+  assert.deepEqual(S(undefined), { count: 10, cats: [], diff: [1, 5], mastery: [0, 100] });
+  assert.deepEqual(S(null), { count: 10, cats: [], diff: [1, 5], mastery: [0, 100] });
+  assert.deepEqual(S({}), { count: 10, cats: [], diff: [1, 5], mastery: [0, 100] });
+  assert.deepEqual(S('nonsense'), { count: 10, cats: [], diff: [1, 5], mastery: [0, 100] });
 
   // 数量 1–50，非法值回落默认 10，小数四舍五入
   assert.equal(S({ count: 0 }).count, 1);
@@ -105,12 +106,12 @@ test('配置净化：四维边界校验（越界夹取 / 非法回落 / 上下�
   assert.equal(S({ count: NaN }).count, 10);
   assert.equal(S({ count: 3 }).count, 3);
 
-  // 难度 1–10
-  assert.deepEqual(S({ diff: [3, 99] }).diff, [3, 10]);
+  // 难度 ★1–★5（知识卡难度标签；旧存档的 FSRS D 口径区间按夹取迁移）
+  assert.deepEqual(S({ diff: [3, 99] }).diff, [3, 5]);
   assert.deepEqual(S({ diff: [-5, 4] }).diff, [1, 4]);
-  assert.deepEqual(S({ diff: [8, 2] }).diff, [2, 8], '下限大于上限自动交换');
-  assert.deepEqual(S({ diff: [null, undefined] }).diff, [1, 10]);
-  assert.deepEqual(S({ diff: 'x' }).diff, [1, 10]);
+  assert.deepEqual(S({ diff: [8, 2] }).diff, [2, 5], '下限大于上限：先各自夹取再交换');
+  assert.deepEqual(S({ diff: [null, undefined] }).diff, [1, 5]);
+  assert.deepEqual(S({ diff: 'x' }).diff, [1, 5]);
 
   // 掌握度 0–100
   assert.deepEqual(S({ mastery: [-20, 300] }).mastery, [0, 100]);
@@ -125,7 +126,22 @@ test('配置净化：四维边界校验（越界夹取 / 非法回落 / 上下�
 
   // 四维一起越界
   assert.deepEqual(S({ count: 100, cats: ['经济学'], diff: [0, 12], mastery: [-1, 101] }, all),
-    { count: 50, cats: ['经济学'], diff: [1, 10], mastery: [0, 100] });
+    { count: 50, cats: ['经济学'], diff: [1, 5], mastery: [0, 100] });
+});
+
+test('旧配置迁移（读取侧）：FSRS D 口径的旧区间夹取到星标域，逆序交换与缺失兜底保持', () => {
+  const S = (r) => clean(sandbox.quizSanitizeConfig(r, []));
+
+  assert.deepEqual(S({ diff: [1, 10] }).diff, [1, 5], '旧默认 [1,10] → [1,5]');
+  assert.deepEqual(S({ diff: [3, 7] }).diff, [3, 5], '旧自定义 [3,7] → [3,5]');
+  assert.deepEqual(S({ diff: [10, 1] }).diff, [1, 5], '逆序旧区间：夹取后仍保证下限 ≤ 上限');
+  assert.deepEqual(S({ diff: [2, 6] }).diff, [2, 5]);
+  assert.deepEqual(S({ diff: [4, 4] }).diff, [4, 4], '区间内的星标区间原样保留');
+  assert.deepEqual(S({ diff: [] }).diff, [1, 5], '缺失兜底 [1,5]');
+  assert.deepEqual(S({ count: 3, cats: ['极限'], diff: [1, 10] }).cats, ['极限']);
+
+  // 迁移是「夹取」不是「按比例缩放」：考查端点本身（★1–5 仍是原值）
+  assert.deepEqual(S({ diff: [1, 5] }).diff, [1, 5], '已是星标口径的配置是不动点');
 });
 
 test('quizClampNum / quizSanitizeRange 基本行为', () => {
@@ -136,28 +152,96 @@ test('quizClampNum / quizSanitizeRange 基本行为', () => {
   assert.equal(sandbox.quizClampNum('x', 1, 10, 3), 3);
   assert.deepEqual(clean(sandbox.quizSanitizeRange([2, 5], 1, 10, [1, 10])), [2, 5]);
   assert.deepEqual(clean(sandbox.quizSanitizeRange([2], 1, 10, [4, 6])), [2, 6]);
+
+  // 星标域（1–5）同款行为：小数保留（配置面板步长 1，但手输小数不丢）
+  assert.equal(sandbox.quizClampNum(0, 1, 5, 3), 1);
+  assert.equal(sandbox.quizClampNum(9, 1, 5, 3), 5);
+  assert.deepEqual(clean(sandbox.quizSanitizeRange([2.5, 4.5], 1, 5, [1, 5])), [2.5, 4.5]);
+  assert.deepEqual(clean(sandbox.quizSanitizeRange([6, 0], 1, 5, [1, 5])), [1, 5]);
 });
 
-test('候选筛选：章节 / 难度 / 掌握度三段都命中才留在池子里', () => {
+test('quizStarNorm 与浏览页 starText 同口径（同一张卡在筛选与徽标上的星标一致）', () => {
+  // 对拍基准＝src/learn.mjs 的显示口径，逐字复制（先源码正则确认它没变，再逐值对拍）：
+  //   n = Math.max(1, Math.min(5, Math.round(n) || 3))
+  const learnSrc = fs.readFileSync(path.join(root, 'src/learn.mjs'), 'utf8');
+  assert.ok(/n = Math\.max\(1, Math\.min\(5, Math\.round\(n\) \|\| 3\)\);/.test(learnSrc),
+    'learn.mjs 的 starText 取整/夹取规则未变（本次不改 learn.mjs，仅作对拍基准）');
+  const starN = (n) => Math.max(1, Math.min(5, Math.round(n) || 3));
+
+  const values = [undefined, null, NaN, 'x', 0, 0.4, 1, 1.4, 2.5, 2.6, 3, 3.5, 4.9, 5, 6, 9, -3, '4'];
+  values.forEach((v) => {
+    assert.equal(sandbox.quizStarNorm(v), starN(v), 'quizStarNorm(' + String(v) + ') 与 starText 口径不一致');
+  });
+
+  // 边界语义单独钉死：0 / 0.4 是「没打星标」的缺省 ★3，6 夹到 ★5，小数四舍五入
+  assert.equal(sandbox.quizStarNorm(0), 3);
+  assert.equal(sandbox.quizStarNorm(0.4), 3);
+  assert.equal(sandbox.quizStarNorm(6), 5);
+  assert.equal(sandbox.quizStarNorm(2.5), 3);
+  assert.equal(sandbox.quizStarNorm(1.4), 1);
+});
+
+test('候选筛选：章节 / 难度标签（★1–★5）/ 掌握度三段都命中才留在池子里', () => {
   const cfg = (c) => sandbox.quizSanitizeConfig(c, []);
   const ids = (c) => Array.from(sandbox.quizFilterEntries(ENTRIES, cfg(c))).map((e) => e.id);
+  const idsOf = (list, c) => Array.from(sandbox.quizFilterEntries(list, cfg(c))).map((e) => e.id);
 
   assert.equal(ids({ count: 8 }).length, 8, '默认范围（空章节=全部）覆盖所有候选');
   assert.deepEqual(ids({ count: 8, cats: ['经济学'] }), ['e1', 'e2', 'e3', 'e4']);
   assert.deepEqual(ids({ count: 8, cats: ['经济学', '统计学'] }).length, 8);
-  assert.deepEqual(ids({ count: 8, diff: [5, 6] }), ['e3', 's3'], '难度区间含端点');
+  assert.deepEqual(ids({ count: 8, diff: [5, 5] }), ['e3', 's2'], '难度区间含端点');
   assert.deepEqual(ids({ count: 8, mastery: [50, 70] }), ['e3', 's3', 's4'], '掌握度区间含端点');
-  assert.deepEqual(ids({ count: 8, cats: ['统计学'], diff: [4, 8], mastery: [50, 70] }), ['s3', 's4']);
-  assert.deepEqual(ids({ count: 8, cats: ['统计学'], diff: [1, 3] }), ['s1']);
+  assert.deepEqual(ids({ count: 8, cats: ['统计学'], diff: [4, 5], mastery: [40, 70] }), ['s2', 's4'], '章节+难度+掌握度三段组合');
+  assert.deepEqual(ids({ count: 8, cats: ['统计学'], diff: [1, 2] }), ['s1']);
 
-  // 缺 diff 的候选按默认 D=5 参与筛选（口径统一）
-  const noDiff = [{ id: 'x1', cat: '经济学', mastery: 0 }];
-  assert.deepEqual(Array.from(sandbox.quizFilterEntries(noDiff, cfg({ diff: [5, 5] }))).map((e) => e.id), ['x1']);
-  assert.deepEqual(Array.from(sandbox.quizFilterEntries(noDiff, cfg({ diff: [6, 10] }))).map((e) => e.id), []);
+  // ★1–★5 逐档命中集合（星标口径全覆盖：难度维度取卡片星标 metaOf(id)[0]）
+  assert.deepEqual([1, 2, 3, 4, 5].map((s) => [s, ids({ count: 8, diff: [s, s] })]), [
+    [1, ['e1']],
+    [2, ['e2', 's1']],
+    [3, ['s3']],
+    [4, ['e4', 's4']],
+    [5, ['e3', 's2']]
+  ]);
+  assert.equal(ids({ count: 8, diff: [1, 5] }).length, 8, '全星标区间覆盖所有候选');
+
+  // 缺 diff 的候选按缺省 ★3 参与筛选（与 learn.mjs metaOf 缺省一致）
+  const noStar = [{ id: 'x1', cat: '经济学', mastery: 0 }];
+  assert.deepEqual(idsOf(noStar, { diff: [3, 3] }), ['x1'], '没有星标标记 → 缺省 ★3 命中');
+  assert.deepEqual(idsOf(noStar, { diff: [1, 2] }), []);
+  assert.deepEqual(idsOf(noStar, { diff: [4, 5] }), []);
+
+  // 边界：0 → 缺省 ★3、6 → 夹到 ★5、小数四舍五入（与浏览页 starText 同规则）
+  const edge = [
+    { id: 'b0', cat: '经济学', mastery: 0, diff: 0 },
+    { id: 'b6', cat: '经济学', mastery: 0, diff: 6 },
+    { id: 'b25', cat: '经济学', mastery: 0, diff: 2.5 },
+    { id: 'b14', cat: '经济学', mastery: 0, diff: 1.4 }
+  ];
+  assert.deepEqual(idsOf(edge, { diff: [3, 3] }), ['b0', 'b25']);
+  assert.deepEqual(idsOf(edge, { diff: [5, 5] }), ['b6'], '超出 5 的脏值夹到 ★5 而不是被静默排除');
+  assert.deepEqual(idsOf(edge, { diff: [1, 1] }), ['b14']);
 
   // 脏数据不炸：无 id 的候选直接丢弃
   assert.deepEqual(Array.from(sandbox.quizFilterEntries([{ cat: '经济学' }, null, ENTRIES[0]], cfg({}))).map((e) => e.id), ['e1']);
   assert.deepEqual(Array.from(sandbox.quizFilterEntries(null, cfg({}))), []);
+});
+
+test('难度维度＝卡片星标：metaOf 缺省链 → 筛选命中（与浏览页星标筛选同源）', () => {
+  // 形如 data/math3.js 的 META：`gx01: [3, '概念·反函数']`；缺省行与 src/learn.mjs:182 一致
+  const META = { k1: [2, '方法·需求定理'] };
+  const metaOf = (id) => META[id] || [3, '综合计算与应用'];
+  const data = [
+    { id: 'k1', cat: '经济学', title: '需求定理', back: 'F1' },
+    { id: 'k2', cat: '经济学', title: '供给定理', back: 'F2' }
+  ];
+  const entries = sandbox.quizCardCandidates(data, () => 50, () => null, (id) => metaOf(id)[0]);
+  const cfg = (c) => sandbox.quizSanitizeConfig(c, []);
+  const hit = (c) => clean(Array.from(sandbox.quizFilterEntries(entries, cfg(c))).map((e) => e.id));
+
+  assert.deepEqual(hit({ diff: [2, 2] }), ['k1']);
+  assert.deepEqual(hit({ diff: [3, 3] }), ['k2'], '无星标标记的卡按缺省 ★3 命中');
+  assert.deepEqual(hit({ diff: [4, 5] }), []);
+  assert.deepEqual(hit({ diff: [1, 5] }), ['k1', 'k2']);
 });
 
 test('「配置 → 出题队列」纯函数：数量 / 干扰项 / 不重复 / 池子不足', () => {
@@ -183,12 +267,12 @@ test('「配置 → 出题队列」纯函数：数量 / 干扰项 / 不重复 / 
   });
 
   // 全部候选都满足四维条件
-  const filtered = sandbox.quizBuildQueue(ENTRIES, cfg({ count: 50, cats: ['统计学'], diff: [4, 8], mastery: [50, 70] }), Math.random, ENTRIES);
+  const filtered = sandbox.quizBuildQueue(ENTRIES, cfg({ count: 50, cats: ['统计学'], diff: [4, 5], mastery: [40, 70] }), Math.random, ENTRIES);
   assert.equal(filtered.qs.length, 2, '池子不足时按实际数量出题');
   Array.from(filtered.qs).forEach((q) => {
     assert.equal(q.cat, '统计学');
-    assert.ok(q.diff >= 4 && q.diff <= 8);
-    assert.ok(q.mastery >= 50 && q.mastery <= 70);
+    assert.ok(q.diff >= 4 && q.diff <= 5);
+    assert.ok(q.mastery >= 40 && q.mastery <= 70);
   });
 
   // 干扰项优先取自同一筛选池：池里只有 2 张时，仍从更大的 fallback 补足到 4 个选项
@@ -315,59 +399,70 @@ test('报告：成绩档位 / 空场次 / 预测差距符号 / 整场表现差',
   assert.equal(clean(sandbox.quizBuildReport(null)).total, 0);
 });
 
-test('错题候选：题面给题目、选项给解析；章节由关联知识点映射，未关联单列一桶', () => {
+test('错题候选：题面给题目、选项给解析；章节由关联知识点映射，难度取关联卡星标', () => {
   const data = [{ id: 'k1', cat: '经济学', title: '需求定理', back: 'P1' }, { id: 'k2', cat: '统计学', title: '大数定律', back: 'P2' }];
+  const stars = { k1: 2, k2: 5 };
   const wrongs = {
-    w1: { q: '题目一', a: '解析一', linked: ['k1'], diff: 3, state: 'review', stab: 10, lastR: NOW },
+    w1: { q: '题目一', a: '解析一', linked: ['k1'], diff: 9, state: 'review', stab: 10, lastR: NOW },
     w2: { q: '题目二', a: '解析二', linked: ['k2'] },
     w3: { q: '题目三', a: '解析三', linked: ['不存在'] },
     w4: { q: '题目四', a: '', linked: [] }
   };
-  const out = clean(sandbox.quizWrongCandidates(wrongs, data, (wid) => wid === 'w1' ? 42 : 7, (w) => (w.state === 'review' && typeof w.stab === 'number') ? 88 : 0));
+  const out = clean(sandbox.quizWrongCandidates(wrongs, data, (wid) => wid === 'w1' ? 42 : 7, (w) => (w.state === 'review' && typeof w.stab === 'number') ? 88 : 0, (kid) => stars[kid]));
 
   assert.equal(out.length, 4);
   const by = (id) => out.filter((e) => e.id === id)[0];
   assert.equal(by('w1').prompt, '题目一');
   assert.equal(by('w1').label, '解析一');
   assert.equal(by('w1').cat, '经济学');
-  assert.equal(by('w1').diff, 3);
+  assert.equal(by('w1').diff, 2, '难度＝关联知识点的卡片星标；错题记录自身的 FSRS D=9 不参与筛选');
   assert.equal(by('w1').mastery, 42);
   assert.equal(by('w1').predicted, 88);
   assert.equal(by('w2').cat, '统计学');
-  assert.equal(by('w2').diff, 5, '未进入排期的错题按默认 D=5');
+  assert.equal(by('w2').diff, 5, '关联卡 ★5');
   assert.equal(by('w3').cat, '未关联', '关联的知识点不存在 → 未关联桶');
+  assert.equal(by('w3').diff, 3, '关联不到卡片 → 缺省 ★3');
   assert.equal(by('w4').cat, '未关联');
+  assert.equal(by('w4').diff, 3, '未关联错题按缺省 ★3（否则会被 ★1–5 区间静默排除）');
   assert.equal(by('w4').label, '（无解析）');
   assert.equal(by('w4').mastery, 7);
 
   assert.deepEqual(clean(sandbox.quizWrongCandidates(null, data)), []);
-  assert.deepEqual(clean(sandbox.quizWrongCandidates({ w9: { q: 'q', a: 'a' } }, null)), [{ id: 'w9', label: 'a', prompt: 'q', cat: '未关联', diff: 5, mastery: 0, predicted: 0 }]);
+  assert.deepEqual(clean(sandbox.quizWrongCandidates({ w9: { q: 'q', a: 'a', diff: 8 } }, null, null, null, null)),
+    [{ id: 'w9', label: 'a', prompt: 'q', cat: '未关联', diff: 3, mastery: 0, predicted: 0 }]);
 });
 
 test('错题自测端到端（纯函数链路）：按错题范围配置 → 出题队列 → 报告', () => {
   const data = [{ id: 'k1', cat: '经济学' }, { id: 'k2', cat: '统计学' }];
+  const stars = { k1: 2, k2: 5 };
   const wrongs = {
-    w1: { q: '题目一', a: '解析一', linked: ['k1'], diff: 3 },
+    w1: { q: '题目一', a: '解析一', linked: ['k1'], diff: 9 },
     w2: { q: '题目二', a: '解析二', linked: ['k1'], diff: 4 },
     w3: { q: '题目三', a: '解析三', linked: ['k2'], diff: 8 },
     w4: { q: '题目四', a: '解析四', linked: [], diff: 5 }
   };
   const cfgs = sandbox.quizSanitizeConfig;
-  const entries = sandbox.quizWrongCandidates(wrongs, data, () => 40, () => 0);
+  const entries = sandbox.quizWrongCandidates(wrongs, data, () => 40, () => 0, (kid) => stars[kid]);
 
-  // 只选「经济学」章节 → 只出该章节错题
+  // 只选「经济学」章节 → 只出该章节错题（两张都关联 ★2 的 k1）
   const built = sandbox.quizBuildQueue(entries, cfgs({ count: 10, cats: ['经济学'] }, []), seqRnd([0.2, 0.7]), entries);
   assert.deepEqual(clean(Array.from(built.qs).map((q) => q.id)).sort(), ['w1', 'w2']);
   assert.equal(built.poolSize, 2);
   Array.from(built.qs).forEach((q) => {
     assert.equal(q.cat, '经济学');
+    assert.equal(q.diff, 2, '出题队列里的难度＝卡片星标');
     assert.ok(Array.from(q.opts).some((o) => o.id === q.id));
     assert.ok(Array.from(q.opts).length >= 2);
   });
 
-  // 「未关联」桶 + 难度范围：只要 D=5 的那道
-  const mis = sandbox.quizBuildQueue(entries, cfgs({ count: 10, cats: ['未关联'], diff: [5, 5] }, []), seqRnd([0.5]), entries);
+  // 「未关联」桶 + 难度范围：只要缺省 ★3 的那道
+  const mis = sandbox.quizBuildQueue(entries, cfgs({ count: 10, cats: ['未关联'], diff: [3, 3] }, []), seqRnd([0.5]), entries);
   assert.deepEqual(clean(Array.from(mis.qs).map((q) => q.id)), ['w4']);
+
+  // 回归：★5 的错题不再因自身历史 D=8 而被 ★1–5 区间静默排除
+  const all = sandbox.quizBuildQueue(entries, cfgs({ count: 10, diff: [1, 5] }, []), seqRnd([0.3]), entries);
+  assert.equal(all.poolSize, 4, '错题难度按关联卡星标 → 默认 ★1–★5 覆盖全部错题');
+  assert.equal(clean(entries)[2].diff, 5, 'w3 关联 ★5 的卡 → 落在区间内');
 
   // 同一报告结构用于错题场次（mode='wrong'），章节表现里出现「未关联」
   const answers = [
@@ -384,17 +479,21 @@ test('错题自测端到端（纯函数链路）：按错题范围配置 → 出
   assert.deepEqual(rep.weakIds, ['w1', 'w4'], '正确率 50% < 60% → 整场入队（错题侧同样口径）');
 });
 
-test('知识卡候选（纯）：题面给内容、选项给名称；缺 R 记 0', () => {
+test('知识卡候选（纯）：题面给内容、选项给名称；难度取卡片星标、缺 R 记 0', () => {
   const data = [{ id: 'k1', cat: '经济学', title: '需求定理', back: '公式一' }, { id: 'k2', cat: '统计学', title: '大数定律', back: '公式二' }];
-  const out = clean(sandbox.quizCardCandidates(data, (id) => ({ diff: id === 'k1' ? 2 : undefined }), (id) => id === 'k1' ? 33 : 0, (id) => id === 'k2' ? null : 78));
+  const out = clean(sandbox.quizCardCandidates(data, (id) => id === 'k1' ? 33 : 0, (id) => id === 'k2' ? null : 78, (id) => id === 'k1' ? 2 : undefined));
   assert.equal(out[0].label, '需求定理');
   assert.equal(out[0].prompt, '公式一');
-  assert.equal(out[0].diff, 2);
+  assert.equal(out[0].diff, 2, '难度＝卡片星标 metaOf(id)[0]（不再读排期卡的 FSRS D）');
   assert.equal(out[0].mastery, 33);
   assert.equal(out[0].predicted, 78);
-  assert.equal(out[1].diff, 5, '没有排期卡 → 默认 D=5');
+  assert.equal(out[1].diff, 3, '没有星标标记 → 缺省 ★3');
   assert.equal(out[1].predicted, 0, '没有 R（未进入 review）→ 0');
   assert.deepEqual(clean(sandbox.quizCardCandidates(null, null, null, null)), []);
+
+  // 星标回调缺失（老调用方）→ 全部按缺省 ★3，不抛错
+  const fallback = clean(sandbox.quizCardCandidates(data, () => 0, () => 0));
+  assert.deepEqual(fallback.map((e) => e.diff), [3, 3]);
 });
 
 test('统计聚合：自测次数 / 题数 / 正确率 / 用时 / 表现差入队（含来源分类与窗口过滤）', () => {
@@ -484,6 +583,34 @@ test('源码契约：quiz.mjs 不能出现 export（不在构建 STRIP 集合内
     'quiz.mjs 不得自行改到期时间：提前复习只能用 sched.mjs 的 markCardDueNow');
   assert.ok(/markCardDueNow/.test(src), '入队必须调用既有「提前复习」接口');
   assert.ok(src.indexOf(BEGIN) >= 0 && src.indexOf(END) > src.indexOf(BEGIN), '标记块必须保留（单测靠它抽取）');
+
+  // 难度口径契约：筛选依据是知识卡星标（★1–★5），不得再声称 FSRS 记忆难度 D 是筛选依据
+  assert.ok(/QUIZ_DIFF_MIN = 1;/.test(src) && /QUIZ_DIFF_MAX = 5;/.test(src), '难度值域必须是星标 1–5');
+  assert.ok(/metaOf\(id\)\[0\]/.test(src), '知识卡难度取 metaOf(id)[0]（卡片星标，与浏览页同源）');
+  assert.ok(/知识卡难度标签（★1–★5，取自卡片星标）/.test(src), '配置面板提示必须写明星标口径');
+  assert.ok(!/未进入排期的卡按默认 D=/.test(src), '旧的「FSRS 记忆难度 D」难度提示必须消失');
+  assert.ok(/非 FSRS 记忆难度 D/.test(src), '报告口径必须注明「非 FSRS 记忆难度 D」');
+  assert.ok(!/FSRS 记忆难度 D（1–10）/.test(src), '1–10 的 D 不得再作为筛选提示文案');
+
+  // t20 题头契约：自测卡面不再展示 FSRS 记忆难度 D —— 题头区域内不得出现 D 数值 / 「记忆难度」/ quizFsrsD 调用
+  const headStart = src.indexOf('function renderQuizQuestion()');
+  assert.ok(headStart > 0, '题头渲染函数 renderQuizQuestion 必须存在（抽取范围以它为准）');
+  const headEnd = src.indexOf('\n  function ', headStart + 10);
+  const headSrc = src.slice(headStart, headEnd > headStart ? headEnd : src.length);
+  assert.ok(headSrc.length > 200, '题头源码切片必须非空（否则下面的「不得出现」断言会假通过）');
+  // 只对渲染代码断言：剔掉整行注释（题头区域允许注释解释「为什么不再展示 D」），
+  // 逐行过滤不会截断任何代码行，故不会掩盖同一行里的渲染调用。
+  const headCode = headSrc.split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
+  assert.ok(/难度 ' \+ starText\(quizStarNorm\(q\.diff\)\) \+ ' · 掌握 ' \+ Math\.round\(q\.mastery \|\| 0\) \+ '%'/.test(headCode),
+    '题头主行必须是「难度 ★…★ · 掌握 x%」（星标＋掌握度，均取自本题筛选口径）');
+  assert.ok(/QUIZ_DEFAULT_DIFF = 3;/.test(src), '星标缺省值仍是 ★3（metaOf 缺省口径），与 t19 一致');
+  assert.ok(!/D=/.test(headCode), '题头不得再渲染任何 FSRS 记忆难度数值（D=…）');
+  assert.ok(!/记忆难度/.test(headCode), '题头不得再出现「记忆难度」字样');
+  assert.ok(!/quizFsrsD\(/.test(headCode), '题头不得再调用 quizFsrsD');
+  assert.ok(!/toFixed/.test(headCode), '题头不得再渲染小数形式（D=x.x）');
+  assert.ok(!/quizFsrsD/.test(src), 'quizFsrsD 已整体删除：全文件不得残留定义或调用点');
+  // 报告头的筛选口径行保留（它解释筛选依据，不是难度展示）
+  assert.ok(/筛选范围：难度 ★/.test(src) && /非 FSRS 记忆难度 D/.test(src), '报告头筛选口径行必须保留');
 });
 
 test('新存储键写入口径：DB.log.quiz 与 DB.log.counts[日].q（记录上限 200）', () => {

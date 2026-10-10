@@ -26,21 +26,34 @@
     input.click();
   }
 
+  // 错题自测（错题模块二级项 wrongQuiz）：进入 currentModule='wrong' + currentView='quiz'，
+  // 与错题本内「📝 错题自测」入口（src/wrong.mjs 的 wrongQuizEntry）等价——没有进行中的错题自测
+  // 会话时重开一个，避免把卡片自测（mode !== 'wrong'）的会话带进错题自测视图；进行中的错题自测
+  // 会话保持不动（二级栏重渲染/误点不丢进度）。
+  function enterWrongQuiz() {
+    if (!quiz || quiz.mode !== 'wrong') quiz = null;
+  }
+
   function handleAction(action, arg) {
     switch (action) {
       case 'nav':
         closeDrawer();
-        currentView = arg;
-        if (arg === 'wrong' || arg === 'wrongBrowse' || arg === 'wrongStats') currentModule = 'wrong';
+        // 错题自测（错题模块二级项）复用自测视图：视图值落 'quiz' 而不是 'wrongQuiz'（后者不是渲染分支，
+        // 否则 renderApp 无从分发）；currentModule='wrong' 由下面的分支保证，与 wrongQuizEntry 同一状态对。
+        currentView = (arg === 'wrongQuiz') ? 'quiz' : arg;
+        if (arg === 'wrong' || arg === 'wrongQuiz' || arg === 'wrongBrowse' || arg === 'wrongStats') currentModule = 'wrong';
         else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics' || arg === 'bank') currentModule = 'cards';
         else if (arg === 'actPlan' || arg === 'actHabit' || arg === 'actFocus' || arg === 'actHelp') currentModule = 'act';
         else if (arg === 'mile') currentModule = 'cards';
+        if (arg === 'wrongQuiz') enterWrongQuiz();
         renderApp();
         break;
       case 'module':
         closeDrawer();
-        currentModule = arg;
-        currentView = (arg === 'wrong') ? 'wrong' : (arg === 'act') ? 'actFocus' : 'learn';
+        // 一级模块项：'wrongQuiz' 归错题模块（它不是一个模块 id），与上面的 nav 分支同一状态对
+        currentModule = (arg === 'wrongQuiz') ? 'wrong' : arg;
+        currentView = (arg === 'wrong') ? 'wrong' : (arg === 'wrongQuiz') ? 'quiz' : (arg === 'act') ? 'actFocus' : 'learn';
+        if (arg === 'wrongQuiz') enterWrongQuiz();
         renderApp();
         break;
       case 'menuclose':
@@ -149,7 +162,7 @@
       // ---- 题库（POC）：筛选 / 开题 / 加错题 / 上一题下一题 / 返回 / 重置 ----
       // bank.mjs 只负责渲染与 data-action 标记，状态改写与重渲染统一收口在这里。
       case 'bankFilter': {
-        // data-arg 只剩 type= / tag= / star=（页内科目选择与频率维度已下线：
+        // data-arg 有 type= / tag= / star= / year=（页内科目选择与频率维度已下线：
         // 历史遗留的 subject= / typeStar= 静默忽略，不再有分支）
         const eq = String(arg == null ? '' : arg).indexOf('=');
         if (eq < 0) break;
@@ -158,6 +171,9 @@
         if (key === 'type') bankType = value;
         else if (key === 'tag') bankTag = value;
         else if (key === 'star') bankStar = value;
+        // t14：年份/卷 的「全部」用 '' 表示（谓词里 ''/'all' 等价，但会话状态只存 ''
+        // 或 '年份'/'年份|来源'，避免把 UI 首项值当成年份存进状态）
+        else if (key === 'year') bankYear = (value === 'all' ? '' : value);
         else if (key === 'query') bankQuery = value;
         else break;
         bankOpen = null; // 改筛选即回到列表，避免详情页与筛选条件不一致
@@ -205,6 +221,7 @@
         bankType = 'all';
         bankTag = 'all';
         bankStar = 'all';
+        bankYear = ''; // t14：年份/卷 回到全选态
         bankQuery = '';
         bankOpen = null;
         renderApp();

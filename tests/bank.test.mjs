@@ -365,7 +365,15 @@ test('卡片派生题（t32 统计试点）：id/标签/星级/题干/答案/另
     assert.ok(String(q.src.note).indexOf(e.src) >= 0, q.id + ' src.note 应含例题 src 原文：' + e.src);
     assert.match(String(q.school), new RegExp(String(e.year) + ' 年$'), q.id + ' school 应以「<年份> 年」结尾');
     assert.ok(B.bankYearSourceLabel(q.year, q.school).length > 0, q.id + ' 年份来源简称不得为空');
-    assert.equal(q.no, '卡片 ' + e.key + (e.idx > 0 ? '-' + (e.idx + 1) : ''), q.id + ' 题号应为「卡片 <id>」形态');
+    // S5：题号＝「例题 src 明写的真实题号」，取不到写 '未编号' 占位；绝不再回退到内部卡片 id（用户投诉 #4）
+    assert.notEqual(q.no, '', q.id + ' 题号不得为空');
+    assert.ok(String(q.no).indexOf(e.key) < 0, q.id + ' 题号不得泄漏内部卡片 id：' + q.no);
+    if (q.no !== '未编号') {
+      assert.match(String(q.no), /^[一二三四五六七八九十]+(?:、\(\d+ 分\)|\(\d+\))$/,
+        q.id + ' 题号形态应为「一、(20 分)」或「二(9)」：' + q.no);
+      assert.ok(String(e.src).indexOf(String(q.no).charAt(0)) >= 0 && String(e.src).indexOf(String(q.no).match(/\d+/)[0]) >= 0,
+        q.id + ' 题号必须能在例题 src 原文里逐字找到（禁推断）：' + e.src);
+    }
     assert.ok(typeof q.type === 'string' && q.type.length > 0, q.id + ' 缺题型');
     // ⑥ 逐字段不得是空串/undefined（渲染层与校验器都不应拿到它们）
     for (const [k, v] of Object.entries(q)) {
@@ -398,12 +406,15 @@ const cardEntriesOf = (EXAMPLE, prefix) => {
 // 例题 src 无四位年份即排除（例题仅真题红线，不编造年份/来源）：数学三 0 条，微观仅 mk31 第 1 条
 // poc = 非卡片派生题（手写真题）条数：math3 由 t53 前的 24 增至 181（t53 全量入库 2010–2022 的 157 条）
 // t62：微观期望值改为从 data/econ.js 现算（t51 新增 13 张卡后，写死 148 会立刻过期），另用 floor 锁住已入库量；
-// 数学三保持 t49 写死值（150），因为它同时被 t53 的 poc=181 交叉锁定。
+// 数学三写死值（t49 起）：t49 时 150；T140 因 T139 给数学三补挂 55 条例题（EXAMPLE 键 124→179）而更新为 205；
+// 它与 poc=181 交叉锁定（150+181=331 → 205+181=386），故仍不改为现算——任一侧漂移都会立刻转红。
 const ECON_CARD_PARTS = cardEntriesOf(SUBJECTS.econ.EXAMPLE || {}, CARD_PREFIX.econ);
 const T49_CARDS = [
-  { sid: 'math3', cardFile: 'data/math3.js', kept: 150, skip: 0, poc: 181 },
+  { sid: 'math3', cardFile: 'data/math3.js', kept: 205, skip: 0, poc: 181 },
+  // poc（既有手写真题）＝题库总题数 − 卡片派生题：math3 181（t53 全量入库 2010–2022）；
+  // econ 15（t49 起）→ 174（T143a 第一批微观真题题面 159 条入库：15 + 159 = 174）。
   { sid: 'econ', cardFile: 'data/econ.js', kept: ECON_CARD_PARTS.kept.length,
-    skip: ECON_CARD_PARTS.skipped.length, poc: 15, floor: 161 }
+    skip: ECON_CARD_PARTS.skipped.length, poc: 174, floor: 161 }
 ];
 
 test('卡片派生题（t49 数学三 / 微观）：id/标签/星级/题干/答案/另解/陷阱/提示与卡片例题逐题同源', () => {
@@ -433,8 +444,8 @@ test('卡片派生题（t49 数学三 / 微观）：id/标签/星级/题干/答�
     // ② 无年份条目一律不入库，也不得影响同一张卡的后续条目（微观 mk31 第 1 条无年份、第 2/3 条有）
     for (const s of skipped) {
       assert.ok(!derived.some((q) => q.id === s.id), spec.sid + ' 无年份例题不应入库：' + s.id);
-      assert.ok(!derived.some((q) => q.src.card === s.key && q.no === '卡片 ' + s.key),
-        spec.sid + ' 无年份条目不得占用「卡片 ' + s.key + '」题号');
+      assert.ok(!derived.some((q) => String(q.no).indexOf(s.key) >= 0),
+        spec.sid + ' 题号不得泄漏内部卡片 id：' + s.key);
     }
     // ③ 既有手写题逐条保留（本任务只做增量）
     assert.equal(BANK[spec.sid].questions.length - derived.length, spec.poc, spec.sid + ' 既有手写题应逐条保留');
@@ -465,7 +476,15 @@ test('卡片派生题（t49 数学三 / 微观）：id/标签/星级/题干/答�
       assert.ok(String(q.src.note).indexOf(String(e.year)) >= 0, q.id + ' src.note 应含年份');
       assert.match(String(q.school), new RegExp(String(e.year) + ' 年$'), q.id + ' school 应以「<年份> 年」结尾');
       assert.ok(B.bankYearSourceLabel(q.year, q.school).length > 0, q.id + ' 年份来源简称不得为空');
-      assert.equal(q.no, '卡片 ' + e.key + (e.idx > 0 ? '-' + (e.idx + 1) : ''), q.id + ' 题号应为「卡片 <id>」形态');
+      // S5：题号＝「例题 src 明写的真实题号」，取不到写 '未编号' 占位；绝不再回退到内部卡片 id（用户投诉 #4）
+    assert.notEqual(q.no, '', q.id + ' 题号不得为空');
+    assert.ok(String(q.no).indexOf(e.key) < 0, q.id + ' 题号不得泄漏内部卡片 id：' + q.no);
+    if (q.no !== '未编号') {
+      assert.match(String(q.no), /^[一二三四五六七八九十]+(?:、\(\d+ 分\)|\(\d+\))$/,
+        q.id + ' 题号形态应为「一、(20 分)」或「二(9)」：' + q.no);
+      assert.ok(String(e.src).indexOf(String(q.no).charAt(0)) >= 0 && String(e.src).indexOf(String(q.no).match(/\d+/)[0]) >= 0,
+        q.id + ' 题号必须能在例题 src 原文里逐字找到（禁推断）：' + e.src);
+    }
       assert.ok(typeof q.type === 'string' && q.type.length > 0, q.id + ' 缺题型');
       assert.ok(BANK[spec.sid].types.some((t) => t.key === q.type), q.id + ' 题型 ' + q.type + ' 不在本科题型表内');
       // ⑧ 逐字段不得是空串/undefined（渲染层与校验器都不应拿到它们）
@@ -1777,7 +1796,9 @@ test('徽标口径：首两枚徽标为「院校 · 年度 · 题号」（school
   assert.equal(byClass(tree, 'bank-badge-subject').length, 0, '旧的科目名徽标类名应下线');
   const years = byClass(tree, 'bank-badge-year');
   assert.equal(years.length, rows.length, '列表卡每题一枚「年度 · 题号」徽标');
-  assert.equal(years[0].text, first.year + ' · ' + first.no, '徽标应显示年度与题号');
+  // S5：题号取不到时数据侧写 '未编号'，界面不渲染占位符（也绝不回落到卡片 id）→ 期望值同口径过滤
+  assert.equal(years[0].text, [first.year, first.no === '未编号' ? '' : first.no].filter((v) => v != null && v !== '').join(' · '),
+    '徽标应显示年度与题号（题号未知时只显示年度，不显示占位符）');
   const src = read('src/bank.mjs');
   const schoolFn = src.match(/function bankSchoolLabel\(q\) \{[\s\S]*?\n\}/)[0];
   assert.ok(schoolFn.indexOf('q.school') >= 0 && schoolFn.indexOf('q.subjectLabel') >= 0, '徽标应保留 q.school → q.subjectLabel 回退（t19 补 school 后自动生效）');

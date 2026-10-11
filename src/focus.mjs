@@ -2204,6 +2204,27 @@
     return { ok: true, state: next, plan: p, filled: filled, cleared: true, target: p.targetCount };
   }
 
+  // 计划到期自动结算（纯函数）：把所有「已过截止日、且仍是 active」的计划按 focusPlanSettle 的
+  // 规则逐个结掉——填满 → done（不动链）；没填满 → failed + 该计划下未结束的链一律清空
+  // （workCount 归零、current 清空、status 'cleared'、clearReason 'plan:<id>'）。
+  // 修 2.1.3：focusPlanSettle 此前只有 tests/focus.test.mjs 在调用，运行期没有任何入口
+  // ⇒ 截止日期过了、整链没填满也不会清空（用户实测：到期后任务链照旧还在）。
+  // 现由 focusPlanAutoSettleApply 挂到悬浮提醒的节拍（挂载 + 每 1s）与专注视图渲染前。
+  // 返回 { changed, state, settled }；settled 每项 = { id, status, cleared }。
+  function focusPlanAutoSettle(state, now) {
+    const st = state || focusDefaultState();
+    const overdue = focusPlanOverdue(st, now);
+    let next = st;
+    const settled = [];
+    for (let i = 0; i < overdue.length; i++) {
+      const r = focusPlanSettle(next, overdue[i].id, now);
+      if (!r || !r.ok) continue;   // 期间状态已变（非 active）则跳过，不重复结算
+      next = r.state;
+      settled.push({ id: overdue[i].id, status: (r.plan && r.plan.status) || '', cleared: !!r.cleared });
+    }
+    return { changed: settled.length > 0, state: next, settled: settled };
+  }
+
   // ---------------- 存储 ----------------
   function loadFocus() {
     if (typeof window !== 'undefined' && window.__focusData) return window.__focusData;
@@ -2371,6 +2392,9 @@
   // ---------------- UI：主入口 ----------------
   function renderFocusSection(wrap) {
     focusClearTick();
+    // 到期结算兜底：后台标签页的 1s 表会被节流，打开专注链时先按当前时间结一次（无逾期时零开销）
+    const autoSettled = focusPlanAutoSettle(loadFocus(), Date.now());
+    if (autoSettled.changed) saveFocus(autoSettled.state);
     const st = loadFocus();
     const now = Date.now();
 
@@ -2689,31 +2713,59 @@
     } catch (e) { /* 存储不可用时仅内存生效 */ }
   }
 
+  // 壳层底边（顶栏 + 二级导航栏）的实测像素值：悬浮提醒必须整个落在它下面，
+  // 否则会盖住二级菜单（用户 2.1.3 报的问题）。三级降级：
+  // ①实测布局——renderSubnav 给 .subnav 设了 sticky top = header 高度（learn.mjs:649-650），
+  //   故 header / .subnav 两者 getBoundingClientRect().bottom 的最大值就是壳层底边；
+  // ②--chrome-h（:root 默认 0px，learn.mjs:651 渲染壳层时写入 headerH + subnavH）；
+  // ③96px 兜底（与 style.css 其他吸顶规则的默认值一致）。
+  // immersive（body.immersive 隐藏 .subnav）时只剩 header，实测值自然变小，无需特判。
+  function focusReminderChromeBottom() {
+    let bottom = 0;
+    try {
+      ['header', '.subnav'].forEach(function (sel) {
+        const n = document.querySelector(sel);
+        if (!n || !n.offsetHeight) return;
+        const r = n.getBoundingClientRect();
+        if (Number.isFinite(r.bottom) && r.bottom > bottom) bottom = r.bottom;
+      });
+      if (!bottom) {
+        const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chrome-h'));
+        if (Number.isFinite(v) && v > 0) bottom = v;
+      }
+    } catch (e) { /* 取不到布局/样式时走下面的兜底值 */ }
+    return bottom > 0 ? Math.round(bottom) : 96;
+  }
+
+  // 落到壳层之下 + 12px 呼吸位。带 !important 覆盖 style.css 的 .focus-reminder top；
+  // 每次 sync（挂载 + 每 1s + 每次壳层重渲染）都会重算，窗口尺寸 / immersive 切换都能跟上。
+  function focusReminderPlace(box) {
+    if (!box) return;
+    const top = (focusReminderChromeBottom() + 12) + 'px';
+    try { box.style.setProperty('top', top, 'important'); } catch (e) { box.style.top = top; }
+  }
+
   function focusReminderEnsure() {
     if (typeof document === 'undefined' || !document.body) return null;
     if (focusReminderEl && focusReminderEl.parentNode) return focusReminderEl;
     const box = el('div', 'focus-reminder');
     box.id = 'focusReminder';
-    // 2.2.0 回滚：计时悬浮窗改为「顶部锚定」。旧实现贴底（bottom: calc(14px + var(--dock-h))），
-    // 在卡片页会压住 .rating 四档记忆档位条（style.css:443/.dock:1181 都在底部一条带上），
-    // 用户点不到档位。内联写 top / bottom:auto 时带 !important：style.css 的 .focus-reminder
-    // 底部锚定由 style-eng 的任务改，本文件只保证「悬浮窗一定在顶部」，两种取值下都不遮挡底栏。
+    // 2.2.0 回滚：计时悬浮窗由「贴底」改为「顶部锚定」（旧实现贴底会压住 .rating 四档记忆档位条）。
+    // 2.1.3 修：贴顶（top 12/14px）会压住壳层顶栏与二级导航栏，二级菜单点不到 ⇒ 改为落在
+    // 壳层之下，见 focusReminderPlace（实测布局 → --chrome-h → 96px 三级降级）。
     box.style.position = 'fixed';
-    box.style.top = '14px';
     box.style.bottom = 'auto';
     box.style.right = '14px';
     box.style.left = 'auto';
     box.style.zIndex = '90';
     if (typeof matchMedia === 'function' && matchMedia('(max-width: 420px)').matches) {
-      // ≤420px：左右各收 8px（与 style.css 窄屏 .focus-reminder 的 intent 一致），
-      // 并整体下移到顶栏之下：窄屏顶栏是单行且右侧就是 ☰ 菜单键（style.css:1178-1182），
-      // 悬浮窗若贴顶会盖住它，连抽屉导航都点不开（自检实测：点击被悬浮窗 head 截获，抽屉不开）。
-      box.style.top = '78px';
+      // ≤420px：左右各收 8px（与 style.css 窄屏 .focus-reminder 的 intent 一致）。
+      // 窄屏顶栏是单行且右侧就是 ☰ 菜单键（style.css:1178-1182），落到壳层之下后同样不再截获它。
       box.style.left = '8px';
       box.style.right = '8px';
     }
+    focusReminderPlace(box);
     try {
-      box.style.setProperty('top', box.style.top, 'important');
       box.style.setProperty('bottom', 'auto', 'important');
       box.style.setProperty('right', box.style.right, 'important');
       box.style.setProperty('left', box.style.left, 'important');
@@ -2813,6 +2865,8 @@
     }
     const box = focusReminderEnsure();
     if (!box) return { visible: true, rendered: false, info: info };
+    // 每拍重算落点：壳层高度会随视图（immersive 隐藏 .subnav）与窗口尺寸变化
+    focusReminderPlace(box);
     box.setAttribute('data-mode', String(info.mode || ''));
     box.setAttribute('data-level', String(info.level || ''));
     box.setAttribute('data-key', String(info.key || ''));
@@ -2849,13 +2903,25 @@
     }
   }
 
+  // 运行期入口：结算 + 落盘 + 重绘（只有真的结掉计划时才写盘/重绘；无逾期计划时只是读一次筛选）。
+  // 挂在悬浮提醒的节拍上，因此在「浏览 / 统计」等任意视图下都会到期结算，不要求用户先打开专注链。
+  function focusPlanAutoSettleApply(now) {
+    const r = focusPlanAutoSettle(loadFocus(), Number(now) || Date.now());
+    if (!r.changed) return false;
+    saveFocus(r.state);
+    try { renderApp(); } catch (e) { /* 重绘失败不影响已落盘的结算结果，下个节拍会再同步 */ }
+    return true;
+  }
+
   // 独立于专注视图的定时器：既有的 focusTickTimer 在离开 actFocus 时会停表，
   // 悬浮提醒必须在「浏览 / 统计」等任意视图下继续走秒，故自己起一个 1s 表。
   function focusReminderStart() {
     if (typeof document === 'undefined') return false;
+    focusPlanAutoSettleApply(Date.now());
     focusReminderSync(Date.now(), true);
     if (focusReminderTimer) return true;
     focusReminderTimer = setInterval(function () {
+      try { focusPlanAutoSettleApply(Date.now()); } catch (e) { /* 到期结算失败不影响提醒走秒 */ }
       try { focusReminderSync(Date.now(), false); } catch (e) { /* 提醒渲染失败不影响主流程 */ }
     }, 1000);
     return true;
@@ -4252,6 +4318,7 @@ export {
   focusPlanDueSoon,
   focusPlanOverdue,
   focusPlanSettle,
+  focusPlanAutoSettle,
   FOCUS_LEVEL_VISUALS,
   FOCUS_LEVEL_VISUAL_KEYS,
   FOCUS_LEVEL_VISUAL_ORDER,
@@ -4276,6 +4343,7 @@ export {
   focusReminderSync,
   focusReminderStart,
   focusReminderClear,
+  focusPlanAutoSettleApply,
   FOCUS_REMINDER_UI_KEY
 };
 

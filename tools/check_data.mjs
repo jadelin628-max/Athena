@@ -58,6 +58,8 @@ const JYSG_SCHOOL_GROUPS = [
 const SRC_SCHOOL_RULES = [
   { fileMatch: /JYSG真题册/, oneOf: JYSG_SCHOOL_GROUPS, label: 'JYSG 真题册 13 院校组之一' },
   { fileMatch: /(?:数学三真题答案解析|考研数学三真题)/, need: ['数学三'], label: '数学三真题答案解析册' },
+  // 微观真题册（T143a 批块 159 条，校 1995–2012）：题块标题即「北京大学光华-431 金融学统计 <年> 年」
+  { fileMatch: /光华历年真题-修订版/, need: ['光华', '431'], label: '光华历年真题-修订版（微观）' },
 ];
 
 // —— 加载：在隔离 vm 里执行每个数据文件，复用同一个 window.SUBJECTS ——

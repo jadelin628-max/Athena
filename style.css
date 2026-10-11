@@ -2006,11 +2006,17 @@ body.immersive #immersiveExit { display: block; }
 /* t8 · 顶部锚定（原贴底 bottom: 14px + --dock-h，实测会压住 .rating 四档档位条：
    窄屏 .rating:not(.hidden) 贴在 --dock-h 之上（style.css:443），悬浮窗同在底部一条带里、
    z-index 90 盖住档位按钮 → 点不到）。改贴顶后与底部两条带（.rating / .dock）矩形必然不相交，
-   桌面 right:14px / 顶部 12px（+--safe-top），≤760px 由段末 @media 收紧为左右各 8px。
+   ≤760px 由段末 @media 收紧为左右各 8px。
+   2.1.3 · 再下移：「贴顶」的 top 12px 会压住壳层顶栏与二级导航栏（.subnav 吸顶在 header 之下），
+   二级菜单点不到。现锚定「壳层之下」= calc(max(--chrome-h, 96px) + 12px + --safe-top)：
+   --chrome-h 由 renderSubnav 写入 header.offsetHeight + .subnav.offsetHeight（learn.mjs:651），
+   它在 :root 里默认是 0px（style.css:92），故此处必须有 96px 下限（同 .principle / 其他吸顶
+   规则的兜底取值），否则未渲染壳层时会退回贴顶。focus.mjs 在挂载与每秒同步时还会按实测布局
+   重算，并以带 !important 的内联 top 覆盖本行 —— 两种取值下都不会再盖住二级菜单。
    子规则（head/level/title/fold/clock/meta）与 is-collapsed / is-expired 一字未动；
    `[data-mode]` 子规则见本段末尾 t37 说明（三条 appoint 规则已作为死 CSS 删除）。 */
 .focus-reminder {
-  position: fixed; right: 14px; top: calc(12px + var(--safe-top, 0px)); bottom: auto; left: auto;
+  position: fixed; right: 14px; top: calc(max(var(--chrome-h, 0px), 96px) + 12px + var(--safe-top, 0px)); bottom: auto; left: auto;
   z-index: 90;
   min-width: 164px; max-width: 240px;
   padding: 8px 10px;

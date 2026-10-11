@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '2.1.2';
+  const VERSION = '2.1.3';
 
   // ---------------- 更新日志（设置页「📜 更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '2.1.3', date: '2026-10', items: ['知识卡片（按反馈整改三处）：全库 2809 → 2897 张（数学三 397 → 398 · 微观 301 → 342 · 统计 226 → 272）——过于繁琐的卡片一律拆成「一个结论一张」的单点卡，正文长度硬上限 300 字符、超限 0 张；新增与拆分都以真题考频为准（复核见 docs/refs/freq-audit.md）；卡片正文不再出现 PDF 页码 / 讲义等引用来源（清理 29 张卡 31 处）；撰写口径落在新增的 docs/CARD-STANDARD.md（正文上限、拆分判据、考频优先、来源不入正文）', '题库：真题 767 → 981 题（数学三 331 → 386 · 微观 176 → 335 · 统计 260）。数学三补挂 55 道卡片例题（修好三角函数题的题型归类，卡片派生题 150 → 205）、非选择题答案逐题亲读 136 道（裁定记录 docs/refs/rulings/math3-ans.md）；微观入库第一批手写真题 159 道。题库「来源」标签改为显示年份与题号，由知识卡例题派生的题不再显示来源卡片 id（原卷无题号者显示「未编号」）', '专注链修复两处：①计时 / 预约的剩余时间悬浮提醒会盖住顶边栏的二级菜单，现按顶栏实际高度下移到壳层之下，窗口缩放与沉浸模式切换都跟随；②计划模式下计划任务过了截止日期，任务链没有按规则清空——结算函数此前只有测试在调、运行期没有入口，现补上运行期自动结算（挂载时、每秒定时、渲染前兜底），逾期未填满清空整链、已填满转完成；两处均补源码级守卫测试', '工程：题库生成器落为 tools/bank-cv.mjs（哨兵块原位替换 + 两道显式守卫：数学三放行重排、放行写工作树）并补测试；题库头注释与题量口径随「现算派生」闸门同步，文档地图补齐卡片标准与考频复核'] },
     { v: '2.1.2', date: '2026-10', items: ['题库大幅扩充：真题总量 523 → 767 题（数学三 331 · 微观 176 · 统计 260）。数学三 2010–2022 真题 157 道逐题入库（题面按真题册裁片逐字录入，来源页码与裁片 sha256 可回溯），并回填 108 道选择题的四个选项；统计科补入 2021–2026 名校真题 76 道（北大光华 / 复旦 / 清华 / 南开 / 中山 / 上交 / 上财等 13 所院校）；跨来源同题判重（删 2 条与卡片例题重复者）；修正两处答案判据（U(θ,2θ) 的 MLE 取 X₍ₙ₎/2；2025 年第 1 题第 3 小问为 AC）', '知识卡片：全库 2769 → 2809 张。统计补写 27 张（覆盖 15 行「讲义有而卡片无」的缺口）、原地重写 8 张（覆盖不足）；微观补写 13 张（对齐考点族缺口）——补写前逐条与讲义 / 真题比对，微观 8 处来源草稿错误经独立复算订正', '参考资料转录基线（2.2.0 前置）：统计教材 / 微观 / 数学三真题 / 统计真题四族的页码结构索引、低产页逐页读图裁定与公式「可引用 / 必须重推」清单（微观 49 页闭合、裁定 190 条；数学三 108 道选择题选项回填），并给出考纲覆盖矩阵与 2.2.0 批次方案（docs/refs/）', '修复与工程：题库数据生成器加防护（原始生成器误跑会重排数学三入库块并吞掉元素间逗号导致语法错误，现默认拒绝写入）；文档闸门改为「现算派生」（不再硬编题量常量）并修复文档行号引用漂移；题库头注释题量与跨来源判重口径订正'] },
     { v: '2.1.1', date: '2026-10', items: ['题库：修复徽标 / 标签 / 题型名称里的公式未渲染（现与卡面同一套 KaTeX 渲染）；三组筛选器改为自绘下拉，带公式的选项也能正常显示；选择题四个选项加 (A)–(D) 前缀、答案区显示「答案：X」并标出正确项；新增「年份 / 卷」筛选（同卷不同来源合并、同年多卷分列）；统计科新增由知识卡例题派生的 170 道真题（题库 55 → 225 题，每题含题干 / 答案解析 / 难度 / 题型 / 知识点标签 / 陷阱与提示，可一键纳入错题本）', '错题模块：删除学习界面里残留的「错题自测」入口，自测改由二级功能栏进入（与学习模块一致）；「手动录入」移到工具栏左上角，移动端不再难以触达', '自测：难度维度改用知识卡的难度标签（★1–★5，取自卡片星级），题头不再显示 FSRS 记忆难度行（记忆算法难度仍在评分后的记忆模块里可见）', '专注链界面：回到 2.0 的简洁风格——层级改用树杈缩进表达、去掉彩色层级与彩色边框；点击整行即可展开（不再需要单独的小展开键），展开内容改为模块卡 + 标签（是否计划中 / 计划截止日期）；层级折叠键放大并居中，触屏热区不小于 40×40px；窄屏不再横向溢出', '专注链语义：已完成的任务单元无需计划模式即可自由组合成「已完成层次」，并可继续归属到更高层；计划中的层级须下级全部完成才可转正（不满足时提示还差哪些）；计时 / 预约的剩余时间悬浮提醒改到页面顶部，不再遮挡四档评分', '修复：单元展开面板里「归属」重复显示两次；清理悬浮提醒里指向已废弃状态（appoint）的死样式规则'] },
     { v: '2.1.0', date: '2026-10', items: ['题库模块（新）：数学三 / 微观 / 统计真题共 55 道（math3 24 · econ 15 · stats 16），知识点标签 × 题型双体系并列筛选 + 难度五星 + 题型出现频率五星（由库内题数实时统计），每题含题干 / 答案解析 / 难度 / 题型 / 知识点标签 / 陷阱与提示，可一键纳入错题本并按题干查重；跟随全局学科选择器，科目总量与筛选命中数分列显示、筛选 chip 可再点取消；数据 window.BANK.<subj> 与学习库完全隔离', '自测重构：开始前按数量 / 章节范围 / 难度范围 / 掌握度范围四维配置队列（含边界夹取），表现差的卡自动提前纳入重学队列（保留 FSRS 历史、不改算法），完成后出报告（得分、章节表现、用时、与预测掌握度的差距）并在统计页留档；错题模块提供同款自测；自测记录与配置随导入导出与云同步往返（上限 200 条）', '专注链：任务层次严格划分（任务单元 → 任务组 → 任务群 → 任务集团，逐级归属、组合自动升一级、混层组合明确拒绝）；计划任务（顶层与「＋子级」）均可设「最低下一级任务数」与截止日期，非法日期被拒；删除编制后番号复用最小空缺号（已有号不变）；四级层级出现可区分的视觉层级与番号符号，归属关系一眼可见', '专注链与全局：专注 / 预约计时在任意视图都有剩余时间悬浮提醒（可收起，与既有风格一致）；浏览界面未到期卡片可一键「⏰ 立即重学」提前复习，不重置 FSRS 历史也不改动调度算法；错题本中由例题标记的错题不再联动知识点掌握度（手动录入的错题仍联动，历史影响不回滚）', '修复：专注链统计页热力图不显示；完成专注后的完成度弹窗每秒重复弹出、内容无法编辑并持续报错（现已单次弹出且可正常编辑）；题库「已在错题本」状态恒不亮；云同步在 log / revlogs / quiz 数据畸形时抛 TypeError 中断同步；并订正题库与自测若干文案、口径与易碎断言'] },
@@ -5469,19 +5470,32 @@ function bankFindByStem(stem) {
   return null;
 }
 
+// S5：卡片派生题拿不到真实题号时，数据侧写占位符 '未编号'（与 tools/bank-cv.mjs 的 CARD_NO_UNKNOWN 同字面量）。
+// 界面一律经 bankNoText 过滤 —— 既不再把内部卡片 id（「卡片 pd09」）渲染出来，也不渲染占位符本身。
+var BANK_NO_UNKNOWN = '未编号';
+function bankNoText(q) {
+  var no = q && q.no;
+  if (no == null || no === '' || no === BANK_NO_UNKNOWN) return '';
+  return String(no);
+}
+
 // 题目「可纳入错题本」的载体：题型 + 钩子（wrongId 便于回跳定位）
 // t32：卡片派生题没有真题册文件，来源串回退到 src.card/note（不渲染 undefined）
+// S5：卡片派生题的来源串改为「年份 · 题号」（题号取不到则只留年份；再退一步才写「卡片例题」，绝不出现卡片 id）
 function bankSourceText(q) {
   var s = q && q.src;
   if (!s) return '';
   if (s.file) return String(s.file) + (s.no ? (' · ' + s.no) : '');
-  if (s.card) return '卡片例题 ' + s.card;
+  if (s.card) {
+    var bits = [q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; });
+    return bits.length ? bits.join(' · ') : '卡片例题';
+  }
   return s.note ? String(s.note) : '';
 }
 
 function bankBuildCard(q) {
   var tagText = (q.tags || []).map(function (id) { return bankTagTitle(q.subject, id) || id; }).join(' · ');
-  var head = [q.subjectLabel, q.year, q.no].filter(function (v) { return v != null && v !== ''; }).join(' ');
+  var head = [q.subjectLabel, q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; }).join(' ');
   return {
     title: head + ' · ' + q.typeName,
     question: q.stem,
@@ -5507,7 +5521,7 @@ function bankAddToWrong(q) {
     id: 'bank_' + q.id,
     subject: q.subject,
     year: q.year,
-    no: q.no,
+    no: bankNoText(q),
     type: q.type,
     tags: (q.tags || []).slice()
   };
@@ -5772,7 +5786,7 @@ function bankItemNode(q) {
   // t32：卡片派生题可能缺 year/school（无四位年份的例题一律不入库；此处只做防御，缺则跳过该徽标，不渲染 undefined）
   var schoolLabel = bankSchoolLabel(q);
   if (schoolLabel) top.appendChild(texEl('span', 'bank-badge bank-badge-school', schoolLabel));
-  var yearNo = [q.year, q.no].filter(function (v) { return v != null && v !== ''; }).join(' · ');
+  var yearNo = [q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; }).join(' · ');
   if (yearNo) top.appendChild(texEl('span', 'bank-badge bank-badge-year', yearNo));
   top.appendChild(texEl('span', 'bank-badge bank-badge-type', q.typeName));
   var tstar = texEl('span', 'bank-badge bank-badge-freq bank-star' + q.typeStars, bankStars(q.typeStars));
@@ -5840,7 +5854,7 @@ function bankDetailNode(q) {
   // 徽标文案一律经 texEl → renderTex（与列表页同款）；t32 起 year/school 缺失时跳过该徽标（不渲染 undefined/空行）
   var schoolLabel = bankSchoolLabel(q);
   if (schoolLabel) top.appendChild(texEl('span', 'bank-badge bank-badge-school', schoolLabel));
-  var yearNo = [q.year, q.no].filter(function (v) { return v != null && v !== ''; }).join(' · ');
+  var yearNo = [q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; }).join(' · ');
   if (yearNo) top.appendChild(texEl('span', 'bank-badge bank-badge-year', yearNo));
   top.appendChild(texEl('span', 'bank-badge bank-badge-type', q.typeName));
   top.appendChild(texEl('span', 'bank-badge bank-badge-freq bank-star' + q.typeStars, bankStars(q.typeStars) + ' 出现频率'));
@@ -14708,6 +14722,27 @@ function bankDetailNode(q) {
     return { ok: true, state: next, plan: p, filled: filled, cleared: true, target: p.targetCount };
   }
 
+  // 计划到期自动结算（纯函数）：把所有「已过截止日、且仍是 active」的计划按 focusPlanSettle 的
+  // 规则逐个结掉——填满 → done（不动链）；没填满 → failed + 该计划下未结束的链一律清空
+  // （workCount 归零、current 清空、status 'cleared'、clearReason 'plan:<id>'）。
+  // 修 2.1.3：focusPlanSettle 此前只有 tests/focus.test.mjs 在调用，运行期没有任何入口
+  // ⇒ 截止日期过了、整链没填满也不会清空（用户实测：到期后任务链照旧还在）。
+  // 现由 focusPlanAutoSettleApply 挂到悬浮提醒的节拍（挂载 + 每 1s）与专注视图渲染前。
+  // 返回 { changed, state, settled }；settled 每项 = { id, status, cleared }。
+  function focusPlanAutoSettle(state, now) {
+    const st = state || focusDefaultState();
+    const overdue = focusPlanOverdue(st, now);
+    let next = st;
+    const settled = [];
+    for (let i = 0; i < overdue.length; i++) {
+      const r = focusPlanSettle(next, overdue[i].id, now);
+      if (!r || !r.ok) continue;   // 期间状态已变（非 active）则跳过，不重复结算
+      next = r.state;
+      settled.push({ id: overdue[i].id, status: (r.plan && r.plan.status) || '', cleared: !!r.cleared });
+    }
+    return { changed: settled.length > 0, state: next, settled: settled };
+  }
+
   // ---------------- 存储 ----------------
   function loadFocus() {
     if (typeof window !== 'undefined' && window.__focusData) return window.__focusData;
@@ -14875,6 +14910,9 @@ function bankDetailNode(q) {
   // ---------------- UI：主入口 ----------------
   function renderFocusSection(wrap) {
     focusClearTick();
+    // 到期结算兜底：后台标签页的 1s 表会被节流，打开专注链时先按当前时间结一次（无逾期时零开销）
+    const autoSettled = focusPlanAutoSettle(loadFocus(), Date.now());
+    if (autoSettled.changed) saveFocus(autoSettled.state);
     const st = loadFocus();
     const now = Date.now();
 
@@ -15193,31 +15231,59 @@ function bankDetailNode(q) {
     } catch (e) { /* 存储不可用时仅内存生效 */ }
   }
 
+  // 壳层底边（顶栏 + 二级导航栏）的实测像素值：悬浮提醒必须整个落在它下面，
+  // 否则会盖住二级菜单（用户 2.1.3 报的问题）。三级降级：
+  // ①实测布局——renderSubnav 给 .subnav 设了 sticky top = header 高度（learn.mjs:649-650），
+  //   故 header / .subnav 两者 getBoundingClientRect().bottom 的最大值就是壳层底边；
+  // ②--chrome-h（:root 默认 0px，learn.mjs:651 渲染壳层时写入 headerH + subnavH）；
+  // ③96px 兜底（与 style.css 其他吸顶规则的默认值一致）。
+  // immersive（body.immersive 隐藏 .subnav）时只剩 header，实测值自然变小，无需特判。
+  function focusReminderChromeBottom() {
+    let bottom = 0;
+    try {
+      ['header', '.subnav'].forEach(function (sel) {
+        const n = document.querySelector(sel);
+        if (!n || !n.offsetHeight) return;
+        const r = n.getBoundingClientRect();
+        if (Number.isFinite(r.bottom) && r.bottom > bottom) bottom = r.bottom;
+      });
+      if (!bottom) {
+        const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chrome-h'));
+        if (Number.isFinite(v) && v > 0) bottom = v;
+      }
+    } catch (e) { /* 取不到布局/样式时走下面的兜底值 */ }
+    return bottom > 0 ? Math.round(bottom) : 96;
+  }
+
+  // 落到壳层之下 + 12px 呼吸位。带 !important 覆盖 style.css 的 .focus-reminder top；
+  // 每次 sync（挂载 + 每 1s + 每次壳层重渲染）都会重算，窗口尺寸 / immersive 切换都能跟上。
+  function focusReminderPlace(box) {
+    if (!box) return;
+    const top = (focusReminderChromeBottom() + 12) + 'px';
+    try { box.style.setProperty('top', top, 'important'); } catch (e) { box.style.top = top; }
+  }
+
   function focusReminderEnsure() {
     if (typeof document === 'undefined' || !document.body) return null;
     if (focusReminderEl && focusReminderEl.parentNode) return focusReminderEl;
     const box = el('div', 'focus-reminder');
     box.id = 'focusReminder';
-    // 2.2.0 回滚：计时悬浮窗改为「顶部锚定」。旧实现贴底（bottom: calc(14px + var(--dock-h))），
-    // 在卡片页会压住 .rating 四档记忆档位条（style.css:443/.dock:1181 都在底部一条带上），
-    // 用户点不到档位。内联写 top / bottom:auto 时带 !important：style.css 的 .focus-reminder
-    // 底部锚定由 style-eng 的任务改，本文件只保证「悬浮窗一定在顶部」，两种取值下都不遮挡底栏。
+    // 2.2.0 回滚：计时悬浮窗由「贴底」改为「顶部锚定」（旧实现贴底会压住 .rating 四档记忆档位条）。
+    // 2.1.3 修：贴顶（top 12/14px）会压住壳层顶栏与二级导航栏，二级菜单点不到 ⇒ 改为落在
+    // 壳层之下，见 focusReminderPlace（实测布局 → --chrome-h → 96px 三级降级）。
     box.style.position = 'fixed';
-    box.style.top = '14px';
     box.style.bottom = 'auto';
     box.style.right = '14px';
     box.style.left = 'auto';
     box.style.zIndex = '90';
     if (typeof matchMedia === 'function' && matchMedia('(max-width: 420px)').matches) {
-      // ≤420px：左右各收 8px（与 style.css 窄屏 .focus-reminder 的 intent 一致），
-      // 并整体下移到顶栏之下：窄屏顶栏是单行且右侧就是 ☰ 菜单键（style.css:1178-1182），
-      // 悬浮窗若贴顶会盖住它，连抽屉导航都点不开（自检实测：点击被悬浮窗 head 截获，抽屉不开）。
-      box.style.top = '78px';
+      // ≤420px：左右各收 8px（与 style.css 窄屏 .focus-reminder 的 intent 一致）。
+      // 窄屏顶栏是单行且右侧就是 ☰ 菜单键（style.css:1178-1182），落到壳层之下后同样不再截获它。
       box.style.left = '8px';
       box.style.right = '8px';
     }
+    focusReminderPlace(box);
     try {
-      box.style.setProperty('top', box.style.top, 'important');
       box.style.setProperty('bottom', 'auto', 'important');
       box.style.setProperty('right', box.style.right, 'important');
       box.style.setProperty('left', box.style.left, 'important');
@@ -15317,6 +15383,8 @@ function bankDetailNode(q) {
     }
     const box = focusReminderEnsure();
     if (!box) return { visible: true, rendered: false, info: info };
+    // 每拍重算落点：壳层高度会随视图（immersive 隐藏 .subnav）与窗口尺寸变化
+    focusReminderPlace(box);
     box.setAttribute('data-mode', String(info.mode || ''));
     box.setAttribute('data-level', String(info.level || ''));
     box.setAttribute('data-key', String(info.key || ''));
@@ -15353,13 +15421,25 @@ function bankDetailNode(q) {
     }
   }
 
+  // 运行期入口：结算 + 落盘 + 重绘（只有真的结掉计划时才写盘/重绘；无逾期计划时只是读一次筛选）。
+  // 挂在悬浮提醒的节拍上，因此在「浏览 / 统计」等任意视图下都会到期结算，不要求用户先打开专注链。
+  function focusPlanAutoSettleApply(now) {
+    const r = focusPlanAutoSettle(loadFocus(), Number(now) || Date.now());
+    if (!r.changed) return false;
+    saveFocus(r.state);
+    try { renderApp(); } catch (e) { /* 重绘失败不影响已落盘的结算结果，下个节拍会再同步 */ }
+    return true;
+  }
+
   // 独立于专注视图的定时器：既有的 focusTickTimer 在离开 actFocus 时会停表，
   // 悬浮提醒必须在「浏览 / 统计」等任意视图下继续走秒，故自己起一个 1s 表。
   function focusReminderStart() {
     if (typeof document === 'undefined') return false;
+    focusPlanAutoSettleApply(Date.now());
     focusReminderSync(Date.now(), true);
     if (focusReminderTimer) return true;
     focusReminderTimer = setInterval(function () {
+      try { focusPlanAutoSettleApply(Date.now()); } catch (e) { /* 到期结算失败不影响提醒走秒 */ }
       try { focusReminderSync(Date.now(), false); } catch (e) { /* 提醒渲染失败不影响主流程 */ }
     }, 1000);
     return true;

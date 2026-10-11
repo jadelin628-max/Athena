@@ -94,6 +94,8 @@ import {
   focusPlanFilledCount,
   focusPlanDueSoon,
   focusPlanSettle,
+  focusPlanAutoSettle,
+  focusPlanAutoSettleApply,
   FOCUS_LEVEL_KEYS,
   FOCUS_LEVEL_RANK,
   FOCUS_MIN_CHILD_MIN,
@@ -712,6 +714,35 @@ test('计划模式：未填满整链清空 / 填满 done', () => {
   assert.equal(r2.plan.status, 'done');
 });
 
+test('到期自动结算：逾期未填满清空整链 / 已填满转 done / 幂等', () => {
+  // 未填满：截止日过后自动结算 → 链清空、plan 记 failed
+  let st = makeState();
+  const r = focusPlanCreate(st, { title: '线代第三章', dueAt: NOW + 7 * 86400000, targetCount: 3 }, NOW);
+  st = r.state;
+  st = startAndFinish(st, 'n1', NOW + 60 * MIN, NOW + 85 * MIN, { completion: 100 }).state;
+  // 截止日未到 → 不结算（也不该动状态）
+  assert.equal(focusPlanAutoSettle(st, NOW + 2 * 86400000).changed, false);
+  const auto = focusPlanAutoSettle(st, NOW + 8 * 86400000);
+  assert.equal(auto.changed, true);
+  assert.equal(auto.settled.length, 1);
+  assert.deepEqual(auto.settled[0], { id: r.plan.id, status: 'failed', cleared: true });
+  assert.equal(focusFindChain(auto.state, 'n1').workCount, 0);
+  // 幂等：同一状态再结算一次不再改动
+  assert.equal(focusPlanAutoSettle(auto.state, NOW + 9 * 86400000).changed, false);
+
+  // 已填满：自动结算只把 plan 标 done，不清链
+  let st2 = makeState();
+  const r3 = focusPlanCreate(st2, { title: '小目标', dueAt: NOW + 86400000, targetCount: 1 }, NOW);
+  st2 = r3.state;
+  st2 = focusSitDown(st2, 'n1', NOW, { taskText: 'done', planId: r3.plan.id }).state;
+  st2 = focusCompleteUnit(st2, 'n1', NOW + 25 * MIN, { achieved: true, completion: 100 }).state;
+  assert.equal(focusPlanFilledCount(st2, r3.plan.id), 1);
+  const auto2 = focusPlanAutoSettle(st2, NOW + 2 * 86400000);
+  assert.equal(auto2.changed, true);
+  assert.equal(auto2.settled[0].status, 'done');
+  assert.equal(auto2.settled[0].cleared, false);
+});
+
 test('临近截止提醒', () => {
   let st = makeState();
   st = focusPlanCreate(st, { title: '快到期', dueAt: NOW + 2 * 86400000, targetCount: 2 }, NOW).state;
@@ -719,6 +750,40 @@ test('临近截止提醒', () => {
   const soon = focusPlanDueSoon(st, NOW);
   assert.equal(soon.length, 1);
   assert.equal(soon[0].title, '快到期');
+});
+
+test('t42 源码级守卫（+反证）：提醒窗落在壳层之下 / 计划到期有运行期结算入口', () => {
+  const srcText = fs.readFileSync(new URL('../src/focus.mjs', import.meta.url), 'utf8');
+  const cssText = fs.readFileSync(new URL('../style.css', import.meta.url), 'utf8');
+  const ruleBlock = (css, sel) => {
+    const i = String(css).indexOf(sel + ' {');
+    if (i < 0) return '';
+    const j = String(css).indexOf('}', i);
+    return j < 0 ? '' : String(css).slice(i, j + 1);
+  };
+  const hasChrome = (css, sel) => ruleBlock(css, sel).indexOf('--chrome-h') >= 0;
+  // 反证：守卫必须能对「又贴顶」判红、对「按壳层下移」判绿、对邻近选择器不误报
+  assert.equal(hasChrome('.focus-reminder { top: calc(12px + var(--safe-top, 0px)); }', '.focus-reminder'), false, '守卫失效：合成贴顶样本应判红');
+  assert.equal(hasChrome('.focus-reminder { top: calc(max(var(--chrome-h, 0px), 96px) + 12px); }', '.focus-reminder'), true, '守卫失效：合成下移样本应判绿');
+  assert.equal(hasChrome('.focus-reminder-head { top: 14px; }', '.focus-reminder'), false, '守卫误报：邻近选择器应判绿');
+
+  // ---- bug1：倒计时悬浮窗必须整个落在顶栏 + 二级导航栏之下 ----
+  const reminderRule = ruleBlock(cssText, '.focus-reminder');
+  assert.ok(reminderRule, 'style.css 缺少 .focus-reminder 规则块');
+  assert.ok(/top:\s*calc\(max\(var\(--chrome-h/.test(reminderRule), '.focus-reminder 的 top 必须写成 max(var(--chrome-h, 0px), …)——:root 已把 --chrome-h 定义为 0px，普通逗号兜底永不生效');
+  assert.equal(srcText.indexOf('function focusReminderChromeBottom()') >= 0, true, 'src/focus.mjs 缺少壳层底边实测函数');
+  assert.equal(srcText.indexOf('function focusReminderPlace(box)') >= 0, true, 'src/focus.mjs 缺少落到壳层之下的定位函数');
+  assert.ok(srcText.split('focusReminderPlace(box)').length - 1 >= 2, 'focusReminderPlace 必须同时挂在 ensure（新建）与 sync（每拍/壳层变化）上');
+  assert.equal(srcText.indexOf("box.style.top = '14px'") >= 0, false, 'src/focus.mjs 又出现硬编码 14px 顶距（会压住二级菜单）');
+  assert.equal(srcText.indexOf("'78px'") >= 0, false, 'src/focus.mjs 又出现移动端硬编码 78px 顶距');
+
+  // ---- bug2：计划到期必须由运行期入口自动结算（规则本体不得被绕过或复制） ----
+  assert.equal(srcText.indexOf('function focusPlanSettle(') >= 0, true, '规则本体 focusPlanSettle 丢了');
+  assert.equal(srcText.indexOf('focusPlanOverdue(state, now)') >= 0, true, 'focusPlanAutoSettle 未复用 focusPlanOverdue 的逾期口径');
+  assert.ok(srcText.split('focusPlanAutoSettleApply(').length - 1 >= 3, 'focusPlanAutoSettleApply 运行期调用点不足（定义 1 + 挂载 1 + 1s 节拍 1）');
+  assert.equal(typeof focusPlanAutoSettleApply, 'function', '未导出运行期结算入口');
+  // 无 DOM 环境下直接调用：默认状态没有逾期计划 ⇒ 不得写盘、不得重绘（返回 false）
+  assert.equal(focusPlanAutoSettleApply(NOW), false, '默认状态不应有可结算的逾期计划');
 });
 
 test('sanitize：elite→main、单元 name、org formalized', () => {

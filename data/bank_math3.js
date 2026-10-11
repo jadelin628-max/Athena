@@ -1,4 +1,4 @@
-/* Athena 题库 · 考研数学三（共 331 题 ＝ 手写 24（POC 首批：2012/2013/2019/2023/2024/2025 数学三真题） + 卡片派生 150（t49 追加） + 真题册入库 157（t53 追加，2010–2022，净增 157 ＝ 计划 161 − 4 条与库内手写题同题撞车））
+/* Athena 题库 · 考研数学三（共 386 题 ＝ 手写 24（POC 首批：2012/2013/2019/2023/2024/2025 数学三真题） + 卡片派生 205（t49 追加 150 + T139 补挂例题 55） + 真题册入库 157（t53 追加，2010–2022，净增 157 ＝ 计划 161 − 4 条与库内手写题同题撞车））
  *
  * 数据形态（可扩展）：
  *   window.BANK.<subj> = { id, name, sourceNote, types[], questions[] }
@@ -8,15 +8,15 @@
  * 挂在 window.BANK 命名空间下（与 window.SUBJECTS.<id> 并列，互不污染）。
  *
  * 关键约定：
- *   1) tags 只放「现有知识点的 id」（data/math3.js 中已有 id，共 397 个）——
+ *   1) tags 只放「现有知识点的 id」（data/math3.js 中已有 id，共 398 个）——
  *      标签名与「自带五星难度」在运行时由题库模块从 window.SUBJECTS.math3 反查，
  *      本文件不复制、不改写知识点数据。
  *   2) type 必须是本文件 types[] 的 key；「题型频率（五星）」由题库模块按库内真题实际统计得出。
  *   3) stem 忠实于「真题答案解析册」文本层的可读内容；数学符号在源 PDF 文字层中残损，
  *      此处按题号与解析上下文复原为规范 LaTeX（复原依据见每题 src.note，不虚构条件与结论）。
  * t49 卡片派生题（origin: 'card'，id 形如 cv-m3-<卡片id>，见 BEGIN GENERATED 哨兵块）：
- *   由 data/math3.js 的 EXAMPLE（124 键 / 150 条）按已裁定映射生成，**不要手改**——改 data/math3.js 后
- *   重跑 `node backup/scratch/bank-cv2/build-bank-cv2.mjs --subject math3 --write` 即可复算；字段口径见 docs/DATA_SCHEMA.md。
+ *   由 data/math3.js 的 EXAMPLE（179 键 / 205 条 ＝ t49 追加 150 条 + T139 补挂例题 55 条）按已裁定映射生成，**不要手改**——改 data/math3.js 后
+ *   重跑 `node tools/bank-cv.mjs --subject math3 --write --allow-workspace-write --allow-math3-reorder` 即可复算；字段口径见 docs/DATA_SCHEMA.md。
  */
 (function () {
   'use strict';
@@ -274,7 +274,7 @@
     },
   // ==== BEGIN GENERATED card-questions (t49) ====
     {
-      id: "cv-m3-lim09", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "卡片 lim09", type: "limit", star: 5,
+      id: "cv-m3-lim09", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "未编号", type: "limit", star: 5,
       tags: ["lim09"],
       stem: "求 $\\lim_{x\\to\\frac{\\pi}{4}}(\\tan x)^{\\frac{1}{\\cos x-\\sin x}}$",
       answer: "这是 $1^{\\infty}$ 型极限。令 $t=x-\\frac{\\pi}{4}\\to0$，则 $\\tan x=\\tan\\left(\\frac{\\pi}{4}+t\\right)\\sim1+2t$，且 $\\cos x-\\sin x=\\sqrt2\\cos\\left(x+\\frac{\\pi}{4}\\right)=-\\sqrt2\\sin t\\sim-\\sqrt2\\,t$。故$$\\frac{\\ln\\tan x}{\\cos x-\\sin x}\\sim\\frac{\\tan x-1}{\\cos x-\\sin x}\\sim\\frac{2t}{-\\sqrt2\\,t}=-\\sqrt2$$所以原式 $=e^{-\\sqrt2}$。",
@@ -283,14 +283,14 @@
       src: { card: "lim09", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim09\"]）来源原文：2012 年数三真题。traps 取自 PITFALL[lim09]。MNEM[lim09] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-lim07", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "卡片 lim07", type: "limit", star: 4,
+      id: "cv-m3-lim07", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "未编号", type: "limit", star: 4,
       tags: ["lim07"],
       stem: "（2012 数三）求极限 $\\lim_{x\\to0}\\dfrac{e^{x^{2}}-e^{2-2\\cos x}}{x^{4}}$",
       answer: "令 $u=x^{2},\\ v=2-2\\cos x$，则 $u,v\\to0$，故$$e^{u}-e^{v}=e^{v}\\left(e^{u-v}-1\\right)\\sim u-v=x^{2}-(2-2\\cos x)=x^{2}-2(1-\\cos x)$$由 $1-\\cos x=\\dfrac{x^{2}}{2}-\\dfrac{x^{4}}{24}+o(x^{4})$，得 $2(1-\\cos x)=x^{2}-\\dfrac{x^{4}}{12}+o(x^{4})$，故分子 $x^{2}-2(1-\\cos x)\\sim\\dfrac{x^{4}}{12}$。于是$$\\lim_{x\\to0}\\frac{e^{x^{2}}-e^{2-2\\cos x}}{x^{4}}=\\frac{1}{12}$$",
       src: { card: "lim07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim07\"]）来源原文：2012 年数三真题。PITFALL[lim07] 无条目 → 省略 traps 字段。MNEM[lim07] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-inf08", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 inf08", type: "limit", star: 5,
+      id: "cv-m3-inf08", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "limit", star: 5,
       tags: ["inf08"],
       stem: "（2025 数三）当 $x\\to0^{+}$ 时，下列无穷小量中与 $x$ 等价的是：(A) $e^{-\\sin x}-1$；(B) $\\sqrt{x+1}-\\cos x$；(C) $1-\\cos\\sqrt{2x}$；(D) $1-\\dfrac{\\ln(1+x)}{x}$",
       answer: "由 $1-\\cos u\\sim\\dfrac{u^{2}}{2}$ 得 $1-\\cos\\sqrt{2x}\\sim\\dfrac{(\\sqrt{2x})^{2}}{2}=x$，故选 (C)。其余：$e^{-\\sin x}-1\\sim-\\sin x\\sim-x$；$\\sqrt{x+1}-\\cos x\\sim\\dfrac{x}{2}$；$1-\\dfrac{\\ln(1+x)}{x}\\sim\\dfrac{x}{2}$。",
@@ -298,7 +298,7 @@
       src: { card: "inf08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"inf08\"][0]）来源原文：2025 年数三真题。traps 取自 PITFALL[inf08]。MNEM[inf08] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-inf08-2", origin: 'card', year: 2013, school: "全国硕士研究生入学统一考试-数学三 2013 年", no: "卡片 inf08-2", type: "limit", star: 5,
+      id: "cv-m3-inf08-2", origin: 'card', year: 2013, school: "全国硕士研究生入学统一考试-数学三 2013 年", no: "未编号", type: "limit", star: 5,
       tags: ["inf08"],
       stem: "（2013 数三）当 $x\\to0$ 时，$1-\\cos x\\cdot\\cos 2x\\cdot\\cos 3x$ 与 $a x^{n}$ 为等价无穷小，求 $n$ 与 $a$ 的值。",
       answer: "裂项并用 $1-\\cos u\\sim\\dfrac{u^{2}}{2}$：$$1-\\cos x\\cos2x\\cos3x=(1-\\cos x)+\\cos x(1-\\cos2x)+\\cos x\\cos2x(1-\\cos3x)$$$$\\sim\\frac{x^{2}}{2}+\\frac{(2x)^{2}}{2}+\\frac{(3x)^{2}}{2}=7x^{2}$$故 $n=2,\\ a=7$。",
@@ -306,7 +306,7 @@
       src: { card: "inf08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"inf08\"][1]）来源原文：2013 年数三真题。traps 取自 PITFALL[inf08]。MNEM[inf08] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-d14", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "卡片 d14", type: "deriv", star: 5,
+      id: "cv-m3-d14", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "未编号", type: "deriv", star: 5,
       tags: ["d14"],
       stem: "（2020 数三）设 $z=\\arctan\\bigl[xy+\\sin(x+y)\\bigr]$，则 $dz\\big|_{(0,\\pi)}=$____",
       answer: "由 $(\\arctan u)'=\\dfrac{u'}{1+u^{2}}$，在 $(0,\\pi)$ 处 $xy+\\sin(x+y)=0$：$$z_x=\\frac{y+\\cos(x+y)}{1+[xy+\\sin(x+y)]^{2}}\\Big|_{(0,\\pi)}=\\pi-1,\\qquad z_y=\\frac{x+\\cos(x+y)}{1+[xy+\\sin(x+y)]^{2}}\\Big|_{(0,\\pi)}=-1$$故$$dz\\big|_{(0,\\pi)}=(\\pi-1)dx-dy$$",
@@ -314,14 +314,14 @@
       src: { card: "d14", note: "卡片例题（data/math3.js 的 EXAMPLE[\"d14\"]）来源原文：2020 年数三真题。traps 取自 PITFALL[d14]。MNEM[d14] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int16", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 int16", type: "integral", star: 5,
+      id: "cv-m3-int16", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "integral", star: 5,
       tags: ["int16"],
       stem: "（2025 数三）计算 $\\int_{0}^{1}\\dfrac{1}{(x+1)(x^{2}-2x+2)}\\,dx$",
       answer: "设 $\\dfrac{1}{(x+1)(x^{2}-2x+2)}=\\dfrac{A}{x+1}+\\dfrac{Bx+C}{x^{2}-2x+2}$，解得 $A=\\dfrac15,\\ B=-\\dfrac15,\\ C=\\dfrac35$。故$$\\int_{0}^{1}\\frac{1}{(x+1)(x^{2}-2x+2)}dx=\\frac15\\int_{0}^{1}\\frac{dx}{x+1}+\\frac15\\int_{0}^{1}\\frac{-x+3}{x^{2}-2x+2}dx$$由 $x^{2}-2x+2=(x-1)^{2}+1$，令 $u=x-1$ 得 $\\dfrac{-x+3}{x^{2}-2x+2}=\\dfrac{2-u}{u^{2}+1}$，故$$\\int\\frac{-x+3}{x^{2}-2x+2}dx=2\\arctan(x-1)-\\frac12\\ln(x^{2}-2x+2)$$于是原式 $=\\dfrac15\\left[\\ln(x+1)+2\\arctan(x-1)-\\dfrac12\\ln(x^{2}-2x+2)\\right]_{0}^{1}=\\dfrac{3}{10}\\ln 2+\\dfrac{\\pi}{10}$。",
       src: { card: "int16", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int16\"]）来源原文：2025 年数三真题。PITFALL[int16] 无条目 → 省略 traps 字段。MNEM[int16] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int24", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 int24", type: "integral", star: 5,
+      id: "cv-m3-int24", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "integral", star: 5,
       tags: ["int24"],
       stem: "求 $\\lim_{n\\to\\infty}\\frac{1}{n^{2}}\\left(\\sin\\frac{1}{n}+2\\sin\\frac{2}{n}+\\cdots+n\\sin\\frac{n}{n}\\right)$",
       answer: "由定积分定义：$$\\lim_{n\\to\\infty}\\sum_{k=1}^{n}\\frac{k}{n^{2}}\\sin\\frac{k}{n}=\\int_{0}^{1}x\\sin x\\,dx$$再由分部积分：$$\\int_{0}^{1}x\\sin x\\,dx=-x\\cos x\\Big|_{0}^{1}+\\int_{0}^{1}\\cos x\\,dx=\\left[-x\\cos x+\\sin x\\right]_{0}^{1}=\\sin1-\\cos1$$",
@@ -330,7 +330,7 @@
       src: { card: "int24", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int24\"]）来源原文：2016 年数三真题。traps 取自 PITFALL[int24]。hint 取自 MNEM[int24]。" }
     },
     {
-      id: "cv-m3-int25", origin: 'card', year: 2013, school: "全国硕士研究生入学统一考试-数学三 2013 年", no: "卡片 int25", type: "integral", star: 5,
+      id: "cv-m3-int25", origin: 'card', year: 2013, school: "全国硕士研究生入学统一考试-数学三 2013 年", no: "未编号", type: "integral", star: 5,
       tags: ["int25"],
       stem: "设 $F(x)=\\int_{x}^{x^{2}}\\frac{\\sin t}{t}\\,dt$，求 $F'(x)$（综合：变限积分求导与上下限均含 $x$）",
       answer: "由莱布尼茨公式：$$F'(x)=\\frac{\\sin(x^{2})}{x^{2}}\\cdot(x^{2})'-\\frac{\\sin x}{x}\\cdot(x)'=\\frac{\\sin(x^{2})}{x^{2}}\\cdot2x-\\frac{\\sin x}{x}=\\frac{2\\sin(x^{2})}{x}-\\frac{\\sin x}{x}$$",
@@ -339,7 +339,7 @@
       src: { card: "int25", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int25\"][0]）来源原文：2013 年数三真题。traps 取自 PITFALL[int25]。hint 取自 MNEM[int25]。" }
     },
     {
-      id: "cv-m3-int25-2", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "卡片 int25-2", type: "integral", star: 5,
+      id: "cv-m3-int25-2", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "未编号", type: "integral", star: 5,
       tags: ["int25"],
       stem: "（2026 数三）设 $f(x)=\\int_{1}^{x^{3}}\\dfrac{e^{t}}{1+t^{2}}\\,dt$，$g(x)$ 为 $f(x)$ 的反函数，则 $g'(0)=$____",
       answer: "由 $f(1)=\\int_1^1=0$ 知 $g(0)=1$。由变限积分求导：$$f'(x)=\\frac{e^{x^{3}}}{1+x^{6}}\\cdot 3x^{2}$$故 $f'(1)=\\dfrac{3e}{2}$。由反函数求导公式 $g'(0)=\\dfrac{1}{f'(g(0))}=\\dfrac{1}{f'(1)}=\\dfrac{2}{3e}$。",
@@ -348,14 +348,14 @@
       src: { card: "int25", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int25\"][1]）来源原文：2026 年数三真题。traps 取自 PITFALL[int25]。hint 取自 MNEM[int25]。" }
     },
     {
-      id: "cv-m3-int28", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "卡片 int28", type: "integral", star: 4,
+      id: "cv-m3-int28", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "未编号", type: "integral", star: 4,
       tags: ["int28"],
       stem: "求 $y=x^{2}$ 与 $y=x$ 所围平面图形的面积，并求该图形绕 $x$ 轴旋转所得旋转体的体积",
       answer: "交点 $x=0,1$。面积：$$S=\\int_{0}^{1}(x-x^{2})\\,dx=\\left[\\frac{x^{2}}{2}-\\frac{x^{3}}{3}\\right]_{0}^{1}=\\frac{1}{6}$$体积（圆环法）：$$V=\\pi\\int_{0}^{1}\\left[x^{2}-(x^{2})^{2}\\right]dx=\\pi\\int_{0}^{1}(x^{2}-x^{4})\\,dx=\\pi\\left(\\frac13-\\frac15\\right)=\\frac{2\\pi}{15}$$",
       src: { card: "int28", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int28\"]）来源原文：2011 年数三真题。PITFALL[int28] 无条目 → 省略 traps 字段。MNEM[int28] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tay01", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "卡片 tay01", type: "limit", star: 5,
+      id: "cv-m3-tay01", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "未编号", type: "limit", star: 5,
       tags: ["tay01"],
       stem: "求 $\\lim_{x\\to0}\\frac{e^{x}-1-x}{x^{2}}$",
       answer: "由 $e^{x}=1+x+\\dfrac{x^{2}}{2}+o(x^{2})$，得$$\\lim_{x\\to0}\\frac{e^{x}-1-x}{x^{2}}=\\frac{1}{2}$$",
@@ -365,7 +365,7 @@
       src: { card: "tay01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tay01\"]）来源原文：2017 年数三真题。traps 取自 PITFALL[tay01]。hint 取自 MNEM[tay01]。" }
     },
     {
-      id: "cv-m3-tay04", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 tay04", type: "series", star: 5,
+      id: "cv-m3-tay04", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "series", star: 5,
       tags: ["tay04"],
       stem: "设幂级数 $\\sum_{n=0}^{\\infty}a_{n}x^{n}$ 的和函数为 $\\ln(2+x)$，求 $\\sum_{n=0}^{\\infty}n\\,a_{2n}$",
       answer: "$$\\ln(2+x)=\\ln 2+\\ln\\left(1+\\frac{x}{2}\\right)=\\ln 2+\\sum_{n=1}^{\\infty}\\frac{(-1)^{n-1}}{n}\\left(\\frac{x}{2}\\right)^{n}$$故 $a_{0}=\\ln 2$，$a_{n}=\\dfrac{(-1)^{n-1}}{n\\cdot2^{n}}\\ (n\\ge1)$。于是$$a_{2n}=\\frac{(-1)^{2n-1}}{2n\\cdot2^{2n}}=-\\frac{1}{2n\\cdot4^{n}}\\quad(n\\ge1)$$所以$$\\sum_{n=0}^{\\infty}n\\,a_{2n}=\\sum_{n=1}^{\\infty}n\\left(-\\frac{1}{2n\\cdot4^{n}}\\right)=-\\frac{1}{2}\\sum_{n=1}^{\\infty}\\frac{1}{4^{n}}=-\\frac{1}{2}\\cdot\\frac{1/4}{1-1/4}=-\\frac{1}{6}$$",
@@ -374,7 +374,7 @@
       src: { card: "tay04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tay04\"]）来源原文：2024 年数三真题。traps 取自 PITFALL[tay04]。MNEM[tay04] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-mvt02", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 mvt02", type: "proof", star: 5,
+      id: "cv-m3-mvt02", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "proof", star: 5,
       tags: ["mvt02"],
       stem: "证明：当 $x>0$ 时，$\\dfrac{x}{1+x}<\\ln(1+x)<x$",
       answer: "对 $f(t)=\\ln(1+t)$ 在 $[0,x]$ 用拉格朗日中值定理：存在 $\\xi\\in(0,x)$ 使 $\\ln(1+x)=\\dfrac{x}{1+\\xi}$；由 $0<\\xi<x$ 得 $\\dfrac{x}{1+x}<\\dfrac{x}{1+\\xi}<x$，即证。",
@@ -382,7 +382,7 @@
       src: { card: "mvt02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"mvt02\"]）来源原文：2016 年数三真题。PITFALL[mvt02] 无条目 → 省略 traps 字段。MNEM[mvt02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ser10", origin: 'card', year: 2009, school: "全国硕士研究生入学统一考试-数学三 2009 年", no: "卡片 ser10", type: "series", star: 5,
+      id: "cv-m3-ser10", origin: 'card', year: 2009, school: "全国硕士研究生入学统一考试-数学三 2009 年", no: "未编号", type: "series", star: 5,
       tags: ["ser10"],
       stem: "求幂级数 $\\sum_{n=1}^{\\infty}\\frac{x^{n}}{n}$ 的收敛域，并在收敛域内求其和函数",
       answer: "$$R=\\lim_{n\\to\\infty}\\left|\\frac{a_{n}}{a_{n+1}}\\right|=\\lim_{n\\to\\infty}\\frac{n+1}{n}=1$$端点 $x=-1$ 为交错级数收敛，$x=1$ 为调和级数发散，故收敛域 $[-1,1)$。设和函数 $S(x)=\\sum_{n=1}^{\\infty}\\frac{x^{n}}{n}$，则$$S'(x)=\\sum_{n=1}^{\\infty}x^{n-1}=\\frac{1}{1-x}\\ (|x|<1)$$积分并由 $S(0)=0$ 得$$S(x)=-\\ln(1-x),\\quad x\\in[-1,1)$$",
@@ -391,7 +391,7 @@
       src: { card: "ser10", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ser10\"]）来源原文：2009 年数三真题。traps 取自 PITFALL[ser10]。MNEM[ser10] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ode02", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 ode02", type: "ode", star: 5,
+      id: "cv-m3-ode02", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "ode", star: 5,
       tags: ["ode02"],
       stem: "求一阶线性方程 $y'+y=x$ 的通解",
       answer: "$$y=e^{-x}\\left[\\int x\\,e^{x}\\,dx+C\\right]=e^{-x}\\left[(x-1)e^{x}+C\\right]=(x-1)+Ce^{-x}$$",
@@ -400,7 +400,7 @@
       src: { card: "ode02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ode02\"][0]）来源原文：2022 年数三真题。traps 取自 PITFALL[ode02]。MNEM[ode02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ode02-2", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 ode02-2", type: "ode", star: 5,
+      id: "cv-m3-ode02-2", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "ode", star: 5,
       tags: ["ode02"],
       stem: "（2023 数三）设某公司在 $t$ 时刻的资产为 $f(t)$，从 $0$ 时刻到 $t$ 时刻的平均资产等于 $\\dfrac{f(t)}{t}-t$。已知 $f(t)$ 连续且 $f(0)=0$，则 $f(t)=$____",
       answer: "由 $\\dfrac{1}{t}\\int_{0}^{t}f(s)ds=\\dfrac{f(t)}{t}-t$ 得 $\\int_{0}^{t}f(s)ds=f(t)-t^{2}$，两边求导：$$f(t)=f'(t)-2t\\ \\Rightarrow\\ f'-f=2t$$一阶线性方程，通解 $f=e^{t}\\left(C+\\int 2te^{-t}dt\\right)=Ce^{t}-2t-2$。由 $f(0)=0$ 得 $C=2$，故$$f(t)=2e^{t}-2t-2$$",
@@ -408,7 +408,7 @@
       src: { card: "ode02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ode02\"][1]）来源原文：2023 年数三真题。traps 取自 PITFALL[ode02]。MNEM[ode02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ode02-3", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 ode02-3", type: "ode", star: 5,
+      id: "cv-m3-ode02-3", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "ode", star: 5,
       tags: ["ode02"],
       stem: "（2016 数三）设函数 $f(x)$ 在 $[0,+\\infty)$ 上连续，且满足 $\\int_{0}^{x}f(x-t)\\,dt=\\int_{0}^{x}(x-t)f(t)\\,dt+e^{-x}-1$，求 $f(x)$ 的表达式。",
       answer: "令 $u=x-t$，左边 $=\\int_{0}^{x}f(u)du$；右边 $\\int_{0}^{x}(x-t)f(t)dt=x\\int_{0}^{x}f(t)dt-\\int_{0}^{x}tf(t)dt$。两边求导得$$f(x)=\\int_{0}^{x}f(t)dt-e^{-x}$$再求导：$f'(x)=f(x)+e^{-x}$，即 $f'-f=e^{-x}$。由公式得$$f(x)=e^{x}\\left(C+\\int e^{-x}e^{-x}dx\\right)=Ce^{x}-\\frac{e^{-x}}{2}$$又由原式取 $x=0$ 得 $f(0)=-1$，故 $C=-\\frac12$，$$f(x)=-\\frac{e^{x}+e^{-x}}{2}$$",
@@ -416,7 +416,7 @@
       src: { card: "ode02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ode02\"][2]）来源原文：2016 年数三真题。traps 取自 PITFALL[ode02]。MNEM[ode02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-dbi02", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 dbi02", type: "dblint", star: 5,
+      id: "cv-m3-dbi02", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "dblint", star: 5,
       tags: ["dbi02"],
       stem: "计算二重积分 $\\iint_{D}x\\,dxdy$，其中 $D$ 由 $(x-1)^{2}+y^{2}\\le 1$ 围成",
       answer: "区域为以 $(1,0)$ 为圆心、半径 $1$ 的圆：$(x-1)^{2}+y^{2}\\le1\\iff x^{2}+y^{2}\\le 2x$。极坐标下 $r\\le 2\\cos\\theta$，$\\theta\\in\\left[-\\frac{\\pi}{2},\\frac{\\pi}{2}\\right]$，$x=r\\cos\\theta$，故$$\\iint_{D}x\\,dxdy=\\int_{-\\pi/2}^{\\pi/2}d\\theta\\int_{0}^{2\\cos\\theta}r\\cos\\theta\\cdot r\\,dr=\\frac{8}{3}\\int_{-\\pi/2}^{\\pi/2}\\cos^{4}\\theta\\,d\\theta=\\frac{8}{3}\\cdot\\frac{3\\pi}{8}=\\pi$$",
@@ -425,7 +425,7 @@
       src: { card: "dbi02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"dbi02\"]）来源原文：2023 年数三真题。traps 取自 PITFALL[dbi02]。MNEM[dbi02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la04", origin: 'card', year: 2010, school: "全国硕士研究生入学统一考试-数学三 2010 年", no: "卡片 la04", type: "eigen", star: 5,
+      id: "cv-m3-la04", origin: 'card', year: 2010, school: "全国硕士研究生入学统一考试-数学三 2010 年", no: "未编号", type: "eigen", star: 5,
       tags: ["la04"],
       stem: "求矩阵 $A=\\begin{pmatrix}2&1\\\\1&2\\end{pmatrix}$ 的特征值与特征向量，并求可逆矩阵 $P$ 使 $P^{-1}AP$ 为对角阵",
       answer: "$$|\\lambda E-A|=\\begin{vmatrix}\\lambda-2&-1\\\\-1&\\lambda-2\\end{vmatrix}=(\\lambda-2)^{2}-1=0\\Rightarrow \\lambda_{1}=1,\\ \\lambda_{2}=3$$对 $\\lambda=1$：解 $(A-E)x=0$ 得特征向量 $\\alpha_{1}=(1,-1)^{T}$；对 $\\lambda=3$：解 $(A-3E)x=0$ 得 $\\alpha_{2}=(1,1)^{T}$。取$$P=\\begin{pmatrix}1&1\\\\-1&1\\end{pmatrix}\\Rightarrow P^{-1}AP=\\begin{pmatrix}1&0\\\\0&3\\end{pmatrix}$$",
@@ -434,7 +434,7 @@
       src: { card: "la04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la04\"]）来源原文：2010 年数三真题。traps 取自 PITFALL[la04]。MNEM[la04] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-multi03", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "卡片 multi03", type: "multivar", star: 5,
+      id: "cv-m3-multi03", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "未编号", type: "multivar", star: 5,
       tags: ["multi03"],
       stem: "求 $f(x,y)=x^{3}+y^{3}-3xy$ 的极值（判断驻点是否为极值点）",
       answer: "由 $f_{x}=3x^{2}-3y=0,\\ f_{y}=3y^{2}-3x=0$ 得 $y=x^{2},\\ x=y^{2}$，故 $x^{4}=x$，驻点为 $(0,0)$ 与 $(1,1)$。$$f_{xx}=6x,\\ f_{xy}=-3,\\ f_{yy}=6y,\\ \\Delta=AC-B^{2}=36xy-9$$在 $(0,0)$：$\\Delta=-9<0$，为鞍点，非极值；在 $(1,1)$：$\\Delta=27>0$ 且 $A=6>0$，取极小值 $f(1,1)=1+1-3=-1$。",
@@ -442,7 +442,7 @@
       src: { card: "multi03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"multi03\"][0]）来源原文：2012 年数三真题。traps 取自 PITFALL[multi03]。MNEM[multi03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-multi03-2", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "卡片 multi03-2", type: "multivar", star: 5,
+      id: "cv-m3-multi03-2", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "未编号", type: "multivar", star: 5,
       tags: ["multi03"],
       stem: "（2020 数三）求函数 $f(x,y)=x^{3}+8y^{3}-xy$ 的极值。",
       answer: "由 $f_{x}=3x^{2}-y=0,\\ f_{y}=24y^{2}-x=0$ 得 $y=3x^{2},\\ x=24y^{2}$，故 $x=216x^{4}$，即 $x=0$ 或 $x=\\frac16$，驻点为 $(0,0)$ 与 $\\left(\\frac16,\\frac{1}{12}\\right)$。$$f_{xx}=6x,\\ f_{xy}=-1,\\ f_{yy}=48y,\\quad \\Delta=AC-B^{2}=288xy-1$$在 $(0,0)$：$\\Delta=-1<0$，非极值；在 $\\left(\\frac16,\\frac{1}{12}\\right)$：$\\Delta=3>0$ 且 $A=1>0$，取极小值 $f\\left(\\frac16,\\frac{1}{12}\\right)=\\frac{1}{216}+\\frac{1}{216}-\\frac{1}{72}=-\\frac{1}{216}$。",
@@ -450,7 +450,7 @@
       src: { card: "multi03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"multi03\"][1]）来源原文：2020 年数三真题。traps 取自 PITFALL[multi03]。MNEM[multi03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-multi03-3", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 multi03-3", type: "multivar", star: 5,
+      id: "cv-m3-multi03-3", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "multivar", star: 5,
       tags: ["multi03"],
       stem: "（2024 数三）函数 $z=2x^{3}-9x^{2}-6y^{4}+12x+24y$ 的极值点是____",
       answer: "$z_{x}=6x^{2}-18x+12=6(x-1)(x-2)$，$z_{y}=-24y^{3}+24=-24(y^{3}-1)$。令 $z_{x}=z_{y}=0$ 得 $x=1,2,\\ y=1$，驻点为 $(1,1),(2,1)$。$$z_{xx}=12x-18,\\quad z_{xy}=0,\\quad z_{yy}=-72y^{2},\\quad \\Delta=z_{xx}z_{yy}$$在 $(1,1)$：$z_{xx}=-6,\\ z_{yy}=-72$，$\\Delta=432>0$ 且 $z_{xx}<0$，为极大值点。在 $(2,1)$：$z_{xx}=6,\\ z_{yy}=-72$，$\\Delta=-432<0$，非极值点。故极值点为 $(1,1)$。",
@@ -458,7 +458,7 @@
       src: { card: "multi03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"multi03\"][2]）来源原文：2024 年数三真题。traps 取自 PITFALL[multi03]。MNEM[multi03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-lim05", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "卡片 lim05", type: "limit", star: 4,
+      id: "cv-m3-lim05", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "未编号", type: "limit", star: 4,
       tags: ["lim05"],
       stem: "（2017 数三）设 $f(x)=\\begin{cases}\\dfrac{1-\\cos\\sqrt{x}}{ax},&x>0\\\\b,&x\\le0\\end{cases}$ 在 $x=0$ 处连续，则 $ab=$____",
       answer: "由 $1-\\cos\\sqrt{x}\\sim\\dfrac{x}{2}$ 得$$\\lim_{x\\to0^{+}}f(x)=\\lim_{x\\to0^{+}}\\frac{1-\\cos\\sqrt{x}}{ax}=\\frac{1}{2a}$$连续要求 $\\lim_{x\\to0^{+}}f(x)=f(0)=b$，故 $\\dfrac{1}{2a}=b$，即 $ab=\\dfrac12$。",
@@ -466,14 +466,14 @@
       src: { card: "lim05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim05\"]）来源原文：2017 年数三真题。traps 取自 PITFALL[lim05]。MNEM[lim05] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-lim11", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "卡片 lim11", type: "limit", star: 4,
+      id: "cv-m3-lim11", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "未编号", type: "limit", star: 4,
       tags: ["lim11"],
       stem: "（2011 数三）设 $f(x)=\\lim_{t\\to0}x(1+3t)^{\\frac{x}{t}}$，则 $f'(x)=$____",
       answer: "由第二重要极限 $(1+\\frac{a}{u})^{u}\\to e^{a}$ 得 $\\lim_{t\\to0}(1+3t)^{\\frac{1}{t}}=e^{3}$，故$$f(x)=x\\,e^{3x}$$于是$$f'(x)=e^{3x}+3x\\,e^{3x}=e^{3x}(1+3x)$$",
       src: { card: "lim11", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim11\"]）来源原文：2011 年数三真题。PITFALL[lim11] 无条目 → 省略 traps 字段。MNEM[lim11] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-lim12", origin: 'card', year: 2003, school: "全国硕士研究生入学统一考试-数学三 2003 年", no: "卡片 lim12", type: "limit", star: 4,
+      id: "cv-m3-lim12", origin: 'card', year: 2003, school: "全国硕士研究生入学统一考试-数学三 2003 年", no: "未编号", type: "limit", star: 4,
       tags: ["lim12"],
       stem: "求 $\\lim_{n\\to\\infty}\\sqrt[n]{2^{n}+3^{n}}$",
       answer: "由 $3=\\sqrt[n]{3^{n}}\\le\\sqrt[n]{2^{n}+3^{n}}\\le\\sqrt[n]{2\\cdot3^{n}}=3\\sqrt[n]{2}\\to3$，夹逼得极限 $=3$。",
@@ -482,7 +482,7 @@
       src: { card: "lim12", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim12\"]）来源原文：2003 年数三真题。traps 取自 PITFALL[lim12]。MNEM[lim12] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-inf01", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "卡片 inf01", type: "limit", star: 5,
+      id: "cv-m3-inf01", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "未编号", type: "limit", star: 5,
       tags: ["inf01"],
       stem: "（2011 数三）当 $x\\to0$ 时，$3\\sin x-\\sin 3x$ 与 $c x^{k}$ 为等价无穷小，求 $k$ 与 $c$ 的值。",
       answer: "由 $\\sin 3x=3\\sin x-4\\sin^{3}x$ 得$$3\\sin x-\\sin 3x=4\\sin^{3}x\\sim4x^{3}$$故与 $4x^{3}$ 等价，$k=3,\\ c=4$。",
@@ -490,7 +490,7 @@
       src: { card: "inf01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"inf01\"]）来源原文：2011 年数三真题。traps 取自 PITFALL[inf01]。MNEM[inf01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-inf06", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "卡片 inf06", type: "limit", star: 5,
+      id: "cv-m3-inf06", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "未编号", type: "limit", star: 5,
       tags: ["inf06"],
       stem: "求 $\\lim_{x\\to0}\\frac{e^{x}-e^{\\sin x}}{x-\\sin x}$（综合：$e^{x}-1\\sim x$ 与 $\\sin x\\sim x$）",
       answer: "$$e^{x}-e^{\\sin x}=e^{\\sin x}\\left(e^{x-\\sin x}-1\\right)$$令 $t=x-\\sin x\\to0$，则 $e^{t}-1\\sim t$，故$$\\lim_{x\\to0}\\frac{e^{x}-e^{\\sin x}}{x-\\sin x}=\\lim_{x\\to0}e^{\\sin x}\\cdot\\frac{e^{x-\\sin x}-1}{x-\\sin x}=e^{0}\\cdot1=1$$",
@@ -499,7 +499,7 @@
       src: { card: "inf06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"inf06\"]）来源原文：2021 年数三真题。traps 取自 PITFALL[inf06]。MNEM[inf06] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-dr02", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "卡片 dr02", type: "deriv", star: 5,
+      id: "cv-m3-dr02", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "未编号", type: "deriv", star: 5,
       tags: ["dr02"],
       stem: "设 $f(x)=(e^{x}-1)(e^{2x}-2)\\cdots(e^{nx}-n)$，其中 $n$ 为正整数，求 $f'(0)$",
       answer: "由乘积求导法则，$f'(0)$ 为各项分别求导后其余项取 $x=0$ 的值之和。当 $x=0$ 时 $e^{kx}-k=1-k$，故除第一项 $(e^{x}-1)$（其值为 $0$）外，其余各项求导产生的乘积都含因子 $(e^{x}-1)\\big|_{x=0}=0$。故$$f'(0)=(e^{x})'\\big|_{x=0}\\cdot(1-2)(1-3)\\cdots(1-n)=(-1)^{n-1}(n-1)!$$",
@@ -507,14 +507,14 @@
       src: { card: "dr02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"dr02\"]）来源原文：2012 年数三真题。PITFALL[dr02] 无条目 → 省略 traps 字段。MNEM[dr02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int02", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "卡片 int02", type: "integral", star: 5,
+      id: "cv-m3-int02", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "未编号", type: "integral", star: 5,
       tags: ["int02"],
       stem: "（2026 数三）$\\int_{0}^{1}x(x-1)\\left(x-\\dfrac{1}{2}\\right)dx=$____",
       answer: "令 $u=x-\\dfrac12$，则 $x=u+\\dfrac12,\\ x-1=u-\\dfrac12,\\ x-\\dfrac12=u$，故$$I=\\int_{-1/2}^{1/2}u\\left(u+\\frac12\\right)\\left(u-\\frac12\\right)du=\\int_{-1/2}^{1/2}u\\left(u^{2}-\\frac14\\right)du$$被积函数 $u^{3}-\\frac14 u$ 为奇函数，在对称区间上积分为 $0$。故 $I=0$。",
       src: { card: "int02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int02\"]）来源原文：2026 年数三真题。PITFALL[int02] 无条目 → 省略 traps 字段。MNEM[int02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int03", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 int03", type: "integral", star: 5,
+      id: "cv-m3-int03", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "integral", star: 5,
       tags: ["int03"],
       stem: "（2025 数三）设 $\\int_{1}^{+\\infty}\\dfrac{a}{x(2x+a)}\\,dx=\\ln 2$，则 $a=$ ____",
       answer: "由 $\\dfrac{a}{x(2x+a)}=\\dfrac{1}{x}-\\dfrac{2}{2x+a}$，得$$\\int_{1}^{+\\infty}\\left(\\frac{1}{x}-\\frac{2}{2x+a}\\right)dx=\\left[\\ln x-\\ln(2x+a)\\right]_{1}^{+\\infty}=\\left[\\ln\\frac{x}{2x+a}\\right]_{1}^{+\\infty}=\\ln\\frac12-\\ln\\frac{1}{2+a}=\\ln\\frac{2+a}{2}$$令其 $=\\ln 2$，得 $\\dfrac{2+a}{2}=2$，故 $a=2$。",
@@ -522,7 +522,7 @@
       src: { card: "int03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int03\"]）来源原文：2025 年数三真题。traps 取自 PITFALL[int03]。MNEM[int03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int23", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 int23", type: "integral", star: 5,
+      id: "cv-m3-int23", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "integral", star: 5,
       tags: ["int23"],
       stem: "（2024 数三）当 $x\\to0$ 时，$\\int_{0}^{x}\\dfrac{(1+t^{2})\\sin t^{2}}{1+\\cos^{2}t}\\,dt$ 与 $x^{k}$ 是同阶无穷小，则 $k=$____",
       answer: "当 $t\\to0$ 时 $\\sin t^{2}\\sim t^{2}$，$\\dfrac{1+t^{2}}{1+\\cos^{2}t}\\to\\dfrac12$，故被积函数 $\\sim\\dfrac{t^{2}}{2}$，于是$$\\int_{0}^{x}\\frac{(1+t^{2})\\sin t^{2}}{1+\\cos^{2}t}dt\\sim\\int_{0}^{x}\\frac{t^{2}}{2}dt=\\frac{x^{3}}{6}$$与 $x^{3}$ 同阶，$k=3$。",
@@ -530,7 +530,7 @@
       src: { card: "int23", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int23\"][0]）来源原文：2024 年数三真题。PITFALL[int23] 无条目 → 省略 traps 字段。hint 取自 MNEM[int23]。" }
     },
     {
-      id: "cv-m3-int23-2", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 int23-2", type: "integral", star: 5,
+      id: "cv-m3-int23-2", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "integral", star: 5,
       tags: ["int23"],
       stem: "（2016 数三）设函数 $f(x)=\\int_{0}^{1}|t^{2}-x^{2}|\\,dt$（$x>0$），求 $f(x)$ 的最小值点与最小值。",
       answer: "当 $0<x\\le1$ 时：$$f(x)=\\int_{0}^{x}(x^{2}-t^{2})dt+\\int_{x}^{1}(t^{2}-x^{2})dt=\\frac{4}{3}x^{3}-x^{2}+\\frac{1}{3}$$当 $x>1$ 时：$f(x)=\\int_{0}^{1}(x^{2}-t^{2})dt=x^{2}-\\dfrac13$。对 $0<x<1$：$f'(x)=4x^{2}-2x=2x(2x-1)$，驻点 $x=\\dfrac12$，且 $f''(x)=8x-2>0$；$x>1$ 时 $f'(x)=2x>0$。故 $x=\\dfrac12$ 为最小值点，最小值 $f\\left(\\dfrac12\\right)=\\dfrac{4}{3}\\cdot\\dfrac18-\\dfrac14+\\dfrac13=\\dfrac14$。",
@@ -538,7 +538,7 @@
       src: { card: "int23", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int23\"][1]）来源原文：2016 年数三真题。PITFALL[int23] 无条目 → 省略 traps 字段。hint 取自 MNEM[int23]。" }
     },
     {
-      id: "cv-m3-int26", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "卡片 int26", type: "integral", star: 4,
+      id: "cv-m3-int26", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "未编号", type: "integral", star: 4,
       tags: ["int26"],
       stem: "（2017 数三）计算 $\\int_{-\\pi}^{\\pi}\\left(\\sin^{3}x+\\sqrt{\\pi^{2}-x^{2}}\\right)dx$",
       answer: "$\\sin^{3}x$ 是奇函数，在对称区间上积分为 $0$；$\\sqrt{\\pi^{2}-x^{2}}$ 表示上半圆，其面积为 $\\dfrac12\\pi\\cdot\\pi^{2}=\\dfrac{\\pi^{3}}{2}$，故$$\\int_{-\\pi}^{\\pi}\\left(\\sin^{3}x+\\sqrt{\\pi^{2}-x^{2}}\\right)dx=\\frac{\\pi^{3}}{2}$$",
@@ -546,7 +546,7 @@
       src: { card: "int26", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int26\"]）来源原文：2017 年数三真题。traps 取自 PITFALL[int26]。MNEM[int26] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int27", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "卡片 int27", type: "integral", star: 4,
+      id: "cv-m3-int27", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "未编号", type: "integral", star: 4,
       tags: ["int27"],
       stem: "设 $p$ 为常数，求反常积分 $\\int_{0}^{+\\infty}\\frac{\\arctan x}{x^{p}(1+x)}\\,dx$ 收敛时 $p$ 的取值范围",
       answer: "分为 $[0,1]$ 与 $[1,+\\infty)$ 两段。当 $x\\to0^{+}$ 时，$\\arctan x\\sim x$，被积函数 $\\sim\\frac{x}{x^{p}}=\\frac{1}{x^{p-1}}$，由瑕积分 $\\int_{0}^{1}\\frac{dx}{x^{q}}$ 收敛 $\\iff q<1$，得 $p-1<1$，即 $p<2$。当 $x\\to+\\infty$ 时，$\\arctan x\\to\\frac{\\pi}{2}$，被积函数 $\\sim\\frac{\\pi/2}{x^{p+1}}$，由 $\\int_{1}^{+\\infty}\\frac{dx}{x^{q}}$ 收敛 $\\iff q>1$，得 $p+1>1$，即 $p>0$。综上 $0<p<2$。",
@@ -554,21 +554,21 @@
       src: { card: "int27", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int27\"]）来源原文：2026 年数三真题。traps 取自 PITFALL[int27]。MNEM[int27] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int29", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "卡片 int29", type: "integral", star: 4,
+      id: "cv-m3-int29", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "未编号", type: "integral", star: 4,
       tags: ["int29"],
       stem: "设平面区域 $D$ 由曲线 $y=\\sqrt{x}\\sin(\\pi x)\\ (0\\le x\\le1)$ 与 $x$ 轴围成，求 $D$ 绕 $x$ 轴旋转所得旋转体的体积",
       answer: "$$V=\\pi\\int_{0}^{1}\\left[\\sqrt{x}\\sin(\\pi x)\\right]^{2}dx=\\pi\\int_{0}^{1}x\\sin^{2}(\\pi x)\\,dx$$由 $\\sin^{2}(\\pi x)=\\frac{1-\\cos(2\\pi x)}{2}$，得$$\\int_{0}^{1}x\\sin^{2}(\\pi x)\\,dx=\\frac12\\int_{0}^{1}x\\,dx-\\frac12\\int_{0}^{1}x\\cos(2\\pi x)\\,dx=\\frac14-0=\\frac14$$故$$V=\\frac{\\pi}{4}$$",
       src: { card: "int29", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int29\"][0]）来源原文：2021 年数三真题。PITFALL[int29] 无条目 → 省略 traps 字段。MNEM[int29] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int29-2", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 int29-2", type: "integral", star: 4,
+      id: "cv-m3-int29-2", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "integral", star: 4,
       tags: ["int29"],
       stem: "（2023 数三）设平面区域 $D=\\{(x,y)\\mid 0\\le y\\le\\dfrac{1}{x\\sqrt{1+x^{2}}},\\ x\\ge1\\}$。(Ⅰ) 求 $D$ 的面积；(Ⅱ) 求 $D$ 绕 $x$ 轴旋转所得旋转体的体积。",
       answer: "(Ⅰ) $S=\\int_{1}^{+\\infty}\\dfrac{dx}{x\\sqrt{1+x^{2}}}$。令 $x=\\tan\\theta$，则 $S=\\int\\csc\\theta\\,d\\theta=\\ln\\frac{\\sqrt{1+x^{2}}-1}{x}$，故$$S=\\left[\\ln\\frac{\\sqrt{1+x^{2}}-1}{x}\\right]_{1}^{+\\infty}=0-\\ln(\\sqrt2-1)=\\ln(\\sqrt2+1)$$(Ⅱ) $$V=\\pi\\int_{1}^{+\\infty}\\dfrac{dx}{x^{2}(1+x^{2})}=\\pi\\int_{1}^{+\\infty}\\left(\\dfrac{1}{x^{2}}-\\dfrac{1}{1+x^{2}}\\right)dx=\\pi\\left[-\\frac1x-\\arctan x\\right]_{1}^{+\\infty}=\\pi\\left(-\\frac{\\pi}{2}\\right)-\\pi\\left(-1-\\frac{\\pi}{4}\\right)=\\pi\\left(1-\\frac{\\pi}{4}\\right)$$",
       src: { card: "int29", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int29\"][1]）来源原文：2023 年数三真题。PITFALL[int29] 无条目 → 省略 traps 字段。MNEM[int29] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tay02", origin: 'card', year: 2002, school: "全国硕士研究生入学统一考试-数学三 2002 年", no: "卡片 tay02", type: "limit", star: 5,
+      id: "cv-m3-tay02", origin: 'card', year: 2002, school: "全国硕士研究生入学统一考试-数学三 2002 年", no: "未编号", type: "limit", star: 5,
       tags: ["tay02"],
       stem: "求 $\\lim_{x\\to0}\\frac{\\sin x-x}{x^{3}}$",
       answer: "由 $\\sin x=x-\\dfrac{x^{3}}{6}+o(x^{3})$，得$$\\lim_{x\\to0}\\frac{\\sin x-x}{x^{3}}=-\\frac{1}{6}$$",
@@ -576,28 +576,28 @@
       src: { card: "tay02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tay02\"]）来源原文：2002 年数三真题。PITFALL[tay02] 无条目 → 省略 traps 字段。MNEM[tay02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-mvt01", origin: 'card', year: 2000, school: "全国硕士研究生入学统一考试-数学三 2000 年", no: "卡片 mvt01", type: "proof", star: 4,
+      id: "cv-m3-mvt01", origin: 'card', year: 2000, school: "全国硕士研究生入学统一考试-数学三 2000 年", no: "未编号", type: "proof", star: 4,
       tags: ["mvt01"],
       stem: "设 $f(x)$ 在 $[0,\\pi]$ 上连续，且 $\\int_{0}^{\\pi}f(x)\\cos x\\,dx=\\int_{0}^{\\pi}f(x)\\sin x\\,dx=0$，证明 $f(x)$ 在 $(0,\\pi)$ 内至少有两个零点。（2000 年数三真题）",
       answer: "反证：由 $\\int_{0}^{\\pi}f\\sin x\\,dx=0$ 且 $\\sin x>0$，知 $f$ 在 $(0,\\pi)$ 内至少有一个零点；设其恰有一个零点 $x_{0}$。令 $g(x)=f(x)\\sin(x-x_{0})$，则 $g$ 在 $(0,\\pi)$ 上不变号且不恒为零，故 $\\int_{0}^{\\pi}g\\,dx\\neq0$。但 $\\sin(x-x_{0})=\\sin x\\cos x_{0}-\\cos x\\sin x_{0}$，由题设两积分为 $0$ 得 $\\int_{0}^{\\pi}g\\,dx=0$，矛盾。故至少两个零点。",
       src: { card: "mvt01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"mvt01\"]）来源原文：2000 年数三真题。PITFALL[mvt01] 无条目 → 省略 traps 字段。MNEM[mvt01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ser01", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 ser01", type: "integral", star: 5,
+      id: "cv-m3-ser01", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "integral", star: 5,
       tags: ["ser01"],
       stem: "（2019 数三）求曲线 $y=e^{-x}\\sin x\\ (x\\ge0)$ 与 $x$ 轴之间图形的面积。",
       answer: "分部积分得 $\\int e^{-x}\\sin x\\,dx=-\\dfrac{e^{-x}}2(\\sin x+\\cos x)+C$。在 $[n\\pi,(n+1)\\pi]$ 上 $|\\sin x|=(-1)^{n}\\sin x$，故第 $n$ 段面积为 $\\dfrac12\\left(e^{-n\\pi}+e^{-(n+1)\\pi}\\right)$。总面积是两个公比 $e^{-\\pi}$ 的几何级数之和：$$S=\\sum_{n=0}^{\\infty}\\frac12\\left(e^{-n\\pi}+e^{-(n+1)\\pi}\\right)=\\frac12\\left(\\frac{1}{1-e^{-\\pi}}+\\frac{e^{-\\pi}}{1-e^{-\\pi}}\\right)=\\frac{e^{\\pi}+1}{2(e^{\\pi}-1)}$$",
       src: { card: "ser01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ser01\"]）来源原文：2019 年数三真题。PITFALL[ser01] 无条目 → 省略 traps 字段。MNEM[ser01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ode01", origin: 'card', year: 2015, school: "全国硕士研究生招生考试-数学三 2015 年", no: "卡片 ode01", type: "ode", star: 5,
+      id: "cv-m3-ode01", origin: 'card', year: 2015, school: "全国硕士研究生招生考试-数学三 2015 年", no: "未编号", type: "ode", star: 5,
       tags: ["ode01"],
       stem: "（2015 数三）设函数 $y=f(x)$ 可导且 $f(0)=2$。曲线 $y=f(x)$ 在点 $(x_0,f(x_0))$ 处的切线与 $x$ 轴交于点 $\\left(x_0-\\dfrac{f(x_0)}{f'(x_0)},0\\right)$，且该切线与 $x$ 轴及直线 $x=x_0$ 所围三角形的面积为 $4$，求 $f(x)$。",
       answer: "三角形面积 $=\\dfrac12\\cdot\\left|\\dfrac{f(x_0)}{f'(x_0)}\\right|\\cdot|f(x_0)|=4$，即 $\\dfrac{f^{2}}{|f'|}=8$，取 $y'=\\dfrac{y^{2}}{8}$（符号由面积取绝对值吸收）。分离变量：$$\\frac{dy}{y^{2}}=\\frac{dx}{8}\\ \\Rightarrow\\ -\\frac{1}{y}=\\frac{x}{8}+C$$由 $f(0)=2$ 得 $C=-\\frac12$，故$$f(x)=\\frac{8}{4-x}$$",
       src: { card: "ode01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ode01\"]）来源原文：2015 年数三真题。PITFALL[ode01] 无条目 → 省略 traps 字段。MNEM[ode01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ode03", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 ode03", type: "ode", star: 5,
+      id: "cv-m3-ode03", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "ode", star: 5,
       tags: ["ode03"],
       stem: "已知微分方程 $y''+ay'+by=ce^{x}$ 的通解为 $y=(C_{1}+C_{2}x)e^{-x}+e^{x}$，求 $a,b,c$",
       answer: "齐次通解 $(C_{1}+C_{2}x)e^{-x}$ 表明 $-1$ 是特征方程 $r^{2}+ar+b=0$ 的二重根，故特征方程为 $(r+1)^{2}=r^{2}+2r+1=0$，得 $a=2,\\ b=1$。又 $y^{*}=e^{x}$ 是非齐次方程的特解，代入 $y''+2y'+y$ 得 $(1+2+1)e^{x}=4e^{x}$，故 $c=4$。",
@@ -605,7 +605,7 @@
       src: { card: "ode03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ode03\"][0]）来源原文：2019 年数三真题。traps 取自 PITFALL[ode03]。MNEM[ode03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ode03-2", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "卡片 ode03-2", type: "ode", star: 5,
+      id: "cv-m3-ode03-2", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "未编号", type: "ode", star: 5,
       tags: ["ode03"],
       stem: "（2020 数三）设函数 $y=f(x)$ 满足 $y''+2y'+5y=0$，$f(0)=1,\\ f'(0)=-1$，求 $f(x)$ 的表达式。",
       answer: "特征方程 $r^{2}+2r+5=0$，解得 $r=-1\\pm2i$，故$$f(x)=e^{-x}(C_{1}\\cos2x+C_{2}\\sin2x)$$由 $f(0)=C_{1}=1$。$f'(x)=e^{-x}\\left[(-C_{1}+2C_{2})\\cos2x+(-C_{2}-2C_{1})\\sin2x\\right]$，由 $f'(0)=-C_{1}+2C_{2}=-1$ 得 $-1+2C_{2}=-1$，即 $C_{2}=0$。故$$f(x)=e^{-x}\\cos2x$$",
@@ -613,7 +613,7 @@
       src: { card: "ode03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ode03\"][1]）来源原文：2020 年数三真题。traps 取自 PITFALL[ode03]。MNEM[ode03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ode05", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "卡片 ode05", type: "ode", star: 5,
+      id: "cv-m3-ode05", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "未编号", type: "ode", star: 5,
       tags: ["ode05"],
       stem: "求微分方程 $y''-2y'=e^{x}$ 满足 $y(0)=1,\\ y'(0)=1$ 的特解",
       answer: "特征方程 $r^{2}-2r=0$ 得 $r_{1}=0,\\ r_{2}=2$，齐次通解 $y=C_{1}+C_{2}e^{2x}$。设特解 $y^{*}=Ae^{x}$，代入得 $-Ae^{x}=e^{x}\\Rightarrow A=-1$，故通解 $y=C_{1}+C_{2}e^{2x}-e^{x}$。由 $y(0)=1$ 得 $C_{1}+C_{2}-1=1$；由 $y'(0)=1$ 得 $2C_{2}-1=1\\Rightarrow C_{2}=1,\\ C_{1}=1$。故$$y=1+e^{2x}-e^{x}$$",
@@ -621,28 +621,28 @@
       src: { card: "ode05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ode05\"]）来源原文：2026 年数三真题。traps 取自 PITFALL[ode05]。MNEM[ode05] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-multi01", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 multi01", type: "multivar", star: 5,
+      id: "cv-m3-multi01", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "multivar", star: 5,
       tags: ["multi01"],
       stem: "（2023 数三）已知函数 $f(x,y)$ 满足 $df(x,y)=\\dfrac{x\\,dy-y\\,dx}{x^{2}+y^{2}}$，$f(1,1)=\\dfrac{\\pi}{4}$，则 $f(\\sqrt3,3)=$ ____",
       answer: "由 $\\dfrac{x\\,dy-y\\,dx}{x^{2}+y^{2}}=d\\left(\\arctan\\dfrac{y}{x}\\right)$，故 $f(x,y)=\\arctan\\dfrac{y}{x}+C$。由 $f(1,1)=\\arctan1+C=\\dfrac{\\pi}{4}+C=\\dfrac{\\pi}{4}$ 得 $C=0$。于是$$f(\\sqrt3,3)=\\arctan\\frac{3}{\\sqrt3}=\\arctan\\sqrt3=\\frac{\\pi}{3}$$",
       src: { card: "multi01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"multi01\"]）来源原文：2023 年数三真题。PITFALL[multi01] 无条目 → 省略 traps 字段。MNEM[multi01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-multi02", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 multi02", type: "multivar", star: 5,
+      id: "cv-m3-multi02", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "multivar", star: 5,
       tags: ["multi02"],
       stem: "已知可导函数 $y=y(x)$ 由方程 $a\\,e^{x}+y^{2}+y-\\ln(1+x)\\cos y+b=0$ 确定，且 $y(0)=0,\\ y'(0)=0$。(1) 求 $a,b$ 的值；(2) 判断 $x=0$ 是否为 $y(x)$ 的极值点",
       answer: "(1) 将 $x=0,y=0$ 代入方程得 $a+b=0$。方程两边对 $x$ 求导：$$a e^{x}+2yy'+y'-\\frac{\\cos y}{1+x}+\\ln(1+x)\\cdot y'\\sin y=0$$代入 $x=0,y=0,y'=0$ 得 $a-1=0$，故 $a=1,\\ b=-1$。(2) 再对 $x$ 求导，代入 $x=0,y=0,y'=0$ 并利用 $a=1$，得 $1+y''(0)+1=0$（两个 $1$ 分别来自 $e^{x}$ 项与 $\\frac{\\cos y}{1+x}$ 求导项），故 $y''(0)=-2<0$。由极值的第二充分条件，$x=0$ 为 $y(x)$ 的极大值点。",
       src: { card: "multi02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"multi02\"]）来源原文：2023 年数三真题。PITFALL[multi02] 无条目 → 省略 traps 字段。MNEM[multi02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-dbi01", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "卡片 dbi01", type: "dblint", star: 5,
+      id: "cv-m3-dbi01", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "未编号", type: "dblint", star: 5,
       tags: ["dbi01"],
       stem: "设 $D=\\{(x,y)\\mid 0\\le x\\le1,\\ 0\\le y\\le1\\}$，计算 $\\iint_{D}\\frac{y}{(1+x^{2}+y^{2})^{3/2}}\\,dxdy$",
       answer: "化为累次积分并先对 $y$ 积分：$$\\iint_{D}\\frac{y}{(1+x^{2}+y^{2})^{3/2}}dxdy=\\int_{0}^{1}dx\\int_{0}^{1}\\frac{y}{(1+x^{2}+y^{2})^{3/2}}dy$$内层 $\\int\\frac{y}{(1+x^{2}+y^{2})^{3/2}}dy=-(1+x^{2}+y^{2})^{-1/2}$，故原式$$=\\int_{0}^{1}\\left[\\frac{1}{\\sqrt{1+x^{2}}}-\\frac{1}{\\sqrt{2+x^{2}}}\\right]dx=\\left[\\ln\\left(x+\\sqrt{1+x^{2}}\\right)-\\ln\\left(x+\\sqrt{2+x^{2}}\\right)\\right]_{0}^{1}=\\ln\\frac{2+\\sqrt2}{1+\\sqrt3}$$",
       src: { card: "dbi01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"dbi01\"]）来源原文：2026 年数三真题。PITFALL[dbi01] 无条目 → 省略 traps 字段。MNEM[dbi01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la01", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "卡片 la01", type: "linalg", star: 5,
+      id: "cv-m3-la01", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "未编号", type: "linalg", star: 5,
       tags: ["la01"],
       stem: "（2020 数三）行列式 $\\begin{vmatrix}a&0&-1&1\\\\0&a&1&-1\\\\-1&1&a&0\\\\1&-1&0&a\\end{vmatrix}=$____",
       answer: "把第 2 行加到第 1 行、第 3 行加到第 4 行：$$\\begin{vmatrix}a&0&-1&1\\\\0&a&1&-1\\\\-1&1&a&0\\\\1&-1&0&a\\end{vmatrix}=\\begin{vmatrix}a&a&0&0\\\\0&a&1&-1\\\\-1&1&a&0\\\\0&0&a&a\\end{vmatrix}$$按第一行展开并化简（两 $3\\times3$ 行列式）得 $a^{2}(a^{2}-4)$。",
@@ -650,7 +650,7 @@
       src: { card: "la01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la01\"][0]）来源原文：2020 年数三真题。traps 取自 PITFALL[la01]。MNEM[la01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la01-2", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 la01-2", type: "linalg", star: 5,
+      id: "cv-m3-la01-2", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "linalg", star: 5,
       tags: ["la01"],
       stem: "（2025 数三）已知 $f(x)=\\begin{vmatrix}2x+1&3&2x+1&1\\\\2x&-3&4x&-2\\\\2x+1&2&2x+1&1\\\\2x&-4&4x&-2\\end{vmatrix}$，$g(x)=\\begin{vmatrix}2x+1&1&2x+1&3\\\\5x+1&-2&4x&-3\\\\0&1&2x+1&2\\\\2x&-2&4x&-4\\end{vmatrix}$，则方程 $f(x)=g(x)$ 的不同的根的个数为____",
       answer: "对 $f(x)$：$r_1-r_3=(0,1,0,0)$，按第 1 行展开后剩下的 $3\\times3$ 行列式第 1、3 行相同，故 $f(x)\\equiv0$。对 $g(x)$：$r_1-r_3=(2x+1,0,0,1)$，按第 1 行展开得$$g(x)=(2x+1)\\begin{vmatrix}-2&4x&-3\\\\1&2x+1&2\\\\-2&4x&-4\\end{vmatrix}-\\begin{vmatrix}5x+1&-2&4x\\\\0&1&2x+1\\\\2x&-2&4x\\end{vmatrix}=-2x(4x+1)$$故 $f(x)=g(x)\\iff -2x(4x+1)=0$，有两个不同的根 $x=0,\\ x=-\\frac14$。",
@@ -658,7 +658,7 @@
       src: { card: "la01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la01\"][1]）来源原文：2025 年数三真题。traps 取自 PITFALL[la01]。MNEM[la01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la01-3", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 la01-3", type: "linalg", star: 5,
+      id: "cv-m3-la01-3", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "linalg", star: 5,
       tags: ["la01"],
       stem: "（2023 数三）已知线性方程组 $\\begin{cases}ax_1+x_3=1\\\\x_1+ax_2+x_3=0\\\\x_1+2x_2+ax_3=0\\\\ax_1+bx_2=2\\end{cases}$ 有解。若 $\\begin{vmatrix}a&0&1\\\\1&a&1\\\\1&2&a\\end{vmatrix}=4$，则 $\\begin{vmatrix}1&a&1\\\\1&2&a\\\\a&b&0\\end{vmatrix}=$____",
       answer: "记 $D_1=\\begin{vmatrix}a&0&1\\\\1&a&1\\\\1&2&a\\end{vmatrix}=(a-1)^{2}(a+2)=4$，得 $a=2$ 或 $a=-1$。由方程组有解，第 4 行是前 3 行的线性组合 $r_4=2r_1+\\beta r_2+\\gamma r_3$（右端 $2=2\\cdot1+0+0$），解得 $b=-4$（$a=2$）或 $b=\\dfrac72$（$a=-1$），代入$$\\begin{vmatrix}1&a&1\\\\1&2&a\\\\a&b&0\\end{vmatrix}=a^{3}-2a+b(1-a)$$两种情况均得 $8$。",
@@ -666,63 +666,63 @@
       src: { card: "la01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la01\"][2]）来源原文：2023 年数三真题。traps 取自 PITFALL[la01]。MNEM[la01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la13", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 la13", type: "eigen", star: 4,
+      id: "cv-m3-la13", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "eigen", star: 4,
       tags: ["la13"],
       stem: "设 $A$ 为 3 阶矩阵，$\\Lambda=\\operatorname{diag}(1,-1,0)$，则 $A$ 的特征值为 $1,-1,0$ 的充分必要条件是什么？",
       answer: "充分必要条件：$A$ 与 $\\Lambda$ 相似，即存在可逆矩阵 $P$，使 $A=P\\Lambda P^{-1}$。理由：3 阶矩阵 $A$ 有 3 个互异特征值 $1,-1,0$，故有 3 个线性无关的特征向量，从而可对角化，且相似于以其特征值为对角元的对角阵 $\\Lambda$；反之相似矩阵有相同特征值。注意：存在可逆 $P,Q$ 使 $A=P\\Lambda Q$ 是\"等价\"，存在可逆 $P$ 使 $A=P\\Lambda P^{T}$ 是\"合同\"，均非特征值条件。",
       src: { card: "la13", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la13\"][0]）来源原文：2022 年数三真题。PITFALL[la13] 无条目 → 省略 traps 字段。MNEM[la13] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la13-2", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 la13-2", type: "eigen", star: 4,
+      id: "cv-m3-la13-2", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "eigen", star: 4,
       tags: ["la13"],
       stem: "（2025 数三）「$A^{3}-A^{2}$ 可对角化」是「$A$ 可对角化」的（ ）(A) 充分不必要 (B) 必要不充分 (C) 充分必要 (D) 既不充分也不必要",
       answer: "若 $A$ 可对角化，则 $A$ 的多项式 $A^{3}-A^{2}=A^{2}(A-E)$ 也可对角化，故是必要条件。反之，取幂零 Jordan 块 $A=\\begin{pmatrix}0&1\\\\0&0\\end{pmatrix}$，则 $A^{2}=O$，$A^{3}-A^{2}=O$ 可对角化，但 $A$ 不可对角化，故不充分。选 (B)。",
       src: { card: "la13", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la13\"][1]）来源原文：2025 年数三真题。PITFALL[la13] 无条目 → 省略 traps 字段。MNEM[la13] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-dr09", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "卡片 dr09", type: "deriv", star: 3,
+      id: "cv-m3-dr09", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "未编号", type: "deriv", star: 3,
       tags: ["dr09"],
       stem: "（2018 数三）设 $f(x)=\\cos\\sqrt{|x|}$，求 $f$ 在 $x=0$ 处的左、右导数，并判断 $f$ 在 $x=0$ 处是否可导。",
       answer: "用 $1-\\cos u\\sim\\frac{u^{2}}{2}$：$$f_+'(0)=\\lim_{x\\to0^{+}}\\frac{\\cos\\sqrt{x}-1}{x}=\\lim_{x\\to0^{+}}\\frac{-\\frac{x}{2}}{x}=-\\frac12,\\qquad f_-'(0)=\\lim_{x\\to0^{-}}\\frac{\\cos\\sqrt{-x}-1}{x}=\\lim_{x\\to0^{-}}\\frac{\\frac{x}{2}}{x}=\\frac12$$左右导数不相等，故 $f$ 在 $x=0$ 处不可导（即当年选择题的 D 选项）。",
       src: { card: "dr09", note: "卡片例题（data/math3.js 的 EXAMPLE[\"dr09\"]）来源原文：2018 年数三真题。PITFALL[dr09] 无条目 → 省略 traps 字段。MNEM[dr09] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int06", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 int06", type: "integral", star: 5,
+      id: "cv-m3-int06", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "integral", star: 5,
       tags: ["int06"],
       stem: "（2024 数三）设 $I=\\int_{\\alpha}^{\\alpha+k\\pi}|\\sin x|\\,dx$，$k$ 为整数，则 $I$ 的值（ ）(A) 只与 $\\alpha$ 有关；(B) 只与 $k$ 有关；(C) 与 $\\alpha$ 和 $k$ 均有关；(D) 与 $\\alpha$ 和 $k$ 均无关",
       answer: "$|\\sin x|$ 是以 $\\pi$ 为周期的函数，且 $\\int_{0}^{\\pi}|\\sin x|\\,dx=\\int_{0}^{\\pi}\\sin x\\,dx=2$。任意长度为 $k\\pi$ 的区间（无论起点如何）上 $|\\sin x|$ 的积分都等于 $k\\cdot2=2k$，仅取决于 $k$。故选 (B)。",
       src: { card: "int06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int06\"]）来源原文：2024 年数三真题。PITFALL[int06] 无条目 → 省略 traps 字段。MNEM[int06] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int18", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 int18", type: "integral", star: 4,
+      id: "cv-m3-int18", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "integral", star: 4,
       tags: ["int18"],
       stem: "（2022 数三）计算 $\\int_{0}^{2}\\dfrac{2x-4}{x^{2}+2x+4}\\,dx$",
       answer: "$2x-4=(2x+2)-6$，故$$\\int\\frac{2x-4}{x^{2}+2x+4}dx=\\ln(x^{2}+2x+4)-6\\int\\frac{dx}{(x+1)^{2}+3}=\\ln(x^{2}+2x+4)-2\\sqrt3\\arctan\\frac{x+1}{\\sqrt3}$$代入上下限：$$\\text{原式}=\\ln\\frac{12}{4}-2\\sqrt3\\left(\\arctan\\sqrt3-\\arctan\\frac{1}{\\sqrt3}\\right)=\\ln3-2\\sqrt3\\cdot\\frac{\\pi}{6}=\\ln3-\\frac{\\sqrt3\\,\\pi}{3}$$",
       src: { card: "int18", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int18\"]）来源原文：2022 年数三真题。PITFALL[int18] 无条目 → 省略 traps 字段。MNEM[int18] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int19", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 int19", type: "integral", star: 4,
+      id: "cv-m3-int19", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "integral", star: 4,
       tags: ["int19"],
       stem: "（2024 数三）计算 $\\int_{2}^{+\\infty}\\dfrac{5}{x^{4}+3x^{2}-4}\\,dx$",
       answer: "$x^{4}+3x^{2}-4=(x^{2}-1)(x^{2}+4)$，设 $\\dfrac{5}{(x^{2}-1)(x^{2}+4)}=\\dfrac{A}{x^{2}-1}+\\dfrac{B}{x^{2}+4}$，解得 $A=1,\\ B=-1$。故$$\\int_{2}^{+\\infty}\\frac{5}{x^{4}+3x^{2}-4}dx=\\int_{2}^{+\\infty}\\frac{dx}{x^{2}-1}-\\int_{2}^{+\\infty}\\frac{dx}{x^{2}+4}=\\left[\\frac12\\ln\\frac{x-1}{x+1}-\\frac12\\arctan\\frac{x}{2}\\right]_{2}^{+\\infty}=\\frac12\\ln3-\\frac{\\pi}{8}$$",
       src: { card: "int19", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int19\"]）来源原文：2024 年数三真题。PITFALL[int19] 无条目 → 省略 traps 字段。MNEM[int19] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-int21", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 int21", type: "integral", star: 4,
+      id: "cv-m3-int21", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "integral", star: 4,
       tags: ["int21"],
       stem: "设 $f(x)=\\begin{cases}(x+1)\\cos x,&x>0\\\\ \\frac{1}{\\sqrt{1+x^{2}}},&x\\le0\\end{cases}$，求 $f(x)$ 的一个连续原函数 $F(x)$",
       answer: "当 $x>0$ 时，$$\\int(x+1)\\cos x\\,dx=(x+1)\\sin x+\\cos x+C_{2}$$当 $x\\le0$ 时，$$\\int\\frac{1}{\\sqrt{1+x^{2}}}\\,dx=\\ln\\left(x+\\sqrt{1+x^{2}}\\right)+C_{1}$$由原函数在 $x=0$ 处连续：$F(0^{-})=C_{1}$，$F(0^{+})=1+C_{2}$，故 $C_{1}=1+C_{2}$。取 $C_{2}=0,\\ C_{1}=1$，得$$F(x)=\\begin{cases}(x+1)\\sin x+\\cos x,&x>0\\\\ \\ln\\left(x+\\sqrt{1+x^{2}}\\right)+1,&x\\le0\\end{cases}$$",
       src: { card: "int21", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int21\"]）来源原文：2023 年数三真题。PITFALL[int21] 无条目 → 省略 traps 字段。MNEM[int21] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tay03", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 tay03", type: "limit", star: 5,
+      id: "cv-m3-tay03", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "limit", star: 5,
       tags: ["tay03"],
       stem: "（2023 数三）求 $\\lim_{x\\to\\infty}x^{2}\\left(2-x\\sin\\dfrac{1}{x}-\\cos\\dfrac{1}{x}\\right)$",
       answer: "令 $t=\\dfrac1x\\to0$，用 $\\sin t=t-\\dfrac{t^{3}}{6}+o(t^{3})$、$\\cos t=1-\\dfrac{t^{2}}{2}+o(t^{2})$：$$2-x\\sin\\frac1x-\\cos\\frac1x=2-\\frac{\\sin t}{t}-\\cos t=2-\\left(1-\\frac{t^{2}}{6}\\right)-\\left(1-\\frac{t^{2}}{2}\\right)+o(t^{2})=\\frac23 t^{2}+o(t^{2})$$故$$\\lim_{x\\to\\infty}x^{2}\\left(2-x\\sin\\frac1x-\\cos\\frac1x\\right)=\\lim_{t\\to0}\\frac{\\frac23 t^{2}+o(t^{2})}{t^{2}}=\\frac23$$",
       src: { card: "tay03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tay03\"]）来源原文：2023 年数三真题。PITFALL[tay03] 无条目 → 省略 traps 字段。MNEM[tay03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ser05", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 ser05", type: "series", star: 4,
+      id: "cv-m3-ser05", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "series", star: 4,
       tags: ["ser05"],
       stem: "（2025 数三）已知 $k$ 为常数，判断级数 $\\sum_{n=1}^{\\infty}(-1)^{n}\\left[\\dfrac{1}{n}-\\ln\\left(1+\\dfrac{k}{n^{2}}\\right)\\right]$ 的敛散性（绝对收敛 / 条件收敛 / 发散）",
       answer: "当 $n\\to\\infty$ 时 $\\ln\\left(1+\\dfrac{k}{n^{2}}\\right)\\sim\\dfrac{k}{n^{2}}$，故原级数 $=\\sum_{n=1}^{\\infty}\\dfrac{(-1)^{n}}{n}-k\\sum_{n=1}^{\\infty}\\dfrac{(-1)^{n}}{n^{2}}$。其中 $\\sum\\dfrac{(-1)^{n}}{n}$ 条件收敛（莱布尼茨），$\\sum\\dfrac{(-1)^{n}}{n^{2}}$ 绝对收敛（$p=2>1$），二者之和条件收敛，与 $k$ 取值无关。",
@@ -730,56 +730,56 @@
       src: { card: "ser05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ser05\"]）来源原文：2025 年数三真题。traps 取自 PITFALL[ser05]。MNEM[ser05] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ser12", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 ser12", type: "series", star: 4,
+      id: "cv-m3-ser12", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "series", star: 4,
       tags: ["ser12"],
       stem: "求幂级数 $\\sum_{n=0}^{\\infty}\\frac{x^{2n}}{(2n)!}$ 的和函数",
       answer: "由 $e^{x}=\\sum_{n=0}^{\\infty}\\frac{x^{n}}{n!}$ 与 $e^{-x}=\\sum_{n=0}^{\\infty}\\frac{(-x)^{n}}{n!}$，两式相加奇次项抵消：$$e^{x}+e^{-x}=2\\sum_{n=0}^{\\infty}\\frac{x^{2n}}{(2n)!}$$故$$\\sum_{n=0}^{\\infty}\\frac{x^{2n}}{(2n)!}=\\frac{e^{x}+e^{-x}}{2}=\\cosh x$$收敛半径 $R=+\\infty$。",
       src: { card: "ser12", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ser12\"]）来源原文：2023 年数三真题。PITFALL[ser12] 无条目 → 省略 traps 字段。MNEM[ser12] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ode04", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "卡片 ode04", type: "ode", star: 4,
+      id: "cv-m3-ode04", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "未编号", type: "ode", star: 4,
       tags: ["ode04"],
       stem: "求差分方程 $\\Delta y_{t}=t$（即 $y_{t+1}-y_{t}=t$）的通解",
       answer: "齐次方程 $y_{t+1}-y_{t}=0$ 的通解为 $y_{t}=C$。设非齐次特解 $y_{t}^{*}=At^{2}+Bt$，则$$\\Delta y_{t}^{*}=A[(t+1)^{2}-t^{2}]+B[(t+1)-t]=2At+(A+B)=t$$得 $A=\\frac12,\\ B=-\\frac12$，特解 $y_{t}^{*}=\\frac{t^{2}-t}{2}$。故通解$$y_{t}=C+\\frac{t(t-1)}{2}$$",
       src: { card: "ode04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ode04\"]）来源原文：2021 年数三真题。PITFALL[ode04] 无条目 → 省略 traps 字段。MNEM[ode04] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-multi04", origin: 'card', year: 2010, school: "全国硕士研究生入学统一考试-数学三 2010 年", no: "卡片 multi04", type: "multivar", star: 4,
+      id: "cv-m3-multi04", origin: 'card', year: 2010, school: "全国硕士研究生入学统一考试-数学三 2010 年", no: "未编号", type: "multivar", star: 4,
       tags: ["multi04"],
       stem: "求函数 $u=xy+2yz$ 在约束条件 $x^{2}+y^{2}+z^{2}=10$ 下的最大值与最小值",
       answer: "构造 $L=xy+2yz+\\lambda(x^{2}+y^{2}+z^{2}-10)$，令各偏导为零：$$L_{x}=y+2\\lambda x=0,\\quad L_{y}=x+2z+2\\lambda y=0,\\quad L_{z}=2y+2\\lambda z=0$$联立 $x^{2}+y^{2}+z^{2}=10$ 解得驻点，如 $(1,\\sqrt5,2)$、$(-1,-\\sqrt5,2)$、$(1,\\sqrt5,-2)$、$(-1,-\\sqrt5,-2)$、$(2\\sqrt2,0,-\\sqrt2)$、$(-2\\sqrt2,0,\\sqrt2)$，对应 $u$ 值分别为 $\\pm5\\sqrt5$ 与 $0$。由实际问题必存在最值，故最大值 $5\\sqrt5$，最小值 $-5\\sqrt5$。",
       src: { card: "multi04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"multi04\"]）来源原文：2010 年数三真题。PITFALL[multi04] 无条目 → 省略 traps 字段。MNEM[multi04] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-multi05", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "卡片 multi05", type: "multivar", star: 4,
+      id: "cv-m3-multi05", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "未编号", type: "multivar", star: 4,
       tags: ["multi05"],
       stem: "（2021 数三）设函数 $f(x,y)$ 可微，且 $f(x+1,e^{x})=x(x+1)^{2}$，$f(x,x^{2})=2x^{2}\\ln x$，则 $df(1,1)=$（ ）(A) $dx+dy$ (B) $dx-dy$ (C) $dy$ (D) $-dy$",
       answer: "两式分别对 $x$ 求导（复合函数链式法则）：$$f_1(x+1,e^x)+e^{x}f_2(x+1,e^x)=(x+1)^2+2x(x+1)$$$$f_1(x,x^2)+2x f_2(x,x^2)=4x\\ln x+2x$$分别取 $x=0$ 与 $x=1$（两处都涉及 $f(1,1)$）：$$f_1(1,1)+f_2(1,1)=1,\\qquad f_1(1,1)+2f_2(1,1)=2$$解得 $f_1(1,1)=0,\\ f_2(1,1)=1$，故 $df(1,1)=dy$，选 (C)。",
       src: { card: "multi05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"multi05\"][0]）来源原文：2021 年数三真题。PITFALL[multi05] 无条目 → 省略 traps 字段。MNEM[multi05] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-multi05-2", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 multi05-2", type: "multivar", star: 4,
+      id: "cv-m3-multi05-2", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "multivar", star: 4,
       tags: ["multi05"],
       stem: "（2016 数三）设 $z=z(x,y)$ 由方程 $(x+1)z-y^{2}=x^{2}f(x-z,y)$ 确定，其中 $f$ 具有连续偏导数，求 $dz\\big|_{(0,1)}$。",
       answer: "由原方程取 $x=0,y=1$ 得 $z(0,1)=1$。两边分别对 $x,y$ 求偏导：$$z+(x+1)z_x=2xf+x^{2}f_1'(1-z_x),\\qquad (x+1)z_y-2y=x^{2}\\bigl[-f_1'z_y+f_2'\\bigr]$$代入 $x=0,y=1,z=1$ 得 $z_x(0,1)=-1,\\ z_y(0,1)=2$，故$$dz\\big|_{(0,1)}=-dx+2dy$$",
       src: { card: "multi05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"multi05\"][1]）来源原文：2016 年数三真题。PITFALL[multi05] 无条目 → 省略 traps 字段。MNEM[multi05] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-dbi03", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 dbi03", type: "dblint", star: 5,
+      id: "cv-m3-dbi03", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "dblint", star: 5,
       tags: ["dbi03"],
       stem: "设 $f(x)$ 连续，交换 $\\int_{0}^{1}dy\\int_{0}^{y}f(x)\\,dx$ 的积分次序并计算",
       answer: "积分区域为 $0\\le x\\le y\\le1$，交换次序：$$\\int_{0}^{1}dy\\int_{0}^{y}f(x)\\,dx=\\int_{0}^{1}dx\\int_{x}^{1}f(x)\\,dy=\\int_{0}^{1}(1-x)f(x)\\,dx$$",
       src: { card: "dbi03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"dbi03\"]）来源原文：2025 年数三真题。PITFALL[dbi03] 无条目 → 省略 traps 字段。MNEM[dbi03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la08", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 la08", type: "linalg", star: 5,
+      id: "cv-m3-la08", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "linalg", star: 5,
       tags: ["la08"],
       stem: "（2024 数三）设 $A=\\begin{pmatrix}a+1&b&3\\\\a&\\frac{b}{2}&1\\\\1&1&2\\end{pmatrix}$，$M_{ij}$ 为 $a_{ij}$ 的余子式，若 $|A|=-\\dfrac12$ 且 $-M_{21}+M_{22}-M_{23}=0$，则（ ）(A) $a=1$ 或 $a=-\\dfrac32$；(B) $a=0$ 或 $a=\\dfrac32$；(C) $b=1$ 或 $b=-\\dfrac12$；(D) $b=-1$ 或 $a=\\dfrac12$",
       answer: "代数余子式 $A_{ij}=(-1)^{i+j}M_{ij}$，故 $-M_{21}+M_{22}-M_{23}=A_{21}+A_{22}+A_{23}$，它等于把 $A$ 的第 2 行换成 $(1,1,1)$ 后按第 2 行展开的行列式：$$\\begin{vmatrix}a+1&b&3\\\\1&1&1\\\\1&1&2\\end{vmatrix}=\\begin{vmatrix}a+1&b&3\\\\1&1&1\\\\0&0&1\\end{vmatrix}=a+1-b=0$$故 $b=a+1$。对 $|A|$ 先作 $r_{1}-r_{2}$ 再作 $r_{1}-r_{3}$：$$|A|=\\begin{vmatrix}a+1&b&3\\\\a&\\frac b2&1\\\\1&1&2\\end{vmatrix}=\\begin{vmatrix}0&\\frac b2-1&0\\\\a&\\frac b2&1\\\\1&1&2\\end{vmatrix}=-\\left(\\frac b2-1\\right)(2a-1)=-\\frac12$$即 $\\left(\\dfrac b2-1\\right)(2a-1)=\\dfrac12$。代入 $b=a+1$ 得 $\\dfrac{a-1}{2}(2a-1)=\\dfrac12$，即 $2a^{2}-3a=0$，故 $a=0$ 或 $a=\\dfrac32$，选 (B)。",
       src: { card: "la08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la08\"]）来源原文：2024 年数三真题。PITFALL[la08] 无条目 → 省略 traps 字段。MNEM[la08] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la10", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "卡片 la10", type: "linalg", star: 5,
+      id: "cv-m3-la10", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "未编号", type: "linalg", star: 5,
       tags: ["la10"],
       stem: "设 $\\alpha$ 为 3 维单位列向量，$E$ 为 3 阶单位矩阵，判断 $E-\\alpha\\alpha^{T}$ 是否可逆",
       answer: "因 $\\alpha^{T}\\alpha=1$，秩为 $1$ 的矩阵 $\\alpha\\alpha^{T}$ 的三个特征值为 $1,0,0$（其迹 $\\mathrm{tr}(\\alpha\\alpha^{T})=\\alpha^{T}\\alpha=1$）。故 $E-\\alpha\\alpha^{T}$ 的三个特征值为 $0,1,1$，于是$$|E-\\alpha\\alpha^{T}|=0\\times1\\times1=0$$所以 $E-\\alpha\\alpha^{T}$ 不可逆。",
@@ -787,7 +787,7 @@
       src: { card: "la10", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la10\"]）来源原文：2017 年数三真题。PITFALL[la10] 无条目 → 省略 traps 字段。MNEM[la10] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la12", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 la12", type: "eigen", star: 4,
+      id: "cv-m3-la12", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "eigen", star: 4,
       tags: ["la12"],
       stem: "设 $A$ 是 3 阶实对称矩阵，$E$ 为 3 阶单位矩阵，若 $A^{2}+A=2E$ 且 $|A|=4$，求二次型 $x^{T}Ax$ 的规范形",
       answer: "设 $\\lambda$ 为 $A$ 的特征值，由 $A^{2}+A=2E$ 得 $\\lambda^{2}+\\lambda=2$，即 $\\lambda=1$ 或 $-2$。又三个特征值之积 $=|A|=4$，故三个特征值只能为 $1,-2,-2$。于是二次型 $x^{T}Ax$ 的正惯性指数为 $1$、负惯性指数为 $2$，规范形为$$y_{1}^{2}-y_{2}^{2}-y_{3}^{2}$$",
@@ -795,14 +795,14 @@
       src: { card: "la12", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la12\"]）来源原文：2019 年数三真题。PITFALL[la12] 无条目 → 省略 traps 字段。hint 取自 MNEM[la12]。" }
     },
     {
-      id: "cv-m3-la14", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "卡片 la14", type: "eigen", star: 4,
+      id: "cv-m3-la14", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "未编号", type: "eigen", star: 4,
       tags: ["la14"],
       stem: "（2011 数三）设 $A$ 为 3 阶实对称矩阵，$A$ 的各行元素之和为 $3$，且 $r(A)=1$，则二次型 $x^{T}Ax$ 在正交变换下的标准形为____",
       answer: "各行元素之和为 $3$，故 $A(1,1,1)^{T}=3(1,1,1)^{T}$，$3$ 是特征值。又 $r(A)=1$ 且 $A$ 为实对称矩阵，故另两个特征值为 $0,0$。正交变换下标准形的系数即特征值，故标准形为$$3y_{1}^{2}$$",
       src: { card: "la14", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la14\"]）来源原文：2011 年数三真题。PITFALL[la14] 无条目 → 省略 traps 字段。MNEM[la14] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la17", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "卡片 la17", type: "linalg", star: 4,
+      id: "cv-m3-la17", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "未编号", type: "linalg", star: 4,
       tags: ["la17"],
       stem: "（2011 数三）设 $A$ 为 3 阶非零矩阵，$\\eta_1,\\eta_2,\\eta_3$ 是 $Ax=\\beta\\ (\\beta\\ne0)$ 的三个线性无关的解，写出 $Ax=\\beta$ 的通解。",
       answer: "$\\eta_2-\\eta_1,\\ \\eta_3-\\eta_1$ 是 $Ax=0$ 的两个线性无关的解，故 $3-r(A)\\ge2$，得 $r(A)\\le1$；又 $A\\ne O$ 得 $r(A)=1$，故 $Ax=0$ 的基础解系恰含 $2$ 个向量。又 $\\dfrac{\\eta_2+\\eta_3}{2}$ 是 $Ax=\\beta$ 的特解，通解为$$x=\\frac{\\eta_2+\\eta_3}{2}+k_1(\\eta_2-\\eta_1)+k_2(\\eta_3-\\eta_1)\\quad(k_1,k_2\\in\\mathbb R)$$",
@@ -810,21 +810,21 @@
       src: { card: "la17", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la17\"]）来源原文：2011 年数三真题。traps 取自 PITFALL[la17]。MNEM[la17] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ineq04", origin: 'card', year: 2010, school: "全国硕士研究生入学统一考试-数学三 2010 年", no: "卡片 ineq04", type: "proof", star: 4,
+      id: "cv-m3-ineq04", origin: 'card', year: 2010, school: "全国硕士研究生入学统一考试-数学三 2010 年", no: "未编号", type: "proof", star: 4,
       tags: ["ineq04"],
       stem: "（2010 数三）设 $a_{n}=\\int_{0}^{1}\\bigl[\\ln(1+x)\\bigr]^{n}dx\\ (n=1,2,\\cdots)$。(Ⅰ) 证明 $0<a_{n}<\\dfrac{1}{n+1}$；(Ⅱ) 求 $\\lim_{n\\to\\infty}a_{n}$。",
       answer: "(Ⅰ) 当 $0<x<1$ 时由 $\\ln(1+x)<x$ 得 $0<[\\ln(1+x)]^{n}<x^{n}$，故$$0<a_{n}<\\int_{0}^{1}x^{n}dx=\\frac{1}{n+1}$$(Ⅱ) 由夹逼准则，$0<a_n<\\dfrac1{n+1}\\to0$，故 $\\lim_{n\\to\\infty}a_{n}=0$。",
       src: { card: "ineq04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ineq04\"]）来源原文：2010 年数三真题。PITFALL[ineq04] 无条目 → 省略 traps 字段。MNEM[ineq04] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-lim06", origin: 'card', year: 2015, school: "全国硕士研究生招生考试-数学三 2015 年", no: "卡片 lim06", type: "limit", star: 4,
+      id: "cv-m3-lim06", origin: 'card', year: 2015, school: "全国硕士研究生招生考试-数学三 2015 年", no: "未编号", type: "limit", star: 4,
       tags: ["lim06"],
       stem: "（2015 数三）求极限 $\\lim_{x\\to0}\\dfrac{\\ln(\\cos x)}{x^{2}}$",
       answer: "用 $\\ln(1+u)\\sim u$ 与 $1-\\cos x\\sim\\dfrac{x^{2}}{2}$：$$\\ln(\\cos x)=\\ln\\bigl[1+(\\cos x-1)\\bigr]\\sim\\cos x-1\\sim-\\frac{x^{2}}{2}$$故$$\\lim_{x\\to0}\\frac{\\ln(\\cos x)}{x^{2}}=-\\frac{1}{2}$$",
       src: { card: "lim06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim06\"]）来源原文：2015 年数三真题。PITFALL[lim06] 无条目 → 省略 traps 字段。MNEM[lim06] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-lim08", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "卡片 lim08", type: "limit", star: 4,
+      id: "cv-m3-lim08", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "未编号", type: "limit", star: 4,
       tags: ["lim08"],
       stem: "（2011 数三）求极限 $\\lim_{x\\to0}\\dfrac{\\sqrt{1+2\\sin x}-1-x}{x\\ln(1+x)}$",
       answer: "展开：$$\\sqrt{1+2\\sin x}=1+\\frac{1}{2}(2\\sin x)-\\frac{1}{8}(2\\sin x)^{2}+o(x^{2})=1+\\sin x-\\frac{\\sin^{2}x}{2}+o(x^{2})$$故 $\\sqrt{1+2\\sin x}-1-x=\\sin x-\\dfrac{\\sin^{2}x}{2}-x=-\\dfrac{x^{2}}{2}+o(x^{2})$。又 $\\ln(1+x)\\sim x$，所以$$\\lim_{x\\to0}\\frac{\\sqrt{1+2\\sin x}-1-x}{x\\ln(1+x)}=\\lim_{x\\to0}\\frac{-\\frac{x^{2}}{2}+o(x^{2})}{x^{2}}=-\\frac{1}{2}$$",
@@ -833,189 +833,189 @@
       src: { card: "lim08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim08\"]）来源原文：2011 年数三真题。traps 取自 PITFALL[lim08]。hint 取自 MNEM[lim08]。" }
     },
     {
-      id: "cv-m3-lim10", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 lim10", type: "limit", star: 5,
+      id: "cv-m3-lim10", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "limit", star: 5,
       tags: ["lim10"],
       stem: "（2016 数三）求极限 $\\lim_{x\\to0}(\\cos 2x+2x\\sin x)^{\\frac{1}{x^{4}}}$",
       answer: "这是 $1^{\\infty}$ 型。由 $\\cos2x=1-2x^{2}+\\dfrac{2}{3}x^{4}+o(x^{4})$、$2x\\sin x=2x^{2}-\\dfrac{1}{3}x^{4}+o(x^{4})$ 得$$\\cos2x+2x\\sin x=1+\\frac{x^{4}}{3}+o(x^{4})$$故 $\\ln(\\cos2x+2x\\sin x)\\sim\\dfrac{x^{4}}{3}$，原式 $=e^{\\frac13}$。",
       src: { card: "lim10", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim10\"][0]）来源原文：2016 年数三真题。PITFALL[lim10] 无条目 → 省略 traps 字段。MNEM[lim10] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-lim10-2", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 lim10-2", type: "limit", star: 5,
+      id: "cv-m3-lim10-2", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "limit", star: 5,
       tags: ["lim10"],
       stem: "（2022 数三）求极限 $\\lim_{x\\to0}\\left(\\dfrac{1+e^{x}}{2}\\right)^{\\cot x}$",
       answer: "这是 $1^{\\infty}$ 型。由 $e^{x}-1\\sim x$：$$\\ln\\frac{1+e^{x}}{2}=\\ln\\left(1+\\frac{e^{x}-1}{2}\\right)\\sim\\frac{e^{x}-1}{2}\\sim\\frac{x}{2}$$又 $\\cot x\\sim\\dfrac1x$，故对数极限 $=\\dfrac12$，原式 $=e^{\\frac12}=\\sqrt{e}$。",
       src: { card: "lim10", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim10\"][1]）来源原文：2022 年数三真题。PITFALL[lim10] 无条目 → 省略 traps 字段。MNEM[lim10] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-lim16", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 lim16", type: "limit", star: 3,
+      id: "cv-m3-lim16", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "limit", star: 3,
       tags: ["lim16"],
       stem: "设 $f(x)=\\lim_{n\\to\\infty}\\frac{1+x}{1+x^{2n}}$，讨论 $f(x)$ 在 $x=1$ 与 $x=-1$ 处的连续性",
       answer: "当 $|x|<1$ 时 $x^{2n}\\to0$，故 $f(x)=1+x$；当 $|x|>1$ 时 $x^{2n}\\to\\infty$，故 $f(x)=0$；且 $f(1)=1,\\ f(-1)=0$。在 $x=-1$ 处：$$\\lim_{x\\to-1^{-}}f(x)=0,\\quad\\lim_{x\\to-1^{+}}f(x)=\\lim_{x\\to-1^{+}}(1+x)=0=f(-1)$$故连续。在 $x=1$ 处：$$\\lim_{x\\to1^{-}}f(x)=2,\\quad\\lim_{x\\to1^{+}}f(x)=0$$左右极限不相等，故 $f(x)$ 在 $x=1$ 处不连续（跳跃间断点）。",
       src: { card: "lim16", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim16\"]）来源原文：2024 年数三真题。PITFALL[lim16] 无条目 → 省略 traps 字段。MNEM[lim16] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-lim17", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "卡片 lim17", type: "limit", star: 4,
+      id: "cv-m3-lim17", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "未编号", type: "limit", star: 4,
       tags: ["lim17"],
       stem: "（2020 数三）设 $f(x)=\\dfrac{e^{\\frac{1}{x+1}}\\ln|1+x|}{(e^{x}-1)(x-2)}$，则 $f(x)$ 的第二类间断点的个数为（ ）(A) 1 (B) 2 (C) 3 (D) 4",
       answer: "间断点只可能是 $x=-1,0,2$（$x=1$ 处除数分母均非零，$f(1)$ 有定义，非间断点）。$x=-1$：$e^{1/(x+1)}\\to\\infty$，$\\ln|1+x|\\to-\\infty$，$f\\to-\\infty$，第二类；$x=0$：由 $e^{x}-1\\sim x$、$\\ln(1+x)\\sim x$ 得 $\\lim_{x\\to0}f(x)=\\lim_{x\\to0}\\dfrac{e\\cdot x}{(x)(-2)}=-\\dfrac{e}{2}$，为可去间断点（第一类）；$x=2$：分母趋于 $0$ 而分子 $e^{1/3}\\ln3$ 有限非零，$f\\to\\infty$，第二类。故第二类间断点有 $2$ 个，选 (B)。",
       src: { card: "lim17", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim17\"]）来源原文：2020 年数三真题。PITFALL[lim17] 无条目 → 省略 traps 字段。MNEM[lim17] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-inf09", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 inf09", type: "limit", star: 5,
+      id: "cv-m3-inf09", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "limit", star: 5,
       tags: ["inf09"],
       stem: "已知 $\\lim_{x\\to0}\\frac{\\sqrt{1+f(x)\\sin 2x}-1}{e^{3x}-1}=2$，求 $\\lim_{x\\to0}f(x)$",
       answer: "当 $x\\to0$ 时，$\\sqrt{1+u}-1\\sim\\frac12 u$，故 $\\sqrt{1+f(x)\\sin2x}-1\\sim\\frac12 f(x)\\sin2x$；又 $\\sin2x\\sim2x$、$e^{3x}-1\\sim3x$。故$$2=\\lim_{x\\to0}\\frac{\\frac12 f(x)\\cdot2x}{3x}=\\lim_{x\\to0}\\frac{f(x)}{3}\\ \\Rightarrow\\ \\lim_{x\\to0}f(x)=6$$",
       src: { card: "inf09", note: "卡片例题（data/math3.js 的 EXAMPLE[\"inf09\"]）来源原文：2016 年数三真题。PITFALL[inf09] 无条目 → 省略 traps 字段。MNEM[inf09] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-inf10", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "卡片 inf10", type: "limit", star: 4,
+      id: "cv-m3-inf10", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "未编号", type: "limit", star: 4,
       tags: ["inf10"],
       stem: "（2026 数三）$\\lim_{x\\to0}\\dfrac{1}{x}\\left(\\dfrac{\\sqrt{1+x^{2}}}{\\sin x}-\\dfrac{1}{\\tan x}\\right)=$____",
       answer: "$$\\frac{\\sqrt{1+x^{2}}}{\\sin x}-\\frac{1}{\\tan x}=\\frac{\\sqrt{1+x^{2}}-\\cos x}{\\sin x}$$用 $\\sqrt{1+x^{2}}=1+\\frac{x^{2}}{2}+o(x^{2})$、$\\cos x=1-\\frac{x^{2}}{2}+o(x^{2})$ 得分子 $\\sqrt{1+x^{2}}-\\cos x=x^{2}+o(x^{2})$，又 $\\sin x\\sim x$，故$$\\text{原式}=\\lim_{x\\to0}\\frac{x^{2}+o(x^{2})}{x\\cdot x}=1$$",
       src: { card: "inf10", note: "卡片例题（data/math3.js 的 EXAMPLE[\"inf10\"]）来源原文：2026 年数三真题。PITFALL[inf10] 无条目 → 省略 traps 字段。MNEM[inf10] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-inf11", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 inf11", type: "limit", star: 3,
+      id: "cv-m3-inf11", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "limit", star: 3,
       tags: ["inf11"],
       stem: "当 $x\\to0$ 时，$x-\\tan x$ 与 $x^{k}$ 是同阶无穷小，求 $k$",
       answer: "由 $\\tan x=x+\\frac{x^{3}}{3}+o(x^{3})$ 得 $x-\\tan x=-\\frac{x^{3}}{3}+o(x^{3})\\sim-\\frac{x^{3}}{3}$，故 $x-\\tan x$ 与 $x^{3}$ 同阶，$k=3$。",
       src: { card: "inf11", note: "卡片例题（data/math3.js 的 EXAMPLE[\"inf11\"]）来源原文：2019 年数三真题。PITFALL[inf11] 无条目 → 省略 traps 字段。MNEM[inf11] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-mvt04", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 mvt04", type: "proof", star: 4,
+      id: "cv-m3-mvt04", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "proof", star: 4,
       tags: ["mvt04"],
       stem: "（2023 数三）设函数 $f(x)$ 在 $[-a,a]$ 上具有 2 阶连续导数，证明：(Ⅰ) 若 $f(0)=0$，则存在 $\\xi\\in(-a,a)$，使 $f''(\\xi)=\\dfrac{1}{a^{2}}[f(a)+f(-a)]$；(Ⅱ) 若 $f(x)$ 在 $(-a,a)$ 内取得极值，则存在 $\\eta\\in(-a,a)$，使 $|f''(\\eta)|\\ge\\dfrac{1}{2a^{2}}|f(a)-f(-a)|$",
       answer: "(Ⅰ) 由泰勒公式（$f(0)=0$）：$$f(a)=f'(0)a+\\frac{f''(\\xi_{1})}{2}a^{2},\\qquad f(-a)=-f'(0)a+\\frac{f''(\\xi_{2})}{2}a^{2}$$其中 $\\xi_{1}\\in(0,a),\\ \\xi_{2}\\in(-a,0)$。两式相加得 $f(a)+f(-a)=\\dfrac{f''(\\xi_{1})+f''(\\xi_{2})}{2}a^{2}$。因 $f''$ 连续，由介值定理存在 $\\xi\\in(\\xi_{2},\\xi_{1})$ 使 $f''(\\xi)=\\dfrac{f''(\\xi_{1})+f''(\\xi_{2})}{2}=\\dfrac{f(a)+f(-a)}{a^{2}}$。(Ⅱ) 设 $f$ 在 $x_{0}\\in(-a,a)$ 取极值，则 $f'(x_{0})=0$。由泰勒公式：$$f(a)=f(x_{0})+\\frac{f''(\\xi_{1})}{2}(a-x_{0})^{2},\\qquad f(-a)=f(x_{0})+\\frac{f''(\\xi_{2})}{2}(a+x_{0})^{2}$$相减得 $f(a)-f(-a)=\\dfrac12\\left[f''(\\xi_{1})(a-x_{0})^{2}-f''(\\xi_{2})(a+x_{0})^{2}\\right]$。取 $|f''(\\eta)|=\\max\\{|f''(\\xi_{1})|,|f''(\\xi_{2})|\\}$，则$$|f(a)-f(-a)|\\le\\frac{|f''(\\eta)|}{2}\\left[(a-x_{0})^{2}+(a+x_{0})^{2}\\right]=|f''(\\eta)|(a^{2}+x_{0}^{2})\\le2a^{2}|f''(\\eta)|$$故 $|f''(\\eta)|\\ge\\dfrac{1}{2a^{2}}|f(a)-f(-a)|$。",
       src: { card: "mvt04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"mvt04\"]）来源原文：2023 年数三真题。PITFALL[mvt04] 无条目 → 省略 traps 字段。MNEM[mvt04] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ser09", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 ser09", type: "series", star: 3,
+      id: "cv-m3-ser09", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "series", star: 3,
       tags: ["ser09"],
       stem: "（2019 数三）$\\lim_{n\\to\\infty}\\left(\\dfrac{1}{1\\cdot2}+\\dfrac{1}{2\\cdot3}+\\cdots+\\dfrac{1}{n(n+1)}\\right)=$____",
       answer: "裂项 $\\dfrac{1}{k(k+1)}=\\dfrac1k-\\dfrac1{k+1}$，前 $N$ 项和$$S_{N}=\\left(1-\\frac12\\right)+\\left(\\frac12-\\frac13\\right)+\\cdots+\\left(\\frac1N-\\frac1{N+1}\\right)=1-\\frac{1}{N+1}$$故 $\\lim_{n\\to\\infty}S_{n}=1$。",
       src: { card: "ser09", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ser09\"]）来源原文：2019 年数三真题。PITFALL[ser09] 无条目 → 省略 traps 字段。MNEM[ser09] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ser11", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "卡片 ser11", type: "series", star: 3,
+      id: "cv-m3-ser11", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "未编号", type: "series", star: 3,
       tags: ["ser11"],
       stem: "（2020 数三）设幂级数 $\\sum_{n=1}^{\\infty}n a_{n}(x-2)^{n}$ 的收敛区间为 $(-2,6)$，则 $\\sum_{n=1}^{\\infty}a_{n}(x+1)^{2n}$ 的收敛区间为（ ）(A) $(-2,6)$ (B) $(-3,1)$ (C) $(-5,3)$ (D) $(-17,15)$",
       answer: "$\\sum na_n(x-2)^n$ 的中心为 $2$、半径为 $4$，故 $\\sum a_n u^n$ 的收敛半径 $R=4$（乘因子 $n$ 不改变半径）。令 $u=(x+1)^{2}$：$|(x+1)^{2}|<4\\Rightarrow |x+1|<2\\Rightarrow -3<x<1$，收敛区间 $(-3,1)$，选 (B)。",
       src: { card: "ser11", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ser11\"]）来源原文：2020 年数三真题。PITFALL[ser11] 无条目 → 省略 traps 字段。MNEM[ser11] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la07", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 la07", type: "linalg", star: 3,
+      id: "cv-m3-la07", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "linalg", star: 3,
       tags: ["la07"],
       stem: "（2025 数三）已知 $A$ 是 $m\\times n$ 矩阵，$\\beta$ 是 $m$ 维非零向量。若 $A$ 有 $k$ 阶非零子式，则（ ）(A) 当 $k=m$ 时 $Ax=\\beta$ 有解；(B) 当 $k=m$ 时 $Ax=\\beta$ 无解；(C) 当 $k<m$ 时 $Ax=\\beta$ 有解；(D) 当 $k<m$ 时 $Ax=\\beta$ 无解",
       answer: "非零子式的最高阶数即矩阵的秩，故 $k$ 阶非零子式意味着 $r(A)\\ge k$。当 $k=m$ 时，$r(A)=m$（$m\\times n$ 矩阵的秩不超过行数 $m$），即 $A$ 行满秩，增广矩阵 $(A\\mid\\beta)$ 的秩也等于 $m=r(A)$，故 $Ax=\\beta$ 必有解，选 (A)。",
       src: { card: "la07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la07\"]）来源原文：2025 年数三真题。PITFALL[la07] 无条目 → 省略 traps 字段。MNEM[la07] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la09", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 la09", type: "eigen", star: 4,
+      id: "cv-m3-la09", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "eigen", star: 4,
       tags: ["la09"],
       stem: "（2025 数三）设 $A=\\begin{pmatrix}1&2\\\\-2&-a\\end{pmatrix}$，$B=\\begin{pmatrix}1&0\\\\1&a\\end{pmatrix}$，若 $f(x,y)=|xA+yB|$ 是正定二次型，则 $a$ 的取值范围是（ ）",
       answer: "$$xA+yB=\\begin{pmatrix}x+y&2x\\\\-2x+y&-ax+ay\\end{pmatrix}$$故$$f(x,y)=\\begin{vmatrix}x+y&2x\\\\-2x+y&a(y-x)\\end{vmatrix}=(4-a)x^{2}-2xy+a\\,y^{2}$$对应对称矩阵 $\\begin{pmatrix}4-a&-1\\\\-1&a\\end{pmatrix}$ 正定：$4-a>0$ 且 $(4-a)a-1>0$，即 $a<4$ 且 $a^{2}-4a+1<0$，解得 $a\\in(2-\\sqrt3,\\ 2+\\sqrt3)$。",
       src: { card: "la09", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la09\"]）来源原文：2025 年数三真题。PITFALL[la09] 无条目 → 省略 traps 字段。MNEM[la09] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la11", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 la11", type: "linalg", star: 3,
+      id: "cv-m3-la11", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "linalg", star: 3,
       tags: ["la11"],
       stem: "设 $A$ 是 4 阶矩阵，$A^{*}$ 是 $A$ 的伴随矩阵，若线性方程组 $Ax=0$ 的基础解系中只有 2 个向量，求 $r(A^{*})$",
       answer: "由 $Ax=0$ 的基础解系含 $n-r(A)=2$ 个向量，得 $r(A)=4-2=2$。因 $r(A)=2<3=n-1$，此时 $A$ 的所有 $n-1$ 阶子式全为 $0$，故 $A^{*}=O$，即$$r(A^{*})=0$$",
       src: { card: "la11", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la11\"]）来源原文：2019 年数三真题。PITFALL[la11] 无条目 → 省略 traps 字段。MNEM[la11] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-la16", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 la16", type: "linalg", star: 4,
+      id: "cv-m3-la16", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "linalg", star: 4,
       tags: ["la16"],
       stem: "（2023 数三）已知 $\\alpha_{1}=\\begin{pmatrix}1\\\\2\\\\3\\end{pmatrix}$，$\\alpha_{2}=\\begin{pmatrix}2\\\\1\\\\1\\end{pmatrix}$，$\\beta_{1}=\\begin{pmatrix}2\\\\5\\\\9\\end{pmatrix}$，$\\beta_{2}=\\begin{pmatrix}1\\\\0\\\\1\\end{pmatrix}$。若 $\\gamma$ 既可由 $\\alpha_{1},\\alpha_{2}$ 线性表示，也可由 $\\beta_{1},\\beta_{2}$ 线性表示，则 $\\gamma=$（ ）(A) $k(3,3,4)^{T}$；(B) $k(3,5,10)^{T}$；(C) $k(-1,1,2)^{T}$；(D) $k(1,5,8)^{T}$",
       answer: "设 $\\gamma=x_{1}\\alpha_{1}+x_{2}\\alpha_{2}=x_{3}\\beta_{1}+x_{4}\\beta_{2}$，即 $x_{1}\\alpha_{1}+x_{2}\\alpha_{2}-x_{3}\\beta_{1}-x_{4}\\beta_{2}=0$。对 $(\\alpha_{1},\\alpha_{2},-\\beta_{1},-\\beta_{2})=\\begin{pmatrix}1&2&-2&-1\\\\2&1&-5&0\\\\3&1&-9&-1\\end{pmatrix}$ 作行变换得行最简形 $\\begin{pmatrix}1&0&0&3\\\\0&1&0&-1\\\\0&0&1&1\\end{pmatrix}$，通解 $x_{1}=-3x_{4},\\ x_{2}=x_{4},\\ x_{3}=-x_{4}$。故$$\\gamma=x_{1}\\alpha_{1}+x_{2}\\alpha_{2}=k(1,5,8)^{T}\\ (k\\in\\mathbb R)$$选 (D)。",
       src: { card: "la16", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la16\"]）来源原文：2023 年数三真题。PITFALL[la16] 无条目 → 省略 traps 字段。MNEM[la16] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext01", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "卡片 ext01", type: "deriv", star: 5,
+      id: "cv-m3-ext01", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "未编号", type: "deriv", star: 5,
       tags: ["ext01"],
       stem: "（2020 数三）设 $\\lim_{x\\to a}\\dfrac{f(x)-a}{x-a}=b$，则 $\\lim_{x\\to a}\\dfrac{\\sin f(x)-\\sin a}{x-a}=$（ ）(A) $b\\sin a$ (B) $b\\cos a$ (C) $b\\sin f(a)$ (D) $b\\cos f(a)$",
       answer: "由题设 $f(x)-a=b(x-a)+o(x-a)$，故 $f(x)\\to a$。用 $\\sin f(x)-\\sin a=\\cos a\\,[f(x)-a]+o(f(x)-a)$：$$\\lim_{x\\to a}\\frac{\\sin f(x)-\\sin a}{x-a}=\\cos a\\cdot\\lim_{x\\to a}\\frac{f(x)-a}{x-a}=b\\cos a$$选 (B)。",
       src: { card: "ext01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext01\"]）来源原文：2020 年数三真题。PITFALL[ext01] 无条目 → 省略 traps 字段。MNEM[ext01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext03", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 ext03", type: "limit", star: 4,
+      id: "cv-m3-ext03", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "limit", star: 4,
       tags: ["ext03"],
       stem: "（2022 数三）设 $\\alpha(x),\\ \\beta(x)$ 是当 $x\\to0$ 时的无穷小，判断下列命题的正误：① $\\alpha\\sim\\beta\\Rightarrow\\alpha^{2}\\sim\\beta^{2}$；② $\\alpha^{2}\\sim\\beta^{2}\\Rightarrow\\alpha\\sim\\beta$；③ $\\alpha\\sim\\beta\\Rightarrow\\alpha-\\beta=o(\\alpha)$；④ $\\alpha-\\beta=o(\\alpha)\\Rightarrow\\alpha\\sim\\beta$。正确的是____",
       answer: "① 真：$\\dfrac{\\alpha^{2}}{\\beta^{2}}=\\left(\\dfrac{\\alpha}{\\beta}\\right)^{2}\\to1$。② 假：取 $\\alpha=x,\\ \\beta=-x$，$\\alpha^{2}\\sim\\beta^{2}$ 但 $\\alpha\\nsim\\beta$。③ 真：$\\dfrac{\\alpha-\\beta}{\\alpha}=1-\\dfrac{\\beta}{\\alpha}\\to0$。④ 真：$\\dfrac{\\alpha-\\beta}{\\alpha}\\to0\\Rightarrow\\dfrac{\\beta}{\\alpha}\\to1$。故正确的是 ①③④。",
       src: { card: "ext03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext03\"]）来源原文：2022 年数三真题。PITFALL[ext03] 无条目 → 省略 traps 字段。MNEM[ext03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext04", origin: 'card', year: 2013, school: "全国硕士研究生入学统一考试-数学三 2013 年", no: "卡片 ext04", type: "limit", star: 4,
+      id: "cv-m3-ext04", origin: 'card', year: 2013, school: "全国硕士研究生入学统一考试-数学三 2013 年", no: "未编号", type: "limit", star: 4,
       tags: ["ext04"],
       stem: "（2013 数三）设函数 $f(x)$ 在 $[0,+\\infty)$ 上可导，$f(0)=0$，且 $\\lim_{x\\to+\\infty}f(x)=2$。证明：(Ⅰ) 存在 $a>0$，使得 $f(a)=1$；(Ⅱ) 对 (Ⅰ) 中的 $a$，存在 $\\xi\\in(0,a)$，使得 $f'(\\xi)=\\dfrac1a$。",
       answer: "(Ⅰ) 因 $\\lim_{x\\to+\\infty}f(x)=2>1$，存在 $X>0$ 使 $f(X)>1$；又 $f(0)=0<1$，$f$ 在 $[0,X]$ 上连续，由介值定理存在 $a\\in(0,X)$ 使 $f(a)=1$。(Ⅱ) $f$ 在 $[0,a]$ 上满足拉格朗日中值定理条件：存在 $\\xi\\in(0,a)$ 使$$f'(\\xi)=\\frac{f(a)-f(0)}{a-0}=\\frac{1-0}{a}=\\frac1a$$",
       src: { card: "ext04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext04\"]）来源原文：2013 年数三真题。PITFALL[ext04] 无条目 → 省略 traps 字段。MNEM[ext04] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext05", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 ext05", type: "deriv", star: 5,
+      id: "cv-m3-ext05", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "deriv", star: 5,
       tags: ["ext05"],
       stem: "（2019 数三）设 $f(x)=\\begin{cases}x^{2x},&x>0\\\\xe^{x}+1,&x\\le0\\end{cases}$，求 $f'(x)$ 并求 $f(x)$ 的极值。",
       answer: "$x>0$：$f'(x)=2x^{2x}(\\ln x+1)$；$x<0$：$f'(x)=e^{x}(x+1)$。由 $\\lim_{x\\to0^{+}}\\dfrac{x^{2x}-1}{x}=\\lim\\dfrac{2x\\ln x}{x}=-\\infty$，$f'(0)$ 不存在。令 $f'(x)=0$ 得驻点 $x=-1$ 与 $x=\\frac1e$。极小值 $f(-1)=1-\\frac1e$、$f\\left(\\frac1e\\right)=e^{-\\frac2e}$，极大值 $f(0)=1$。",
       src: { card: "ext05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext05\"][0]）来源原文：2019 年数三真题。PITFALL[ext05] 无条目 → 省略 traps 字段。MNEM[ext05] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext05-2", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 ext05-2", type: "deriv", star: 5,
+      id: "cv-m3-ext05-2", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "deriv", star: 5,
       tags: ["ext05"],
       stem: "（2019 数三）曲线 $y=x\\sin x+2\\cos x$ 在 $\\left(-\\dfrac{3\\pi}{2},\\dfrac{3\\pi}{2}\\right)$ 内的拐点坐标为____",
       answer: "$$y'=\\sin x+x\\cos x-2\\sin x=x\\cos x-\\sin x,\\qquad y''=\\cos x-x\\sin x-\\cos x=-x\\sin x$$由 $y''=0$ 得 $x=0$ 或 $\\sin x=0$，即 $x=-\\pi,0,\\pi$。在 $x=\\pm\\pi$ 两侧 $y''=-x\\sin x$ 变号，为拐点；在 $x=0$ 附近 $-x\\sin x\\sim-x^{2}$，两侧同号（均小于 $0$），故 $(0,2)$ 不是拐点。于是拐点为 $(-\\pi,-2)$ 与 $(\\pi,-2)$。",
       src: { card: "ext05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext05\"][1]）来源原文：2019 年数三真题。PITFALL[ext05] 无条目 → 省略 traps 字段。MNEM[ext05] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext06", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 ext06", type: "deriv", star: 5,
+      id: "cv-m3-ext06", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "deriv", star: 5,
       tags: ["ext06"],
       stem: "（2022 数三）设 $y(x)$ 是微分方程 $y'+\\dfrac{1}{2\\sqrt{x}}y=2+\\sqrt{x}$ 满足 $y(1)=3$ 的解，求曲线 $y=y(x)$ 的渐近线。",
       answer: "由一阶线性通解公式：$$y=e^{-\\sqrt{x}}\\left[\\int(2+\\sqrt{x})\\,e^{\\sqrt{x}}\\,dx+C\\right]$$令 $u=\\sqrt{x}$，则 $\\int(2+u)e^{u}\\cdot2u\\,du=2u^{2}e^{u}+C$，故$$y=e^{-\\sqrt{x}}\\left(2x\\,e^{\\sqrt{x}}+C\\right)=2x+Ce^{-\\sqrt{x}}$$由 $y(1)=3$ 得 $C=e$，即 $y=2x+e^{1-\\sqrt{x}}$。因 $\\lim_{x\\to+\\infty}[y-2x]=\\lim e^{1-\\sqrt{x}}=0$，故斜渐近线为 $y=2x$（无铅直、水平渐近线）。",
       src: { card: "ext06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext06\"][0]）来源原文：2022 年数三真题。PITFALL[ext06] 无条目 → 省略 traps 字段。MNEM[ext06] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext06-2", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "卡片 ext06-2", type: "deriv", star: 5,
+      id: "cv-m3-ext06-2", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "未编号", type: "deriv", star: 5,
       tags: ["ext06"],
       stem: "（2026 数三）曲线 $y=xe^{1/x}$ 的渐近线（ ）(A) 无水平渐近线、无铅直渐近线；(B) 有水平渐近线、无铅直渐近线；(C) 无水平渐近线、有铅直渐近线；(D) 有水平渐近线、有铅直渐近线",
       answer: "当 $x\\to0^{+}$ 时 $e^{1/x}\\to+\\infty$，故 $xe^{1/x}\\to+\\infty$，$x=0$ 为铅直渐近线；当 $x\\to0^{-}$ 时 $e^{1/x}\\to0$，$xe^{1/x}\\to0$。又 $x\\to+\\infty$ 时 $e^{1/x}\\to1$，$y\\sim x$，存在斜渐近线 $y=x+1$，无水平渐近线。故选 (C)。",
       src: { card: "ext06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext06\"][1]）来源原文：2026 年数三真题。PITFALL[ext06] 无条目 → 省略 traps 字段。MNEM[ext06] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext06-3", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 ext06-3", type: "deriv", star: 5,
+      id: "cv-m3-ext06-3", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "deriv", star: 5,
       tags: ["ext06"],
       stem: "（2025 数三）设 $g(x)$ 是 $f(x)=\\dfrac{1}{2}\\ln\\dfrac{3+x}{3-x}$ 的反函数，则曲线 $y=g(x)$ 的渐近线方程为____",
       answer: "令 $y=f(x)$，则 $2y=\\ln\\dfrac{3+x}{3-x}$，解得 $x=\\dfrac{3(e^{2y}-1)}{e^{2y}+1}$，故$$g(x)=\\frac{3(e^{2x}-1)}{e^{2x}+1}$$当 $x\\to+\\infty$ 时 $e^{2x}\\to+\\infty$，$g(x)\\to3$；当 $x\\to-\\infty$ 时 $e^{2x}\\to0$，$g(x)\\to-3$。故 $y=g(x)$ 的水平渐近线为$$y=3\\quad\\text{与}\\quad y=-3$$",
       src: { card: "ext06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext06\"][2]）来源原文：2025 年数三真题。PITFALL[ext06] 无条目 → 省略 traps 字段。MNEM[ext06] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext07", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 ext07", type: "deriv", star: 5,
+      id: "cv-m3-ext07", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "deriv", star: 5,
       tags: ["ext07"],
       stem: "（2024 数三）某商品价格 $P=\\begin{cases}25-0.25Q,&Q\\le20\\\\35-0.75Q,&Q>20\\end{cases}$，总成本 $C=150+5Q+0.25Q^{2}$，求利润最大值。",
       answer: "$Q\\le20$：利润 $L=(25-0.25Q)Q-C=20Q-0.5Q^{2}-150$，$L'=20-Q=0\\Rightarrow Q=20$，$L(20)=50$。$Q>20$：$L=(35-0.75Q)Q-C=30Q-Q^{2}-150$，$L'=30-2Q<0$（当 $Q>20$），故在 $(20,+\\infty)$ 递减。所以最大利润 $=50$ 万元。",
       src: { card: "ext07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext07\"][0]）来源原文：2024 年数三真题。PITFALL[ext07] 无条目 → 省略 traps 字段。MNEM[ext07] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext07-2", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 ext07-2", type: "deriv", star: 5,
+      id: "cv-m3-ext07-2", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "deriv", star: 5,
       tags: ["ext07"],
       stem: "（2022 数三）设某产品的产量 $Q$ 由资本投入量 $x$ 和劳动投入量 $y$ 决定，生产函数 $Q=12x^{\\frac12}y^{\\frac16}$，该产品的销售单价 $P$ 与产量 $Q$ 的关系为 $P=1160-1.5Q$。若单位资本投入和单位劳动投入的价格分别为 $6$ 和 $8$，求利润最大时的产量。",
       answer: "成本 $C=6x+8y$，收益 $R=PQ=(1160-1.5Q)Q$，故利润$$L=13920\\,x^{\\frac12}y^{\\frac16}-216\\,x\\,y^{\\frac13}-6x-8y$$$$L_x=6960\\,x^{-\\frac12}y^{\\frac16}-216\\,y^{\\frac13}-6,\\qquad L_y=2320\\,x^{\\frac12}y^{-\\frac56}-72\\,x\\,y^{-\\frac23}-8$$令 $L_x=L_y=0$ 解得唯一驻点 $(x,y)=(256,64)$（实际问题最大利润必在驻点取得）。此时$$Q=12\\sqrt{256}\\cdot\\sqrt[6]{64}=12\\times16\\times2=384$$",
       src: { card: "ext07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext07\"][1]）来源原文：2022 年数三真题。PITFALL[ext07] 无条目 → 省略 traps 字段。MNEM[ext07] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext07-3", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 ext07-3", type: "deriv", star: 5,
+      id: "cv-m3-ext07-3", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "deriv", star: 5,
       tags: ["ext07"],
       stem: "（2024 数三）设 $t>0$，平面区域 $D$ 由曲线 $y=xe^{-2x}$ 与直线 $x=t,\\ x=2t$ 及 $x$ 轴围成，面积为 $S(t)$，求 $S(t)$ 的最大值。",
       answer: "$$S(t)=\\int_{t}^{2t}xe^{-2x}dx$$由 $\\int xe^{-2x}dx=-\\dfrac{e^{-2x}}{4}(2x+1)$，得$$S(t)=\\frac{e^{-2t}}{4}(2t+1)-\\frac{e^{-4t}}{4}(4t+1)$$$$S'(t)=te^{-4t}(4-e^{2t})$$令 $S'(t)=0$ 得 $e^{2t}=4$，即 $t=\\ln2$。当 $0<t<\\ln2$ 时 $S'>0$；当 $t>\\ln2$ 时 $S'<0$，故 $t=\\ln2$ 为最大值点，$$S_{\\max}=S(\\ln2)=\\frac{4\\ln2+3}{64}$$",
       src: { card: "ext07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext07\"][2]）来源原文：2024 年数三真题。PITFALL[ext07] 无条目 → 省略 traps 字段。MNEM[ext07] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext08", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 ext08", type: "deriv", star: 5,
+      id: "cv-m3-ext08", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "deriv", star: 5,
       tags: ["ext08"],
       stem: "（2019 数三）商品 $A$ 的需求量 $Q_{A}=500-P_{A}^{2}-P_{A}P_{B}+2P_{B}^{2}$，当 $P_{A}=10,\\ P_{B}=20$ 时，$A$ 的需求量对自身价格的弹性 $\\eta_{AA}$ 为____",
       answer: "$$\\eta_{AA}=-\\frac{P_A}{Q_A}\\cdot\\frac{\\partial Q_A}{\\partial P_A}=-\\frac{10}{1000}\\cdot(-2P_A-P_B)\\Big|_{P_A=10,\\,P_B=20}=\\frac{10}{1000}\\times40=0.4$$",
       src: { card: "ext08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext08\"]）来源原文：2019 年数三真题。PITFALL[ext08] 无条目 → 省略 traps 字段。MNEM[ext08] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext10", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 ext10", type: "integral", star: 4,
+      id: "cv-m3-ext10", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "integral", star: 4,
       tags: ["ext10"],
       stem: "（2019 数三）设 $a_{n}=\\int_{0}^{1}x^{n}\\sqrt{1-x^{2}}\\,dx\\ (n=0,1,2,\\cdots)$。(Ⅰ) 证明数列 $\\{a_{n}\\}$ 单调递减，且 $a_{n}=\\dfrac{n-1}{n+2}\\,a_{n-2}\\ (n\\ge2)$；(Ⅱ) 求 $\\lim_{n\\to\\infty}\\dfrac{a_{n}}{a_{n-1}}$。",
       answer: "(Ⅰ) 在 $(0,1)$ 内 $x^{n+1}\\sqrt{1-x^{2}}<x^{n}\\sqrt{1-x^{2}}$，故 $a_{n+1}<a_{n}$，$\\{a_n\\}$ 单调递减。对 $a_{n}$ 分部积分（$u=x^{n-1},\\ dv=x\\sqrt{1-x^{2}}dx$）：$$a_{n}=\\frac{n-1}{3}\\int_{0}^{1}x^{n-2}(1-x^{2})^{3/2}dx=\\frac{n-1}{3}(a_{n-2}-a_{n})$$解得 $a_{n}=\\dfrac{n-1}{n+2}a_{n-2}$。(Ⅱ) 因 $\\{a_n\\}$ 单调递减，$a_{n}\\le a_{n-1}$；又 $a_{n-1}\\le a_{n-2}=\\dfrac{n+2}{n-1}a_{n}$，故$$\\frac{n-1}{n+2}\\le\\frac{a_{n}}{a_{n-1}}\\le1$$由夹逼准则，$\\lim_{n\\to\\infty}\\dfrac{a_{n}}{a_{n-1}}=1$。",
@@ -1023,7 +1023,7 @@
       src: { card: "ext10", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext10\"]）来源原文：2019 年数三真题。PITFALL[ext10] 无条目 → 省略 traps 字段。hint 取自 MNEM[ext10]。" }
     },
     {
-      id: "cv-m3-ext13", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 ext13", type: "multivar", star: 5,
+      id: "cv-m3-ext13", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "multivar", star: 5,
       tags: ["ext13"],
       stem: "（2023 数三）设 $f(x,y)=\\ln(y+|x\\sin y|)$，则（ ）(A) $\\frac{\\partial f}{\\partial x}\\big|_{(0,1)}$ 不存在，$\\frac{\\partial f}{\\partial y}\\big|_{(0,1)}$ 存在；(B) 前者存在、后者不存在；(C) 均存在；(D) 均不存在",
       answer: "固定 $y=1$：$f(x,1)=\\ln(1+|x|\\sin1)$，在 $x=0$ 处含 $|x|$，左右导数分别为 $\\sin1$ 与 $-\\sin1$，故 $\\frac{\\partial f}{\\partial x}\\big|_{(0,1)}$ 不存在。固定 $x=0$：$f(0,y)=\\ln y$，$\\frac{\\partial f}{\\partial y}\\big|_{(0,1)}=\\frac1y\\big|_{y=1}=1$ 存在。故选 (A)。",
@@ -1031,196 +1031,196 @@
       src: { card: "ext13", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext13\"]）来源原文：2023 年数三真题。traps 取自 PITFALL[ext13]。MNEM[ext13] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext14", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "卡片 ext14", type: "multivar", star: 5,
+      id: "cv-m3-ext14", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "未编号", type: "multivar", star: 5,
       tags: ["ext14"],
       stem: "设 $z=z(x,y)$ 由方程 $x-az=e^{y+az}$（$a$ 为非零常数）确定，求 $\\frac{\\partial z}{\\partial x}-\\frac{\\partial z}{\\partial y}$",
       answer: "令 $F=x-az-e^{y+az}=0$，则$$F_{x}=1,\\quad F_{y}=-e^{y+az},\\quad F_{z}=-a-ae^{y+az}=-a(1+e^{y+az})$$由隐函数求偏导公式：$$\\frac{\\partial z}{\\partial x}=-\\frac{F_{x}}{F_{z}}=\\frac{1}{a(1+e^{y+az})},\\qquad \\frac{\\partial z}{\\partial y}=-\\frac{F_{y}}{F_{z}}=-\\frac{e^{y+az}}{a(1+e^{y+az})}$$故$$\\frac{\\partial z}{\\partial x}-\\frac{\\partial z}{\\partial y}=\\frac{1+e^{y+az}}{a(1+e^{y+az})}=\\frac{1}{a}$$",
       src: { card: "ext14", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext14\"][0]）来源原文：2026 年数三真题。PITFALL[ext14] 无条目 → 省略 traps 字段。MNEM[ext14] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext14-2", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 ext14-2", type: "multivar", star: 5,
+      id: "cv-m3-ext14-2", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "multivar", star: 5,
       tags: ["ext14"],
       stem: "（2024 数三）设 $z=z(x,y)$ 由 $z+e^{x}-y\\ln(1+z^{2})=0$ 确定，求 $\\left(\\dfrac{\\partial^{2}z}{\\partial x^{2}}+\\dfrac{\\partial^{2}z}{\\partial y^{2}}\\right)\\Big|_{(0,0)}$",
       answer: "令 $F=z+e^{x}-y\\ln(1+z^{2})=0$。代入 $x=y=0$ 得 $z(0,0)=-1$。$$F_{x}=e^{x},\\quad F_{y}=-\\ln(1+z^{2}),\\quad F_{z}=1-\\frac{2yz}{1+z^{2}}$$在 $(0,0,-1)$：$F_{z}=1$，故 $z_{x}=-1,\\ z_{y}=\\ln2$。再由 $F_{x}+F_{z}z_{x}=0$ 对 $x$ 求导：$F_{xx}+2F_{xz}z_{x}+F_{zz}z_{x}^{2}+F_{z}z_{xx}=0$，代入 $F_{xx}=1,\\ F_{xz}=0,\\ F_{zz}=0$ 得 $z_{xx}=-1$。同理对 $F_{y}+F_{z}z_{y}=0$ 对 $y$ 求导，代入 $F_{yy}=0,\\ F_{yz}=\\frac{-2z}{1+z^{2}}=1,\\ F_{zz}=0$ 得 $z_{yy}=-2\\ln2$。故原式 $=-(1+2\\ln2)$。",
       src: { card: "ext14", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext14\"][1]）来源原文：2024 年数三真题。PITFALL[ext14] 无条目 → 省略 traps 字段。MNEM[ext14] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext14-3", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 ext14-3", type: "multivar", star: 5,
+      id: "cv-m3-ext14-3", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "multivar", star: 5,
       tags: ["ext14"],
       stem: "（2025 数三）设 $z=z(x,y)$ 由 $z+\\ln z-\\int_{y}^{x}x e^{-t^{2}}dt=1$ 确定，求 $\\dfrac{\\partial^{2}z}{\\partial x^{2}}\\Big|_{(1,1)}$。",
       answer: "代入 $x=y=1$：$z+\\ln z-\\int_1^1=1$，得 $z(1,1)=1$。令 $F=z+\\ln z-\\int_{y}^{x}x e^{-t^{2}}dt-1=0$。对 $x$ 求偏导：$$z_{x}\\left(1+\\frac1z\\right)-\\left[\\int_{y}^{x}e^{-t^{2}}dt+x e^{-x^{2}}\\right]=0$$在 $(1,1,1)$：$\\int_1^1=0$，得 $2z_{x}-e^{-1}=0$，故 $z_{x}=\\dfrac{1}{2e}$。再对 $x$ 求偏导：$$z_{xx}\\left(1+\\frac1z\\right)-\\frac{z_{x}^{2}}{z^{2}}-\\left(2e^{-x^{2}}-2x^{2}e^{-x^{2}}\\right)=0$$在 $(1,1,1)$：$z_{x}=\\dfrac{1}{2e}$，括号内 $=2e^{-1}-2e^{-1}=0$，得$$2z_{xx}-\\frac{1}{4e^{2}}=0\\quad\\Rightarrow\\quad z_{xx}=\\frac{1}{8e^{2}}$$",
       src: { card: "ext14", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext14\"][2]）来源原文：2025 年数三真题。PITFALL[ext14] 无条目 → 省略 traps 字段。MNEM[ext14] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext16", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 ext16", type: "series", star: 5,
+      id: "cv-m3-ext16", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "series", star: 5,
       tags: ["ext16"],
       stem: "（2023 数三）已知 $a_n<b_n$。若级数 $\\sum a_n$ 与 $\\sum b_n$ 均收敛，则「$\\sum a_n$ 绝对收敛」是「$\\sum b_n$ 绝对收敛」的（ ）(A) 充分必要条件 (B) 充分不必要 (C) 必要不充分 (D) 既不充分也不必要",
       answer: "令 $c_n=b_n-a_n>0$，则 $\\sum c_n=\\sum b_n-\\sum a_n$ 收敛且为正项级数，故绝对收敛。于是 $b_n=a_n+c_n$、$a_n=b_n-c_n$，分别有$$|b_n|\\le|a_n|+c_n,\\qquad |a_n|\\le|b_n|+c_n$$故 $\\sum|a_n|$ 收敛 $\\iff$ $\\sum|b_n|$ 收敛，选 (A)。",
       src: { card: "ext16", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext16\"]）来源原文：2023 年数三真题。PITFALL[ext16] 无条目 → 省略 traps 字段。MNEM[ext16] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext17", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 ext17", type: "series", star: 5,
+      id: "cv-m3-ext17", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "series", star: 5,
       tags: ["ext17"],
       stem: "（2016 数三）求幂级数 $\\sum_{n=0}^{\\infty}\\frac{x^{2n+2}}{(n+1)(2n+1)}$ 的收敛域及和函数。",
       answer: "由比值判别法：$\\dfrac{u_{n+1}}{u_n}\\to x^{2}$，故 $|x|<1$ 收敛、$|x|>1$ 发散；$x=\\pm1$ 时级数为 $\\sum\\dfrac{1}{(n+1)(2n+1)}$，与 $\\sum\\dfrac{1}{n^{2}}$ 同敛散，收敛。收敛域 $[-1,1]$。设 $S(x)=\\sum_{n=0}^{\\infty}\\dfrac{x^{2n+2}}{(n+1)(2n+1)}$，则$$S''(x)=2\\sum_{n=0}^{\\infty}x^{2n}=\\frac{2}{1-x^{2}}$$由 $S'(0)=S(0)=0$ 积分两次：$$S'(x)=\\ln(1+x)-\\ln(1-x),\\quad S(x)=(1+x)\\ln(1+x)+(1-x)\\ln(1-x)$$",
       src: { card: "ext17", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext17\"][0]）来源原文：2016 年数三真题。PITFALL[ext17] 无条目 → 省略 traps 字段。MNEM[ext17] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext17-2", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 ext17-2", type: "series", star: 5,
+      id: "cv-m3-ext17-2", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "series", star: 5,
       tags: ["ext17"],
       stem: "（2022 数三）求幂级数 $\\sum_{n=0}^{\\infty}\\frac{(-4)^{n}+1}{4^{n}(2n+1)}x^{2n}$ 的收敛域及和函数。",
       answer: "比值判别：$\\left|\\dfrac{u_{n+1}}{u_n}\\right|\\to x^{2}$，故 $|x|<1$ 收敛；$x=\\pm1$ 时分别为 $\\sum\\dfrac{(-1)^n}{2n+1}$ 与 $\\sum\\dfrac{1}{2n+1}$ 的收敛组合，均收敛。收敛域 $[-1,1]$。记$$S(x)=S_1(x)+S_2(x),\\quad S_1=\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x^{2n}}{2n+1},\\quad S_2=\\sum_{n=0}^{\\infty}\\frac{x^{2n}}{4^{n}(2n+1)}$$由 $\\sum(-1)^{n}\\dfrac{x^{2n+1}}{2n+1}=\\arctan x$、$\\sum\\dfrac{x^{2n}}{4^n}=\\dfrac{1}{1-x^{2}/4}$，得$$S(x)=\\frac{\\arctan x}{x}+\\frac{1}{x}\\ln\\frac{2+x}{2-x}\\ (x\\ne0),\\qquad S(0)=2$$",
       src: { card: "ext17", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext17\"][1]）来源原文：2022 年数三真题。PITFALL[ext17] 无条目 → 省略 traps 字段。MNEM[ext17] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext17-3", origin: 'card', year: 2014, school: "全国硕士研究生入学统一考试-数学三 2014 年", no: "卡片 ext17-3", type: "series", star: 5,
+      id: "cv-m3-ext17-3", origin: 'card', year: 2014, school: "全国硕士研究生入学统一考试-数学三 2014 年", no: "未编号", type: "series", star: 5,
       tags: ["ext17"],
       stem: "（2014 数三）求幂级数 $\\sum_{n=0}^{\\infty}(n+1)(n+3)x^{n}$ 的收敛域及和函数。",
       answer: "比值判别：$\\dfrac{(n+2)(n+4)}{(n+1)(n+3)}\\to1$，故 $R=1$；$x=\\pm1$ 时通项不趋于 $0$，发散。收敛域 $(-1,1)$。设 $S(x)=\\sum(n+1)(n+3)x^{n}$，则$$\\int_{0}^{x}S(t)dt=\\sum(n+3)x^{n+1}=\\sum(n+2)x^{n+1}+\\sum x^{n+1}=\\left(\\frac{x^{2}}{1-x}\\right)'+\\frac{x}{1-x}=\\frac{3x-2x^{2}}{(1-x)^{2}}$$求导得$$S(x)=\\left(\\frac{3x-2x^{2}}{(1-x)^{2}}\\right)'=\\frac{3-x}{(1-x)^{3}}$$",
       src: { card: "ext17", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext17\"][2]）来源原文：2014 年数三真题。PITFALL[ext17] 无条目 → 省略 traps 字段。MNEM[ext17] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ext19", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "卡片 ext19", type: "ode", star: 5,
+      id: "cv-m3-ext19", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "未编号", type: "ode", star: 5,
       tags: ["ext19"],
       stem: "（2017 数三）差分方程 $y_{t+1}-2y_{t}=2^{t}$ 的通解为____",
       answer: "齐次方程 $y_{t+1}-2y_t=0$ 的通解为 $Y_t=A\\cdot2^t$。因右端 $2^{t}$ 与齐次解同形，设特解 $y_t^*=k\\,t\\,2^{t}$，代入得$$k(t+1)2^{t+1}-2k\\,t\\,2^{t}=2^{t}\\ \\Rightarrow\\ k=\\frac12$$故通解$$y_t=A\\cdot2^{t}+\\frac{t}{2}2^{t}=A\\cdot2^{t}+t\\cdot2^{t-1}$$",
       src: { card: "ext19", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext19\"]）来源原文：2017 年数三真题。PITFALL[ext19] 无条目 → 省略 traps 字段。MNEM[ext19] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ms01", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 ms01", type: "integral", star: 3,
+      id: "cv-m3-ms01", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "integral", star: 3,
       tags: ["ms01"],
       stem: "（2022 数三）设 $I_1=\\int_0^1\\dfrac{\\ln(1+x)}{2(1+\\cos x)}\\,dx$，$I_2=\\int_0^1\\dfrac{2x}{1+\\cos x}\\,dx$，$I_3=\\int_0^1\\dfrac{2x}{1+\\sin x}\\,dx$，则（ ）(A) $I_1<I_2<I_3$；(B) $I_2<I_1<I_3$；(C) $I_1<I_3<I_2$；(D) $I_3<I_2<I_1$",
       answer: "在 $(0,1)$ 内 $\\ln(1+x)<x$，故 $\\dfrac{\\ln(1+x)}{2(1+\\cos x)}<\\dfrac{x}{1+\\cos x}<\\dfrac{2x}{1+\\cos x}$，即 $I_1<I_2$。又 $\\cos x>\\sin x$，故 $1+\\cos x>1+\\sin x$，从而 $\\dfrac{2x}{1+\\cos x}<\\dfrac{2x}{1+\\sin x}$，即 $I_2<I_3$。故 $I_1<I_2<I_3$，选 (A)。",
       src: { card: "ms01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ms01\"]）来源原文：2022 年数三真题。PITFALL[ms01] 无条目 → 省略 traps 字段。MNEM[ms01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ms02", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 ms02", type: "integral", star: 4,
+      id: "cv-m3-ms02", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "integral", star: 4,
       tags: ["ms02"],
       stem: "（2025 数三）设 $f(x)=\\int_0^x e^{t^{2}}\\sin t\\,dt$，$g(x)=\\left(\\int_0^x e^{t^{2}}dt\\right)\\sin^{2}x$，则（ ）(A) $x=0$ 是 $f,g$ 的极值点；(B) $x=0$ 是 $f$ 的极值点，$(0,0)$ 是 $g$ 的拐点；(C) $x=0$ 是 $f$ 的极值点，$(0,0)$ 是 $f$ 的拐点；(D) $(0,0)$ 是 $f,g$ 的拐点",
       answer: "$f'(x)=e^{x^{2}}\\sin x$，在 $x=0$ 两侧 $f'$ 由负变正，故 $x=0$ 是 $f$ 的极小值点。又 $F(x)=\\int_0^x e^{t^{2}}dt\\sim x+\\dfrac{x^{3}}{3}$，$\\sin^{2}x\\sim x^{2}$，故 $g(x)=F(x)\\sin^{2}x\\sim x^{3}$（$x\\to0$），为奇函数型三次，$(0,0)$ 为 $g$ 的拐点。故选 (B)。",
       src: { card: "ms02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ms02\"]）来源原文：2025 年数三真题。PITFALL[ms02] 无条目 → 省略 traps 字段。MNEM[ms02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ms03", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "卡片 ms03", type: "eigen", star: 4,
+      id: "cv-m3-ms03", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "未编号", type: "eigen", star: 4,
       tags: ["ms03"],
       stem: "（2021 数三）二次型 $f(x_1,x_2,x_3)=(x_1+x_2)^{2}+(x_2+x_3)^{2}-(x_3-x_1)^{2}$ 的正惯性指数与负惯性指数依次为（ ）(A) $2,0$；(B) $1,1$；(C) $2,1$；(D) $1,2$",
       answer: "$f$ 对应的对称矩阵为$$A=\\begin{pmatrix}0&1&1\\\\1&2&1\\\\1&1&0\\end{pmatrix}$$由 $|\\lambda E-A|=-(\\lambda-3)\\lambda(\\lambda+1)$ 得特征值 $3,0,-1$，故正惯性指数 $1$、负惯性指数 $1$，选 (B)。",
       src: { card: "ms03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ms03\"]）来源原文：2021 年数三真题。PITFALL[ms03] 无条目 → 省略 traps 字段。MNEM[ms03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp01", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "卡片 tp01", type: "limit", star: 5,
+      id: "cv-m3-tp01", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "未编号", type: "limit", star: 5,
       tags: ["tp01"],
       stem: "（2020 数三）已知 $a,b$ 为常数，若 $\\left(1+\\dfrac1n\\right)^{n}-e$ 与 $\\dfrac{b}{n^{a}}$ 在 $n\\to+\\infty$ 时是等价无穷小，求 $a,b$。",
       answer: "令 $x=\\dfrac1n\\to0$，则 $\\left(1+\\dfrac1n\\right)^{n}=(1+x)^{1/x}=e^{\\frac{\\ln(1+x)}{x}}$。由 $\\ln(1+x)=x-\\dfrac{x^{2}}{2}+o(x^{2})$ 得 $\\dfrac{\\ln(1+x)}{x}=1-\\dfrac{x}{2}+o(x)$，故$$(1+x)^{1/x}=e\\cdot e^{-x/2+o(x)}=e\\left(1-\\frac{x}{2}+o(x)\\right)=e-\\frac{e}{2}x+o(x)$$于是 $\\left(1+\\dfrac1n\\right)^{n}-e=-\\dfrac{e}{2n}+o\\left(\\dfrac1n\\right)$。与 $\\dfrac{b}{n^{a}}$ 等价，得 $a=1,\\ b=-\\dfrac{e}{2}$。",
       src: { card: "tp01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp01\"]）来源原文：2020 年数三真题。PITFALL[tp01] 无条目 → 省略 traps 字段。MNEM[tp01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp02", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 tp02", type: "integral", star: 5,
+      id: "cv-m3-tp02", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "integral", star: 5,
       tags: ["tp02"],
       stem: "（2019 数三）求曲线 $y=e^{-x}\\sin x\\ (x\\ge0)$ 与 $x$ 轴之间图形的面积。",
       answer: "分部积分两次得$$\\int e^{-x}\\sin x\\,dx=-\\frac{e^{-x}}{2}(\\sin x+\\cos x)+C$$在 $[n\\pi,(n+1)\\pi]$ 上 $|\\sin x|=(-1)^{n}\\sin x$，故$$\\int_{n\\pi}^{(n+1)\\pi}e^{-x}|\\sin x|\\,dx=(-1)^{n}\\int_{n\\pi}^{(n+1)\\pi}e^{-x}\\sin x\\,dx=\\frac12\\left(e^{-n\\pi}+e^{-(n+1)\\pi}\\right)$$于是总面积（几何级数求和）$$S=\\sum_{n=0}^{\\infty}\\frac12\\left(e^{-n\\pi}+e^{-(n+1)\\pi}\\right)=\\frac12\\cdot\\frac{1+e^{-\\pi}}{1-e^{-\\pi}}=\\frac{e^{\\pi}+1}{2(e^{\\pi}-1)}$$",
       src: { card: "tp02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp02\"]）来源原文：2019 年数三真题。PITFALL[tp02] 无条目 → 省略 traps 字段。MNEM[tp02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp03", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 tp03", type: "proof", star: 5,
+      id: "cv-m3-tp03", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "proof", star: 5,
       tags: ["tp03"],
       stem: "（2025 数三）设 $f(x)$ 在 $(a,b)$ 内可导。证明：$f'(x)$ 在 $(a,b)$ 内严格单调增加 ⟺ 对任意 $a<x_1<x_2<x_3<b$，有 $\\dfrac{f(x_2)-f(x_1)}{x_2-x_1}<\\dfrac{f(x_3)-f(x_2)}{x_3-x_2}$。",
       answer: "（Ⅰ）设 $f'$ 严格增加。对任意 $x_1<x_2<x_3$，由拉格朗日中值定理，存在 $\\xi_1\\in(x_1,x_2),\\ \\xi_2\\in(x_2,x_3)$ 使$$\\frac{f(x_2)-f(x_1)}{x_2-x_1}=f'(\\xi_1),\\qquad \\frac{f(x_3)-f(x_2)}{x_3-x_2}=f'(\\xi_2)$$因 $x_1<\\xi_1<x_2<\\xi_2<x_3$ 且 $f'$ 严格增，故 $f'(\\xi_1)<f'(\\xi_2)$，即证。\n\n（Ⅱ）设不等式对一切 $x_1<x_2<x_3$ 成立。对任意 $u<v$，取 $h>0$ 使 $u<u+h<v<v+h<b$，分别对 $(u,u+h,v)$ 与 $(u,v,v+h)$ 用题设得$$\\frac{f(u+h)-f(u)}{h}<\\frac{f(v)-f(u+h)}{v-u-h},\\qquad \\frac{f(v)-f(u)}{v-u}<\\frac{f(v+h)-f(v)}{h}$$令 $h\\to0^{+}$，由可导性得 $f'(u)\\le\\dfrac{f(v)-f(u)}{v-u}\\le f'(v)$，故 $f'$ 单调不减。若 $f'$ 不严格增，则存在 $c<d$ 使 $f'(c)=f'(d)$，由单调不减知 $f'$ 在 $[c,d]$ 上恒为常数，从而 $f$ 在 $[c,d]$ 上为线性函数；取 $c<x_1<x_2<x_3<d$，两割线斜率相等，与题设严格不等式矛盾。故 $f'$ 严格增加。",
       src: { card: "tp03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp03\"]）来源原文：2025 年数三真题。PITFALL[tp03] 无条目 → 省略 traps 字段。MNEM[tp03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp04", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 tp04", type: "eigen", star: 5,
+      id: "cv-m3-tp04", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "eigen", star: 5,
       tags: ["tp04"],
       stem: "（2023 数三）设矩阵 $A$ 满足：对任意 $x_1,x_2,x_3$ 有 $A\\begin{pmatrix}x_1\\\\x_2\\\\x_3\\end{pmatrix}=\\begin{pmatrix}x_1+x_2+x_3\\\\2x_1-x_2+x_3\\\\x_2-x_3\\end{pmatrix}$。(Ⅰ) 求 $A$；(Ⅱ) 求可逆矩阵 $P$ 与对角矩阵 $\\Lambda$，使 $P^{-1}AP=\\Lambda$。",
       answer: "(Ⅰ) 分别取 $(x_1,x_2,x_3)=e_1,e_2,e_3$，得各列为 $Ae_1=(1,2,0)^{T},\\ Ae_2=(1,-1,1)^{T},\\ Ae_3=(1,1,-1)^{T}$，故$$A=\\begin{pmatrix}1&1&1\\\\2&-1&1\\\\0&1&-1\\end{pmatrix}$$\n\n(Ⅱ) $|\\lambda E-A|=\\begin{vmatrix}\\lambda-1&-1&-1\\\\-2&\\lambda+1&-1\\\\0&-1&\\lambda+1\\end{vmatrix}=(\\lambda-2)(\\lambda+1)(\\lambda+2)$，特征值为 $\\lambda_1=2,\\ \\lambda_2=-1,\\ \\lambda_3=-2$（互异，必可对角化）。解 $(\\lambda_i E-A)x=0$：$$\\lambda=2:\\ \\alpha_1=(4,3,1)^{T};\\qquad \\lambda=-1:\\ \\alpha_2=(1,0,-2)^{T};\\qquad \\lambda=-2:\\ \\alpha_3=(0,1,-1)^{T}$$取$$P=\\begin{pmatrix}4&1&0\\\\3&0&1\\\\1&-2&-1\\end{pmatrix}\\ \\Longrightarrow\\ P^{-1}AP=\\operatorname{diag}(2,-1,-2)$$",
       src: { card: "tp04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp04\"]）来源原文：2023 年数三真题。PITFALL[tp04] 无条目 → 省略 traps 字段。MNEM[tp04] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp05", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "卡片 tp05", type: "series", star: 5,
+      id: "cv-m3-tp05", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "未编号", type: "series", star: 5,
       tags: ["tp05"],
       stem: "（2021 数三）设 $n$ 为正整数，$y=y_n(x)$ 是微分方程 $xy'-(n+1)y=0$ 的满足 $y_n(1)=\\dfrac{1}{n(n+1)}$ 的解。(Ⅰ) 求 $y_n(x)$；(Ⅱ) 求级数 $\\sum_{n=1}^{\\infty}y_n(x)$ 的收敛域及和函数。",
       answer: "(Ⅰ) 分离变量 $\\dfrac{dy}{y}=\\dfrac{n+1}{x}dx$，得 $y=Cx^{n+1}$；由 $y_n(1)=\\dfrac1{n(n+1)}$ 得 $C=\\dfrac1{n(n+1)}$，故 $y_n(x)=\\dfrac{x^{n+1}}{n(n+1)}$。\n\n(Ⅱ) 设 $S(x)=\\sum_{n=1}^{\\infty}\\dfrac{x^{n+1}}{n(n+1)}$。由比值判别法收敛半径 $R=1$；端点 $x=1$ 时 $\\sum\\dfrac1{n(n+1)}=1$ 收敛，$x=-1$ 时 $\\sum\\dfrac{(-1)^{n+1}}{n(n+1)}$ 绝对收敛，故收敛域 $[-1,1]$。由 $\\dfrac1{n(n+1)}=\\dfrac1n-\\dfrac1{n+1}$：$$S(x)=\\sum_{n=1}^{\\infty}\\frac{x^{n+1}}{n}-\\sum_{n=1}^{\\infty}\\frac{x^{n+1}}{n+1}=x\\sum_{n=1}^{\\infty}\\frac{x^n}{n}-\\left[\\sum_{n=1}^{\\infty}\\frac{x^n}{n}-x\\right]$$由 $-\\ln(1-x)=\\sum_{n=1}^{\\infty}\\dfrac{x^n}{n}\\ (|x|<1)$ 得$$S(x)=-x\\ln(1-x)+\\ln(1-x)+x=(1-x)\\ln(1-x)+x\\ (|x|<1)$$由 $S$ 在 $[-1,1]$ 连续，$S(1)=\\lim_{x\\to1^{-}}S(x)=1$，$S(-1)=2\\ln2-1$。故$$S(x)=\\begin{cases}(1-x)\\ln(1-x)+x,&x\\in[-1,1)\\\\1,&x=1\\end{cases}$$",
       src: { card: "tp05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp05\"]）来源原文：2021 年数三真题。PITFALL[tp05] 无条目 → 省略 traps 字段。MNEM[tp05] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp06", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "卡片 tp06", type: "multivar", star: 5,
+      id: "cv-m3-tp06", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "未编号", type: "multivar", star: 5,
       tags: ["tp06"],
       stem: "（2021 数三）求函数 $f(x,y)=2\\ln|x|+\\dfrac{(x-1)^{2}+y^{2}}{2x^{2}}$ 的极值。",
       answer: "$$f_{x}=\\frac{2x^{2}+x-1-y^{2}}{x^{3}},\\qquad f_{y}=\\frac{y}{x^{2}}$$由 $f_y=0$ 得 $y=0$；代入 $f_x=0$ 得 $(2x-1)(x+1)=0$，驻点为 $(-1,0)$ 与 $(\\tfrac12,0)$。$$A=f_{xx}=\\frac{-2x^{2}-2x+3+3y^{2}}{x^{4}},\\quad B=f_{xy}=-\\frac{2y}{x^{3}},\\quad C=f_{yy}=\\frac{1}{x^{2}}$$在 $(-1,0)$：$A=3,\\ B=0,\\ C=1$，$\\Delta=AC-B^{2}=3>0$ 且 $A>0$，极小值 $f(-1,0)=2$；在 $(\\tfrac12,0)$：$A=24,\\ B=0,\\ C=4$，$\\Delta=96>0$ 且 $A>0$，极小值 $f(\\tfrac12,0)=\\dfrac12-2\\ln2$。",
       src: { card: "tp06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp06\"]）来源原文：2021 年数三真题。PITFALL[tp06] 无条目 → 省略 traps 字段。MNEM[tp06] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp07", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 tp07", type: "ode", star: 5,
+      id: "cv-m3-tp07", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "ode", star: 5,
       tags: ["tp07"],
       stem: "（2025 数三）微分方程 $xy'-y+x^{2}e^{x}=0$ 满足 $y(1)=-e$ 的解为 $y=$____",
       answer: "方程化为 $y'-\\dfrac1x y=-x\\,e^{x}$（一阶线性）。由通解公式：$$y=e^{\\int\\frac1x dx}\\left[\\int(-x\\,e^{x})\\,e^{-\\int\\frac1x dx}\\,dx+C\\right]=x\\left[\\int(-e^{x})\\,dx+C\\right]=x\\left(-e^{x}+C\\right)$$由 $y(1)=-e+C=-e$ 得 $C=0$，故 $y=-x\\,e^{x}$。（快捷法：原方程即 $\\left(\\dfrac yx\\right)'=\\dfrac{xy'-y}{x^{2}}=-e^{x}$，积分得 $\\dfrac yx=-e^{x}+C$，同得 $y=-xe^{x}$。）",
       src: { card: "tp07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp07\"]）来源原文：2025 年数三真题。PITFALL[tp07] 无条目 → 省略 traps 字段。MNEM[tp07] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp08", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 tp08", type: "dblint", star: 5,
+      id: "cv-m3-tp08", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "dblint", star: 5,
       tags: ["tp08"],
       stem: "（2024 数三）设 $D$ 由 $xy=\\frac13,\\ xy=3,\\ y=\\frac{x}{3},\\ y=3x$ 围成，计算 $\\iint_{D}(1+x-y)\\,dxdy$。",
       answer: "区域 $D$ 关于直线 $y=x$ 对称，被积函数中 $x-y$ 为反对称，故 $\\iint_D(x-y)dxdy=0$，只需算 $D$ 的面积。令 $u=xy,\\ v=\\dfrac yx$，则 $u\\in[\\frac13,3],\\ v\\in[\\frac13,3]$，且$$\\frac{\\partial(x,y)}{\\partial(u,v)}=\\frac{1}{2v}$$故$$\\iint_D(1+x-y)dxdy=\\iint_D dxdy=\\int_{1/3}^{3}du\\int_{1/3}^{3}\\frac{dv}{2v}=\\frac{8}{3}\\cdot\\frac{1}{2}\\cdot2\\ln3=\\frac{8}{3}\\ln3$$",
       src: { card: "tp08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp08\"][0]）来源原文：2024 年数三真题。PITFALL[tp08] 无条目 → 省略 traps 字段。MNEM[tp08] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp08-2", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 tp08-2", type: "dblint", star: 5,
+      id: "cv-m3-tp08-2", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "dblint", star: 5,
       tags: ["tp08"],
       stem: "（2024 数三）设 $f(x,y)$ 连续，则 $\\int_{\\pi/6}^{\\pi/2}dx\\int_{\\sin x}^{1}f(x,y)\\,dy=$（ ）(A) $\\int_{1/2}^{1}dy\\int_{\\pi/6}^{\\arcsin y}f(x,y)\\,dx$ (B) $\\int_{1/2}^{1}dy\\int_{\\arcsin y}^{\\pi/2}f(x,y)\\,dx$ (C) $\\int_{0}^{1/2}dy\\int_{\\pi/6}^{\\arcsin y}f(x,y)\\,dx$ (D) $\\int_{0}^{1/2}dy\\int_{\\arcsin y}^{\\pi/2}f(x,y)\\,dx$",
       answer: "区域为 $\\pi/6\\le x\\le\\pi/2,\\ \\sin x\\le y\\le1$，即 $\\dfrac12\\le y\\le1,\\ \\pi/6\\le x\\le\\arcsin y$，故$$\\int_{\\pi/6}^{\\pi/2}dx\\int_{\\sin x}^{1}f(x,y)dy=\\int_{1/2}^{1}dy\\int_{\\pi/6}^{\\arcsin y}f(x,y)\\,dx$$选 (A)。",
       src: { card: "tp08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp08\"][1]）来源原文：2024 年数三真题。PITFALL[tp08] 无条目 → 省略 traps 字段。MNEM[tp08] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp08-3", origin: 'card', year: 2013, school: "全国硕士研究生入学统一考试-数学三 2013 年", no: "卡片 tp08-3", type: "dblint", star: 5,
+      id: "cv-m3-tp08-3", origin: 'card', year: 2013, school: "全国硕士研究生入学统一考试-数学三 2013 年", no: "未编号", type: "dblint", star: 5,
       tags: ["tp08"],
       stem: "（2013 数三）设平面区域 $D$ 由直线 $y=\\frac{x}{3},\\ y=3x$ 及 $x+y=8$ 围成，计算 $\\iint_{D}x^{2}\\,dxdy$。",
       answer: "$D=\\{(x,y)\\mid 0\\le x\\le2,\\ x/3\\le y\\le3x\\}\\cup\\{(x,y)\\mid 2\\le x\\le6,\\ x/3\\le y\\le8-x\\}$，故$$\\iint_D x^{2}dxdy=\\int_{0}^{2}x^{2}\\left(3x-\\frac{x}{3}\\right)dx+\\int_{2}^{6}x^{2}\\left(8-x-\\frac{x}{3}\\right)dx$$$$=\\frac{8}{3}\\int_{0}^{2}x^{3}dx+\\left[\\frac{8x^{3}}{3}-\\frac{x^{4}}{3}\\right]_{2}^{6}=\\frac{32}{3}+(144-16)=\\frac{416}{3}$$",
       src: { card: "tp08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp08\"][2]）来源原文：2013 年数三真题。PITFALL[tp08] 无条目 → 省略 traps 字段。MNEM[tp08] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp08-4", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 tp08-4", type: "dblint", star: 5,
+      id: "cv-m3-tp08-4", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "dblint", star: 5,
       tags: ["tp08"],
       stem: "（2025 数三）设 $D=\\{(x,y)\\mid y^{2}\\le x,\\ x^{2}\\le y\\}$，计算 $\\iint_{D}(x-y+1)^{2}\\,dxdy$。",
       answer: "区域由 $x=y^{2}$ 与 $y=x^{2}$ 围成，即 $0\\le x\\le1,\\ x^{2}\\le y\\le\\sqrt{x}$。$$\\iint_{D}(x-y+1)^{2}dxdy=\\int_{0}^{1}dx\\int_{x^{2}}^{\\sqrt{x}}(x-y+1)^{2}dy$$对 $y$ 积分 $\\int(x-y+1)^{2}dy=-\\dfrac{(x-y+1)^{3}}{3}$，代入上下限再对 $x$ 积分（展开 $x$ 的多项式幂并逐项积分）得$$\\iint_{D}(x-y+1)^{2}dxdy=\\frac{71}{210}$$",
       src: { card: "tp08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp08\"][3]）来源原文：2025 年数三真题。PITFALL[tp08] 无条目 → 省略 traps 字段。MNEM[tp08] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp09", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 tp09", type: "linalg", star: 5,
+      id: "cv-m3-tp09", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "linalg", star: 5,
       tags: ["tp09"],
       stem: "（2024 数三）设 $A=\\begin{pmatrix}1&-1&0&-1\\\\1&1&0&3\\\\2&1&2&6\\end{pmatrix}$，$B=\\begin{pmatrix}1&0&1&2\\\\1&-1&a&a-1\\\\2&-3&2&-2\\end{pmatrix}$，$\\alpha=(0,2,3)^{T}$，$\\beta=(1,0,-1)^{T}$。(Ⅰ) 证明 $Ax=\\alpha$ 的解都是 $Bx=\\beta$ 的解；(Ⅱ) 若 $Ax=\\alpha$ 与 $Bx=\\beta$ 有不同的解，求 $a$。",
       answer: "(Ⅰ) 解 $Ax=\\alpha$：由 $x_1-x_2-x_4=0,\\ x_1+x_2+3x_4=2,\\ 2x_1+x_2+2x_3+6x_4=3$ 得通解 $x=(1,1,0,0)^{T}+t(-1,-2,-1,1)^{T}$。代入 $Bx$：$B(1,1,0,0)^{T}=(1,0,-1)^{T}=\\beta$，且 $B(-1,-2,-1,1)^{T}=(0,0,0)^{T}$，故 $Ax=\\alpha$ 的解均满足 $Bx=\\beta$。(Ⅱ) 对增广矩阵 $(B\\mid\\beta)$ 作行变换：当 $a\\ne1$ 时两方程组同解；当 $a=1$ 时 $r(A\\mid\\alpha)\\ne r(B\\mid\\beta)$，解集不同。故 $a=1$。",
       src: { card: "tp09", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp09\"]）来源原文：2024 年数三真题。PITFALL[tp09] 无条目 → 省略 traps 字段。MNEM[tp09] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-tp10", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 tp10", type: "limit", star: 5,
+      id: "cv-m3-tp10", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "limit", star: 5,
       tags: ["tp10"],
       stem: "（2025 数三）设函数 $f(x)$ 在 $x=0$ 处连续，且 $\\lim_{x\\to0}\\dfrac{xf(x)-e^{2\\sin x}+1}{\\ln(1+x)+\\ln(1-x)}=-3$。证明 $f(x)$ 在 $x=0$ 处可导，并求 $f'(0)$。",
       answer: "$\\ln(1+x)+\\ln(1-x)=\\ln(1-x^{2})\\sim-x^{2}$，故分母是 $2$ 阶无穷小，分子 $N(x)=xf(x)-e^{2\\sin x}+1$ 必为 $2$ 阶无穷小，$N(x)\\sim3x^{2}$。由$$e^{2\\sin x}=1+2\\sin x+2\\sin^{2}x+o(x^{2})=1+2x+2x^{2}+o(x^{2})$$得 $xf(x)\\sim2x+5x^{2}$，即 $f(x)\\sim2+5x$。由连续性 $f(0)=2$，且$$f'(0)=\\lim_{x\\to0}\\frac{f(x)-f(0)}{x}=\\lim_{x\\to0}\\frac{5x+o(x)}{x}=5$$",
       src: { card: "tp10", note: "卡片例题（data/math3.js 的 EXAMPLE[\"tp10\"]）来源原文：2025 年数三真题。PITFALL[tp10] 无条目 → 省略 traps 字段。MNEM[tp10] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-wr02", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "卡片 wr02", type: "ode", star: 4,
+      id: "cv-m3-wr02", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "未编号", type: "ode", star: 4,
       tags: ["wr02"],
       stem: "（2026 数三）微分方程 $y''-2y'=e^{x}$ 满足 $y(0)=1,\\ y'(0)=1$，则解 $y=$____",
       answer: "这是缺 $y$ 型可降阶方程。令 $p=y'$，则 $y''=p'$，方程化为 $p'-2p=e^{x}$（一阶线性）。由通解公式：$$p=e^{2x}\\Bigl[\\int e^{x}e^{-2x}dx+C\\Bigr]=e^{2x}\\bigl(-e^{-x}+C\\bigr)=-e^{x}+Ce^{2x}$$代入 $p(0)=y'(0)=1$ 得 $-1+C=1$，故 $C=2$，$y'=-e^{x}+2e^{2x}$。再积分：$$y=\\int\\bigl(-e^{x}+2e^{2x}\\bigr)dx=-e^{x}+e^{2x}+C_1$$由 $y(0)=1$ 得 $-1+1+C_1=1$，即 $C_1=1$。故$$y=1-e^{x}+e^{2x}$$",
       src: { card: "wr02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"wr02\"]）来源原文：2026 年数三真题。PITFALL[wr02] 无条目 → 省略 traps 字段。MNEM[wr02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-wr03", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "卡片 wr03", type: "integral", star: 5,
+      id: "cv-m3-wr03", origin: 'card', year: 2026, school: "全国硕士研究生招生考试-数学三 2026 年", no: "未编号", type: "integral", star: 5,
       tags: ["wr03"],
       stem: "（2026 数三）设 $p$ 为常数，反常积分 $\\int_{0}^{+\\infty}\\dfrac{\\arctan x}{x^{p}(x+1)}\\,dx$ 收敛，则 $p$ 的取值范围是____",
       answer: "需同时讨论 $x\\to0^{+}$ 与 $x\\to+\\infty$ 两端，故拆成 $\\int_0^1+\\int_1^{+\\infty}$。当 $x\\to0^{+}$ 时 $\\arctan x\\sim x$，被积函数 $\\sim\\dfrac{x}{x^{p}(x+1)}\\sim\\dfrac{1}{x^{p-1}}$，由瑕积分 $\\int_0^1\\frac{dx}{x^{q}}$ 收敛 $\\iff q<1$，得 $p-1<1$ 即 $p<2$。当 $x\\to+\\infty$ 时 $\\arctan x\\to\\frac{\\pi}{2}$，被积函数 $\\sim\\dfrac{\\pi/2}{x^{p+1}}$，由无穷积分收敛 $\\iff p+1>1$ 即 $p>0$。综上 $0<p<2$。",
       src: { card: "wr03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"wr03\"]）来源原文：2026 年数三真题。PITFALL[wr03] 无条目 → 省略 traps 字段。MNEM[wr03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-zt01", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 zt01", type: "limit", star: 5,
+      id: "cv-m3-zt01", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "limit", star: 5,
       tags: ["zt01"],
       stem: "求 $\\lim_{n\\to\\infty}\\frac{1}{n^{2}}\\left(\\sin\\frac{1}{n}+2\\sin\\frac{2}{n}+\\cdots+n\\sin\\frac{n}{n}\\right)$",
       answer: "由定积分定义：$$\\lim_{n\\to\\infty}\\sum_{k=1}^{n}\\frac{k}{n^{2}}\\sin\\frac{k}{n}=\\int_{0}^{1}x\\sin x\\,dx$$再由分部积分：$$\\int_{0}^{1}x\\sin x\\,dx=-x\\cos x\\Big|_{0}^{1}+\\int_{0}^{1}\\cos x\\,dx=\\left[-x\\cos x+\\sin x\\right]_{0}^{1}=\\sin1-\\cos1$$",
       src: { card: "zt01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zt01\"]）来源原文：2016 年数三真题。PITFALL[zt01] 无条目 → 省略 traps 字段。MNEM[zt01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-zt02", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 zt02", type: "eigen", star: 5,
+      id: "cv-m3-zt02", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "eigen", star: 5,
       tags: ["zt02"],
       stem: "（2025 数三）设 $A=\\begin{pmatrix}1&2\\\\-2&-a\\end{pmatrix}$，$B=\\begin{pmatrix}1&0\\\\1&a\\end{pmatrix}$，若 $f(x,y)=|xA+yB|$ 是正定二次型，则 $a$ 的取值范围是（ ）",
       answer: "$$xA+yB=\\begin{pmatrix}x+y&2x\\\\-2x+y&-ax+ay\\end{pmatrix}$$故$$f(x,y)=\\begin{vmatrix}x+y&2x\\\\-2x+y&a(y-x)\\end{vmatrix}=(4-a)x^{2}-2xy+a\\,y^{2}$$对应对称矩阵 $\\begin{pmatrix}4-a&-1\\\\-1&a\\end{pmatrix}$ 正定：$4-a>0$ 且 $(4-a)a-1>0$，即 $a<4$ 且 $a^{2}-4a+1<0$，解得 $a\\in(2-\\sqrt3,\\ 2+\\sqrt3)$。",
@@ -1228,14 +1228,14 @@
       src: { card: "zt02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zt02\"]）来源原文：2025 年数三真题。traps 取自 PITFALL[zt02]。MNEM[zt02] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-zt03", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 zt03", type: "proof", star: 4,
+      id: "cv-m3-zt03", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "proof", star: 4,
       tags: ["zt03"],
       stem: "证明：当 $x>0$ 时，$\\dfrac{x}{1+x}<\\ln(1+x)<x$",
       answer: "对 $f(t)=\\ln(1+t)$ 在 $[0,x]$ 用拉格朗日中值定理：存在 $\\xi\\in(0,x)$ 使 $\\ln(1+x)=\\dfrac{x}{1+\\xi}$；由 $0<\\xi<x$ 得 $\\dfrac{x}{1+x}<\\dfrac{x}{1+\\xi}<x$，即证。",
       src: { card: "zt03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zt03\"]）来源原文：2016 年数三真题。PITFALL[zt03] 无条目 → 省略 traps 字段。MNEM[zt03] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-zt04", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 zt04", type: "deriv", star: 5,
+      id: "cv-m3-zt04", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "deriv", star: 5,
       tags: ["zt04"],
       stem: "（2019 数三）设 $f(x)=\\begin{cases}x^{2x},&x>0\\\\xe^{x}+1,&x\\le0\\end{cases}$，求 $f'(x)$ 并求 $f(x)$ 的极值。",
       answer: "$x>0$：$f'(x)=2x^{2x}(\\ln x+1)$；$x<0$：$f'(x)=e^{x}(x+1)$。由 $\\lim_{x\\to0^{+}}\\dfrac{x^{2x}-1}{x}=\\lim\\dfrac{2x\\ln x}{x}=-\\infty$，$f'(0)$ 不存在。令 $f'(x)=0$ 得驻点 $x=-1$ 与 $x=\\frac1e$。极小值 $f(-1)=1-\\frac1e$、$f\\left(\\frac1e\\right)=e^{-\\frac2e}$，极大值 $f(0)=1$。",
@@ -1243,7 +1243,7 @@
       src: { card: "zt04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zt04\"]）来源原文：2019 年数三真题。traps 取自 PITFALL[zt04]。MNEM[zt04] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-zt05", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 zt05", type: "linalg", star: 5,
+      id: "cv-m3-zt05", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "linalg", star: 5,
       tags: ["zt05"],
       stem: "（2023 数三）已知 $\\alpha_{1}=\\begin{pmatrix}1\\\\2\\\\3\\end{pmatrix}$，$\\alpha_{2}=\\begin{pmatrix}2\\\\1\\\\1\\end{pmatrix}$，$\\beta_{1}=\\begin{pmatrix}2\\\\5\\\\9\\end{pmatrix}$，$\\beta_{2}=\\begin{pmatrix}1\\\\0\\\\1\\end{pmatrix}$。若 $\\gamma$ 既可由 $\\alpha_{1},\\alpha_{2}$ 线性表示，也可由 $\\beta_{1},\\beta_{2}$ 线性表示，则 $\\gamma=$（ ）(A) $k(3,3,4)^{T}$；(B) $k(3,5,10)^{T}$；(C) $k(-1,1,2)^{T}$；(D) $k(1,5,8)^{T}$",
       answer: "设 $\\gamma=x_{1}\\alpha_{1}+x_{2}\\alpha_{2}=x_{3}\\beta_{1}+x_{4}\\beta_{2}$，即 $x_{1}\\alpha_{1}+x_{2}\\alpha_{2}-x_{3}\\beta_{1}-x_{4}\\beta_{2}=0$。对 $(\\alpha_{1},\\alpha_{2},-\\beta_{1},-\\beta_{2})=\\begin{pmatrix}1&2&-2&-1\\\\2&1&-5&0\\\\3&1&-9&-1\\end{pmatrix}$ 作行变换得行最简形 $\\begin{pmatrix}1&0&0&3\\\\0&1&0&-1\\\\0&0&1&1\\end{pmatrix}$，通解 $x_{1}=-3x_{4},\\ x_{2}=x_{4},\\ x_{3}=-x_{4}$。故$$\\gamma=x_{1}\\alpha_{1}+x_{2}\\alpha_{2}=k(1,5,8)^{T}\\ (k\\in\\mathbb R)$$选 (D)。",
@@ -1251,7 +1251,7 @@
       src: { card: "zt05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zt05\"]）来源原文：2023 年数三真题。traps 取自 PITFALL[zt05]。MNEM[zt05] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-zt06", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 zt06", type: "limit", star: 5,
+      id: "cv-m3-zt06", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "limit", star: 5,
       tags: ["zt06"],
       stem: "（2022 数三）求极限 $\\lim_{x\\to0}\\left(\\dfrac{1+e^{x}}{2}\\right)^{\\cot x}$",
       answer: "这是 $1^{\\infty}$ 型。由 $e^{x}-1\\sim x$：$$\\ln\\frac{1+e^{x}}{2}=\\ln\\left(1+\\frac{e^{x}-1}{2}\\right)\\sim\\frac{e^{x}-1}{2}\\sim\\frac{x}{2}$$又 $\\cot x\\sim\\dfrac1x$，故对数极限 $=\\dfrac12$，原式 $=e^{\\frac12}=\\sqrt{e}$。",
@@ -1260,7 +1260,7 @@
       src: { card: "zt06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zt06\"]）来源原文：2022 年数三真题。traps 取自 PITFALL[zt06]。hint 取自 MNEM[zt06]。" }
     },
     {
-      id: "cv-m3-zt07", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 zt07", type: "series", star: 4,
+      id: "cv-m3-zt07", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "series", star: 4,
       tags: ["zt07"],
       stem: "（2022 数三）求幂级数 $\\sum_{n=0}^{\\infty}\\frac{(-4)^{n}+1}{4^{n}(2n+1)}x^{2n}$ 的收敛域及和函数。",
       answer: "比值判别：$\\left|\\dfrac{u_{n+1}}{u_n}\\right|\\to x^{2}$，故 $|x|<1$ 收敛；$x=\\pm1$ 时分别为 $\\sum\\dfrac{(-1)^n}{2n+1}$ 与 $\\sum\\dfrac{1}{2n+1}$ 的收敛组合，均收敛。收敛域 $[-1,1]$。记$$S(x)=S_1(x)+S_2(x),\\quad S_1=\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x^{2n}}{2n+1},\\quad S_2=\\sum_{n=0}^{\\infty}\\frac{x^{2n}}{4^{n}(2n+1)}$$由 $\\sum(-1)^{n}\\dfrac{x^{2n+1}}{2n+1}=\\arctan x$、$\\sum\\dfrac{x^{2n}}{4^n}=\\dfrac{1}{1-x^{2}/4}$，得$$S(x)=\\frac{\\arctan x}{x}+\\frac{1}{x}\\ln\\frac{2+x}{2-x}\\ (x\\ne0),\\qquad S(0)=2$$",
@@ -1269,56 +1269,56 @@
       src: { card: "zt07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zt07\"]）来源原文：2022 年数三真题。traps 取自 PITFALL[zt07]。hint 取自 MNEM[zt07]。" }
     },
     {
-      id: "cv-m3-int33", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 int33", type: "integral", star: 5,
+      id: "cv-m3-int33", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "integral", star: 5,
       tags: ["int33"],
       stem: "（2025 数三）设 $f(x)=\\int_0^x e^{t^2}\\sin t\\,dt$，$g(x)=\\int_0^x e^{t^2}\\,dt\\cdot\\sin^2x$。判断 $x=0$ 是否为 $f$、$g$ 的极值点，点 $(0,0)$ 是否为曲线 $y=g(x)$ 的拐点。",
       answer: "$f'(x)=e^{x^2}\\sin x$：在 $x=0$ 两侧由负变正，故 $x=0$ 是 $f$ 的极小值点。\n$g'(x)=e^{x^2}\\sin^2x+2\\sin x\\cos x\\int_0^x e^{t^2}dt$，$g'(0)=0$；\n$g''(x)=2xe^{x^2}\\sin^2x+4e^{x^2}\\sin x\\cos x+2\\cos 2x\\int_0^x e^{t^2}dt$，$g''(0)=0$；\n$g'''(0)=4>0$，故 $g''$ 在 $x=0$ 附近由负变正 $\\Rightarrow$ $(0,0)$ 是 $g$ 的拐点，且 $g'(x)\\ge0$（两侧同号），$x=0$ 不是 $g$ 的极值点。\n方法：变限积分定义的函数判极值/拐点，先求 $f'(x_0)$，为零则逐阶求导看变号（高阶导数判别法）。",
       src: { card: "int33", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int33\"]）来源原文：2025 年数三真题。PITFALL[int33] 无条目 → 省略 traps 字段。MNEM[int33] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-ser18", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 ser18", type: "series", star: 5,
+      id: "cv-m3-ser18", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "series", star: 5,
       tags: ["ser18"],
       stem: "（2025 数三）判断级数 $\\sum_{n=1}^{\\infty}(-1)^n\\left[\\frac1n-\\ln\\left(1+\\frac{k}{n^2}\\right)\\right]$（$k$ 为常数）的敛散性。",
       answer: "（2025 数三真题）记 $u_n=\\frac1n-\\ln\\left(1+\\frac{k}{n^2}\\right)$。\n① 绝对收敛？$n\\to\\infty$ 时 $\\ln\\left(1+\\frac{k}{n^2}\\right)\\sim\\frac{k}{n^2}$ 是比 $\\frac1n$ 高阶的无穷小，故 $u_n\\sim\\frac1n$，$\\sum|u_n|$ 与调和级数同阶、发散。\n② 原级数：$u_n\\to0^+$，且 $n$ 充分大后 $u_n$ 单调递减（$\\frac{d}{dx}\\left[\\frac1x-\\ln\\left(1+\\frac{k}{x^2}\\right)\\right]=-\\frac{1}{x^2}+\\frac{2k}{x^2(x^2+k)}$，当 $x^2>2k$ 时为负），由莱布尼茨判别法收敛。\n③ 结论：条件收敛，与 $k$ 无关（$k$ 只影响收敛快慢）。关键：高阶无穷小不改变与 $\\frac1n$ 的同阶性。",
       src: { card: "ser18", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ser18\"]）来源原文：2025 年数三真题。PITFALL[ser18] 无条目 → 省略 traps 字段。MNEM[ser18] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx01", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "卡片 gx01", type: "limit", star: 3,
+      id: "cv-m3-gx01", origin: 'card', year: 2025, school: "全国硕士研究生招生考试-数学三 2025 年", no: "未编号", type: "limit", star: 3,
       tags: ["gx01"],
       stem: "（2025 数三）设 $g(x)$ 是函数 $f(x)=\\frac{1}{2}\\ln\\dfrac{3+x}{3-x}$ 的反函数，求曲线 $y=g(x)$ 的渐近线方程",
       answer: "由 $y=f(x)=\\frac12\\ln\\frac{3+x}{3-x}$ 解出 $x$：$e^{2y}=\\frac{3+x}{3-x}$，得 $x=3\\cdot\\frac{e^{2y}-1}{e^{2y}+1}$，故 $g(x)=3\\cdot\\frac{e^{2x}-1}{e^{2x}+1}$。$\\lim_{x\\to+\\infty}g(x)=3$、$\\lim_{x\\to-\\infty}g(x)=-3$，曲线有两条水平渐近线 $y=3$ 与 $y=-3$。",
       src: { card: "gx01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx01\"]）来源原文：2025 年数三真题。PITFALL[gx01] 无条目 → 省略 traps 字段。MNEM[gx01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx10", origin: 'card', year: 2003, school: "全国硕士研究生入学统一考试-数学三 2003 年", no: "卡片 gx10", type: "limit", star: 4,
+      id: "cv-m3-gx10", origin: 'card', year: 2003, school: "全国硕士研究生入学统一考试-数学三 2003 年", no: "未编号", type: "limit", star: 4,
       tags: ["gx10"],
       stem: "求 $\\lim_{n\\to\\infty}\\sqrt[n]{2^{n}+3^{n}}$",
       answer: "提出最大项：$\\sqrt[n]{3^{n}\\left[\\left(\\frac23\\right)^{n}+1\\right]}=3\\cdot\\sqrt[n]{1+\\left(\\frac23\\right)^{n}}\\to3\\cdot1=3$（抓大头公式：极限等于最大项 3）。",
       src: { card: "gx10", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx10\"]）来源原文：2003 年数三真题。PITFALL[gx10] 无条目 → 省略 traps 字段。MNEM[gx10] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx13", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "卡片 gx13", type: "deriv", star: 5,
+      id: "cv-m3-gx13", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "未编号", type: "deriv", star: 5,
       tags: ["gx13"],
       stem: "（2018 数三）设 $f(x)=\\cos\\sqrt{|x|}$，求 $f$ 在 $x=0$ 处的左、右导数，并判断 $f$ 在 $x=0$ 处是否可导",
       answer: "$f_{+}{}'(0)=\\lim_{h\\to0^{+}}\\frac{\\cos\\sqrt{h}-1}{h}=\\lim\\frac{-\\frac12(\\sqrt h)^{2}}{h}=-\\frac12$；$f_{-}{}'(0)=\\lim_{h\\to0^{-}}\\frac{\\cos\\sqrt{-h}-1}{h}=\\lim\\frac{-\\frac12(-h)}{h}=\\frac12$。左右导数存在但不相等，故 $f$ 在 $x=0$ 处不可导。",
       src: { card: "gx13", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx13\"]）来源原文：2018 年数三真题。PITFALL[gx13] 无条目 → 省略 traps 字段。MNEM[gx13] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx17", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "卡片 gx17", type: "deriv", star: 3,
+      id: "cv-m3-gx17", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "未编号", type: "deriv", star: 3,
       tags: ["gx17"],
       stem: "（2018 数三）设函数 $f(x)$ 满足 $f(x+\\Delta x)-f(x)=2x\\,f(x)\\,\\Delta x+o(\\Delta x)$（$\\Delta x\\to0$），且 $f(0)=2$，求 $f(1)$",
       answer: "由可微定义，$\\Delta y=2xf(x)\\Delta x+o(\\Delta x)$ 表明 $f$ 可微且 $f'(x)=2xf(x)$——可分离变量方程。解得 $\\frac{df}{f}=2x\\,dx\\Rightarrow\\ln f=x^{2}+C$，$f=Ce^{x^{2}}$；由 $f(0)=2$ 得 $C=2$，故 $f(1)=2e$。",
       src: { card: "gx17", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx17\"]）来源原文：2018 年数三真题。PITFALL[gx17] 无条目 → 省略 traps 字段。MNEM[gx17] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx22", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "卡片 gx22", type: "deriv", star: 4,
+      id: "cv-m3-gx22", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "未编号", type: "deriv", star: 4,
       tags: ["gx22"],
       stem: "（2018 数三）曲线 $y=x^{2}+2\\ln x$ 在其拐点处的切线方程是____",
       answer: "$y'=2x+\\frac2x$，$y''=2-\\frac{2}{x^{2}}=0\\Rightarrow x=1$（$x>0$）。$x<1$ 时 $y''<0$ 凸、$x>1$ 时 $y''>0$ 凹，$(1,1)$ 是拐点；$y'(1)=4$，切线 $y-1=4(x-1)$，即 $y=4x-3$。",
       src: { card: "gx22", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx22\"]）来源原文：2018 年数三真题。PITFALL[gx22] 无条目 → 省略 traps 字段。MNEM[gx22] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx23", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "卡片 gx23", type: "deriv", star: 5,
+      id: "cv-m3-gx23", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "未编号", type: "deriv", star: 5,
       tags: ["gx23"],
       stem: "（2016 数三）设函数 $f(x)$ 在 $(-\\infty,+\\infty)$ 内连续，其导函数的图形已知（含若干零点与不变号区间），判断 $f$ 的极值点个数与曲线 $y=f(x)$ 的拐点个数",
       answer: "方法：导函数图形的每个**变号零点**对应一个极值点（正变负极大、负变正极小，不变号则非极值）；$f'$ 的每个**变号零点**同时也是 $f''$ 的零点——其两侧 $f''$（即 $f'$ 的增减）变号处为拐点，此外 $f'$ 的**无穷型间断/不可导点**处若 $f'$ 变号也产生拐点。逐点清点即得（本题答案为 3 个极值点、2 个拐点，选 D）。",
@@ -1326,21 +1326,21 @@
       src: { card: "gx23", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx23\"]）来源原文：2016 年数三真题。traps 取自 PITFALL[gx23]。MNEM[gx23] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx26", origin: 'card', year: 2000, school: "全国硕士研究生入学统一考试-数学三 2000 年", no: "卡片 gx26", type: "proof", star: 5,
+      id: "cv-m3-gx26", origin: 'card', year: 2000, school: "全国硕士研究生入学统一考试-数学三 2000 年", no: "未编号", type: "proof", star: 5,
       tags: ["gx26"],
       stem: "（2000 数三）设 $f(x)$ 在 $[0,\\pi]$ 上连续，且 $\\int_{0}^{\\pi}f(x)\\cos x\\,dx=0$，$\\int_{0}^{\\pi}f(x)\\sin x\\,dx=0$，证明：存在 $\\xi\\in(0,\\pi)$ 使 $f'(\\xi)=0$ 类问题的辅助函数思想——对含 $f'\\cos x+f\\sin x$ 结构的结论，令 $F(x)=f(x)\\sin x$",
       answer: "构造 $F(x)=f(x)\\sin x$：$F'(x)=f'(x)\\sin x+f(x)\\cos x$。由两个积分条件与 $\\sin x$ 在 $(0,\\pi)$ 内恒正，用积分中值定理/罗尔原话可得 $F$ 在 $(0,\\pi)$ 内至少有三个零点，两次罗尔即得 $F''$ 的零点，进而完成证明——辅助函数的乘积结构正是 $f'\\sin x+f\\cos x$ 的来源。",
       src: { card: "gx26", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx26\"]）来源原文：2000 年数三真题。PITFALL[gx26] 无条目 → 省略 traps 字段。MNEM[gx26] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx34", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "卡片 gx34", type: "integral", star: 4,
+      id: "cv-m3-gx34", origin: 'card', year: 2024, school: "全国硕士研究生招生考试-数学三 2024 年", no: "未编号", type: "integral", star: 4,
       tags: ["gx34"],
       stem: "（2024 数三）计算 $\\int_{2}^{+\\infty}\\dfrac{5}{x^{4}+3x^{2}-4}\\,dx$",
       answer: "因式分解 $x^{4}+3x^{2}-4=(x^{2}+4)(x-1)(x+1)$，部分分式拆项后逐项积分，取极限得收敛值——有理函数积分的标准流程（分解→拆分→积分→取极限）。",
       src: { card: "gx34", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx34\"]）来源原文：2024 年数三真题。PITFALL[gx34] 无条目 → 省略 traps 字段。MNEM[gx34] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx36", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "卡片 gx36", type: "integral", star: 5,
+      id: "cv-m3-gx36", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "未编号", type: "integral", star: 5,
       tags: ["gx36"],
       stem: "（2017 数三）计算 $\\int_{-\\pi}^{\\pi}\\left(\\sin^{3}x+\\sqrt{\\pi^{2}-x^{2}}\\right)dx$",
       answer: "奇函数 $\\sin^{3}x$ 在对称区间积分为 0；$\\sqrt{\\pi^{2}-x^{2}}$ 是上半圆 $y=\\sqrt{\\pi^{2}-x^{2}}$，积分即半圆面积 $\\frac12\\pi\\cdot\\pi^{2}=\\frac{\\pi^{3}}{2}$。总积分 $=\\frac{\\pi^{3}}{2}$——奇偶对称与几何意义联用。",
@@ -1348,21 +1348,21 @@
       src: { card: "gx36", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx36\"]）来源原文：2017 年数三真题。traps 取自 PITFALL[gx36]。MNEM[gx36] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx38", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "卡片 gx38", type: "integral", star: 4,
+      id: "cv-m3-gx38", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "未编号", type: "integral", star: 4,
       tags: ["gx38"],
       stem: "（2022 数三）设 $I_1=\\int_0^1\\frac{\\ln(1+x)}{2(1+\\cos x)}dx$，$I_2=\\int_0^1\\frac{\\ln(1+x)}{1+\\cos x}dx$，$I_3=\\int_0^1\\frac{2x}{1+\\sin x}dx$，比较大小",
       answer: "被积函数同号时逐对比较：$\\frac{\\ln(1+x)}{2(1+\\cos x)}<\\frac{\\ln(1+x)}{1+\\cos x}$（分母减半）故 $I_1<I_2$；又 $\\ln(1+x)<x$ 且 $1+\\cos x<1+\\sin x$ 不恒成立——改用 $\\frac{\\ln(1+x)}{1+\\cos x}$ 与 $\\frac{x}{1+\\sin x}$ 逐点比较，$\\ln(1+x)<x$、$1+\\cos x\\le 2$ 联合放缩得 $I_2<I_3$。综上 $I_1<I_2<I_3$，选 A。",
       src: { card: "gx38", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx38\"]）来源原文：2022 年数三真题。PITFALL[gx38] 无条目 → 省略 traps 字段。MNEM[gx38] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx49", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "卡片 gx49", type: "series", star: 3,
+      id: "cv-m3-gx49", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "未编号", type: "series", star: 3,
       tags: ["gx49"],
       stem: "（2019 数三）设 $a_n=\\int_{0}^{1}x^{n}\\sqrt{1-x^{2}}\\,dx$（$n=0,1,2,\\cdots$），证明 $\\sum_{n=0}^{\\infty}a_n$ 收敛",
       answer: "对被积函数放缩：$0\\le x^{n}\\sqrt{1-x^{2}}\\le x^{n}\\le\\frac{1}{n+1}$？改用 $x^n\\le x^{n/2}\\cdot x^{n/2}$ 结构——更直接：$0\\le a_n\\le\\int_0^1 x^n dx=\\frac{1}{n+1}$，而 $\\sum\\frac{1}{n+1}$ 发散，此路不通；改放缩 $a_n\\le\\int_0^1 x^{2n}dx=\\frac{1}{2n+1}$？仍发散。正解：$x^{n}\\sqrt{1-x^{2}}\\le x^{n}(1-x^{2})^{0}$ 于 $[0,1/2]$ 与 $[1/2,1]$ 分段估计——$[1/2,1]$ 段 $x^{n}\\le(1/2)^{n}$，$[0,1/2]$ 段 $\\sqrt{1-x^2}\\le\\frac{\\sqrt3}{2}x$（凹性）得 $a_n\\le\\frac{\\sqrt3}{2}\\int_0^{1/2}x^{n+1}dx\\le C\\left(\\frac12\\right)^{n}$，几何级数收敛，比较判别法即证。",
       src: { card: "gx49", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx49\"]）来源原文：2019 年数三真题。PITFALL[gx49] 无条目 → 省略 traps 字段。MNEM[gx49] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx51", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 gx51", type: "series", star: 4,
+      id: "cv-m3-gx51", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "series", star: 4,
       tags: ["gx51"],
       stem: "（2023 数三）已知 $a_n<b_n$。若级数 $\\sum a_n$ 与 $\\sum b_n$ 均收敛，则「$\\sum(a_n+b_n)$ 与 $\\sum\\left|a_n-b_n\\right|$」的收敛性判断",
       answer: "考察条件收敛与绝对收敛的运算规则：两收敛级数的和必收敛，故 $\\sum(a_n+b_n)$ 收敛；$\\left|a_n-b_n\\right|\\le\\left|a_n\\right|+\\left|b_n\\right|$，若两级数**绝对**收敛则比较判别得 $\\sum\\left|a_n-b_n\\right|$ 收敛；但仅条件收敛时（正项部分发散）$\\sum\\left|a_n-b_n\\right|$ 可能发散——结论取决于敛散类型，需按绝对/条件分类讨论。",
@@ -1370,25 +1370,432 @@
       src: { card: "gx51", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx51\"]）来源原文：2023 年数三真题。traps 取自 PITFALL[gx51]。MNEM[gx51] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx52", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "卡片 gx52", type: "series", star: 3,
+      id: "cv-m3-gx52", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "未编号", type: "series", star: 3,
       tags: ["gx52"],
       stem: "（2020 数三）设幂级数 $\\sum_{n=1}^{\\infty}n\\,a_{n}(x-2)^{n}$ 的收敛区间为 $(-1,5)$，求 $\\sum a_nx^{n}$ 的收敛半径",
       answer: "$(x-2)^{n}$ 表明展开点为 2、收敛区间 $(-1,5)$ 关于 2 对称、半径 $R_1=3$。逐项积分使收敛半径不变：$\\sum n\\,a_n(x-2)^{n-1}$ 与 $\\sum a_n(x-2)^{n}$ 收敛半径同为 3（$n\\,a_n$ 是 $a_n$ 逐项求导的系数，半径不变）。故 $\\sum a_nx^{n}$（展开点平移到 0）收敛半径 $R=3$。",
       src: { card: "gx52", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx52\"]）来源原文：2020 年数三真题。PITFALL[gx52] 无条目 → 省略 traps 字段。MNEM[gx52] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx59", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 gx59", type: "series", star: 3,
+      id: "cv-m3-gx59", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "series", star: 3,
       tags: ["gx59"],
       stem: "（2023 数三）求幂级数 $\\sum_{n=0}^{\\infty}\\frac{x^{2n}}{(2n)!}$ 的和函数",
       answer: "逐项求导得 $S'(x)=\\sum\\frac{x^{2n-1}}{(2n-1)!}$，则 $S'(x)+S(x)=e^{x}$、$S(x)-S(-x)=2\\sinh x$——联立解得 $S(x)=\\frac{e^{x}+e^{-x}}{2}=\\cosh x$（双曲余弦）。",
       src: { card: "gx59", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx59\"]）来源原文：2023 年数三真题。PITFALL[gx59] 无条目 → 省略 traps 字段。MNEM[gx59] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-m3-gx62", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "卡片 gx62", type: "dblint", star: 3,
+      id: "cv-m3-gx62", origin: 'card', year: 2023, school: "全国硕士研究生招生考试-数学三 2023 年", no: "未编号", type: "dblint", star: 3,
       tags: ["gx62"],
       stem: "（2023 数三）计算二重积分 $\\iint_{D}x\\,dx\\,dy$，其中 $D$ 由 $(x-1)^{2}+y^{2}\\le1$ 围成",
       answer: "区域是圆——选极坐标：圆的极坐标方程 $r=2\\cos\\theta$（$-\\frac\\pi2\\le\\theta\\le\\frac\\pi2$）。$\\iint_D x\\,dxdy=\\int_{-\\pi/2}^{\\pi/2}d\\theta\\int_0^{2\\cos\\theta}r\\cos\\theta\\cdot r\\,dr=\\int_{-\\pi/2}^{\\pi/2}\\frac{16}{3}\\cos^{4}\\theta\\,d\\theta=\\frac{16}{3}\\cdot\\frac{3\\pi\\cdot2}{16}=\\pi$（点火公式）。",
       src: { card: "gx62", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx62\"]）来源原文：2023 年数三真题。PITFALL[gx62] 无条目 → 省略 traps 字段。MNEM[gx62] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-lim01", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "二(9)", type: "limit", star: 5,
+      tags: ["lim01"],
+      stem: "已知函数 $f(x)$ 满足 $\\lim\\limits_{x\\to0}\\dfrac{\\sqrt{1+f(x)\\sin 2x}-1}{e^{3x}-1}=2$，则 $\\lim\\limits_{x\\to0}f(x)=$______.",
+      answer: "由极限存在知分子也趋于 0。用等价无穷小：$\\mathrm{e}^{3x}-1\\sim3x$，$(1+u)^{1/2}-1\\sim\\frac u2$（取 $u=f(x)\\sin2x$），$\\sin2x\\sim2x$，于是分子 $\\sim\\frac12\\cdot2x\\,f(x)=xf(x)$，原式 $=\\frac{xf(x)}{3x}=\\frac{f(x)}3\\to2$，故 $\\lim\\limits_{x\\to0}f(x)=6$。",
+      traps: "$\\frac{\\sin x}{x}\\to1$ 只对 $x\\to0$；$\\lim\\frac{\\sin 2x}{x}$ 要先凑成 $2\\cdot\\frac{\\sin 2x}{2x}$，勿直接写 $=1$。",
+      src: { card: "lim01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"lim01\"]）来源原文：2016 年数三 二(9)（真题册 PDF p25；答案 6）。traps 取自 PITFALL[lim01]。MNEM[lim01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb01", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "二(10)", type: "limit", star: 5,
+      tags: ["zb01"],
+      stem: "极限 $\\lim\\limits_{n\\to\\infty}\\dfrac{1}{n^2}\\left(\\sin\\dfrac{1}{n}+2\\sin\\dfrac{2}{n}+\\cdots+n\\sin\\dfrac{n}{n}\\right)=$______.",
+      answer: "把 $\\frac1{n^{2}}$ 拆成 $\\frac1n\\cdot\\frac1n$，和式即 $\\frac1n\\sum\\limits_{k=1}^{n}\\frac{k}{n}\\sin\\frac{k}{n}$——$f(x)=x\\sin x$ 在 $[0,1]$ 上的定积分定义式，故极限 $=\\int_0^1x\\sin x\\,\\mathrm dx=[-x\\cos x+\\sin x]_0^1=\\sin1-\\cos1$。",
+      traps: "定积分定义求数列和极限时，必须先把和式凑成 $\\frac{1}{n}\\sum f(\\frac{k}{n})$：每项都要有 $\\frac{1}{n}$ 因子，$f$ 的自变量是 $\\frac{k}{n}$。若写成 $\\frac{1}{n^2}\\sum k f(\\frac{k}{n})$ 要先提出 $\\frac{1}{n}$。另注意分点 $\\frac{k}{n}$ 与 $x$ 的对应关系（$k$ 从 $0$ 到 $n$ 对应 $x$ 从 $0$ 到 $1$），勿把积分上下限写错。",
+      hint: "求和型数列极限：\"提出 $\\frac1n$、凑 $\\frac{k}{n}$，和式即 $\\int_0^1 f(x)dx$\"——分点 $\\frac{k}{n}$ 对应 $x$，$\\frac1n$ 对应 $dx$。",
+      src: { card: "zb01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb01\"]）来源原文：2016 年数三 二(10)（真题册 PDF p26；答案 sin1−cos1）。traps 取自 PITFALL[zb01]。hint 取自 MNEM[zb01]。" }
+    },
+    {
+      id: "cv-m3-gx04", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "一(2)", type: "limit", star: 5,
+      tags: ["gx04"],
+      stem: "设函数 $f(x)$ 在 $[0,1]$ 上二阶可导，且 $\\int_0^1 f(x)\\,\\mathrm{d}x=0$，则（ ）\n选项：(A) 当 $f'(x)<0$ 时,$f\\left(\\dfrac{1}{2}\\right)<0$；(B) 当 $f''(x)<0$ 时,$f\\left(\\dfrac{1}{2}\\right)<0$；(C) 当 $f'(x)>0$ 时,$f\\left(\\dfrac{1}{2}\\right)<0$；(D) 当 $f''(x)>0$ 时,$f\\left(\\dfrac{1}{2}\\right)<0$。",
+      answer: "在 $x=\\frac12$ 处用 Taylor 公式（带 Lagrange 余项）并积分：$0=\\int_0^1f(x)\\,\\mathrm dx=f\\!\\left(\\frac12\\right)+\\frac12\\int_0^1f''\\left(\\xi\\right)\\left(x-\\frac12\\right)^{2}\\mathrm dx$（一次项因关于 $x=\\frac12$ 反对称而积分为 0）。当 $f''>0$ 时被积式 $\\ge0$ 且只在 $x=\\frac12$ 为 0，积分 $>0$，故 $f\\!\\left(\\frac12\\right)<0$。选 (D)。",
+      traps: "戴帽后严格性必降级：邻域内 f(x)>0 取极限只能得 ≥0——反例 f(x)=x² 在 x→0 极限为 0。",
+      src: { card: "gx04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx04\"]）来源原文：2018 年数三 一(2)（真题册 PDF p17；答案 D）。traps 取自 PITFALL[gx04]。MNEM[gx04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-inf05", origin: 'card', year: 2015, school: "全国硕士研究生招生考试-数学三 2015 年", no: "二(9)", type: "limit", star: 5,
+      tags: ["inf05"],
+      stem: "$\\lim\\limits_{x\\to0}\\dfrac{\\ln(\\cos x)}{x^2}=$______.",
+      answer: "把 $\\ln(\\cos x)$ 凑成 $\\ln(1+u)$：$u=\\cos x-1\\to0$，$\\ln(1+u)\\sim u$；再由 $1-\\cos x\\sim\\frac{x^{2}}2$ 得 $\\ln(\\cos x)\\sim\\cos x-1\\sim-\\frac{x^{2}}2$，故原极限 $=-\\frac12$。",
+      src: { card: "inf05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"inf05\"]）来源原文：2015 年数三 二(9)（真题册 PDF p30；答案 −1/2）。PITFALL[inf05] 无条目 → 省略 traps 字段。MNEM[inf05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-d01", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "二(9)", type: "deriv", star: 5,
+      tags: ["d01"],
+      stem: "曲线 $y=x^2+2\\ln x$ 在其拐点处的切线方程是______.",
+      answer: "$y=x^{2}+2\\ln x$，由 $(x^{2})'=2x$、$(\\ln x)'=\\frac1x$ 得 $y'=2x+\\frac2x$，$y''=2-\\frac{2}{x^{2}}$；令 $y''=0$ 得 $x=1$ 且两侧变号，故 $(1,1)$ 为拐点。切线斜率 $y'(1)=4$，切线 $y=4x-3$。",
+      src: { card: "d01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"d01\"]）来源原文：2018 年数三 二(9)（真题册 PDF p18；答案 y=4x−3）。PITFALL[d01] 无条目 → 省略 traps 字段。MNEM[d01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-d02", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "二(12)", type: "deriv", star: 5,
+      tags: ["d02"],
+      stem: "设函数 $f(x)$ 满足 $f(x+\\Delta x)-f(x)=2xf(x)\\Delta x+o(\\Delta x)$（$\\Delta x\\to0$），且 $f(0)=2$，则 $f(1)=$______.",
+      answer: "题设即 $f'(x)=2xf(x)$。分离变量 $\\frac{f'}{f}=2x$，积分得 $\\ln f=x^{2}+C$，即 $f=C\\mathrm e^{x^{2}}$；由 $f(0)=2$ 得 $C=2$，故 $f(1)=2\\mathrm e$。",
+      src: { card: "d02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"d02\"]）来源原文：2018 年数三 二(12)（真题册 PDF p18；答案 2e）。PITFALL[d02] 无条目 → 省略 traps 字段。MNEM[d02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-d04", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "一(3)", type: "deriv", star: 5,
+      tags: ["d04"],
+      stem: "设函数 $f(x)=ax-b\\ln x\\ (a>0)$ 有两个零点，则 $\\dfrac ba$ 的取值范围是（ ）\n选项：(A) (e,+∞)；(B) (0,e)；(C) (0,1/e)；(D) (1/e,+∞)。",
+      answer: "$f'(x)=a-\\frac bx=\\frac{ax-b}{x}=0$ 得唯一驻点 $x=\\frac ba$（$f''=\\frac b{x^{2}}>0$，为极小值点）。$f$ 有两个零点 $\\Leftrightarrow f\\!\\left(\\frac ba\\right)=b-b\\ln\\frac ba<0\\Leftrightarrow\\ln\\frac ba>1\\Leftrightarrow\\frac ba>\\mathrm e$。选 (A)。",
+      src: { card: "d04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"d04\"]）来源原文：2021 年数三 一(3)（真题册 PDF p6；答案 A）。PITFALL[d04] 无条目 → 省略 traps 字段。MNEM[d04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-d06", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "二(10)", type: "deriv", star: 5,
+      tags: ["d06"],
+      stem: "曲线 $y=x\\sin x+2\\cos x\\left(-\\dfrac{\\pi}{2}<x<\\dfrac{3\\pi}{2}\\right)$ 的拐点坐标为______.",
+      answer: "$y'=\\sin x+x\\cos x-2\\sin x=x\\cos x-\\sin x$，$y''=\\cos x-x\\sin x-\\cos x=-x\\sin x$：$0<x<\\pi$ 时 $y''<0$，$\\pi<x<\\frac{3\\pi}2$ 时 $y''>0$，$y''$ 在 $x=\\pi$ 变号；又 $y(\\pi)=\\pi\\sin\\pi+2\\cos\\pi=-2$，故拐点 $(\\pi,-2)$。",
+      src: { card: "d06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"d06\"]）来源原文：2019 年数三 二(10)（真题册 PDF p13；答案 (π,−2)）。PITFALL[d06] 无条目 → 省略 traps 字段。MNEM[d06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-d07", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "三(17)", type: "deriv", star: 5,
+      tags: ["d07"],
+      stem: "设函数 $y=f(x)$ 满足 $y''+2y'+5y=0$，$f(0)=1$，$f'(0)=-1$.(Ⅰ) 求 $f(x)$ 的表达式.(Ⅱ) 设 $a_n=\\int_{n\\pi}^{+\\infty}f(x)\\,\\mathrm{d}x$，求 $\\sum\\limits_{n=1}^{\\infty}a_n$.",
+      answer: "特征方程 $\\lambda^{2}+2\\lambda+5=0$ 得 $\\lambda=-1\\pm2i$，故 $f(x)=\\mathrm e^{-x}(C_1\\cos2x+C_2\\sin2x)$。求导用链式法则（$(\\cos u)'=-\\sin u\\cdot u'$、$(\\sin u)'=\\cos u\\cdot u'$，$u=2x$）：$f'(x)=\\mathrm e^{-x}\\left[-C_1\\cos2x-C_2\\sin2x-2C_1\\sin2x+2C_2\\cos2x\\right]$。代入 $f(0)=1$ 得 $C_1=1$，代入 $f'(0)=-1$ 得 $-C_1+2C_2=-1\\Rightarrow C_2=0$，故 $f(x)=\\mathrm e^{-x}\\cos2x$。",
+      src: { card: "d07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"d07\"]）来源原文：2020 年数三 三(17)（真题册 PDF p11；答案 见解答）。PITFALL[d07] 无条目 → 省略 traps 字段。MNEM[d07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-dr01", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "二(13)", type: "deriv", star: 5,
+      tags: ["dr01"],
+      stem: "已知函数 $f(x)=e^{\\sin x}+e^{-\\sin x}$，则 $f'''(2\\pi)=$______.",
+      answer: "$f$ 为偶函数且以 $2\\pi$ 为周期；逐次求导后奇偶性交替（奇、偶、奇），周期性不变，故 $f'''(2\\pi)=f'''(0)$，而奇函数在原点取值为 0，所以 $f'''(2\\pi)=0$。",
+      src: { card: "dr01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"dr01\"]）来源原文：2022 年数三 二(13)（真题册 PDF p3；答案 0）。PITFALL[dr01] 无条目 → 省略 traps 字段。MNEM[dr01] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-dr03", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "一(2)", type: "deriv", star: 5,
+      tags: ["dr03"],
+      stem: "已知函数 $f(x,y)=\\dfrac{e^x}{x-y}$，则（ ）\n选项：(A) $f'_x-f'_y=0$；(B) $f'_x+f'_y=0$；(C) $f'_x-f'_y=f$；(D) $f'_x+f'_y=f$。",
+      answer: "$f'_x=\\frac{\\mathrm e^{x}(x-y)-\\mathrm e^{x}}{(x-y)^{2}}=\\frac{\\mathrm e^{x}(x-y-1)}{(x-y)^{2}}$，$f'_y=\\frac{-\\mathrm e^{x}\\cdot(-1)}{(x-y)^{2}}=\\frac{\\mathrm e^{x}}{(x-y)^{2}}$，相加得 $f'_x+f'_y=\\frac{\\mathrm e^{x}(x-y)}{(x-y)^{2}}=\\frac{\\mathrm e^{x}}{x-y}=f(x,y)$。选 (D)。",
+      traps: "除法法则分子是 $u'v-uv'$（\"先导不导\"减\"不导先导\"），顺序颠倒会整体变号。",
+      hint: "除法法则口决：「上导下不导，减上不导下导，除以分母平方」——分子是交叉相减。",
+      src: { card: "dr03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"dr03\"]）来源原文：2016 年数三 一(2)（真题册 PDF p25；答案 D）。traps 取自 PITFALL[dr03]。hint 取自 MNEM[dr03]。" }
+    },
+    {
+      id: "cv-m3-dr04", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "二(11)", type: "deriv", star: 5,
+      tags: ["dr04"],
+      stem: "若 $y=\\cos e^{-\\sqrt x}$，则 $\\dfrac{\\mathrm dy}{\\mathrm dx}\\Big|_{x=1}=$______.",
+      answer: "三层复合 $u=-\\sqrt x,\\;v=\\mathrm e^{u},\\;y=\\cos v$：$y'=-\\sin v\\cdot v'\\cdot u'=-\\sin\\mathrm e^{-\\sqrt x}\\cdot\\mathrm e^{-\\sqrt x}\\cdot\\left(-\\frac1{2\\sqrt x}\\right)=\\frac{\\sin\\mathrm e^{-\\sqrt x}}{2\\sqrt x\\,\\mathrm e^{\\sqrt x}}$，代入 $x=1$ 得 $\\frac{\\sin\\frac1{\\mathrm e}}{2\\mathrm e}$。",
+      traps: "链式法则勿漏内层导数：$\\sin(x^2)$ 求导 $=\\cos(x^2)\\cdot 2x$，漏乘 $2x$ 是最高频错误。",
+      src: { card: "dr04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"dr04\"]）来源原文：2021 年数三 二(11)（真题册 PDF p7；答案 见解答）。traps 取自 PITFALL[dr04]。MNEM[dr04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-gx14", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "一(1)", type: "deriv", star: 5,
+      tags: ["gx14"],
+      stem: "下列函数中，在 $x=0$ 处不可导的是（ ）\n选项：(A) $f(x)=|x|\\sin|x|$；(B) $f(x)=|x|\\sin\\sqrt{|x|}$；(C) $f(x)=\\cos|x|$；(D) $f(x)=\\cos\\sqrt{|x|}$。",
+      answer: "(A) $|x|\\sin|x|=x\\sin x$、(C) $\\cos|x|=\\cos x$ 在 0 附近与可导函数相同，可导；(B) $\\frac{|x|\\sin\\sqrt{|x|}}{x}=\\frac{|x|^{3/2}}{x}\\to0$，可导；(D) $\\frac{\\cos\\sqrt{|x|}-1}{x}\\sim\\frac{-|x|/2}{x}$ 的左右极限分别为 $-\\frac12$ 与 $\\frac12$，左右导数不等，不可导。选 (D)。",
+      traps: "f(x₀)=0 且 f'(x₀)≠0 时 |f| 在该点不可导（|x| 型）；f'(x₀)=0 时反而可导——两种\"零点情形\"结论相反。",
+      src: { card: "gx14", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx14\"]）来源原文：2018 年数三 一(1)（真题册 PDF p17；答案 D）。traps 取自 PITFALL[gx14]。MNEM[gx14] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-int04", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "二(10)", type: "integral", star: 5,
+      tags: ["int04"],
+      stem: "$\\int e^x\\arcsin\\sqrt{1-e^{2x}}\\,\\mathrm{d}x=$______.",
+      answer: "先凑微分 $\\mathrm e^{x}\\mathrm dx=\\mathrm d(\\mathrm e^{x})$，令 $u=\\mathrm e^{x}$ 得 $\\int\\arcsin\\sqrt{1-u^{2}}\\,\\mathrm du$；再令 $u=\\sin\\theta$，则 $\\sqrt{1-u^{2}}=\\cos\\theta$、$\\arcsin(\\cos\\theta)=\\frac\\pi2-\\theta$、$\\mathrm du=\\cos\\theta\\,\\mathrm d\\theta$，故原积分 $=\\int\\left(\\frac\\pi2-\\theta\\right)\\cos\\theta\\,\\mathrm d\\theta=\\frac\\pi2\\sin\\theta-\\theta\\sin\\theta-\\cos\\theta+C$。回代 $\\theta=\\arcsin\\mathrm e^{x}$ 得 $\\frac\\pi2\\mathrm e^{x}-\\mathrm e^{x}\\arcsin\\mathrm e^{x}-\\sqrt{1-\\mathrm e^{2x}}+C$；再用 $\\arcsin u+\\arcsin\\sqrt{1-u^{2}}=\\frac\\pi2$（$u=\\mathrm e^{x}$）化为答案的简洁形式 $\\mathrm e^{x}\\arcsin\\sqrt{1-\\mathrm e^{2x}}-\\sqrt{1-\\mathrm e^{2x}}+C$。",
+      src: { card: "int04", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int04\"]）来源原文：2018 年数三 二(10)（真题册 PDF p18；答案 见解答）。PITFALL[int04] 无条目 → 省略 traps 字段。MNEM[int04] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-int07", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "二(10)", type: "integral", star: 5,
+      tags: ["int07"],
+      stem: "极限 $\\lim\\limits_{n\\to\\infty}\\dfrac{1}{n^2}\\left(\\sin\\dfrac{1}{n}+2\\sin\\dfrac{2}{n}+\\cdots+n\\sin\\dfrac{n}{n}\\right)=$______.",
+      answer: "把 $\\frac1{n^{2}}$ 拆为 $\\frac1n\\cdot\\frac1n$ 凑成定积分，再分部积分（用 $\\int\\cos x\\,\\mathrm dx=\\sin x$）：$\\lim=\\int_0^1x\\sin x\\,\\mathrm dx=[-x\\cos x]_0^1+\\int_0^1\\cos x\\,\\mathrm dx=\\sin1-\\cos1$。",
+      src: { card: "int07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"int07\"]）来源原文：2016 年数三 二(10)（真题册 PDF p26；答案 sin1−cos1）。PITFALL[int07] 无条目 → 省略 traps 字段。MNEM[int07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-ext09", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "二(12)", type: "integral", star: 5,
+      tags: ["ext09"],
+      stem: "$\\int_0^2\\dfrac{2x-4}{x^2+2x+4}\\,\\mathrm dx=$______.",
+      answer: "拆项：$\\frac{2x-4}{x^{2}+2x+4}=\\frac{2x+2}{x^{2}+2x+4}-\\frac{6}{x^{2}+2x+4}$。前者即 $\\frac{\\mathrm d(x^{2}+2x+4)}{x^{2}+2x+4}$，积出 $\\ln(x^{2}+2x+4)$；后者配方 $(x+1)^{2}+3$，用 $\\int\\frac{\\mathrm du}{u^{2}+a^{2}}=\\frac1a\\arctan\\frac ua$ 得 $\\frac{6}{\\sqrt3}\\arctan\\frac{x+1}{\\sqrt3}$。代入上下限：$\\ln3-\\frac{\\sqrt3}3\\pi$。",
+      src: { card: "ext09", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext09\"]）来源原文：2022 年数三 二(12)（真题册 PDF p3；答案 见解答）。PITFALL[ext09] 无条目 → 省略 traps 字段。MNEM[ext09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-gx29", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "一(3)", type: "integral", star: 5,
+      tags: ["gx29"],
+      stem: "设奇函数 $f(x)$ 在 $(-\\infty,+\\infty)$ 上具有连续导数，则（ ）\n选项：(A) $\\int_0^x[\\cos f(t)+f'(t)]\\mathrm dt$ 是奇函数；(B) $\\int_0^x[\\cos f(t)+f'(t)]\\mathrm dt$ 是偶函数；(C) $\\int_0^x[\\cos f'(t)+f(t)]\\mathrm dt$ 是奇函数；(D) $\\int_0^x[\\cos f'(t)+f(t)]\\mathrm dt$ 是偶函数。",
+      answer: "$f$ 为奇函数 $\\Rightarrow f'$ 为偶函数，而 $\\cos f(t)$（内层为奇的复合）也是偶函数，故被积函数 $\\cos f(t)+f'(t)$ 为偶函数；其变限积分 $\\int_0^x$ 是奇函数，(A) 正确、(B) 错误。而 $\\cos f'(t)+f(t)$ 奇偶性不固定，(C)(D) 均错。选 (A)。",
+      src: { card: "gx29", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx29\"]）来源原文：2020 年数三 一(3)（真题册 PDF p10；答案 A）。PITFALL[gx29] 无条目 → 省略 traps 字段。MNEM[gx29] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-gx31", origin: 'card', year: 2015, school: "全国硕士研究生招生考试-数学三 2015 年", no: "二(10)", type: "integral", star: 5,
+      tags: ["gx31"],
+      stem: "设函数 $f(x)$ 连续，$\\varphi(x)=\\int_0^{x^2}xf(t)\\,\\mathrm{d}t$. 若 $\\varphi(1)=1$，$\\varphi'(1)=5$，则 $f(1)=$______.",
+      answer: "$\\varphi(x)=x\\int_0^{x^{2}}f(t)\\,\\mathrm dt$，由乘积法则与变限积分求导得 $\\varphi'(x)=\\int_0^{x^{2}}f(t)\\,\\mathrm dt+2x^{2}f(x^{2})$；由 $\\varphi(1)=\\int_0^1f(t)\\,\\mathrm dt=1$ 与 $\\varphi'(1)=1+2f(1)=5$ 得 $f(1)=2$。",
+      traps: "变限积分只需被积函数可积就连续；跳跃间断点处左右导数等于 f 的左右极限但整体不可导——可去间断点反而可导。",
+      src: { card: "gx31", note: "卡片例题（data/math3.js 的 EXAMPLE[\"gx31\"]）来源原文：2015 年数三 二(10)（真题册 PDF p30；答案 2）。traps 取自 PITFALL[gx31]。MNEM[gx31] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-trig01", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "三(19)", type: "dblint", star: 5,
+      tags: ["trig01"],
+      stem: "已知平面区域 $D=\\{(x,y)\\mid y-2\\le x\\le\\sqrt{4-y^2},0\\le y\\le2\\}$，计算 $I=\\iint\\limits_{D}\\dfrac{(x-y)^2}{x^2+y^2}\\,\\mathrm dx\\mathrm dy$.",
+      answer: "极坐标下 $\\frac{(x-y)^{2}}{x^{2}+y^{2}}=(\\cos\\theta-\\sin\\theta)^{2}=\\cos^{2}\\theta-2\\sin\\theta\\cos\\theta+\\sin^{2}\\theta=1-\\sin2\\theta$（平方关系 $\\sin^{2}+\\cos^{2}=1$）。区域 $D$ 是圆盘 $x^{2}+y^{2}\\le4$ 中位于直线 $x=y-2$ 右侧、$0\\le y\\le2$ 的部分：当 $0\\le\\theta\\le\\frac\\pi2$ 时直线约束自动满足（$\\frac2{\\sin\\theta-\\cos\\theta}\\ge2$），$0\\le r\\le2$；当 $\\frac\\pi2\\le\\theta\\le\\pi$ 时直线切割圆盘，$0\\le r\\le\\frac2{\\sin\\theta-\\cos\\theta}$。于是 $I=\\int_0^{\\pi/2}\\!\\!\\int_0^2(1-\\sin2\\theta)r\\,\\mathrm dr\\mathrm d\\theta+\\int_{\\pi/2}^{\\pi}\\!\\!\\int_0^{2/(\\sin\\theta-\\cos\\theta)}(1-\\sin2\\theta)r\\,\\mathrm dr\\mathrm d\\theta$：第一块 $=2\\left(\\frac\\pi2-1\\right)=\\pi-2$，第二块中 $1-\\sin2\\theta=(\\sin\\theta-\\cos\\theta)^{2}$ 与上限的平方约去，得 $2\\cdot\\frac\\pi2=\\pi$。故 $I=2\\pi-2$。",
+      hint: "$\\sin^2+\\cos^2=1$ 全家桶：同除 $\\cos^2$ 得 $1+\\tan^2=\\sec^2$，同除 $\\sin^2$ 得 $1+\\cot^2=\\csc^2$。",
+      src: { card: "trig01", note: "卡片例题（data/math3.js 的 EXAMPLE[\"trig01\"]）来源原文：2022 年数三 三(19)（真题册 PDF p4；答案 2\\pi-2）。PITFALL[trig01] 无条目 → 省略 traps 字段。hint 取自 MNEM[trig01]。" }
+    },
+    {
+      id: "cv-m3-trig06", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "三(19)", type: "dblint", star: 5,
+      tags: ["trig06"],
+      stem: "已知平面区域 $D=\\{(x,y)\\mid y-2\\le x\\le\\sqrt{4-y^2},0\\le y\\le2\\}$，计算 $I=\\iint\\limits_{D}\\dfrac{(x-y)^2}{x^2+y^2}\\,\\mathrm dx\\mathrm dy$.",
+      answer: "关键是二倍角 $\\sin2\\theta=2\\sin\\theta\\cos\\theta$：交叉项 $-2\\sin\\theta\\cos\\theta$ 合并成 $-\\sin2\\theta$，被积式化为 $1-\\sin2\\theta=(\\sin\\theta-\\cos\\theta)^{2}$，它与极坐标内层上限 $r=\\frac2{\\sin\\theta-\\cos\\theta}$ 的平方在 $\\int r\\,\\mathrm dr$ 中正好约去；第二块化为 $\\int_{\\pi/2}^{\\pi}2\\,\\mathrm d\\theta=\\pi$，加上第一块 $\\pi-2$，$I=2\\pi-2$（分块与上例相同）。",
+      src: { card: "trig06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"trig06\"]）来源原文：2022 年数三 三(19)（真题册 PDF p4；答案 2\\pi-2）。PITFALL[trig06] 无条目 → 省略 traps 字段。MNEM[trig06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-trig07", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "二(13)", type: "integral", star: 5,
+      tags: ["trig07"],
+      stem: "设平面区域 $D$ 由曲线 $y=\\sqrt x\\sin\\pi x\\ (0\\le x\\le1)$ 与 $x$ 轴围成，则 $D$ 绕 $x$ 轴旋转所成的旋转体的体积为______.",
+      answer: "体积 $V=\\pi\\int_0^1x\\sin^{2}\\pi x\\,\\mathrm dx$；用二倍角 $\\cos2\\pi x=1-2\\sin^{2}\\pi x$ 得降幂 $\\sin^{2}\\pi x=\\frac{1-\\cos2\\pi x}{2}$，于是 $V=\\frac\\pi2\\int_0^1x\\,\\mathrm dx-\\frac\\pi2\\int_0^1x\\cos2\\pi x\\,\\mathrm dx$。后一项分部积分 $=\\left[\\frac{x\\sin2\\pi x}{2\\pi}\\right]_0^1-\\int_0^1\\frac{\\sin2\\pi x}{2\\pi}\\mathrm dx=0$，故 $V=\\frac\\pi2\\cdot\\frac12=\\frac\\pi4$。",
+      src: { card: "trig07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"trig07\"]）来源原文：2021 年数三 二(13)（真题册 PDF p7；答案 \\dfrac{\\pi}{4}）。PITFALL[trig07] 无条目 → 省略 traps 字段。MNEM[trig07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-ser02", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "一(4)", type: "series", star: 5,
+      tags: ["ser02"],
+      stem: "已知级数 $\\sum\\limits_{n=1}^{\\infty}(-1)^n\\sqrt{n}\\sin\\dfrac{1}{n^{\\alpha}}$ 绝对收敛，级数 $\\sum\\limits_{n=1}^{\\infty}\\dfrac{(-1)^n}{n^{2-\\alpha}}$ 条件收敛，则（ ）\n选项：(A) $0<\\alpha\\le\\dfrac{1}{2}$；(B) $\\dfrac{1}{2}<\\alpha\\le1$；(C) $1<\\alpha\\le\\dfrac{3}{2}$；(D) $\\dfrac{3}{2}<\\alpha<2$。",
+      answer: "$\\sqrt n\\sin\\frac1{n^{\\alpha}}\\sim n^{\\frac12-\\alpha}$：绝对收敛要求 $\\alpha-\\frac12>1$ 即 $\\alpha>\\frac32$；$\\sum\\frac{(-1)^{n}}{n^{2-\\alpha}}$ 条件收敛要求 $0<2-\\alpha\\le1$ 即 $1\\le\\alpha<2$。同时成立 $\\Leftrightarrow\\frac32<\\alpha<2$。选 (D)。",
+      traps: "p 级数收敛 $\\iff p>1$，$p=1$ 的调和级数发散，勿误记成\"$p\\ge1$ 收敛\"。",
+      src: { card: "ser02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ser02\"]）来源原文：2012 年数三 一(4)（真题册 PDF p41；答案 D）。traps 取自 PITFALL[ser02]。MNEM[ser02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-ser06", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "一(4)", type: "series", star: 5,
+      tags: ["ser06"],
+      stem: "设幂级数 $\\sum\\limits_{n=1}^{\\infty}na_n(x-2)^n$ 的收敛区间为 $(-2,6)$，则 $\\sum\\limits_{n=1}^{\\infty}a_n(x+1)^{2n}$ 的收敛区间为（ ）\n选项：(A) (-2,6)；(B) (-3,1)；(C) (-5,3)；(D) (-17,15)。",
+      answer: "由 $\\sum na_n(x-2)^{n}$ 的收敛半径 $R=\\lim\\left|\\frac{na_n}{(n+1)a_{n+1}}\\right|=4$ 得 $\\lim\\left|\\frac{a_n}{a_{n+1}}\\right|=4$，即 $\\sum a_nz^{n}$ 的收敛半径也是 4。于是 $\\sum a_n(x+1)^{2n}$ 要求 $|(x+1)^{2}|<4$，即 $|x+1|<2$，收敛域 $(-3,1)$。选 (B)。",
+      traps: "比值判别法 $\\rho=1$ 时无法判定，必须换比较法；勿把 $\\rho=1$ 当成收敛。",
+      src: { card: "ser06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ser06\"]）来源原文：2020 年数三 一(4)（真题册 PDF p10；答案 B）。traps 取自 PITFALL[ser06]。MNEM[ser06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-ext15", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "一(4)", type: "series", star: 5,
+      tags: ["ext15"],
+      stem: "级数 $\\sum\\limits_{n=1}^{\\infty}\\left(\\dfrac{1}{\\sqrt{n}}-\\dfrac{1}{\\sqrt{n+1}}\\right)\\sin(n+k)$（$k$ 为常数）（ ）\n选项：(A) 绝对收敛；(B) 条件收敛；(C) 发散；(D) 收敛性与 $k$ 有关。",
+      answer: "用比较判别法：$\\left|\\left(\\frac1{\\sqrt n}-\\frac1{\\sqrt{n+1}}\\right)\\sin(n+k)\\right|\\le\\frac1{\\sqrt n}-\\frac1{\\sqrt{n+1}}=\\frac{1}{\\sqrt n\\sqrt{n+1}(\\sqrt n+\\sqrt{n+1})}\\sim\\frac1{2n^{3/2}}$，而 $\\sum\\frac1{n^{3/2}}$ 收敛，故原级数绝对收敛。选 (A)。",
+      src: { card: "ext15", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext15\"]）来源原文：2016 年数三 一(4)（真题册 PDF p25；答案 A）。PITFALL[ext15] 无条目 → 省略 traps 字段。MNEM[ext15] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-ext20", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "二(11)", type: "ode", star: 5,
+      tags: ["ext20"],
+      stem: "设某厂家某产品的产量为 $Q$，成本 $C(Q)=100+13Q$，设产品的单价为 $P$，需求量 $Q(P)=\\dfrac{800}{P+3}-2$，则该厂家获得最大利润时的产量为______.",
+      answer: "由 $Q(P)=\\frac{800}{P+3}-2$ 反解得反需求函数 $P=\\frac{800}{Q+2}-3$；利润 $L=PQ-C(Q)=Q\\left(\\frac{800}{Q+2}-3\\right)-100-13Q=700-\\frac{1600}{Q+2}-16Q$。$L'(Q)=\\frac{1600}{(Q+2)^{2}}-16=0\\Rightarrow(Q+2)^{2}=100\\Rightarrow Q=8$（$L''(8)<0$ 取最大），故最大利润时产量 $Q=8$。",
+      src: { card: "ext20", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext20\"]）来源原文：2020 年数三 二(11)（真题册 PDF p11；答案 8）。PITFALL[ext20] 无条目 → 省略 traps 字段。MNEM[ext20] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-ext23", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "一(3)", type: "ode", star: 5,
+      tags: ["ext23"],
+      stem: "已知微分方程 $y''+ay'+by=ce^x$ 的通解为 $y=(C_1+C_2x)e^{-x}+e^x$，则 $a,b,c$ 依次为（ ）\n选项：(A) 1, 0, 1；(B) 1, 0, 2；(C) 2, 1, 3；(D) 2, 1, 4。",
+      answer: "由通解 $y=(C_1+C_2x)\\mathrm e^{-x}+\\mathrm e^{x}$ 读出 $\\lambda=-1$ 为二重特征根，故特征方程 $(\\lambda+1)^{2}=\\lambda^{2}+a\\lambda+b$，得 $a=2,\\;b=1$；把特解 $\\mathrm e^{x}$ 代入 $y''+ay'+by=ce^{x}$ 得 $(1+2+1)\\mathrm e^{x}=c\\mathrm e^{x}$，$c=4$。选 (D)。",
+      src: { card: "ext23", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ext23\"]）来源原文：2019 年数三 一(3)（真题册 PDF p13；答案 D）。PITFALL[ext23] 无条目 → 省略 traps 字段。MNEM[ext23] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-mvt05", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "一(2)", type: "proof", star: 5,
+      tags: ["mvt05"],
+      stem: "已知方程 $x^5-5x+k=0$ 有 3 个不同的实根，则 $k$ 的取值范围是（ ）\n选项：(A) $(-\\infty,-4)$；(B) $(4,+\\infty)$；(C) $\\{-4,4\\}$；(D) $(-4,4)$。",
+      answer: "设 $g(x)=x^{5}-5x+k$，$g'(x)=5x^{4}-5=5(x^{2}-1)(x^{2}+1)$，驻点 $x=\\pm1$：$g$ 在 $(-\\infty,-1)$、$(1,+\\infty)$ 增，$(-1,1)$ 减，极大值 $g(-1)=4+k$、极小值 $g(1)=k-4$。三个不同实根 $\\Leftrightarrow$ 极大 $>0$ 且极小 $<0$，即 $-4<k<4$。选 (D)。",
+      src: { card: "mvt05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"mvt05\"]）来源原文：2019 年数三 一(2)（真题册 PDF p13；答案 D）。PITFALL[mvt05] 无条目 → 省略 traps 字段。MNEM[mvt05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-la02", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "二(15)", type: "linalg", star: 5,
+      tags: ["la02"],
+      stem: "设 $A$ 为 3 阶矩阵，交换 $A$ 的第 2 行和第 3 行，再将第 2 列的 $-1$ 倍加到第 1 列，得到矩阵 $\\begin{pmatrix}-2&1&-1\\\\1&-1&0\\\\-1&0&0\\end{pmatrix}$，则 $A^{-1}$ 的迹 $\\mathrm{tr}(A^{-1})=$______.",
+      answer: "设题中矩阵为 $B=\\begin{pmatrix}-2&1&-1\\\\1&-1&0\\\\-1&0&0\\end{pmatrix}$，两个变换即 $B=P_1AP_2$（$P_1$ 交换第 2、3 行，$P_2$ 把第 2 列的 $-1$ 倍加到第 1 列，二者都是对合初等矩阵），故 $A^{-1}=P_2B^{-1}P_1$。先求 $B^{-1}$：$|B|=1$，按代数余子式得 $B^{-1}=\\begin{pmatrix}0&0&-1\\\\0&-1&-1\\\\-1&-1&1\\end{pmatrix}$；回代得 $A^{-1}=\\begin{pmatrix}0&-1&0\\\\0&0&-1\\\\-1&1&-1\\end{pmatrix}$，故 $\\mathrm{tr}(A^{-1})=-1$。",
+      src: { card: "la02", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la02\"]）来源原文：2022 年数三 二(15)（真题册 PDF p3；答案 -1）。PITFALL[la02] 无条目 → 省略 traps 字段。MNEM[la02] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb03", origin: 'card', year: 2014, school: "全国硕士研究生入学统一考试-数学三 2014 年", no: "一(5)", type: "linalg", star: 5,
+      tags: ["zb03"],
+      stem: "行列式 $\\begin{vmatrix}0&a&b&0\\\\a&0&0&b\\\\0&c&d&0\\\\c&0&0&d\\end{vmatrix}=$（ ）\n选项：(A) $(ad-bc)^2$；(B) $-(ad-bc)^2$；(C) $a^2d^2-b^2c^2$；(D) $b^2c^2-a^2d^2$。",
+      answer: "按第一行展开（只有 $a_{12}=a$、$a_{13}=b$ 非零）：$D=-aM_{12}+bM_{13}$。$M_{12}=\\begin{vmatrix}a&0&b\\\\0&d&0\\\\c&0&d\\end{vmatrix}=d(ad-bc)$，$M_{13}=\\begin{vmatrix}a&0&b\\\\0&c&0\\\\c&0&d\\end{vmatrix}=c(ad-bc)$，故 $D=-(ad-bc)^{2}$。选 (B)。",
+      traps: "$|A+B|\\neq|A|+|B|$；$|kA|=k^{n}|A|$（$n$ 阶，勿写成 $k|A|$）。用性质④（倍加不改变行列式）化简最安全，但它不改变行列式值。",
+      src: { card: "zb03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb03\"]）来源原文：2014 年数三 一(5)（真题册 PDF p33；答案 B）。traps 取自 PITFALL[zb03]。MNEM[zb03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb05", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "一(5)", type: "linalg", star: 5,
+      tags: ["zb05"],
+      stem: "设 $A$ 为 3 阶矩阵，将 $A$ 的第 2 列加到第 1 列得矩阵 $B$，再交换 $B$ 的第 2 行与第 3 行得单位矩阵. 记 $P_1=\\begin{pmatrix}1&0&0\\\\1&1&0\\\\0&0&1\\end{pmatrix}$，$P_2=\\begin{pmatrix}1&0&0\\\\0&0&1\\\\0&1&0\\end{pmatrix}$，则 $A=$（ ）\n选项：(A) $P_1P_2$；(B) $P_1^{-1}P_2$；(C) $P_2P_1$；(D) $P_2P_1^{-1}$。",
+      answer: "「第 2 列加到第 1 列」是右乘初等矩阵 $P_1$、「交换第 2、3 行」是左乘 $P_2$，故 $P_2AP_1=E$，解得 $A=P_2^{-1}P_1^{-1}=P_2P_1^{-1}$（对换矩阵的逆是自身，「列加」矩阵的逆是对应的「列减」矩阵）。选 (D)。",
+      hint: "初等变换不改变秩——左乘初等矩阵=$P$，右乘=$Q$，$|PA|=|P||A|$ 会变行列式（行变换），但秩不变、特征值不一定保留。",
+      src: { card: "zb05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb05\"]）来源原文：2011 年数三 一(5)（真题册 PDF p45；答案 D）。PITFALL[zb05] 无条目 → 省略 traps 字段。hint 取自 MNEM[zb05]。" }
+    },
+    {
+      id: "cv-m3-kn37", origin: 'card', year: 2018, school: "全国硕士研究生招生考试-数学三 2018 年", no: "一(6)", type: "linalg", star: 5,
+      tags: ["kn37"],
+      stem: "设 $A,B$ 为 $n$ 阶矩阵，记 $r(X)$ 为矩阵 $X$ 的秩，$(X,Y)$ 表示分块矩阵，则（ ）\n选项：(A) $r(A,AB)=r(A)$；(B) $r(A,BA)=r(A)$；(C) $r(A,B)=\\max\\{r(A),r(B)\\}$；(D) $r(A,B)=r(A^{\\mathrm{T}},B^{\\mathrm{T}})$。",
+      answer: "$AB$ 的每一列 $A\\beta_j$ 都是 $A$ 的列向量组的线性组合，故 $(A,AB)$ 与 $A$ 的列组等价，$r(A,AB)=r(A)$，(A) 正确。(B) $BA$ 的列一般不能由 $A$ 的列表示；(C) 一般 $r(A,B)\\ge\\max\\{r(A),r(B)\\}$（如 $A=E,B=-E$ 时 $r(A,B)=n$）；(D) $r(A,B)$ 与 $r(A^{T},B^{T})$ 无必然关系。选 (A)。",
+      src: { card: "kn37", note: "卡片例题（data/math3.js 的 EXAMPLE[\"kn37\"]）来源原文：2018 年数三 一(6)（真题册 PDF p17；答案 A）。PITFALL[kn37] 无条目 → 省略 traps 字段。MNEM[kn37] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb06", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "一(5)", type: "linalg", star: 5,
+      tags: ["zb06"],
+      stem: "设 $\\alpha_1=\\begin{pmatrix}0\\\\0\\\\c_1\\end{pmatrix}$，$\\alpha_2=\\begin{pmatrix}0\\\\1\\\\c_2\\end{pmatrix}$，$\\alpha_3=\\begin{pmatrix}1\\\\-1\\\\c_3\\end{pmatrix}$，$\\alpha_4=\\begin{pmatrix}-1\\\\1\\\\c_4\\end{pmatrix}$，其中 $c_1,c_2,c_3,c_4$ 为任意常数，则下列向量组线性相关的为（ ）\n选项：(A) $\\alpha_1,\\alpha_2,\\alpha_3$；(B) $\\alpha_1,\\alpha_2,\\alpha_4$；(C) $\\alpha_1,\\alpha_3,\\alpha_4$；(D) $\\alpha_2,\\alpha_3,\\alpha_4$。",
+      answer: "看第 1、2 分量：$\\alpha_3+\\alpha_4=(0,0,c_3+c_4)$ 与 $\\alpha_1=(0,0,c_1)$ 同向，即 $\\alpha_1$ 可由 $\\alpha_3,\\alpha_4$ 线性表示，故 $\\alpha_1,\\alpha_3,\\alpha_4$ 恒线性相关，选 (C)。其余三组按列排成矩阵的行列式分别为 $-c_1$、$c_1$、$-(c_2+c_4)$，只在特定常数下为 0，不是「必相关」。",
+      traps: "极大线性无关组不唯一，但所含向量个数（= 秩）唯一；求它是用行变换找主元列对应的**原**向量，不是行阶梯形里的行向量。",
+      src: { card: "zb06", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb06\"]）来源原文：2012 年数三 一(5)（真题册 PDF p41；答案 C）。traps 取自 PITFALL[zb06]。MNEM[zb06] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb08", origin: 'card', year: 2011, school: "全国硕士研究生入学统一考试-数学三 2011 年", no: "一(6)", type: "linalg", star: 5,
+      tags: ["zb08"],
+      stem: "设 $A$ 为 $4\\times3$ 矩阵，$\\eta_1,\\eta_2,\\eta_3$ 是非齐次线性方程组 $Ax=\\beta$ 的 3 个线性无关的解，$k_1,k_2$ 为任意常数，则 $Ax=\\beta$ 的通解为（ ）\n选项：(A) $\\dfrac{\\eta_2+\\eta_3}{2}+k_1(\\eta_2-\\eta_1)$；(B) $\\dfrac{\\eta_2-\\eta_3}{2}+k_1(\\eta_2-\\eta_1)$；(C) $\\dfrac{\\eta_2+\\eta_3}{2}+k_1(\\eta_2-\\eta_1)+k_2(\\eta_3-\\eta_1)$；(D) $\\dfrac{\\eta_2-\\eta_3}{2}+k_1(\\eta_2-\\eta_1)+k_2(\\eta_3-\\eta_1)$。",
+      answer: "$A$ 为 $4\\times3$ 矩阵；3 个无关解给出两个无关的齐次解 $\\eta_2-\\eta_1$、$\\eta_3-\\eta_1$，故 $n-r(A)\\ge2$，又 $r(A)\\ge1$，只能 $r(A)=1$，基础解系恰含 2 个向量。$\\frac{\\eta_2+\\eta_3}{2}=\\eta_1+\\frac{(\\eta_2-\\eta_1)+(\\eta_3-\\eta_1)}2$ 是特解，故通解为 $\\frac{\\eta_2+\\eta_3}{2}+k_1(\\eta_2-\\eta_1)+k_2(\\eta_3-\\eta_1)$。选 (C)。",
+      traps: "非齐次 $Ax=b$ 有解 $\\iff r(A)=r(A\\mid b)$，且无穷多解时 $\\iff r(A)<n$（$n$ 为未知数个数）；不要只看 $|A|$ 或把 $r(A)$ 与 $n$ 混淆。",
+      src: { card: "zb08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb08\"]）来源原文：2011 年数三 一(6)（真题册 PDF p45；答案 C）。traps 取自 PITFALL[zb08]。MNEM[zb08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb23", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "一(6)", type: "eigen", star: 5,
+      tags: ["zb23"],
+      stem: "设 $A$ 为 3 阶矩阵，$\\alpha_1,\\alpha_2$ 为 $A$ 的属于特征值 1 的线性无关的特征向量，$\\alpha_3$ 为 $A$ 的属于特征值 $-1$ 的特征向量，则满足 $P^{-1}AP=\\begin{pmatrix}1&0&0\\\\0&-1&0\\\\0&0&1\\end{pmatrix}$ 的可逆矩阵 $P$ 可为（ ）\n选项：(A) $(\\alpha_1+\\alpha_3,\\alpha_2,-\\alpha_3)$；(B) $(\\alpha_1+\\alpha_2,\\alpha_2,-\\alpha_3)$；(C) $(\\alpha_1+\\alpha_3,-\\alpha_3,\\alpha_2)$；(D) $(\\alpha_1+\\alpha_2,-\\alpha_3,\\alpha_2)$。",
+      answer: "对角阵要求 $P$ 的三列依次是 $\\lambda=1,-1,1$ 的特征向量。$\\alpha_1,\\alpha_2$ 属 $\\lambda=1$（其和仍是特征向量），$\\alpha_3$ 属 $\\lambda=-1$；不同特征值的特征向量之和不再是特征向量，故含 $\\alpha_3$ 的「和」不能作第一列。只有 (D) 的列依次来自 $\\lambda=1,-1,1$ 且前两列线性无关：(D)。",
+      src: { card: "zb23", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb23\"]）来源原文：2020 年数三 一(6)（真题册 PDF p10；答案 D）。PITFALL[zb23] 无条目 → 省略 traps 字段。MNEM[zb23] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb25", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "一(5)", type: "linalg", star: 5,
+      tags: ["zb25"],
+      stem: "设 $A,B$ 是可逆矩阵，且 $A$ 与 $B$ 相似，则下列结论错误的是（ ）\n选项：(A) $A^{\\mathrm{T}}$ 与 $B^{\\mathrm{T}}$ 相似；(B) $A^{-1}$ 与 $B^{-1}$ 相似；(C) $A+A^{\\mathrm{T}}$ 与 $B+B^{\\mathrm{T}}$ 相似；(D) $A+A^{-1}$ 与 $B+B^{-1}$ 相似。",
+      answer: "相似保持特征多项式、迹、行列式、秩，也保持 $A$ 的多项式、逆、伴随等运算的相似性，故 (A)(B)(D) 成立；但 $A+A^{T}$ 含「转置」这一非相似不变的运算——相似只给出 $A^{T}\\sim B^{T}$，得不到 $A+A^{T}\\sim B+B^{T}$，故 (C) 不成立。选 (C)。",
+      src: { card: "zb25", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb25\"]）来源原文：2016 年数三 一(5)（真题册 PDF p25；答案 C）。PITFALL[zb25] 无条目 → 省略 traps 字段。MNEM[zb25] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb27", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "二(13)", type: "linalg", star: 5,
+      tags: ["zb27"],
+      stem: "行列式 $\\begin{vmatrix}a&0&-1&1\\\\0&a&1&-1\\\\-1&1&a&0\\\\1&-1&0&a\\end{vmatrix}=$______.",
+      answer: "把矩阵按 $2\\times2$ 分块：$M=\\begin{pmatrix}aI_2&C\\\\C&aI_2\\end{pmatrix}$，$C=\\begin{pmatrix}-1&1\\\\1&-1\\end{pmatrix}$（先做倍加——第 2 行加到第 1 行、第 3 行加到第 4 行——可看穿结构）。分块行列式按 Schur 补展开：$|M|=|aI_2|\\cdot|aI_2-C(aI_2)^{-1}C|=|a^{2}I_2-C^{2}|$；由 $C^{2}=2C$ 知 $C$ 的特征值为 $0,2$，于是 $a^{2}I-C^{2}$ 的特征值为 $a^{2}$ 与 $a^{2}-4$，$|M|=a^{2}(a^{2}-4)$。",
+      src: { card: "zb27", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb27\"]）来源原文：2020 年数三 二(13)（真题册 PDF p11；答案 a^2(a^2-4)）。PITFALL[zb27] 无条目 → 省略 traps 字段。MNEM[zb27] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb33", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "一(7)", type: "linalg", star: 5,
+      tags: ["zb33"],
+      stem: "设 $\\alpha_1=(\\lambda,1,1)^{\\mathrm T}$，$\\alpha_2=(1,\\lambda,1)^{\\mathrm T}$，$\\alpha_3=(1,1,\\lambda)^{\\mathrm T}$，$\\alpha_4=(1,\\lambda,\\lambda^2)^{\\mathrm T}$，若 $\\alpha_1,\\alpha_2,\\alpha_3$ 与 $\\alpha_1,\\alpha_2,\\alpha_4$ 等价，则 $\\lambda$ 的取值范围是（ ）\n选项：(A) {0,1}；(B) {λ | λ∈R, λ≠−2}；(C) {λ | λ∈R, λ≠−1, λ≠−2}；(D) {λ | λ∈R, λ≠−1}。",
+      answer: "两组向量等价 $\\Leftrightarrow$ 秩相等且互相可表示。$\\det(\\alpha_1,\\alpha_2,\\alpha_3)=\\begin{vmatrix}\\lambda&1&1\\\\1&\\lambda&1\\\\1&1&\\lambda\\end{vmatrix}=(\\lambda-1)^{2}(\\lambda+2)$，$\\det(\\alpha_1,\\alpha_2,\\alpha_4)=\\begin{vmatrix}\\lambda&1&1\\\\1&\\lambda&\\lambda\\\\1&1&\\lambda^{2}\\end{vmatrix}=(\\lambda^{2}-1)^{2}$。$\\lambda=-2$ 时秩 2 与 3、$\\lambda=-1$ 时秩 3 与 2，均不等价；其余 $\\lambda$（含 $\\lambda=1$，四向量全为 $(1,1,1)$，两组秩都为 1）等价。选 (C)。",
+      src: { card: "zb33", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb33\"]）来源原文：2022 年数三 一(7)（真题册 PDF p3；答案 C）。PITFALL[zb33] 无条目 → 省略 traps 字段。MNEM[zb33] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-ln03", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "一(5)", type: "linalg", star: 5,
+      tags: ["ln03"],
+      stem: "设 4 阶矩阵 $A=(a_{ij})$ 不可逆，$a_{12}$ 的代数余子式 $A_{12}\\ne0$，$\\alpha_1,\\alpha_2,\\alpha_3,\\alpha_4$ 为矩阵 $A$ 的列向量组，$A^*$ 为 $A$ 的伴随矩阵，则方程组 $A^*x=0$ 的通解为（ ）\n选项：(A) $x=k_1\\alpha_1+k_2\\alpha_2+k_3\\alpha_3$；(B) $x=k_1\\alpha_1+k_2\\alpha_2+k_3\\alpha_4$；(C) $x=k_1\\alpha_1+k_2\\alpha_3+k_3\\alpha_4$；(D) $x=k_1\\alpha_2+k_2\\alpha_3+k_3\\alpha_4$。",
+      answer: "$A_{12}\\ne0$ 说明删去第 1 行、第 2 列的三阶子式非零，即 $\\alpha_1,\\alpha_3,\\alpha_4$ 线性无关。又 $A$ 不可逆而存在三阶非零子式 ⇒ $r(A)=3$ ⇒ $r(A^{*})=1$，$A^{*}x=0$ 的基础解系含 $4-1=3$ 个向量，通解 $x=k_1\\alpha_1+k_2\\alpha_3+k_3\\alpha_4$。选 (C)。",
+      traps: "$A_{ij}=(-1)^{i+j}M_{ij}$ 的符号必须带上；线性组合「大 A 配小 a」是替换**同一行**，替换后若与另一行成比例则行列式为 $0$。",
+      src: { card: "ln03", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ln03\"]）来源原文：2020 年数三 一(5)（真题册 PDF p10；答案 C）。traps 取自 PITFALL[ln03]。MNEM[ln03] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-ln08", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "一(5)", type: "linalg", star: 5,
+      tags: ["ln08"],
+      stem: "设 $\\alpha_1=\\begin{pmatrix}0\\\\0\\\\c_1\\end{pmatrix}$，$\\alpha_2=\\begin{pmatrix}0\\\\1\\\\c_2\\end{pmatrix}$，$\\alpha_3=\\begin{pmatrix}1\\\\-1\\\\c_3\\end{pmatrix}$，$\\alpha_4=\\begin{pmatrix}-1\\\\1\\\\c_4\\end{pmatrix}$，其中 $c_1,c_2,c_3,c_4$ 为任意常数，则下列向量组线性相关的为（ ）\n选项：(A) $\\alpha_1,\\alpha_2,\\alpha_3$；(B) $\\alpha_1,\\alpha_2,\\alpha_4$；(C) $\\alpha_1,\\alpha_3,\\alpha_4$；(D) $\\alpha_2,\\alpha_3,\\alpha_4$。",
+      answer: "把 $\\alpha_1,\\alpha_3,\\alpha_4$ 按列排成矩阵，其第 1 行是 $(0,1,-1)$、第 2 行是 $(0,-1,1)=-(0,1,-1)$，两行成比例 ⇒ 行列式为 0，故三向量恒线性相关（相关 $\\Leftrightarrow$ 某向量可由其余向量表示：$\\alpha_3+\\alpha_4$ 与 $\\alpha_1$ 同向）。选 (C)。",
+      traps: "「以少表多，多的相关」比较的是向量**个数**而不是维数；延长/缩短结论要求各向量增删**相同**个数的分量。",
+      src: { card: "ln08", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ln08\"]）来源原文：2012 年数三 一(5)（真题册 PDF p41；答案 C）。traps 取自 PITFALL[ln08]。MNEM[ln08] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-ln09", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "三(21)", type: "eigen", star: 5,
+      tags: ["ln09"],
+      stem: "设 $A$ 为 2 阶矩阵，$P=(\\alpha,A\\alpha)$，其中 $\\alpha$ 是非零向量且不是 $A$ 的特征向量.(Ⅰ) 证明 $P$ 为可逆矩阵.(Ⅱ) 若 $A^2\\alpha+A\\alpha-6\\alpha=0$，求 $P^{-1}AP$，并判断 $A$ 是否相似于对角矩阵.",
+      answer: "（Ⅰ）若 $P=(\\alpha,A\\alpha)$ 不可逆，则 $A\\alpha$ 与 $\\alpha$ 线性相关，即 $A\\alpha=\\lambda\\alpha$，与「$\\alpha$ 不是特征向量」矛盾，故 $P$ 可逆。（Ⅱ）由 $A^{2}\\alpha+A\\alpha-6\\alpha=0$ 得 $A(A\\alpha)=6\\alpha-A\\alpha$，于是 $AP=A(\\alpha,A\\alpha)=(A\\alpha,6\\alpha-A\\alpha)=(\\alpha,A\\alpha)\\begin{pmatrix}0&6\\\\1&-1\\end{pmatrix}=PB$；$B=\\begin{pmatrix}0&6\\\\1&-1\\end{pmatrix}$ 的特征方程 $\\lambda^{2}+\\lambda-6=0$ 给出互异特征值 $2,-3$，故 $B$ 可对角化，$A$ 与 $B$ 相似也可对角化。",
+      src: { card: "ln09", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ln09\"]）来源原文：2020 年数三 三(21)（真题册 PDF p11；答案 见解答）。PITFALL[ln09] 无条目 → 省略 traps 字段。MNEM[ln09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-la05", origin: 'card', year: 2017, school: "全国硕士研究生招生考试-数学三 2017 年", no: "一(5)", type: "linalg", star: 4,
+      tags: ["la05"],
+      stem: "设 $\\alpha$ 为 $n$ 维单位列向量，$E$ 为 $n$ 阶单位矩阵，则（ ）\n选项：(A) $E-\\alpha\\alpha^{\\mathrm{T}}$ 不可逆；(B) $E+\\alpha\\alpha^{\\mathrm{T}}$ 不可逆；(C) $E+2\\alpha\\alpha^{\\mathrm{T}}$ 不可逆；(D) $E-2\\alpha\\alpha^{\\mathrm{T}}$ 不可逆。",
+      answer: "$\\alpha^{T}\\alpha=1$，且 $(E-\\alpha\\alpha^{T})\\alpha=\\alpha-\\alpha(\\alpha^{T}\\alpha)=0$ 而 $\\alpha\\ne0$，故 $E-\\alpha\\alpha^{T}$ 不可逆，选 (A)。$\\alpha\\alpha^{T}$ 的特征值为 1（方向 $\\alpha$）与 0（重 $n-1$），故 $E+k\\alpha\\alpha^{T}$ 的特征值为 $1+k,1$，$k=1,2,-2$ 时均不含 0，可逆。",
+      src: { card: "la05", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la05\"]）来源原文：2017 年数三 一(5)（真题册 PDF p21；答案 A）。PITFALL[la05] 无条目 → 省略 traps 字段。MNEM[la05] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-la15", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "三(20)", type: "eigen", star: 3,
+      tags: ["la15"],
+      stem: "设二次型 $f(x_1,x_2)=x_1^2-4x_1x_2+4x_2^2$ 经过正交变换 $\\begin{pmatrix}x_1\\\\x_2\\end{pmatrix}=Q\\begin{pmatrix}y_1\\\\y_2\\end{pmatrix}$ 化为二次型 $g(y_1,y_2)=ay_1^2+4y_1y_2+by_2^2$，其中 $a\\ge b$.(Ⅰ) 求 $a$，$b$ 的值.(Ⅱ) 求正交矩阵 $Q$.",
+      answer: "（Ⅰ）$f$ 的矩阵 $A=\\begin{pmatrix}1&-2\\\\-2&4\\end{pmatrix}$，$g$ 的矩阵 $B=\\begin{pmatrix}a&2\\\\2&b\\end{pmatrix}$；正交变换 $x=Qy$ 使 $f\\to g$ 即 $B=Q^{T}AQ$（正交相似），故 $a+b=\\mathrm{tr}A=5$、$ab-4=|A|=0$，结合 $a\\ge b$ 得 $a=4,b=1$。（Ⅱ）取 $Q=\\begin{pmatrix}0&1\\\\-1&0\\end{pmatrix}$（$x_1=y_2,\\;x_2=-y_1$），代入得 $Q^{T}AQ=\\begin{pmatrix}4&2\\\\2&1\\end{pmatrix}=B$ ✓（与 $Q$ 相差一个符号的矩阵同样可行）。",
+      src: { card: "la15", note: "卡片例题（data/math3.js 的 EXAMPLE[\"la15\"]）来源原文：2020 年数三 三(20)（真题册 PDF p11；答案 见解答）。PITFALL[la15] 无条目 → 省略 traps 字段。MNEM[la15] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-kn31", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "二(15)", type: "linalg", star: 4,
+      tags: ["kn31"],
+      stem: "多项式 $f(x)=\\begin{vmatrix}x&x&1&2x\\\\1&x&2&-1\\\\2&1&x&1\\\\2&-1&1&x\\end{vmatrix}$ 中 $x^3$ 项的系数为______.",
+      answer: "把 $f(x)$ 看成 4 阶行列式，含 $x^{3}$ 的项只来自「取 3 个含 $x$ 的元素 + 1 个常数元素」的足标排列，穷举只有两个：① $(1,2),(2,1),(3,3),(4,4)$：元素为 $x\\cdot1\\cdot x\\cdot x$，排列 $(2,1,3,4)$ 是一次对换（符号 $-1$），贡献 $-x^{3}$；② $(1,4),(2,2),(3,3),(4,1)$：元素为 $2x\\cdot x\\cdot x\\cdot2$，排列 $(4,2,3,1)$ 含 5 个逆序（符号 $-1$），贡献 $-4x^{3}$。其余排列含 $x$ 的个数不是 3（对角排列给出 $x^{4}$，再其余至多 2 个 $x$）。故 $x^{3}$ 的系数 $=-1-4=-5$。",
+      src: { card: "kn31", note: "卡片例题（data/math3.js 的 EXAMPLE[\"kn31\"]）来源原文：2021 年数三 二(15)（真题册 PDF p7；答案 -5）。PITFALL[kn31] 无条目 → 省略 traps 字段。MNEM[kn31] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-kn35", origin: 'card', year: 2012, school: "全国硕士研究生入学统一考试-数学三 2012 年", no: "一(6)", type: "linalg", star: 4,
+      tags: ["kn35"],
+      stem: "设 $A$ 为 3 阶矩阵，$P$ 为 3 阶可逆矩阵，且 $P^{-1}AP=\\begin{pmatrix}1&0&0\\\\0&1&0\\\\0&0&2\\end{pmatrix}$. 若 $P=(\\alpha_1,\\alpha_2,\\alpha_3)$，$Q=(\\alpha_1+\\alpha_2,\\alpha_2,\\alpha_3)$，则 $Q^{-1}AQ=$（ ）\n选项：(A) $\\begin{pmatrix}1&0&0\\\\0&2&0\\\\0&0&1\\end{pmatrix}$；(B) $\\begin{pmatrix}1&0&0\\\\0&1&0\\\\0&0&2\\end{pmatrix}$；(C) $\\begin{pmatrix}2&0&0\\\\0&1&0\\\\0&0&2\\end{pmatrix}$；(D) $\\begin{pmatrix}2&0&0\\\\0&2&0\\\\0&0&1\\end{pmatrix}$。",
+      answer: "$Q=(\\alpha_1+\\alpha_2,\\alpha_2,\\alpha_3)=PE$（$E=\\begin{pmatrix}1&0&0\\\\1&1&0\\\\0&0&1\\end{pmatrix}$，即「第 1 列加到第 2 列」的初等矩阵），于是 $Q^{-1}AQ=E^{-1}(P^{-1}AP)E$：对 $\\Lambda=\\mathrm{diag}(1,1,2)$ 作此类相似变换，$\\lambda_1=\\lambda_2=1$ 的特征子空间内部换基不改变对角形式，结果仍为 $\\mathrm{diag}(1,1,2)$。选 (B)。",
+      src: { card: "kn35", note: "卡片例题（data/math3.js 的 EXAMPLE[\"kn35\"]）来源原文：2012 年数三 一(6)（真题册 PDF p41；答案 B）。PITFALL[kn35] 无条目 → 省略 traps 字段。MNEM[kn35] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-kn44", origin: 'card', year: 2010, school: "全国硕士研究生入学统一考试-数学三 2010 年", no: "一(6)", type: "linalg", star: 3,
+      tags: ["kn44"],
+      stem: "设 $A$ 为 4 阶实对称矩阵，且 $A^2+A=O$. 若 $A$ 的秩为 3，则 $A$ 相似于（ ）\n选项：(A) $\\begin{pmatrix}1&0&0&0\\\\0&1&0&0\\\\0&0&1&0\\\\0&0&0&0\\end{pmatrix}$；(B) $\\begin{pmatrix}1&0&0&0\\\\0&1&0&0\\\\0&0&-1&0\\\\0&0&0&0\\end{pmatrix}$；(C) $\\begin{pmatrix}1&0&0&0\\\\0&-1&0&0\\\\0&0&-1&0\\\\0&0&0&0\\end{pmatrix}$；(D) $\\begin{pmatrix}-1&0&0&0\\\\0&-1&0&0\\\\0&0&-1&0\\\\0&0&0&0\\end{pmatrix}$。",
+      answer: "由 $A^{2}+A=O$ 得 $A(A+E)=O$；设 $\\lambda$ 为特征值则 $\\lambda^{2}+\\lambda=0$，$\\lambda\\in\\{0,-1\\}$。$A$ 实对称必可对角化，$r(A)=3$ 说明恰有 3 个非零特征值，即三个 $-1$ 与一个 $0$，故 $A\\sim\\mathrm{diag}(-1,-1,-1,0)$。选 (D)。",
+      src: { card: "kn44", note: "卡片例题（data/math3.js 的 EXAMPLE[\"kn44\"]）来源原文：2010 年数三 一(6)（真题册 PDF p49；答案 D）。PITFALL[kn44] 无条目 → 省略 traps 字段。MNEM[kn44] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-kn68", origin: 'card', year: 2016, school: "全国硕士研究生招生考试-数学三 2016 年", no: "一(6)", type: "eigen", star: 4,
+      tags: ["kn68"],
+      stem: "设二次型 $f(x_1,x_2,x_3)=a(x_1^2+x_2^2+x_3^2)+2x_1x_2+2x_2x_3+2x_1x_3$ 的正、负惯性指数分别为 $1,2$，则（ ）\n选项：(A) $a>1$；(B) $a<-2$；(C) $-2<a<1$；(D) $a=1$ 或 $a=-2$。",
+      answer: "二次型矩阵 $A=\\begin{pmatrix}a&1&1\\\\1&a&1\\\\1&1&a\\end{pmatrix}=aI+J$（$J$ 全 1 阵，特征值 $3,0,0$），故 $A$ 的特征值为 $a+2$（一个，对应 $(1,1,1)$）与 $a-1$（二重）。正、负惯性指数为 $1,2$ ⇒ 一正两负 ⇒ $a+2>0,\\;a-1<0$ ⇒ $-2<a<1$。选 (C)。",
+      src: { card: "kn68", note: "卡片例题（data/math3.js 的 EXAMPLE[\"kn68\"]）来源原文：2016 年数三 一(6)（真题册 PDF p25；答案 C）。PITFALL[kn68] 无条目 → 省略 traps 字段。MNEM[kn68] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb07", origin: 'card', year: 2013, school: "全国硕士研究生入学统一考试-数学三 2013 年", no: "一(5)", type: "linalg", star: 4,
+      tags: ["zb07"],
+      stem: "设 $A,B,C$ 均为 $n$ 阶矩阵. 若 $AB=C$，且 $B$ 可逆，则（ ）\n选项：(A) 矩阵 $C$ 的行向量组与矩阵 $A$ 的行向量组等价；(B) 矩阵 $C$ 的列向量组与矩阵 $A$ 的列向量组等价；(C) 矩阵 $C$ 的行向量组与矩阵 $B$ 的行向量组等价；(D) 矩阵 $C$ 的列向量组与矩阵 $B$ 的列向量组等价。",
+      answer: "$C=AB$ 的每一列都是 $A$ 的列的线性组合 ⇒ $C$ 的列组可由 $A$ 的列组表示；又 $B$ 可逆给出 $A=CB^{-1}$ ⇒ $A$ 的列组也可由 $C$ 的列组表示。互相可表示即等价，选 (B)。（同秩是等价的必要条件而非充分条件。）",
+      src: { card: "zb07", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb07\"]）来源原文：2013 年数三 一(5)（真题册 PDF p37；答案 B）。PITFALL[zb07] 无条目 → 省略 traps 字段。MNEM[zb07] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb09", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "一(7)", type: "linalg", star: 4,
+      tags: ["zb09"],
+      stem: "已知矩阵 $A=\\begin{pmatrix}1&0&-1\\\\2&-1&1\\\\-1&2&-5\\end{pmatrix}$，若存在下三角可逆矩阵 $P$ 和上三角可逆矩阵 $Q$，使 $PAQ$ 为对角矩阵，则 $P,Q$ 可以分别取（ ）\n选项：(A) P=单位阵, Q=[[1,0,1],[0,1,3],[0,0,1]]；(B) P=[[1,0,0],[2,−1,0],[−3,2,1]], Q=单位阵；(C) P=[[1,0,0],[2,−1,0],[−3,2,1]], Q=[[1,0,1],[0,1,3],[0,0,1]]；(D) P=单位阵, Q=[[1,2,−3],[0,−1,2],[0,0,1]]。",
+      answer: "按「初等行变换求逆」的方法：对 $(A,E)$ 作行变换把 $A$ 化为行简化阶梯形，所作行变换之积即 $P=\\begin{pmatrix}1&0&0\\\\2&-1&0\\\\-3&2&1\\end{pmatrix}$；对 $\\begin{pmatrix}A\\\\E\\end{pmatrix}$ 作相应列变换得 $Q=\\begin{pmatrix}1&0&1\\\\0&1&3\\\\0&0&1\\end{pmatrix}$（上三角），此时 $PAQ=\\mathrm{diag}(1,1,0)$ 为对角阵。选 (C)。",
+      traps: "用 $[A\\mid E]$ 求逆只能用初等行变换，不能中途混用列变换；若左半块出现全零行则 $A$ 不可逆。",
+      src: { card: "zb09", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb09\"]）来源原文：2021 年数三 一(7)（真题册 PDF p7；答案 C）。traps 取自 PITFALL[zb09]。MNEM[zb09] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb10", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "三(21)", type: "eigen", star: 4,
+      tags: ["zb10"],
+      stem: "设矩阵 $A=\\begin{pmatrix}2&1&0\\\\1&2&0\\\\1&a&b\\end{pmatrix}$ 仅有两个不同的特征值，若 $A$ 相似于对角矩阵，求 $a,b$ 的值，并求可逆矩阵 $P$，使 $P^{-1}AP$ 为对角矩阵.",
+      answer: "$|\\lambda E-A|=\\begin{vmatrix}\\lambda-2&-1&0\\\\-1&\\lambda-2&0\\\\-1&-a&\\lambda-b\\end{vmatrix}=(\\lambda-b)\\left[(\\lambda-2)^{2}-1\\right]=(\\lambda-b)(\\lambda-3)(\\lambda-1)$。只有两个不同特征值，需可对角化：① $b=3$（特征值 $3,3,1$）时要求 $r(3E-A)=1$，得 $a=-1$，取 $P=\\begin{pmatrix}1&0&-1\\\\1&0&1\\\\0&1&1\\end{pmatrix}$ 有 $P^{-1}AP=\\mathrm{diag}(3,3,1)$；② $b=1$（特征值 $1,1,3$）时要求 $r(E-A)=1$，得 $a=1$，取 $P=\\begin{pmatrix}1&0&1\\\\-1&0&1\\\\0&1&0\\end{pmatrix}$ 有 $P^{-1}AP=\\mathrm{diag}(1,1,3)$。求 $A^{n}$ 时用 $A^{n}=P\\Lambda^{n}P^{-1}$。",
+      src: { card: "zb10", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb10\"]）来源原文：2021 年数三 三(21)（真题册 PDF p9；答案 见解答）。PITFALL[zb10] 无条目 → 省略 traps 字段。MNEM[zb10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb11", origin: 'card', year: 2019, school: "全国硕士研究生招生考试-数学三 2019 年", no: "一(5)", type: "linalg", star: 4,
+      tags: ["zb11"],
+      stem: "设 $A$ 是 4 阶矩阵，$A^*$ 是 $A$ 的伴随矩阵，若线性方程组 $Ax=0$ 的基础解系中只有 2 个向量，则 $r(A^*)=$（ ）\n选项：(A) 0；(B) 1；(C) 2；(D) 3。",
+      answer: "$Ax=0$ 的基础解系中只有 2 个向量 ⇒ $n-r(A)=2$；$A$ 为 4 阶矩阵，故 $r(A)=2<n-1=3$，此时 $A$ 的所有 3 阶子式为 0，$A^{*}=O$，$r(A^{*})=0$。选 (A)。",
+      traps: "$r(A^{*})$ 的分类仅在 $n\\ge2$ 成立（$n=1$ 时约定 $A^{*}=1$）；且 $r(A)=n-1$ 时 $A^{*}\\neq O$、秩为 $1$，勿误认为 $A^{*}=O$。",
+      src: { card: "zb11", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb11\"]）来源原文：2019 年数三 一(5)（真题册 PDF p13；答案 A）。traps 取自 PITFALL[zb11]。MNEM[zb11] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb22", origin: 'card', year: 2022, school: "全国硕士研究生招生考试-数学三 2022 年", no: "一(5)", type: "eigen", star: 4,
+      tags: ["zb22"],
+      stem: "设 $A$ 为 3 阶矩阵，$A=\\begin{pmatrix}1&0&0\\\\0&-1&0\\\\0&0&0\\end{pmatrix}$，则 $A$ 的特征值为 $1,-1,0$ 的充分必要条件是（ ）\n选项：(A) 存在可逆矩阵 P,Q，使得 A=PAQ；(B) 存在可逆矩阵 P，使得 A=PAP⁻¹；(C) 存在正交矩阵 Q，使得 A=QAQ⁻¹；(D) 存在可逆矩阵 P，使得 A=PAPᵀ。",
+      answer: "「$A$ 的特征值为 $1,-1,0$」即「$A$ 与 $\\mathrm{diag}(1,-1,0)$ 相似」，充要条件是存在可逆 $P$ 使 $A=PAP^{-1}$（(B)）。(A) $A=PAQ$ 是等价（秩相同即可）；(C) 正交相似要求 $A$ 实对称；(D) 是合同。均不等价。选 (B)。",
+      traps: "合同、相似、等价是三种不同关系：相似$\\Rightarrow$等价；实对称矩阵合同$\\iff$正负惯性指数相同；一般矩阵的合同与相似互不蕴含。",
+      src: { card: "zb22", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb22\"]）来源原文：2022 年数三 一(5)（真题册 PDF p2；答案 B）。traps 取自 PITFALL[zb22]。MNEM[zb22] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-kn25", origin: 'card', year: 2014, school: "全国硕士研究生入学统一考试-数学三 2014 年", no: "一(6)", type: "linalg", star: 3,
+      tags: ["kn25"],
+      stem: "设 $\\alpha_1,\\alpha_2,\\alpha_3$ 均为 3 维向量，则对任意常数 $k,l$，向量组 $\\alpha_1+k\\alpha_3,\\alpha_2+l\\alpha_3$ 线性无关是向量组 $\\alpha_1,\\alpha_2,\\alpha_3$ 线性无关的（ ）\n选项：(A) 必要非充分条件；(B) 充分非必要条件；(C) 充分必要条件；(D) 既非充分也非必要条件。",
+      answer: "必要性：$\\alpha_1,\\alpha_2,\\alpha_3$ 无关时取它们为基，$\\alpha_1+k\\alpha_3$、$\\alpha_2+l\\alpha_3$ 的坐标是 $(1,0,k)$、$(0,1,l)$，前两个分量已保证线性无关，故对任意 $k,l$ 成立。非充分：取 $\\alpha_1,\\alpha_2$ 无关、$\\alpha_3=\\alpha_1+\\alpha_2$（三向量已相关），此时 $\\alpha_1+k\\alpha_3$、$\\alpha_2+l\\alpha_3$ 的系数行列式为 $1+k+l$，取 $k=1,l=-2$ 即线性相关 ⇒ 题设不保证。选 (A)（必要非充分）。",
+      src: { card: "kn25", note: "卡片例题（data/math3.js 的 EXAMPLE[\"kn25\"]）来源原文：2014 年数三 一(6)（真题册 PDF p33；答案 A）。PITFALL[kn25] 无条目 → 省略 traps 字段。MNEM[kn25] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-kn27", origin: 'card', year: 2010, school: "全国硕士研究生入学统一考试-数学三 2010 年", no: "一(5)", type: "linalg", star: 4,
+      tags: ["kn27"],
+      stem: "设向量组 Ⅰ：$\\alpha_1,\\alpha_2,\\cdots,\\alpha_r$ 可由向量组 Ⅱ：$\\beta_1,\\beta_2,\\cdots,\\beta_s$ 线性表示. 下列命题正确的是（ ）\n选项：(A) 若向量组 Ⅰ 线性无关,则 $r\\le s$；(B) 若向量组 Ⅰ 线性相关,则 $r>s$；(C) 若向量组 Ⅱ 线性无关,则 $r\\le s$；(D) 若向量组 Ⅱ 线性相关,则 $r>s$。",
+      answer: "用秩作桥梁：Ⅰ 可由 Ⅱ 表示 ⇒ $r(Ⅰ)\\le r(Ⅱ)\\le s$；若 Ⅰ 线性无关则 $r(Ⅰ)=r$，故 $r\\le s$，(A) 正确。相关只能说明 $r(Ⅰ)<r$，与 $s$ 无固定关系，(B) 错；(C)(D) 把更强的条件加在 Ⅱ 上也无法比较 $r$ 与 $s$。选 (A)。",
+      src: { card: "kn27", note: "卡片例题（data/math3.js 的 EXAMPLE[\"kn27\"]）来源原文：2010 年数三 一(5)（真题册 PDF p49；答案 A）。PITFALL[kn27] 无条目 → 省略 traps 字段。MNEM[kn27] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-ln10", origin: 'card', year: 2021, school: "全国硕士研究生招生考试-数学三 2021 年", no: "一(5)", type: "eigen", star: 4,
+      tags: ["ln10"],
+      stem: "二次型 $f(x_1,x_2,x_3)=(x_1+x_2)^2+(x_2+x_3)^2-(x_3-x_1)^2$ 的正惯性指数与负惯性指数依次为（ ）\n选项：(A) 2,0；(B) 1,1；(C) 2,1；(D) 1,2。",
+      answer: "先写二次型矩阵：$x_i^{2}$ 的系数为 $a_{ii}$，交叉项 $2x_ix_j$ 的系数平分给 $a_{ij}$ 与 $a_{ji}$。展开 $f=(x_1+x_2)^{2}+(x_2+x_3)^{2}-(x_3-x_1)^{2}=2x_2^{2}+2x_1x_2+2x_1x_3+2x_2x_3$，故 $A=\\begin{pmatrix}0&1&1\\\\1&2&1\\\\1&1&0\\end{pmatrix}$；$|\\lambda E-A|=\\lambda^{3}-2\\lambda^{2}-3\\lambda=\\lambda(\\lambda+1)(\\lambda-3)$，特征值 $3,0,-1$，正、负惯性指数各为 1。选 (B)。",
+      traps: "二次型的矩阵必须写成对称阵：交叉项系数要对半分到 $a_{ij}$ 与 $a_{ji}$；写成上三角会丢一半交叉项。",
+      src: { card: "ln10", note: "卡片例题（data/math3.js 的 EXAMPLE[\"ln10\"]）来源原文：2021 年数三 一(5)（真题册 PDF p6；答案 B）。traps 取自 PITFALL[ln10]。MNEM[ln10] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-m3-zb26", origin: 'card', year: 2020, school: "全国硕士研究生招生考试-数学三 2020 年", no: "一(5)", type: "linalg", star: 4,
+      tags: ["zb26"],
+      stem: "设 4 阶矩阵 $A=(a_{ij})$ 不可逆，$a_{12}$ 的代数余子式 $A_{12}\\ne0$，$\\alpha_1,\\alpha_2,\\alpha_3,\\alpha_4$ 为矩阵 $A$ 的列向量组，$A^*$ 为 $A$ 的伴随矩阵，则方程组 $A^*x=0$ 的通解为（ ）\n选项：(A) $x=k_1\\alpha_1+k_2\\alpha_2+k_3\\alpha_3$；(B) $x=k_1\\alpha_1+k_2\\alpha_2+k_3\\alpha_4$；(C) $x=k_1\\alpha_1+k_2\\alpha_3+k_3\\alpha_4$；(D) $x=k_1\\alpha_2+k_2\\alpha_3+k_3\\alpha_4$。",
+      answer: "核心恒等式 $AA^{*}=A^{*}A=|A|E$。$A$ 不可逆而 $A_{12}\\ne0$ ⇒ 有三阶非零子式 ⇒ $r(A)=3=n-1$ ⇒ $r(A^{*})=1$；于是 $A^{*}x=0$ 的基础解系含 $3$ 个向量，且由 $A^{*}A=O$ 知 $A$ 的每一列都是它的解，结合 $A_{12}\\ne0$ 保证 $\\alpha_1,\\alpha_3,\\alpha_4$ 无关，得通解 $x=k_1\\alpha_1+k_2\\alpha_3+k_3\\alpha_4$。选 (C)。",
+      src: { card: "zb26", note: "卡片例题（data/math3.js 的 EXAMPLE[\"zb26\"]）来源原文：2020 年数三 一(5)（真题册 PDF p10；答案 C）。PITFALL[zb26] 无条目 → 省略 traps 字段。MNEM[zb26] 无条目 → 省略 hint 字段。" }
     },
   // ==== END GENERATED card-questions (t49) ====
   // ==== BEGIN GENERATED year-questions (t53) ====

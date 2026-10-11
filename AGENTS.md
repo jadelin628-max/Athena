@@ -12,6 +12,7 @@ Athena：考研/技能/语言卡片记忆应用 → **综合自我提升平台**
 | 派单 / 收口 / 看活任务 | `docs/BOARD.md` | `docs/WORKFLOW.md` §7 |
 | 改模块 / 排查逻辑 | `docs/ARCHITECTURE.md` | 对应 `src/*.mjs` |
 | 改卡片 / 学科数据 | `docs/DATA_SCHEMA.md` | 同科 `data/<id>.js` 抽样 |
+| **拆卡 / 卡片体量是否超标** | **`docs/CARD-STANDARD.md`** | 同科 `data/<id>.js` 抽样 |
 | **行动 / 习惯树 / 专注链 / 里程碑** | **`docs/ACT.md`** | `src/act.mjs` `habit.mjs` `focus.mjs` `mile.mjs` |
 | **UI Tokens / 布局** | **`docs/ARCHITECTURE.md` §设计** | `style.css` `index.html` |
 | 改工具 / 校验失败 | `tools/README.md` | 对应 `tools/*.mjs` |

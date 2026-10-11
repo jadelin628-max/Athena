@@ -533,19 +533,32 @@ function bankFindByStem(stem) {
   return null;
 }
 
+// S5：卡片派生题拿不到真实题号时，数据侧写占位符 '未编号'（与 tools/bank-cv.mjs 的 CARD_NO_UNKNOWN 同字面量）。
+// 界面一律经 bankNoText 过滤 —— 既不再把内部卡片 id（「卡片 pd09」）渲染出来，也不渲染占位符本身。
+var BANK_NO_UNKNOWN = '未编号';
+function bankNoText(q) {
+  var no = q && q.no;
+  if (no == null || no === '' || no === BANK_NO_UNKNOWN) return '';
+  return String(no);
+}
+
 // 题目「可纳入错题本」的载体：题型 + 钩子（wrongId 便于回跳定位）
 // t32：卡片派生题没有真题册文件，来源串回退到 src.card/note（不渲染 undefined）
+// S5：卡片派生题的来源串改为「年份 · 题号」（题号取不到则只留年份；再退一步才写「卡片例题」，绝不出现卡片 id）
 function bankSourceText(q) {
   var s = q && q.src;
   if (!s) return '';
   if (s.file) return String(s.file) + (s.no ? (' · ' + s.no) : '');
-  if (s.card) return '卡片例题 ' + s.card;
+  if (s.card) {
+    var bits = [q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; });
+    return bits.length ? bits.join(' · ') : '卡片例题';
+  }
   return s.note ? String(s.note) : '';
 }
 
 function bankBuildCard(q) {
   var tagText = (q.tags || []).map(function (id) { return bankTagTitle(q.subject, id) || id; }).join(' · ');
-  var head = [q.subjectLabel, q.year, q.no].filter(function (v) { return v != null && v !== ''; }).join(' ');
+  var head = [q.subjectLabel, q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; }).join(' ');
   return {
     title: head + ' · ' + q.typeName,
     question: q.stem,
@@ -571,7 +584,7 @@ function bankAddToWrong(q) {
     id: 'bank_' + q.id,
     subject: q.subject,
     year: q.year,
-    no: q.no,
+    no: bankNoText(q),
     type: q.type,
     tags: (q.tags || []).slice()
   };
@@ -836,7 +849,7 @@ function bankItemNode(q) {
   // t32：卡片派生题可能缺 year/school（无四位年份的例题一律不入库；此处只做防御，缺则跳过该徽标，不渲染 undefined）
   var schoolLabel = bankSchoolLabel(q);
   if (schoolLabel) top.appendChild(texEl('span', 'bank-badge bank-badge-school', schoolLabel));
-  var yearNo = [q.year, q.no].filter(function (v) { return v != null && v !== ''; }).join(' · ');
+  var yearNo = [q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; }).join(' · ');
   if (yearNo) top.appendChild(texEl('span', 'bank-badge bank-badge-year', yearNo));
   top.appendChild(texEl('span', 'bank-badge bank-badge-type', q.typeName));
   var tstar = texEl('span', 'bank-badge bank-badge-freq bank-star' + q.typeStars, bankStars(q.typeStars));
@@ -904,7 +917,7 @@ function bankDetailNode(q) {
   // 徽标文案一律经 texEl → renderTex（与列表页同款）；t32 起 year/school 缺失时跳过该徽标（不渲染 undefined/空行）
   var schoolLabel = bankSchoolLabel(q);
   if (schoolLabel) top.appendChild(texEl('span', 'bank-badge bank-badge-school', schoolLabel));
-  var yearNo = [q.year, q.no].filter(function (v) { return v != null && v !== ''; }).join(' · ');
+  var yearNo = [q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; }).join(' · ');
   if (yearNo) top.appendChild(texEl('span', 'bank-badge bank-badge-year', yearNo));
   top.appendChild(texEl('span', 'bank-badge bank-badge-type', q.typeName));
   top.appendChild(texEl('span', 'bank-badge bank-badge-freq bank-star' + q.typeStars, bankStars(q.typeStars) + ' 出现频率'));

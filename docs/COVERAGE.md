@@ -40,20 +40,22 @@
 
 依据：`backup/scratch/coverage/card-analysis.md`（分章卡数/例题覆盖/来源分布，可重跑）。
 
-**第一波（2.2.0）卡片终值**（t64 逐科回读 `data/*.js` 实测，2026-10-11；量具 `backup/scratch/docs-wave-a/measure-examples.mjs`）：全库 **2809 张**（学科 25）＝ `stats` **226**（t50 新增 27）/ `econ` **301**（t51 新增 13）/ `math3` **397**；`EXAMPLE` 合计 **键 434 / 条目 489**（stats 166/177、math3 124/150、econ 144/162）。上表 199/288/131/149 等既有值即 POC（t6）时点，保留以便对照。第一波卡片线批次完成状态见 `docs/refs/2.2.0-PLAN.md` §1.1（C1–C5）。
+**第一波（2.2.0）卡片时点值**（t64 逐科回读 `data/*.js` 实测，2026-10-11；量具 `backup/scratch/docs-wave-a/measure-examples.mjs`）：全库 **2809 张**（学科 25）＝ `stats` **226**（t50 新增 27）/ `econ` **301**（t51 新增 13）/ `math3` **397**；`EXAMPLE` 合计 **键 434 / 条目 489**（stats 166/177、math3 124/150、econ 144/162）。上表 199/288/131/149 等既有值即 POC（t6）时点，保留以便对照。第一波卡片线批次完成状态见 `docs/refs/2.2.0-PLAN.md` §1.1（C1–C5）。**本段是第一波时点快照（非终值）**，终值以紧随其后的第二波为准。
 
-### 1.3 题库（BANK）快照：POC 时点 → 第一波终值
+**第二波（2.1.3）卡片终值**（2026-10-12 实测，量具 `backup/scratch/docs-wave-a/measure-cards.mjs` / `measure-examples.mjs`）：全库 **2897 张**（学科 25）＝ `stats` **272** / `econ` **342** / `math3` **398**；三科合计 **1012 张**（cat：stats 9 / econ 18 / math3 14）；`EXAMPLE` 合计 **键 489 / 条目 544**（stats 166/177、math3 179/205、econ 144/162）。超限卡（net 口径）处置结论见 `docs/CARD-STANDARD.md` §5.2。
 
-来源：`data/bank_econ.js` / `data/bank_stats.js` / `data/bank_math3.js` 经 `dump_data.mjs` 求值；**第一波终值**另经 t64 的 `backup/scratch/docs-wave-a/measure-bank.mjs`（只读 vm 载入，可重跑）实测，与 `node tools/check_data.mjs` 的汇总行一致。
+### 1.3 题库（BANK）快照：POC 时点 → 第二波终值
 
-**终值（2026-10-11 实测，含 t67 判重后回读）**：三科合计 **767 题**（真题侧 286 + 卡片派生 481）。
-**沿革链（题量实体）**：**47 → 45 → 54 → 55 → 225 → 523 → 680 → 756 → 769 → 767**——47（POC 首批）→ 45（t19 清理）→ 54（t27 数学三视觉转写）→ 55（t30 补题）→ 225（t32 统计卡片派生 170 入库）→ 523（t49 数学三 150 + 微观 148 派生入库）→ 680（t53 数学三真题净增 157）→ 756（t54 统计真题 76）→ 769（t62 微观派生 148→161）→ **767（t67 统计跨来源交叉判重：删 2 条与卡片派生题同题的 year 题，统计 262 → 260）**。
+来源：`data/bank_econ.js` / `data/bank_stats.js` / `data/bank_math3.js` 经 `dump_data.mjs` 求值；**第二波终值**另经第二波 S8 的 `backup/scratch/docs-wave-a/measure-bank.mjs`（只读 vm 载入，可重跑）实测，与 `node tools/check_data.mjs` 的汇总行一致（第一波终值由 t64 用同一量具实测，留痕见下表与沿革链）。
+
+**终值（2026-10-12 实测，第二波 S8 收口回读）**：三科合计 **981 题**（真题侧 445 + 卡片派生 536）。
+**沿革链（题量实体）**：**47 → 45 → 54 → 55 → 225 → 523 → 680 → 756 → 769 → 767 → 822 → 981**——47（POC 首批）→ 45（t19 清理）→ 54（t27 数学三视觉转写）→ 55（t30 补题）→ 225（t32 统计卡片派生 170 入库）→ 523（t49 数学三 150 + 微观 148 派生入库）→ 680（t53 数学三真题净增 157）→ 756（t54 统计真题 76）→ 769（t62 微观派生 148→161）→ 767（t67 统计跨来源交叉判重：删 2 条与卡片派生题同题的 year 题，统计 262 → 260）→ **822（T139 数学三补挂例题：派生 150→205）** → **981（T143a 微观第一批手写真题 159 条入库：econ 176→335）**。
 
 | 题库 | 题数 | 题型数 | 年份范围（真题侧 / 派生侧） | 题型（题数） |
 | --- | --- | --- | --- | --- |
-| `BANK.math3` | **331**（POC 24 + 派生 150 + 真题 157） | **13** | 2010–2025（逐年 3–23）/ 2000–2026 | 极限与未定式 49、积分与变限积分 44、线性代数求解 37、导数与渐近线 36、参数估计 36、级数敛散性判别 27、特征值·二次型 23、微分方程 22、多元函数微分与极值 22、二重积分计算 16、中值定理证明题 9、经济应用 6、概念辨析·选择判断 4 |
-| `BANK.econ` | **176**（POC 15 + 派生 161） | **10** | 2016–2020 / 2006–2026 | C 寡头与博弈 35、A 消费者选择与需求 33、A 跨期消费与不确定性 23、D 外部性与公共品 20、C 单一市场均衡与市场势力 18、生产者 18、信息经济学 10、需求·弹性与税收归宿 9、一般均衡与福利 8、F 前沿与综合难题 2 |
-| `BANK.stats` | **260**（POC 16 + 派生 170 + 真题 74） | **11** | **2016–2026 连年** / 2001–2026 | 参数估计 57、假设检验 34、随机变量分布与密度 32、线性回归与 OLS 推断 29、数字特征与矩 24、多维随机变量与联合分布 22、概率计算与事件运算 21、抽样分布与统计量分布 17、大数定律与中心极限定理 14、列联表与拟合优度 6、相关分析与独立性辨析 4 |
+| `BANK.math3` | **386**（派生 205 + 真题侧 181） | **13** | 2010–2025（真题侧）/ 2000–2026（全库） | 线性代数求解 58、极限与未定式 53、积分与变限积分 50、导数与渐近线 45、参数估计 36、特征值·二次型 30、级数敛散性判别 30、微分方程 24、多元函数微分与极值 22、二重积分计算 18、中值定理证明题 10、经济应用 6、解答修正 4 |
+| `BANK.econ` | **335**（派生 161 + 真题侧 174） | **10** | 2016–2020（真题侧）/ 1995–2026（全库） | C 寡头与博弈 75、C 单一市场均衡与市场势力 58、A 消费者选择与需求 44、D 外部性与公共品 37、A 跨期消费与不确定性 32、生产者 32、一般均衡与福利 20、信息经济学 18、需求·弹性与税收归宿 17、F 前沿与综合难题 2 |
+| `BANK.stats` | **260**（派生 170 + 真题侧 90） | **11** | **2016–2026 连年**（真题侧）/ 2001–2026（全库） | 参数估计 57、假设检验 34、随机变量分布与密度 32、线性回归与 OLS 推断 29、数字特征与矩 24、多维随机变量与联合分布 22、概率计算与事件运算 21、抽样分布与统计量分布 17、大数定律与中心极限定理 14、列联表与拟合优度 6、相关分析与独立性辨析 4 |
 
 **POC 时点（t6）对照**：`BANK.econ` 15 题 / 6 题型 / 2016-2020｜`BANK.stats` 16 题 / 6 题型 / 2016-2020｜`BANK.math3` 16 题 / 10 题型 / 2012·2013·2019；逐题清单见 `backup/scratch/coverage/bank-questions.md`（POC 时点）与各科 `data/bank_*.js` 的哨兵块注释。
 
@@ -244,7 +246,7 @@
 | **M2** | math3 | 高数：★5 无例题（`lim`3/`derivative`5/`drule`4/`integral`5/`series`3/`ode`2/`mvt`1/`trig`3）挂例题；`gx32`/`gx50`/`gx51`/`kn23` 标题即结论改写；`zb01` 内联真题迁例题 | 例题 + 改卡 | 同 M1；`digest.md` C 段的 4 条「标题即结论」清零 | **未开工**：`digest.md:63-66` 的 `gx32`/`gx50`/`gx51`/`kn23` 标题仍是结论式名词短语（正面已是问句，`probe-c5.mjs` 复读）；`zb01` 的 2016 数三真题仍内联在背面（`data/math3.js` 的「例（2016 数三）」）、`EXAMPLE` 为 0 条 |
 | **M3** | math3 + stats | 题库全量：`BANK.math3` 扩到 2020–2022（2010-2022 汇总册该段为扫描件，须按 t27 的 `read_image` 流程视觉转写；2023–2025 已入库）+ 剩余题型补齐（幂级数展开/求和、积分应用、条件极值、二次型）；`BANK.stats`/`BANK.econ` 扩到 2021-2026/2021-2025 并补题型 | 题库题目 + 题型键 | 每题含 `year`/`no`/`type`/`star`/`tags`/`src`，`src` 可回指 `_extract` 文本页；数学三概率统计题的来源需在 `src` 或 `tags` 里显式标注「跨科：stats 科」以符合 `AGENTS.md:67`；新增 math3 题必须同步补进 `tests/fixtures/bank-answer-manifest.json` 并且 `node --test tests/bank.test.mjs` 通过 | **部分完成**：math3 真题侧 24→**181**（t53 补齐 2020–2022 共 67 题、年份 2010–2025 连续，期望表同步 181 条 = choice 118 + fill 63）；stats 真题侧 16→**92**（t54，2021–2026 连年）。**剩余**＝math3 幂级数展开/求和、积分几何应用、差分方程、正定判定、数三概率统计分布/CLT 独立题型键；econ 真题题面 2021-2025 未入；拍卖/讨价还价题型键未建 |
 | **M4** | math3 + econ/stats | t30/t31 收口时确认的**四条已知缺口**：① `BANK.math3` 仍缺 2020 / 2021 / 2022 三年（扫描件）；② 2024 第 8 题（选项残损、答案 (B)=0 可确认）与 2025 第 4 题起的选择题尚未收；③ 期望答案表只覆盖 `math3` 24 题，建议按同一「手工逐题转录」口径扩到 `econ`/`stats` 的 31 题；④ `data/bank_math3.js` 的 `src.note`/`sourceNote` 仍留「modlens 复核 / `audit-vision.md`」措辞待统一清理（t31 §F2，已单开数据侧任务） | 新入库题目 + 扩表后的 `tests/fixtures/bank-answer-manifest.json` + 措辞清理后的 `data/bank_math3.js` | ① 每题三源一致（题面/答案各自回指来源页与题号）；② 新增题同步补期望表，`node --test tests/bank.test.mjs` 绿；③ 扩表后仍满足「id 集合 `deepEqual` + `choice` 4 选项 + `fill` 锚点 `substring`」三条断言；④ 清理后 `grep modlens data/bank_math3.js` 为空 | **①②④ 已闭环，③ 部分**：① 2020–2022 由 t53 视觉转写补齐；② 2024 第 8 题与 2025 第 4 题起仍未收（三年真题侧只到 4/3/3 道选择题）；④ `modlens`/`audit-vision` 全文 **0** 命中（`check_data` 无该 WARN，2026-10 实测全绿 ERR=0 WARN=0）；③ 期望表已扩到 **181** 条，但 `econ`/`stats` 的 31 题仍未进表 |
-| **D1** | 全科 | 本矩阵的复核与维护：2.2.0 每批合并后重跑 `backup/scratch/coverage/` 脚本，更新本文件对应行的状态与数字 | 更新后的 `docs/COVERAGE.md` | 重跑命令见 §11 附录 A；表中数字必须与新 `data-dump.json` 一致（禁止手改数字） | **已执行两次**：t64 由量具重算（卡片 2809 / 题库 769 / 派生 481 / EXAMPLE 键 434 条目 489，`backup/scratch/docs-wave-a/measure-{bank,examples,probe-c5}.mjs`）；**t67 判重后**按 `backup/scratch/bank-dedup2/measure-stats.mjs` 回读（题库 **767** = math3 331 / econ 176 / stats **260**，派生 481，`check_data` 汇总行一致） |
+| **D1** | 全科 | 本矩阵的复核与维护：2.2.0 每批合并后重跑 `backup/scratch/coverage/` 脚本，更新本文件对应行的状态与数字 | 更新后的 `docs/COVERAGE.md` | 重跑命令见 §11 附录 A；表中数字必须与新 `data-dump.json` 一致（禁止手改数字） | **已执行三次**：t64 由量具重算（卡片 2809 / 题库 769 / 派生 481 / EXAMPLE 键 434 条目 489，`backup/scratch/docs-wave-a/measure-{bank,examples,probe-c5}.mjs`）；**t67 判重后**按 `backup/scratch/bank-dedup2/measure-stats.mjs` 回读（题库 **767** = math3 331 / econ 176 / stats **260**，派生 481，`check_data` 汇总行一致）；**第二波 S8 / 2.1.3（2026-10-12）** 按 `backup/scratch/docs-wave-a/measure-{cards,bank,examples}.mjs` 与 `backup/scratch/captain-recon-b/recon23.mjs all --min 300` 重算（卡片 **2897** = math3 398 / econ 342 / stats 272；题库 **981** = math3 386 / econ 335 / stats 260；派生 **536**；EXAMPLE 键 **489** 条目 **544**；三科超限卡 net>300 **0** 张，`check_data` 汇总行 ERR=0 WARN=0 一致） |
 
 **第一波批次之外的三项登记（不是 PLAN 批次代号）**：
 
@@ -288,7 +290,7 @@
 | `backup/scratch/docs-wave-a/measure-examples.mjs` | 标准输出（`EXAMPLE` 键/条目/来源） | 第一波（t64）量具：重算 §1.2 与 §4 的例题键数、条目数与院校来源占比 |
 | `backup/scratch/docs-wave-a/probe-c5.mjs` | 标准输出（年份分布 / C5 判据 / 线代例题率） | 第一波（t64）量具：复读 C5 的未完成项（`gx32`/`gx50`/`gx51`/`kn23` 标题、`zb01` 无例题、`linalg` 17/84） |
 | `backup/scratch/docs-wave-a/probe-m3-years.mjs` | 标准输出（math3 真题侧逐题 id） | 第一波（t64）量具：核对 `m3-2020-*`…`m3-2022-*` 的确入库 |
-| `backup/scratch/docs-wave-a/measure-cards.mjs` | 标准输出（逐科卡片数 / cat 数 / 例题键数） | 第一波（t64）量具：重算 §1.1/§2/§5 的卡片终值 2809（math3 397 / econ 301 / stats 226）与逐 cat 明细（**只读，不改数据**） |
+| `backup/scratch/docs-wave-a/measure-cards.mjs` | 标准输出（逐科卡片数 / cat 数 / 例题键数） | 第一波（t64）量具：重算 §1.1/§2/§5 的卡片终值 2809（math3 397 / econ 301 / stats 226）与逐 cat 明细（**只读，不改数据**）。**第二波（S8 / 2.1.3，2026-10-12）复用**：重算卡片 **2897**（math3 398 / econ 342 / stats 272；三科 1012）、题库 **981**（math3 386 / econ 335 / stats 260；真题侧 445 + 派生 536）、`EXAMPLE` 键 **489** / 条目 **544**（stats 166/177、math3 179/205、econ 144/162），超限卡归零结论由 `backup/scratch/captain-recon-b/recon23.mjs all --min 300` 同批核对 |
 | `backup/scratch/docs-wave-a/measure-stars.mjs` | 标准输出（星级分布） | 第一波（t64）量具：重算 §5/§6 的 ★ 分布口径 |
 | `backup/scratch/docs-wave-a/probe-facts-t64.mjs` | 标准输出（选择题数 / 含公式标签 / 期望表拆分 / 卡片例题 / micro 闭合） | 第一波（t64）量具：为 §1.3/§6/§9 与 `docs/ARCHITECTURE.md` 的 118、43·8·12、181 = choice 118 + fill 63、124·150 / 144·162 / 166·177、49/49 已闭合供读数 |
 | `backup/scratch/docs-wave-a/make-cp-sandbox.mjs` + `cp-mutate.mjs` | `cp/root`（与工作区同构的只读副本）+ `cp/log-CP-*.txt` | 第一波（t64）反证沙盒：在副本上单点变异（引用行号 +5 / 死锚点复活 / 事实断言取反 / 删一题 / `pending_total` 回退 49 / 护栏改死值）复核两条闸门确实判红 |

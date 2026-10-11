@@ -13,7 +13,7 @@
 | 十八讲逐页索引 | 417 页（讲 18 个 + 后记） |
 | 修订版年份索引 | 31 年 / 144 节 / 461 题 |
 | 答案册年份索引 | 31 年 / 131 节 / 409 题 |
-| 读图裁定 | 141 条（答案册 129 / 修订版 6 / 十八讲 6） |
+| 读图裁定 | 190 条（答案册 131 / 修订版 16 / 十八讲 43） |
 | 考点族映射 | 6 族 × 31 年（xlsx 逐格核验，未匹配 0 格） |
 | 公式清单 | 可直接引用 25 条 / 必须重推 11 条 |
 
@@ -46,7 +46,7 @@
 - 派单中的「十八讲 38 低产页」对应另一阈值（≤450 字口径下为 43 页）；本文件口径与选取依据全部可复算：
   `rank-<key>.json`（逐页字符数 + 数学符号密度 score），排序脚本 `rank.py`。
 - 裁片选取规则：低产页中 **数学符号密度 score 最高的一批**（公式重页）优先，
-  答案册 129 条、修订版 6 条、十八讲 6 条，全部见 `docs/refs/rulings/micro.md`。
+  答案册 131 条、修订版 16 条、十八讲 43 条，全部见 `docs/refs/rulings/micro.md`。
 
 ### 1.4 OCR 讹误模式（凡公式一律以裁片为准）
 
@@ -1406,7 +1406,7 @@
 | G09 | 2019 五 / 2021 五 博弈树与策略式矩阵 | 答案册 2019 五 手绘图 | R118 ans p132、R134 rev p57 | 须重绘 |
 | G10 | 支付矩阵（过桥 / 合伙 / 卖空 / 2015 信号 / 2007 六） | 答案册与修订版多处 | R43 ans p45、R98 ans p101、R128 ans p147、R133 rev p44、R131 rev p28 | 矩阵数字可直接转录入库（重排为表格） |
 
-## 8. 读图裁定索引（141 条，全文见 `docs/refs/rulings/micro.md`）
+## 8. 读图裁定索引（190 条，全文见 `docs/refs/rulings/micro.md`）
 
 | 裁定 | 材料 | PDF 页 | 年份/位置 | 考点族 | 置信度 | sha256 前 12 位 |
 |---|---|---:|---|---|---|---|
@@ -1551,94 +1551,99 @@
 | R139 | j18 | 140 | 教材 第七讲 要素需求函数、成本函数、利润函数与供给函数（书内页码 132） | 生产者/要素市场（B） | high | `d6b480fae9aa` |
 | R140 | j18 | 158 | 教材 第八讲 完全竞争与垄断（书内页码 150） | 单一市场均衡/产组/博弈（C） | high | `29ec1e993377` |
 | R141 | j18 | 180 | 教材 第九讲 古诺均衡、Bertrand 均衡与不完全竞争（书内页码 172 | 单一市场均衡/产组/博弈（C） | high | `e70ddf299015` |
+| R142 | ans | 113 | 2017 四、（30 分）公司1/公司2 古诺竞争与贿赂博弈（题面见 PDF | 单一市场均衡/产组/博弈（C）＋复杂难题/少见考点（F）（xlsx 2017 把「四」列在 E 族，与本页内容不符，见结论） | medium | `1dfedb9c4e59` |
+| R143 | ans | 118 | 2018 四、（25 分）音乐会场座位（公共品捐赠与补偿预算约束）（题面见  | 外部性与公共品（D）＋一般均衡/福利经济（E）（xlsx 2018 把「四」列在 F 族，见结论） | high | `3dc88fd29782` |
+| R144 | rev | 1 | —（封面/择题口径说明页） 北大光华历年真题合集 1995-2025 封面与 | （结构性证据页） | high | `0138edcfc53a` |
+| R145 | rev | 3 | —（目录续页） 2023/2024/2025 三条目 目录（续） | （结构性证据页） | high | `eb9fb42962ad` |
+| R146 | rev | 5 | 1995 【需要完成】四、4（广告博弈）＋三、简答题（每题 10 分） 19 | 单一市场均衡/产组/博弈（C）（xlsx 1995 C[4]）＋生产者/要素市场（B）（xlsx 1995 B[3]） | high | `ebf2e307d0f3` |
+| R147 | rev | 15 | 2000 （跨页题面尾句；小问归属待与 PDF 第 14 页合并判读） 20 | 外部性与公共品（D）＋一般均衡/福利经济（E）（判据不足，需合并前页判读） | high | `d479bfdfcf7b` |
+| R148 | rev | 20 | 2002 七、（15 分）生育率／教育外部性与累进超生税 2002 七、（1 | 外部性与公共品（D）＋消费者/跨期/不确定性（A）（xlsx 2002 未收「七」，属映射缺口） | high | `f6ffdee084e4` |
+| R149 | rev | 26 | 2006 （页首为前一题尾三小问，太湖网箱＝公地悲剧）＋2006 六、（15 | 外部性与公共品（D）（xlsx 2006 D[5]）＋生产者/要素市场（B）（xlsx 2006 B[6]） | high | `91586e0e0c60` |
+| R150 | rev | 32 | 2009 （页首为前一题第 4 问，出口补贴/出口税）＋2009 五、（20 | 外部性与公共品（D）（xlsx 2009 D[5]）＋复杂难题/少见考点（F）（xlsx 2009 F[4]） | high | `1649829d6044` |
+| R151 | rev | 34 | 2010 （页首为前一题第 2–3 问，进入遏制/固定成本）＋2010 五、 | 复杂难题/少见考点（F）（xlsx 2010 F[5]）＋单一市场均衡/产组/博弈（C）（xlsx 2010 C[4]） | high | `15fe83d998c1` |
+| R152 | rev | 40 | 2013 （页首为前一题第 2–4 问，序贯博弈）＋2013 五、肯德基/电 | 单一市场均衡/产组/博弈（C）（xlsx 2013 C[4]、C[5]；本页五、内容实为外部性，沿用既有裁定注记） | high | `a2826758366e` |
+| R153 | rev | 49 | 2017 四、5（三阶段贿赂博弈的题面；与答案册 PDF 第 113 页手写 | 单一市场均衡/产组/博弈（C）＋复杂难题/少见考点（F）（xlsx 2017 把「四」列在 E 族，与本页内容不符，见结论） | high | `cc22c267214a` |
+| R154 | j18 | 1 | 封面（PDF 第 1 页；无印刷页码） 封面 | （非题目/非知识点页：材料版本页） | high | `7cd2053c43d1` |
+| R155 | j18 | 2 | 书名页（PDF 第 2 页；无印刷页码） 书名页 | （非题目/非知识点页：材料版本页） | high | `ace81e6ead8e` |
+| R156 | j18 | 4 | 作者简介（PDF 第 4 页；无印刷页码） 作者简介 | （非题目/非知识点页：著者信息页） | high | `abfe370fab6a` |
+| R157 | j18 | 5 | 内容提要（PDF 第 5 页；无印刷页码） 内容提要 | （非题目/非知识点页：内容范围说明页） | high | `b79ca49ca2c7` |
+| R158 | j18 | 17 | 书内 9（PDF 17）· 第一讲 偏好、效用与消费者的基本问题 第一讲 · | A（消费者偏好与效用；族 A：消费者/跨期/不确定性 ← 一~五讲） | high | `7e0d97173e41` |
+| R159 | j18 | 18 | 书内 10（PDF 18）· 第一讲 第一讲 · 二、消费者最优解的性质（马 | A（消费者偏好与效用：马歇尔需求的性质） | high | `d4011e40b2c3` |
+| R160 | j18 | 32 | 书内 24（PDF 32）· 第二讲 第二讲 · 支出函数的求解例（式 (E | A（消费者理论：支出函数与一次齐次性） | high | `75edaddb880e` |
+| R161 | j18 | 35 | 书内 27（PDF 35）· 第二讲 第二讲 · 习题（希克斯需求函数判别题 | A（消费者理论：希克斯需求/马歇尔需求的可积性判别） | high | `80f04128f352` |
+| R162 | j18 | 38 | 书内 30（PDF 38）· 第三讲 第三讲 · 替代效应与收入效应的分解（ | A（消费者理论：Slutsky 分解、马歇尔需求 vs 希克斯需求） | high | `9c56f515d7a0` |
+| R163 | j18 | 50 | 书内 42（PDF 50）· 第三讲 第三讲 · 广告弹性式（3.34)(3 | A+E（广告弹性比式；消费者剩余定义） | high | `497381607cba` |
+| R164 | j18 | 60 | 书内 52（PDF 60）· 第三讲 第三讲 · 习题 15（从价税下消费者 | A+E（消费者剩余与福利测量；E 复杂难题） | high | `f85d198b748c` |
+| R165 | j18 | 100 | 书内 92（PDF 100）· 第六讲 第六讲 · 生产函数的三种形态：固定 | B（生产者理论：生产函数形态与等产量线） | high | `2b4685e07b91` |
+| R166 | j18 | 103 | 书内 95（PDF 103）· 第六讲 第六讲 · 短期生产函数：总产量/平 | B（生产者理论：短期生产函数 TP/AP/MP） | high | `4e39ebe06674` |
+| R167 | j18 | 109 | 书内 101（PDF 109）· 第六讲 第六讲 · 长期生产函数与要素组合 | B（生产者理论：成本最小化与最优要素比例） | high | `855b6f3237ad` |
+| R168 | j18 | 112 | 书内 104（PDF 112）· 第六讲 第六讲 · 生产扩张与规模报酬：产 | B（生产者理论：产出弹性、生产力弹性、替代弹性） | high | `2d77c9db0633` |
+| R169 | j18 | 115 | 书内 107（PDF 115）· 第六讲 第六讲 · 规模报酬的产出表判定（ | B（生产者理论：规模报酬、扩张线） | high | `3a87f159a300` |
+| R170 | j18 | 116 | 书内 108（PDF 116）· 第六讲 第六讲 · 扩张线为等斜线（例 7 | B（生产者理论：扩张线、要素替代/产量效应、技术进步测定） | high | `d4856d1c250d` |
+| R171 | j18 | 130 | 书内 122（PDF 130）· 第七讲 第七讲 · 平均成本/平均可变成本 | B（生产者理论：成本曲线族与利润最大化） | high | `9859a231554a` |
+| R172 | j18 | 164 | 书内 156（PDF 164）· 第八讲 第八讲 · 二级价格歧视的利润解释 | C（产业组织：价格歧视） | high | `945565d42d81` |
+| R173 | j18 | 168 | 书内 160（PDF 168）· 第八讲 第八讲 · 两部收费 R = T  | C（产业组织：两部收费与价格歧视） | high | `ddf54b9f5036` |
+| R174 | j18 | 190 | 书内 182（PDF 190）· 第九讲 第九讲 · 价格领导模型的最优价格 | C（市场产业组织与博弈：价格领导、串通与卡特尔） | high | `b66c5d2a42d6` |
+| R175 | j18 | 199 | 书内 191（PDF 199）· 第九讲 第九讲 · 章末小结第 (2)(3 | C（市场产业组织：Bertrand/垄断竞争结论） | high | `196efe17dd47` |
+| R176 | j18 | 224 | 书内 216（PDF 224）· 第十一讲 第十一讲 · 囚徒困境（表 11 | F（复杂难题：博弈论）＋C（产业组织与博弈） | high | `89273cacb316` |
+| R177 | j18 | 229 | 书内 221（PDF 229）· 第十一讲 第十一讲 · 习题 2（双寡头  | F（复杂难题：博弈论/多阶段博弈）＋C（产业组织） | high | `6dbfb7ac798b` |
+| R178 | j18 | 231 | 书内 223（PDF 231）· 第十一讲 第十一讲 · 习题 7（WET  | F（复杂难题：博弈论/进入遏制/蜈蚣博弈） | high | `d7c41e7cf726` |
+| R179 | j18 | 235 | 书内 227（PDF 235 − 8，按册内偏移推算，页眉未入裁片）· 第十 | C/F（博弈论：子博弈、信息集、子博弈完美纳什均衡 — t3 缺口「子博弈精炼/可修改策略序贯博弈」） | high | `91cca3030593` |
+| R180 | j18 | 243 | 书内 235（PDF 243 − 8，按册内偏移推算，页眉未入裁片）· 第十 | C/F（博弈论：鲁宾斯坦式谈判、无穷重复博弈、子博弈完美） | high | `a00cd0efed7b` |
+| R181 | j18 | 280 | 书内 272（PDF 280 − 8，按册内偏移推算，页眉未入裁片）· 第十 | F（信息经济学：信号传递/筛选，spence 教育信号） | high | `1249746a75be` |
+| R182 | j18 | 284 | 书内 276（PDF 284 − 8，按册内偏移推算，页眉未入裁片）· 第十 | B（要素市场：劳动供给、lss 闲暇-收入选择） | high | `63929e2e7d42` |
+| R183 | j18 | 309 | 书内 301（PDF 309 − 8，按册内偏移推算，页眉未入裁片）· 第十 | B（要素市场：劳动供给冲击、边际产品价值曲线） | high | `740331cad647` |
+| R184 | j18 | 313 | 书内 305（PDF 313 − 8，按册内偏移推算，页眉未入裁片）· 第十 | E（一般均衡/福利：纯交换经济、埃奇沃斯盒、契约曲线、帕累托有效） | high | `ff02b308d48c` |
+| R185 | j18 | 333 | 书内 325（PDF 333 − 8，按册内偏移推算，页眉未入裁片）· 第十 | E（一般均衡/福利：帕累托最优条件、可计算分配题） | high | `17c670910e8a` |
+| R186 | j18 | 359 | 书内 351（PDF 359 − 8，按册内偏移推算，页眉未入裁片）· 第十 | D（外部性/公共品：免费搭车、迪克塞-奥尔森、科斯定理局限） | high | `d53653423c80` |
+| R187 | j18 | 382 | 书内 374（PDF 382 − 8，按册内偏移推算，页眉未入裁片）· 第十 | D（外部性/公共品/环境政策），附间接税归宿（税收负担） | high | `440f75085970` |
+| R188 | j18 | 410 | 书内 402（PDF 410 − 8，按册内偏移推算，页眉未入裁片）· 第十 | F（组织/契约经济学：交易费用、委托-代理与厂商边界；含可复算的比较静态公式） | high | `d27fe0ed8fe9` |
+| R189 | j18 | 416 | 书内 408（PDF 416 − 8，按册内偏移推算，页眉未入裁片）· 正文 | 无（不计入任何知识族；作为「低产页/非正文页」登记） | high | `ea0de7a16a2f` |
+| R190 | j18 | 417 | 书内 409（PDF 417 − 8，按册内偏移推算，页眉未入裁片）· 全册 | 无（不计入任何知识族；作为「空白页」登记） | high | `338f6e94fae2` |
 
 ## 9. 待裁定批次（剩余低产页）
 
-本族低产页共 190 页（答案册 131 / 修订版 16 / 十八讲 43），其中已裁定 141 页；下表列出**尚未裁定**的 49 页，按优先级排批次。口径：低产页＝去空白后字符数 ≤ 册内中位×0.9，或数学符号密度（`math + 2·greek + eq`）靠前（完整清单见 `lowyield`）。
+本族低产页共 190 页（答案册 131 / 修订版 16 / 十八讲 43），其中已裁定 190 页；下表列出**尚未裁定**的 0 页，按优先级排批次。口径：低产页＝去空白后字符数 ≤ 册内中位×0.9，或数学符号密度（`math + 2·greek + eq`）靠前（完整清单见 `lowyield`）。
 
 | 材料 | 低产页 | 已裁定页 | 待裁定页 |
 |---|---:|---:|---:|
-| 答案册 | 131 | 129 | 2 |
-| 修订版 | 16 | 6 | 10 |
-| 十八讲 | 43 | 6 | 37 |
-| **合计** | **190** | **141** | **49** |
+| 答案册 | 131 | 131 | 0 |
+| 修订版 | 16 | 16 | 0 |
+| 十八讲 | 43 | 43 | 0 |
+| **合计** | **190** | **190** | **0** |
 
 批次口径（供后续会话直接执行，一次会话只做一个批次）：
 
 1. 一次会话只做一个批次（≤20 页），避免平台 300 秒无输出被掐断；每批结束即落盘、重跑生成与校验。
-2. 裁片统一走 `tools/refs-vision.py`（答案册/修订版 100 dpi 起，公式密页可升 110 dpi；十八讲整栏 48–72 dpi），裁完立刻加 `--verify` 复算 sha256，并把元数据登记到 `backup/scratch/refs-micro/crops-cache.json`。
+2. 裁片统一走 `tools/refs-vision.py`（答案册/修订版 100 dpi 起，公式密页可升 110 dpi；十八讲**裁定依据必须 ≥95 dpi**（扫描原生≈48 dpi，48–72 dpi 只作定位，且须符合「单字墨迹 ≥12 px」），单张 ≤400 KB、最长边 ≤1400 px，超限按段拆多条），裁完立刻加 `--verify` 复算 sha256，并把元数据登记到 `backup/scratch/refs-micro/crops-cache.json`。
 3. 每条裁定须含 README §3 的七字段（材料/页码/生成命令/裁片路径+像素+字节+sha256/亲读原文≥20 字/结论/置信度），亲读原文必须是本人用 `read_image` 逐字读出的页面文字，不得用 OCR 文本层冒充。
 4. 把碎片追加到 `backup/scratch/refs-micro/frag/read-<key>-NN.json` 后，依次重跑 `gen_rulings.py` → `build_micro.py` → `check-index.mjs` → `crossref.mjs`；四者全绿才算该批完成。
 5. 凡遇「手写数值自相矛盾 / 分式指数无法逐字保真 / 打红叉未完成」的页，条目进 `formulas_rederive` 或 `figures` 的「须重推/须重绘」栏，不要凭记忆补写。
-6. 本清单的优先级只表示「裁片收益」，不代表题目重要性；真题题面/答案的完整性索引见第 3、4 章。
+6. R 编号自 t52 起为**固定编号**（R1–R141 由 `rnums.json` 快照锁定，R142+ 由 frag 自带 id 追加），新增裁定只追加、不重排；重跑生成后跑 `pin-rnumbers.mjs` 核对编号 ↔ (材料,页) 未平移。
+7. 本清单的优先级只表示「裁片收益」，不代表题目重要性；真题题面/答案的完整性索引见第 3、4 章。
 
-### 批次 B1 — 答案册 · 公式/推导密集页（一律优先）（2 页）
+**本册低产页已全部闭合：三册低产页 190 页逐页处置完毕（裁定 190 条），第 9 章不再有待裁定批次。**
 
-| PDF 页 | 材料 | 字符数 | 数学密度分 | 为什么值得裁 | 建议裁片 | 已有裁片（未入册） |
-|---|---|---:|---:|---|---|---|
-| p113 | ans | 16 | 0 | 答案册浮页/说明页，正文多为题面扫尾或插页，裁定收益低 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-答案.pdf" --page 113 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/ans_p113_<box>_100dpi.png` | — |
-| p118 | ans | 16 | 0 | 答案册浮页/说明页，正文多为题面扫尾或插页，裁定收益低 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-答案.pdf" --page 118 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/ans_p118_<box>_100dpi.png` | — |
+收口账目（t52 收口）：本轮新增 49 条 = 答案册 2 + 修订版 10 + 十八讲 37；其中十八讲含 **20 条既有条目按可读分辨率（95 dpi）重新取证**（原 48 dpi 片降级为仅定位，见各条「证据替换」栏）与其余为新增页。仍不可读页：0（t65 未登记 `unreadable`）。
 
-### 批次 B2 — 修订版 · 低产页（题面缺失/图题）（10 页）
+### 批次 B1 — 答案册 · 公式/推导密集页（一律优先）（0 页）
 
 | PDF 页 | 材料 | 字符数 | 数学密度分 | 为什么值得裁 | 建议裁片 | 已有裁片（未入册） |
 |---|---|---:|---:|---|---|---|
-| p1 | rev | 138 | 4 | 修订版题面页：题面文字被公式挤掉，需裁片补题面（题号/小问/图形） | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-修订版.pdf" --page 1 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/rev_p1_<box>_100dpi.png` | — |
-| p5 | rev | 308 | 2 | 修订版题面页：题面文字被公式挤掉，需裁片补题面（题号/小问/图形） | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-修订版.pdf" --page 5 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/rev_p5_<box>_100dpi.png` | — |
-| p40 | rev | 269 | 1 | 修订版题面页：题面文字被公式挤掉，需裁片补题面（题号/小问/图形） | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-修订版.pdf" --page 40 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/rev_p40_<box>_100dpi.png` | — |
-| p3 | rev | 390 | 0 | 修订版题面页：题面文字被公式挤掉，需裁片补题面（题号/小问/图形） | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-修订版.pdf" --page 3 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/rev_p3_<box>_100dpi.png` | — |
-| p15 | rev | 52 | 0 | 修订版题面页：题面文字被公式挤掉，需裁片补题面（题号/小问/图形）；本页缓存里已有 1 张裁片（未入册，见「已有裁片」列）：若取框完整可直接补 --verify + 亲读，若缺节标题行须按下方建议裁片重裁 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-修订版.pdf" --page 15 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/rev_p15_<box>_100dpi.png` | `rev_p15_24_44_505_67_100dpi.png`（668x32/8590 B） |
-| p20 | rev | 340 | 0 | 修订版题面页：题面文字被公式挤掉，需裁片补题面（题号/小问/图形） | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-修订版.pdf" --page 20 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/rev_p20_<box>_100dpi.png` | — |
-| p26 | rev | 279 | 0 | 修订版题面页：题面文字被公式挤掉，需裁片补题面（题号/小问/图形）；本页缓存里已有 1 张裁片（未入册，见「已有裁片」列）：若取框完整可直接补 --verify + 亲读，若缺节标题行须按下方建议裁片重裁 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-修订版.pdf" --page 26 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/rev_p26_<box>_100dpi.png` | `rev_p26_24_44_546_295_100dpi.png`（725x349/61698 B） |
-| p32 | rev | 358 | 0 | 修订版题面页：题面文字被公式挤掉，需裁片补题面（题号/小问/图形） | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-修订版.pdf" --page 32 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/rev_p32_<box>_100dpi.png` | — |
-| p34 | rev | 240 | 0 | 修订版题面页：题面文字被公式挤掉，需裁片补题面（题号/小问/图形） | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-修订版.pdf" --page 34 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/rev_p34_<box>_100dpi.png` | — |
-| p49 | rev | 273 | 0 | 修订版题面页：题面文字被公式挤掉，需裁片补题面（题号/小问/图形） | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/真题/微观/光华历年真题-修订版.pdf" --page 49 --dpi 100 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/rev_p49_<box>_100dpi.png` | — |
 
-### 批次 B3 — 十八讲 · 公式密集页（教材证据，选做）（37 页）
+### 批次 B2 — 修订版 · 低产页（题面缺失/图题）（0 页）
 
 | PDF 页 | 材料 | 字符数 | 数学密度分 | 为什么值得裁 | 建议裁片 | 已有裁片（未入册） |
 |---|---|---:|---:|---|---|---|
-| p17 | j18 | 305 | 47 | 十八讲公式页（数学密度分 47），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 17 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p17_<box>_48dpi.png` | — |
-| p112 | j18 | 442 | 45 | 十八讲公式页（数学密度分 45），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 112 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p112_<box>_48dpi.png` | — |
-| p109 | j18 | 363 | 41 | 十八讲公式页（数学密度分 41），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 109 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p109_<box>_48dpi.png` | — |
-| p116 | j18 | 407 | 39 | 十八讲公式页（数学密度分 39），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 116 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p116_<box>_48dpi.png` | — |
-| p32 | j18 | 382 | 35 | 十八讲公式页（数学密度分 35），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 32 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p32_<box>_48dpi.png` | — |
-| p18 | j18 | 285 | 32 | 十八讲公式页（数学密度分 32），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 18 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p18_<box>_48dpi.png` | — |
-| p38 | j18 | 373 | 31 | 十八讲公式页（数学密度分 31），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 38 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p38_<box>_48dpi.png` | — |
-| p190 | j18 | 450 | 31 | 十八讲公式页（数学密度分 31），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 190 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p190_<box>_48dpi.png` | — |
-| p100 | j18 | 444 | 27 | 十八讲公式页（数学密度分 27），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 100 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p100_<box>_48dpi.png` | — |
-| p410 | j18 | 379 | 19 | 十八讲公式页（数学密度分 19），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 410 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p410_<box>_48dpi.png` | — |
-| p50 | j18 | 391 | 17 | 十八讲公式页（数学密度分 17），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 50 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p50_<box>_48dpi.png` | — |
-| p115 | j18 | 372 | 16 | 十八讲公式页（数学密度分 16），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 115 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p115_<box>_48dpi.png` | — |
-| p130 | j18 | 355 | 15 | 十八讲公式页（数学密度分 15），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 130 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p130_<box>_48dpi.png` | — |
-| p313 | j18 | 422 | 14 | 十八讲公式页（数学密度分 14），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 313 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p313_<box>_48dpi.png` | — |
-| p359 | j18 | 438 | 12 | 十八讲公式页（数学密度分 12），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 359 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p359_<box>_48dpi.png` | — |
-| p35 | j18 | 116 | 11 | 十八讲公式页（数学密度分 11），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 35 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p35_<box>_48dpi.png` | — |
-| p224 | j18 | 280 | 10 | 十八讲公式页（数学密度分 10），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 224 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p224_<box>_48dpi.png` | — |
-| p231 | j18 | 330 | 10 | 十八讲公式页（数学密度分 10），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 231 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p231_<box>_48dpi.png` | — |
-| p235 | j18 | 277 | 10 | 十八讲公式页（数学密度分 10），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 235 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p235_<box>_48dpi.png` | — |
-| p243 | j18 | 202 | 10 | 十八讲公式页（数学密度分 10），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 243 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p243_<box>_48dpi.png` | — |
-| p60 | j18 | 218 | 9 | 十八讲公式页（数学密度分 9），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 60 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p60_<box>_48dpi.png` | — |
-| p229 | j18 | 366 | 9 | 十八讲公式页（数学密度分 9），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 229 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p229_<box>_48dpi.png` | — |
-| p416 | j18 | 112 | 9 | 十八讲公式页（数学密度分 9），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 416 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p416_<box>_48dpi.png` | — |
-| p103 | j18 | 323 | 8 | 十八讲公式页（数学密度分 8），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 103 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p103_<box>_48dpi.png` | — |
-| p284 | j18 | 437 | 8 | 十八讲公式页（数学密度分 8），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 284 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p284_<box>_48dpi.png` | — |
-| p4 | j18 | 414 | 6 | 十八讲公式页（数学密度分 6），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 4 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p4_<box>_48dpi.png` | — |
-| p168 | j18 | 443 | 6 | 十八讲公式页（数学密度分 6），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 168 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p168_<box>_48dpi.png` | — |
-| p333 | j18 | 220 | 5 | 十八讲公式页（数学密度分 5），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 333 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p333_<box>_48dpi.png` | — |
-| p164 | j18 | 420 | 4 | 十八讲公式页（数学密度分 4），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 164 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p164_<box>_48dpi.png` | — |
-| p199 | j18 | 170 | 1 | 十八讲公式页（数学密度分 1），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 199 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p199_<box>_48dpi.png` | — |
-| p1 | j18 | 58 | 0 | 十八讲公式页（数学密度分 0），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 1 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p1_<box>_48dpi.png` | — |
-| p2 | j18 | 44 | 0 | 十八讲公式页（数学密度分 0），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 2 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p2_<box>_48dpi.png` | — |
-| p5 | j18 | 178 | 0 | 十八讲公式页（数学密度分 0），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 5 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p5_<box>_48dpi.png` | — |
-| p280 | j18 | 105 | 0 | 十八讲公式页（数学密度分 0），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 280 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p280_<box>_48dpi.png` | — |
-| p309 | j18 | 232 | 0 | 十八讲公式页（数学密度分 0），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 309 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p309_<box>_48dpi.png` | — |
-| p382 | j18 | 394 | 0 | 十八讲公式页（数学密度分 0），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 382 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p382_<box>_48dpi.png` | — |
-| p417 | j18 | 21 | 0 | 十八讲公式页（数学密度分 0），教材证据；若某条公式清单要「可直接引用」须有本页裁定 | `参考文件/_venv/Scripts/python.exe tools/refs-vision.py --pdf "参考文件/教材讲义/微观/微观经济学十八讲.pdf" --page 417 --dpi 48 --box <x0,y0,x1,y1> --out backup/scratch/refs-vision/j18_p417_<box>_48dpi.png` | — |
+
+### 批次 B3 — 十八讲 · 公式密集页（教材证据，选做）（0 页）
+
+| PDF 页 | 材料 | 字符数 | 数学密度分 | 为什么值得裁 | 建议裁片 | 已有裁片（未入册） |
+|---|---|---:|---:|---|---|---|
 
 复用提示：上表「已有裁片」列的图是探索期渲的（在 `backup/scratch/refs-micro/crops-cache.json` 里登记，但未进裁定记录）。它们分两类：① 取框完整、只差 `--verify` 复算与 `read_image` 亲读 → 可直接补成裁定，省一次渲染；② 取框不全（例如只有一条标题带，或整页上段）→ 必须按「建议裁片」列给的 box 重裁，重裁后 sha256 与缓存里的旧值不同，登记时以新值为准。查这类裁片的命令：`node backup/scratch/refs-micro/crops-audit.mjs`（只读，会打印全部孤儿裁片并标出落在本清单的页）。
 
-编号稳定性：`build_micro.py` 的 R 编号是**现场编号**（按材料 + 页排序后从 R1 起编），任何裁定集变更都会平移编号，而第 7 章清单的 ev 是字面量引用 —— 所以每批结束必须跑 `node backup/scratch/refs-micro/pin-rnumbers.mjs`（与 `rnums.json` 快照比对，报「编号 ↔ (材料,页) 是否平移」）；若报了平移，先跑 `fix-ev.mjs` 重写 ev，再跑 `crossref.mjs` 与 `check-index.mjs` 复验。
+编号稳定性：R 编号自 t52 起为**固定编号** —— R1–R141 由 `rnums.json` 快照锁定（`gen_rulings.py` 的 `load_pins()` 按 (材料,页) 回填），R142 及以后由各 frag 自带 `id` 追加，生成器只做「缺失/冲突」检查与排序，**不再按排序现场编号**。因此第 7 章清单里 ev 的字面量引用（如 `R123 j18 p180`）不会因裁定集增减而断链；每批结束仍应跑 `node backup/scratch/refs-micro/pin-rnumbers.mjs` 核对「编号 ↔ (材料,页) 是否平移」，若报平移则说明快照与现状脱钩，需先修 frag 的 `id` 再重跑生成；最后跑 `crossref.mjs` 与 `check-index.mjs` 复验。
 
 ## 10. 已知局限
 

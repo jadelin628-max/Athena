@@ -34,11 +34,29 @@ const FILES = ['math3.js', 'econ.js', 'stats.js', 'politics.js', 'corp.js', 'inv
 // 题库数据（POC）：window.BANK.<subj>；其 tags 必须命中同名 data/<subj>.js 的真实卡 id
 const BANK_FILES = ['bank_math3.js', 'bank_econ.js', 'bank_stats.js'];
 
+// t54：JYSG 真题册一本收 13 所院校的卷（t54 起统计真题从「仅北大光华-431」扩到 13 组），
+//   单一 need 无法覆盖；`oneOf` 的语义＝school 必须「同时命中某一组的全部关键词」，命中 0 组报一条 ERR 并点名。
+//   组清单**内联**（docs/refs/*.json 被 .gitignore 忽略，禁止运行时读它），逐组取自 docs/refs/statq.json 的 groups。
+const JYSG_SCHOOL_GROUPS = [
+  { need: ['光华', '431'], label: '北京大学光华-431 金融学统计' },
+  { need: ['复旦', '432'], label: '复旦大学-432 应用统计' },
+  { need: ['北京师范大学', '432'], label: '北京师范大学-432' },
+  { need: ['中国科学技术大学', '432'], label: '中国科学技术大学-432' },
+  { need: ['中国科学技术大学', '812'], label: '中国科学技术大学-812 概率论与数理统计' },
+  { need: ['数院', '856'], label: '北京大学数院-856 大数据' },
+  { need: ['清华', '432'], label: '清华大学-432 应用统计' },
+  { need: ['数院', '431'], label: '北京大学数院-431 金融学综合' },
+  { need: ['叉院', '849'], label: '北大叉院-849' },
+  { need: ['南开', '432'], label: '南开大学-432 应用统计' },
+  { need: ['中山', '432'], label: '中山大学-432 应用统计' },
+  { need: ['上海交通大学', '432'], label: '上海交通大学-432 统计学' },
+  { need: ['上海财经', '432'], label: '上海财经大学-432 应用统计' },
+];
 // 题源（school）同源规则：src.file 命中 fileMatch 时，school 必须含 need 里的每个关键词。
 // 关键词取自来源册的题块标题（如 JYSG 真题册的「北京大学光华-431 金融学统计 20XX 年」、
 // 数学三解析册的「全国硕士研究生…考试 数学三」），不允许猜测/泛指。
 const SRC_SCHOOL_RULES = [
-  { fileMatch: /JYSG真题册/, need: ['光华', '431'], label: '北京大学光华-431 金融学统计' },
+  { fileMatch: /JYSG真题册/, oneOf: JYSG_SCHOOL_GROUPS, label: 'JYSG 真题册 13 院校组之一' },
   { fileMatch: /(?:数学三真题答案解析|考研数学三真题)/, need: ['数学三'], label: '数学三真题答案解析册' },
 ];
 
@@ -189,9 +207,9 @@ for (const f of BANK_FILES) {
     if (seenIds.has(q.id)) report('ERR', title + ' 题目 id 重复: ' + q.id);
     seenIds.add(q.id);
     bankQuestionTotal++;
-    // 字段契约分两族（t32）：
-    //   origin 缺省/'year' —— 真题册入库题（既有 55 题）：题干/解析/陷阱/提示四件套齐全；
-    //   origin 'card'      —— 卡片派生题：traps/hint 只在 PITFALL/MNEM 有条目时写入（禁止编造），缺则整字段省略。
+    // 字段契约分两族（t32/t58）：
+    //   origin 缺省/'year' —— 真题册入库题；origin 'card' —— 卡片派生题（traps/hint 只在 PITFALL/MNEM 有条目时写入）。
+    //   traps/hint 两族统一为「条件必需」（t58）：源里有则必填非空，源里没有则整字段省略（禁止编造与空串占位）。
     const origin = q.origin == null ? 'year' : q.origin;
     if (origin === 'card') cardOriginTotal++;
     else if (origin !== 'year') report('ERR', title + ' ' + q.id + ' origin 非法（只能是 year / card）: ' + q.origin);
@@ -199,12 +217,9 @@ for (const f of BANK_FILES) {
     for (const fld of ['stem', 'answer']) {
       if (typeof q[fld] !== 'string' || !q[fld].trim()) report('ERR', title + ' ' + q.id + ' 缺字段 ' + fld);
     }
-    // 条件必需：存在即非空（空串占位与编造一律判红）
+    // 条件必需（t58，适用全部 origin）：缺失合法（无内容应省略该字段）；存在即必须为非空字符串
     for (const fld of ['traps', 'hint']) {
-      if (q[fld] == null) {
-        if (origin !== 'card') report('ERR', title + ' ' + q.id + ' 缺字段 ' + fld);
-        continue;
-      }
+      if (q[fld] == null) continue;
       if (typeof q[fld] !== 'string' || !q[fld].trim()) report('ERR', title + ' ' + q.id + ' 字段 ' + fld + ' 存在但为空（无内容应省略该字段）');
     }
     if (!q.year) report('ERR', title + ' ' + q.id + ' 缺 year');
@@ -250,8 +265,16 @@ for (const f of BANK_FILES) {
         for (const rule of SRC_SCHOOL_RULES) {
           if (!rule.fileMatch.test(srcFile)) continue;
           covered = true;
-          for (const need of rule.need) {
+          for (const need of rule.need || []) {
             if (!school.includes(need)) report('ERR', title + ' ' + q.id + ' school 与 src.file 不同源（' + rule.label + ' 缺「' + need + '」）: ' + school + ' ← ' + srcFile);
+          }
+          // oneOf：必须整体命中某一组（t54 JYSG 13 院校组）；命中 0 组只报一条 ERR，并在文案里点名全部组
+          if (rule.oneOf) {
+            const hit = rule.oneOf.find((g) => g.need.every((k) => school.includes(k)));
+            if (!hit) {
+              report('ERR', title + ' ' + q.id + ' school 与 src.file 不同源（' + rule.label + '，school 未命中任何院校组）: ' + school
+                + ' ← ' + srcFile + '；组清单：' + rule.oneOf.map((g) => g.label).join(' / '));
+            }
           }
         }
         if (!covered) report('WARN', title + ' ' + q.id + ' src.file 未被同源规则覆盖，请人工确认 school: ' + srcFile);

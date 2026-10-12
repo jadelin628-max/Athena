@@ -56,7 +56,11 @@ tools/              # 构建与校验闸门
 tests/              # node:test
 docs/               # 架构 / 数据 schema / 工作流（活文档；历史归档 backup/docs-archive/）
 dist/ src-tauri/    # 桌面版（构建同步，目标产物 gitignore）
-backup/             # 数据与文档归档（gitignore）
+backup/             # 本地归档（gitignore，看 backup/README.md）
+                    #   <data>.js.pre-*  改动前数据快照（回滚点）
+                    #   docs-archive/    已交付 Spec / 历史文档
+                    #   scratch/         现役波次的量具脚本与证据链（被 docs 引用者原位保留）
+                    #   scratch-archive/ 已完成波次的一次性脚本与截图（无人引用者移入，含 _MANIFEST-moved.txt）
 ```
 
 ## 内容与算法

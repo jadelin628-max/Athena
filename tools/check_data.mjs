@@ -164,6 +164,7 @@ const bankSandbox = { window: { SUBJECTS: subjects, BANK: {} }, String, Math, co
 vm.createContext(bankSandbox);
 let bankQuestionTotal = 0;
 let cardOriginTotal = 0;   // t32：origin === 'card' 的卡片派生题数（全库）
+let subOfTotal = 0;        // t74（T142）：例题标记为 year 题小问子集（subOf）而不再重复入库的条数（全库）
 for (const f of BANK_FILES) {
   const filePath = path.join(DATA_DIR, f);
   if (!fs.existsSync(filePath)) { report('ERR', '题库文件缺失: data/' + f); continue; }
@@ -303,13 +304,41 @@ for (const f of BANK_FILES) {
     }
   }
 
+  // t74（T142）：小问级不重复收录 —— 例题若标记 subOf（＝该例题是某条 year 题的小问子集），题库就不得
+  // 再收录对应的卡片派生题；同时 subOf.id 必须指向**本学科题库里真实存在的 year 题**（不得指错题、
+  // 不得指向卡片派生题自身）。生成侧口径见 tools/bank-cv.mjs 的 expectedRows。
+  const exampleOf = (bySubject[expectSid] && bySubject[expectSid].mod && bySubject[expectSid].mod.EXAMPLE) || {};
+  const qById = new Map((bank.questions || []).map((q) => [q && q.id, q]));
+  const derivedIdx = new Set((bank.questions || []).filter((q) => q && q.origin === 'card')
+    .map((q) => String(q.cardId) + '#' + String(q.idx)));
+  let subOfCount = 0;
+  for (const ekey of Object.keys(exampleOf)) {
+    const val = exampleOf[ekey];
+    const arr = Array.isArray(val) ? val : [val];
+    arr.forEach((e, i) => {
+      if (!e || !e.subOf) return;
+      subOfCount++;
+      const tag = title + ' EXAMPLE[' + JSON.stringify(ekey) + ']' + (arr.length > 1 ? '[' + i + ']' : '') + '.subOf';
+      if (typeof e.subOf.id !== 'string' || !e.subOf.id.trim()) { report('ERR', tag + ' 缺 id'); return; }
+      if (typeof e.subOf.item !== 'string' || !e.subOf.item.trim()) report('ERR', tag + ' 缺 item（小问编号）');
+      const target = qById.get(e.subOf.id);
+      if (!target) { report('ERR', tag + '.id 指向题库里不存在的题: ' + e.subOf.id); return; }
+      if (target.origin === 'card') report('ERR', tag + '.id 指向卡片派生题（应指向 year 真题）: ' + e.subOf.id);
+      if (derivedIdx.has(ekey + '#' + i)) {
+        report('ERR', tag + ' 声明压制，但题库仍收录该卡片派生题（' + ekey + ' 第 ' + i + ' 条）');
+      }
+    });
+  }
+  subOfTotal += subOfCount;
+
   // 每个题型都必须有题命中（否则是无人使用的题型）
   for (const key of typeKeys) if (!typeHits[key]) report('WARN', title + ' 题型 ' + key + ' 无题目命中');
 
   const starText = Object.keys(stars).sort().map((k) => k + '★×' + stars[k]).join(' ');
   const qTotal = (bank.questions || []).length;
   const cardText = bank.questions.some((q) => q && q.origin === 'card') ? ' | 卡片派生=' + bank.questions.filter((q) => q && q.origin === 'card').length : '';
-  console.log(`  ${title.padEnd(20)} ${String(qTotal).padStart(3)} 题 | ${typeKeys.size} 题型 | 年份 ${[...years].sort().join(',')} | 难度 ${starText || '—'} | school=${qSchool}/${qTotal}（${schools.size} 个来源）${cardText} | id泄漏=${qLeak} **奇=${qStarOdd} $奇=${qDollarOdd}`);
+  const subOfText = subOfCount ? ' | 小问级不重复收录=' + subOfCount : '';
+  console.log(`  ${title.padEnd(20)} ${String(qTotal).padStart(3)} 题 | ${typeKeys.size} 题型 | 年份 ${[...years].sort().join(',')} | 难度 ${starText || '—'} | school=${qSchool}/${qTotal}（${schools.size} 个来源）${cardText}${subOfText} | id泄漏=${qLeak} **奇=${qStarOdd} $奇=${qDollarOdd}`);
 }
 
 console.log('');
@@ -359,7 +388,8 @@ console.log('');
 console.log('=== 结果 ===');
 console.log('学科数:', Object.keys(bySubject).length, '| 卡片总数:', allIds.size ? [...Object.values(bySubject)].reduce((a, b) => a + b.data.length, 0) : 0,
   '| 题库科目:', Object.keys(banks).length, '| 真题总数:', bankQuestionTotal,
-  '| 其中卡片派生题(origin=card):', cardOriginTotal);
+  '| 其中卡片派生题(origin=card):', cardOriginTotal,
+  '| 小问级不重复收录(subOf 压制):', subOfTotal);
 if (errorCount === 0 && warnCount === 0) {
   console.log('✅ 全绿：结构完整、无泄漏、无未闭合标记');
 } else {

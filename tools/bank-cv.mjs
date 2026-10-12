@@ -516,6 +516,17 @@ export function expectedRows(cfg, cards) {
     for (let i = 0; i < arr.length; i++) {
       const e = arr[i] || {};
       const src = typeof e.src === 'string' ? e.src.trim() : '';
+      // T142 口径：例题若已声明为某 year 真题的小问子集（subOf），不再重复收录派生题。
+      // 卡片例题与 year 真题两处记录都保留，只是题库不重复出现同一小问。
+      if (e.subOf && e.subOf.id) {
+        excluded.push({
+          cardId: key,
+          idx: i,
+          src,
+          reason: '例题为 year 题小问子集（T142 口径：不重复收录）→ ' + e.subOf.id + ' 第 ' + (e.subOf.item || '?') + ' 小问'
+        });
+        continue;
+      }
       const m = src.match(YEAR_RE);
       const card = cardById.get(key) || {};
       if (!m) {

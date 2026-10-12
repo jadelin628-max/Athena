@@ -24,17 +24,21 @@ for (const f of ['math3.js', 'econ.js', 'stats.js']) {
 for (const f of ['bank_math3.js', 'bank_econ.js', 'bank_stats.js']) {
   vm.runInContext(read('data/' + f), sandbox, { filename: f });
 }
-const exposed = ['bankStarLevel', 'bankStars', 'bankTypeStars', 'bankTypeFrequency', 'bankTagCat', 'bankTagTitle', 'bankMatch', 'bankAllQuestions', 'bankSameQuestion', 'bankLookupWrongEntry', 'bankWrongState', 'bankFilteredQuestions', 'bankCurrentFilter', 'bankTypeSelected', 'bankSubjectTotals', 'bankSubjectTotal', 'bankSubjectTypeCount', 'bankHitText', 'bankScopeText', 'bankCurrentSubjectId', 'bankNormalizeTypeFilter', 'bankTypeOptions', 'bankTagRanking', 'bankTagOptions', 'bankTagOptionHidden', 'bankStarOptions', 'bankSelectValue', 'bankSchoolLabel', 'bankChoiceLetter', 'bankYearSelected', 'bankYearSourceLabel', 'bankYearRows', 'bankYearOptions', 'bankNormalizeYearFilter'];
+const exposed = ['bankStarLevel', 'bankStars', 'bankTypeStars', 'bankTypeFrequency', 'bankTagCat', 'bankTagTitle', 'bankMatch', 'bankAllQuestions', 'bankSameQuestion', 'bankLookupWrongEntry', 'bankWrongState', 'bankFilteredQuestions', 'bankCurrentFilter', 'bankTypeSelected', 'bankSubjectTotals', 'bankSubjectTotal', 'bankSubjectTypeCount', 'bankHitText', 'bankScopeText', 'bankCurrentSubjectId', 'bankNormalizeTypeFilter', 'bankTypeOptions', 'bankTagRanking', 'bankTagOptions', 'bankTagOptionHidden', 'bankStarOptions', 'bankSelectValue', 'bankSchoolLabel', 'bankChoiceLetter', 'bankYearSelected', 'bankYearSourceLabel', 'bankYearRows', 'bankYearOptions', 'bankNormalizeYearFilter', 'bankNoText', 'bankSourceText'];
 // 筛选会话状态声明在 learn.mjs（同一 IIFE 作用域），单测注入等价初值才能驱动筛选逻辑；
 // bank.mjs 自身不得声明这些变量（见「导航接线」用例，重复声明会抛语法错误）。
 // currentSubjectId 声明在 src/app.mjs（全局学科选择器）：t17 起题库范围恒等于它（不再是页内 bankSubject）。
 const stateVars = "var bankType = 'all', bankTag = 'all', bankStar = 'all', bankYear = '', bankQuery = '', bankOpen = null, bankOnlyWrong = false, currentSubjectId = 'math3';";
 // 常量表与题型取名助手在 TESTABLE 块之外（不属于纯函数块），单测需要一并注入
+// T148：题目来源串的两个纯助手（bankNoText / bankSourceText）同样在块外，一并注入后可按真实题库逐条断言
 const bankSrc = read('src/bank.mjs');
 const consts = [
   bankSrc.match(/var BANK_SUBJECT_META = \{[\s\S]*?\n\};/)[0],
   bankSrc.match(/var BANK_SUBJECT_ORDER = \[[^\]]*\];/)[0],
-  bankSrc.match(/function bankTypeName\(subjectId, typeKey\) \{[\s\S]*?\n\}/)[0]
+  bankSrc.match(/function bankTypeName\(subjectId, typeKey\) \{[\s\S]*?\n\}/)[0],
+  bankSrc.match(/var BANK_NO_UNKNOWN = '[^']*';/)[0],
+  bankSrc.match(/function bankNoText\(q\) \{[\s\S]*?\n\}/)[0],
+  bankSrc.match(/function bankSourceText\(q\) \{[\s\S]*?\n\}/)[0]
 ].join('\n');
 sandbox.exports = {};
 vm.runInContext(
@@ -72,9 +76,14 @@ const BANKS = ['math3', 'econ', 'stats'];
 // → 删除 2 条与卡片派生题**同题**的 year 题（st-2025-12 让位于 cv-st-test01、st-2025-2 让位于 cv-st-sy04，
 // 卡片派生题为规范条目；删除依据逐字比对而非相似度）⇒ stats 262 − 2 = 260、全库 769 − 2 = 767；
 // 依据 backup/scratch/bank-dedup2/（cross-dedup.mjs 扫描 + excluded.md 删除证据 + check-clean.mjs 零回归）。
+// t74（T142）补充：统计科合卷真题的**小问级**重复不再重复收录 —— st-2025-1 第 2 小问让位于 cv-st-est02、
+// 第 3 小问让位于 cv-st-est12、st-2026-2 第 (1)(2) 问让位于 cv-st-sy05（三张卡的例题与三条 year 真题都保留，
+// 只是题库不再出现「同一小问的第二条独立条目」；标记写在 data/stats.js 的 EXAMPLE 条目 `subOf`）⇒
+// stats 260 − 3 = 257、全库 767 − 3 = 764；判据与逐对裁定见 docs/refs/2.2.0-PLAN.md §1.2 Q7 与 backup/scratch/bank-split/。
 // 只保留「不得低于已入库量」的护栏，避免题量悄悄失守（下限是护栏，不是对现实的固定描述）。
-const MIN_QUESTIONS = {math3: 331, econ: 176, stats: 260};
-const MIN_TOTAL = 767;
+// t74 起合计下限由各科下限**派生**（不再单独写死魔数）：改某一科下限时合计自动跟随。
+const MIN_QUESTIONS = {math3: 331, econ: 176, stats: 257};
+const MIN_TOTAL = MIN_QUESTIONS.math3 + MIN_QUESTIONS.econ + MIN_QUESTIONS.stats;
 // 题型定义来自 t4 的题型体系表（数学三 10 / 微观 6 / 统计 6）；t27 为「积分与变限积分」新增 math3 的
 // integral 键（11 类）、t30 为「级数敛散性判别」新增 series 键（12 类）、t32 为统计卡片例题新增
 // prob/dist/multi/numchar/limit 五键（6 → 11 类）、t49 为数学三新增 multivar（12 → 13 类）、为微观新增
@@ -239,7 +248,7 @@ const setViewState = (code) => vm.runInContext(code, view);
 
 // ---------------------------------------------------------------- 数据契约
 
-test('三科题库均挂载 window.BANK.<subj>，且每科题量不低于已入库下限（math3 ≥331、econ ≥176、stats ≥260、合计 ≥767）', () => {
+test('三科题库均挂载 window.BANK.<subj>，且每科题量不低于已入库下限（math3 ≥' + MIN_QUESTIONS.math3 + '、econ ≥' + MIN_QUESTIONS.econ + '、stats ≥' + MIN_QUESTIONS.stats + '、合计 ≥' + MIN_TOTAL + '）', () => {
   let total = 0;
   for (const sid of BANKS) {
     const bank = BANK[sid];
@@ -318,6 +327,9 @@ const cardEntryIds = (EXAMPLE) => {
     const arr = Array.isArray(val) ? val : [val];
     arr.forEach((e, i) => {
       const src = String((e && e.src) == null ? '' : e.src).trim();
+      // t74（T142）：例题若已声明为某 year 真题的小问子集（subOf），题库不重复收录该派生条。
+      // 与 tools/bank-cv.mjs 的 expectedRows 排除口径一一对应 —— 两处必须同批同步改。
+      if (e && e.subOf && e.subOf.id) return;
       const m = src.match(/(?:19|20)\d{2}/);
       if (!m) return; // 例题 src 无四位年份 → 按口径排除（例题仅真题红线，不编造年份）
       out.push({ key, idx: i, entry: e, year: Number(m[0]), src, id: 'cv-st-' + key + (i > 0 ? '-' + (i + 1) : '') });
@@ -382,6 +394,85 @@ test('卡片派生题（t32 统计试点）：id/标签/星级/题干/答案/另
     }
   }
 });
+
+// ------------------------------------------------- t74（T142）：小问级不重复收录不变量
+// 用户口径（T142 已定并实施）：同一道小问不在题库里并存两条独立条目 —— 卡片派生题若只是某条 year
+// 真题的小问子集，卡片例题与 year 真题两处记录都保留，但题库只收 year 题那一条；压制标记写在
+// data/stats.js 的 EXAMPLE 条目 `subOf`（生成侧见 tools/bank-cv.mjs expectedRows）。
+// 这条用例把口径变成不变量：既禁「未标注的小问级重复」进题库，也禁用 `subOf` 随意压制
+// （被压制的例题必须真能在那条 year 题的小问里逐字找到）。
+const normStem = (s) => String(s == null ? '' : s)
+  .replace(/\\[a-zA-Z]+/g, '')
+  .replace(/[{}^_$&~\\]/g, '')
+  .replace(/\s+/g, '');
+const gramsOf = (s, n = 6) => {
+  const t = normStem(s);
+  const out = new Set();
+  for (let i = 0; i + n <= t.length; i++) out.add(t.slice(i, i + n));
+  return out;
+};
+// a 的 6-gram 有多大比例出现在 b 中（a 的 gram 数 < 8 时不判，避免短题干天然高重合）
+const coverRatio = (a, b) => {
+  const A = gramsOf(a);
+  if (A.size < 8) return 0;
+  const S = gramsOf(b);
+  let hit = 0;
+  for (const g of A) if (S.has(g)) hit++;
+  return hit / A.size;
+};
+
+test('小问级不重复收录（t74/T142）：题库不得并存同一小问的两条条目，且每条 subOf 压制都必须被证实', () => {
+  const S = SUBJECTS.stats;
+  const EXAMPLE = S.EXAMPLE || {};
+  const qs = BANK.stats.questions;
+  const byId = new Map(qs.map((q) => [q.id, q]));
+  const yearQs = qs.filter((q) => q.origin !== 'card');
+
+  // ① 每个 subOf：目标 year 题必须真实存在、例题题干确实被它的小问覆盖，且该派生条不得进题库
+  const marked = [];
+  for (const key of Object.keys(EXAMPLE)) {
+    const val = EXAMPLE[key];
+    const arr = Array.isArray(val) ? val : [val];
+    arr.forEach((e, i) => {
+      if (e && e.subOf && e.subOf.id) marked.push({ key, entry: e, id: 'cv-st-' + key + (i > 0 ? '-' + (i + 1) : '') });
+    });
+  }
+  assert.ok(marked.length > 0, '本用例不得空转：统计科应有 subOf 压制条目');
+  for (const m of marked) {
+    assert.ok(m.entry.subOf.item && String(m.entry.subOf.item).trim().length > 0,
+      m.id + ' 的 subOf 必须写明小问编号（item）');
+    const target = byId.get(m.entry.subOf.id);
+    assert.ok(target, m.id + ' 的 subOf.id 必须是题库里真实存在的题：' + m.entry.subOf.id);
+    assert.notEqual(target.origin, 'card', m.id + ' 的 subOf.id 必须指向 year 真题而非卡片派生题');
+    // 例题题干是 year 题小问的**精简转写**（「无偏估计的有」vs「无偏估计的有的（ ）」、A. vs (A)、
+    // MLE vs 极大似然估计），逐字覆盖率天然只有 0.3–0.6 ⇒ 这里不比绝对值，而是要求：
+    // 声明的小问确实是全库里与该例题最相似的那条 year 题，且相似度非平凡（≥0.25）。指错题必转红。
+    const scored = yearQs.map((y) => ({ id: y.id, r: coverRatio(m.entry.q, y.stem) }))
+      .sort((a, b) => b.r - a.r);
+    const r = coverRatio(m.entry.q, target.stem);
+    assert.ok(r >= 0.25, m.id + ' 与声明的 ' + m.entry.subOf.id + ' 相似度过低（' + r.toFixed(3) + '）：压制指错了题？');
+    assert.equal(scored[0].id, m.entry.subOf.id, m.id + ' 声明压制的应为全库最相似的 year 题：实际最相似是 '
+      + scored[0].id + '（' + scored[0].r.toFixed(3) + '），声明是 ' + m.entry.subOf.id + '（' + r.toFixed(3) + '）');
+    assert.ok(!byId.has(m.id), m.id + ' 已被 subOf 压制，仍出现在题库里');
+  }
+
+  // ② 的反证：合成一条「未标注的逐字重复」与一条无关题干，扫描器必须分别判红/判绿（否则 ② 是空转）
+  const probeCard = { origin: 'card', id: 'cv-probe-dup', stem: '设 $X\\sim P(\\lambda)$，求 $E[X^3]$ 与 $E[X^4]$ 的值（反证样本）' };
+  const probeYear = { origin: 'year', id: 'probe-year', stem: probeCard.stem + '；并求方差。' };
+  assert.ok(coverRatio(probeCard.stem, probeYear.stem) >= 0.9, '反证失败：逐字重复样本应被判为重复');
+  assert.ok(coverRatio(probeCard.stem, '毫不相干的题干：求极限与导数') < 0.25, '反证失败：无关题干不应被判为重复');
+
+  // ② 未被压制的卡片派生题：不得整体落在任何一条 year 题里（否则就是未标注的小问级重复）
+  for (const q of qs) {
+    if (q.origin !== 'card') continue;
+    if (marked.some((m) => m.id === q.id)) continue;
+    for (const y of yearQs) {
+      const r = coverRatio(q.stem, y.stem);
+      assert.ok(r < 0.9, q.id + ' 与 year 题 ' + y.id + ' 是同一小问（覆盖率 ' + r.toFixed(3)
+        + '）却未登记 subOf：要么在 data/stats.js 的例题里标 subOf，要么改写例题来源');
+    }
+  }
+});
 // ------------------------------------------------- t49：卡片例题 → 题库 逐题对拍（数学三 / 微观经济学）
 // 与上方统计块同口径、同强度（期望值一律从 data/math3.js、data/econ.js 现算，不读生成脚本中间产物），
 // 另加两条本科特有断言：①数学三卷名按官方更名口径（2014 年及以前「入学统一考试」，2015 年起「招生考试」）；
@@ -395,9 +486,12 @@ const cardEntriesOf = (EXAMPLE, prefix) => {
     const arr = Array.isArray(val) ? val : [val];
     arr.forEach((e, i) => {
       const src = String((e && e.src) == null ? '' : e.src).trim();
+      const id = prefix + '-' + key + (i > 0 ? '-' + (i + 1) : '');
+      // t74（T142）：例题声明为某 year 题的小问子集（subOf）⇒ 题库不重复收录该条派生题
+      // （口径与 tools/bank-cv.mjs 的 expectedRows、上方 cardEntryIds 同源，三处必须同批同步改）
+      if (e && e.subOf && e.subOf.id) { skipped.push({ key, idx: i, entry: e, src, year: null, id, subOf: e.subOf }); return; }
       const m = src.match(/(?:19|20)\d{2}/);
-      const rec = { key, idx: i, entry: e, src, year: m ? Number(m[0]) : null,
-        id: prefix + '-' + key + (i > 0 ? '-' + (i + 1) : '') };
+      const rec = { key, idx: i, entry: e, src, year: m ? Number(m[0]) : null, id };
       (m ? kept : skipped).push(rec);
     });
   }
@@ -951,6 +1045,49 @@ test('错题本状态口径与 src/wrong.mjs 的入库查重同源（同数据�
   assert.match(bank, /function bankAddToWrong\(q\) \{[\s\S]*?q:\s*q\.stem[\s\S]*?markAsWrong\(ex, 'bank:' \+ q\.id\)/, 'bankAddToWrong 应继续以 q.stem 入错题本（口径同源、入库路径不变）');
   // ④ 错题本模块零改动（本任务不新增其导出）
   assert.ok(!/export \{[^}]*lookupWrongEntry/.test(wrong), '不得为本题在 wrong.mjs 新增查询导出');
+});
+
+// ------------------------------------------------------------------ T148 来源串（错题本「📚 来源」）
+// 缺陷：真题题的来源串直接渲染 src.file（形如「参考文件/真题/数学/…/2012年数学三真题答案解析.pdf · 一(1)」），
+// 把开发期的取证件路径暴露给学生；src.note 的取证说明（含页码、裁片目录）同理。
+// 口径：真题侧一律「院校/卷 · 年份 · 题号」，院校名经 bankYearSourceLabel 去掉尾部「<年份> 年」避免与年份段重复；
+// 卡片派生题维持 S5 的「年份 · 题号」；题号取不到（'未编号'）时跳过 —— 三类都不渲染占位符或路径。
+
+test('T148 来源串：真题题不渲染库内文件名，三科逐题给「院校/卷 · 年份 · 题号」', () => {
+  const bank = read('src/bank.mjs');
+  // ① 源码级：函数体内不得再出现 src.file / src.note 的渲染分支
+  const fn = bank.match(/function bankSourceText\(q\) \{[\s\S]*?\n\}/);
+  assert.ok(fn, 'src/bank.mjs 应有 bankSourceText');
+  assert.ok(!/s\.file/.test(fn[0]), 'bankSourceText 不得再渲染 src.file（开发期取证件路径是学生可见字段的污染源）');
+  assert.ok(!/s\.note/.test(fn[0]), 'bankSourceText 不得再渲染 src.note 的取证说明');
+  assert.match(fn[0], /bankYearSourceLabel\(/, '院校名应经 bankYearSourceLabel 去掉尾部年份，避免与年份段重复');
+
+  // ② 数据级：三科逐题断言（先反证量具：路径判红、正常来源串不误伤）
+  const TRACE = /参考文件|[\\/]|\.pdf|\.png|裁片|答案册|解析册|真题册|backup|scratch|复核|转写/;
+  assert.ok(TRACE.test('参考文件/真题/数学/a.pdf · 一(1)'), '反证：取证件路径必须被判红');
+  assert.ok(!TRACE.test('北京大学光华-431 金融学统计 · 2025 · 一、（20 分）'), '反证：正常来源串不得误伤');
+
+  let yearRows = 0;
+  let cardRows = 0;
+  for (const sid of BANKS) {
+    for (const q of BANK[sid].questions) {
+      const label = B.bankSourceText(q);
+      assert.ok(label.length > 0, sid + ' ' + q.id + ' 的来源串不得为空');
+      assert.ok(!TRACE.test(label), sid + ' ' + q.id + ' 的来源串含内部痕迹：' + label);
+      if (q.origin === 'card') {
+        cardRows++;
+        assert.match(label, /^\d{4}( · .+)?$|^卡片例题$/, sid + ' ' + q.id + ' 卡片派生题应给「年份 · 题号」：' + label);
+      } else {
+        yearRows++;
+        assert.ok(label.indexOf(String(q.year)) >= 0, sid + ' ' + q.id + ' 真题来源串应含年份：' + label);
+        const school = B.bankYearSourceLabel(q.year, q.school || '') || B.bankSchoolLabel(q);
+        assert.ok(label.indexOf(school) === 0, sid + ' ' + q.id + ' 真题来源串应以院校/卷开头（' + school + '）：' + label);
+        assert.ok(label.indexOf(B.bankNoText(q)) >= 0 || B.bankNoText(q) === '', sid + ' ' + q.id + ' 真题来源串应含题号或跳过未编号：' + label);
+      }
+    }
+  }
+  assert.equal(yearRows, 445, '三科真题题应为 445 条（题量口径变化须同批更新）');
+  assert.equal(cardRows, 533, '三科卡片派生题应为 533 条（题量口径变化须同批更新）');
 });
 
 test('错题本状态：未入册 → false；入册后 → true（并回传命中条目）', () => {

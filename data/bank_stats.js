@@ -700,13 +700,6 @@
       src: { card: "est01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est01\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[est01] 无条目 → 省略 traps 字段。MNEM[est01] 无条目 → 省略 hint 字段。" }
     },
     {
-      id: "cv-st-est02", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "未编号", type: "estimate", star: 5,
-      tags: ["est02"],
-      stem: "$X_1,\\dots,X_n$ 为总体分布的简单随机样本，下列是总体均值 $\\mu$ 的无偏估计的有（  ）（不定项）\\\\\nA. $X_1$　B. $\\bar{X}$　C. $X_1-X_2+X_n$　D. $10X_1-9X_n$",
-      answer: "无偏性要求 $E(\\hat\\theta)=\\mu$：\nA：$E(X_1)=\\mu$ ✓；B：$E(\\bar X)=\\mu$ ✓；C：$E(X_1-X_2+X_n)=\\mu-\\mu+\\mu=\\mu$ ✓；D：$E(10X_1-9X_n)=10\\mu-9\\mu=\\mu$ ✓。\n故 A、B、C、D 均为 $\\mu$ 的无偏估计（线性无偏估计中系数之和为 1 即可）。",
-      src: { card: "est02", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est02\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[est02] 无条目 → 省略 traps 字段。MNEM[est02] 无条目 → 省略 hint 字段。" }
-    },
-    {
       id: "cv-st-est03", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "未编号", type: "estimate", star: 4,
       tags: ["est03"],
       stem: "设 $X_1,\\dots,X_n$ i.i.d. $\\sim N(\\mu,\\sigma^{2})$，$\\mu$ 已知。证明：(1) $\\dfrac1n\\sum_{i=1}^{n}(X_i-\\mu)^{2}$ 是 $\\sigma^{2}$ 的有效估计；(2) $\\dfrac1n\\sqrt{\\dfrac{\\pi}{2}}\\sum_{i=1}^{n}|X_i-\\mu|$ 是 $\\sigma$ 的无偏估计但不有效",
@@ -805,13 +798,6 @@
       stem: "设 $X_1,\\dots,X_n$ 是从正态总体 $N(\\mu,\\sigma^{2})$ 中抽出的随机样本，证明样本方差 $S^{2}$ 与样本均值 $\\bar X$ 相互独立",
       answer: "令 $\\bar X=\\frac1n\\sum X_i$，$S^{2}=\\frac{1}{n-1}\\sum(X_i-\\bar X)^{2}$。取正交阵 $A$（第一行 $A_{1\\cdot}=\\frac{1}{\\sqrt n}(1,\\dots,1)$），作变换 $Z=AX$，则 $Z_1=\\sqrt n\\,\\bar X$，且 $\\sum_{i=1}^{n}Z_i^{2}=\\sum_{i=1}^{n}X_i^{2}=\\sum_{i=1}^{n}(X_i-\\bar X)^{2}+n\\bar X^{2}=(n-1)S^{2}+Z_1^{2}$。\n由 $X_i$ 独立正态 $\\Rightarrow$ 正交变换下 $Z_1,\\dots,Z_n$ 相互独立。而 $\\sum_{i=2}^{n}Z_i^{2}=(n-1)S^{2}$，故 $Z_1=\\sqrt n\\bar X$ 与 $S^{2}$ 独立。这是后续 $t$、$F$ 分布等抽样分布推导的根基。",
       src: { card: "est11", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est11\"]）来源原文：2017 中国科学技术大学 432 统计学真题。PITFALL[est11] 无条目 → 省略 traps 字段。MNEM[est11] 无条目 → 省略 hint 字段。" }
-    },
-    {
-      id: "cv-st-est12", origin: 'card', year: 2025, school: "北大光华 431 统计真题 2025 年", no: "未编号", type: "estimate", star: 4,
-      tags: ["est12"],
-      stem: "$X_1,\\dots,X_n$ 为 $F(X,\\theta)$ 的简单随机样本，下列说法正确的是（  ）（不定项）\\\\\nA. 似然函数是 $\\theta$ 的函数\\\\\nB. 似然函数是 $X_1,\\dots,X_n$ 的函数\\\\\nC. $g(\\theta)$ 的极大似然估计是 $g(\\hat\\theta)$，其中 $\\hat\\theta$ 为 $\\theta$ 的 MLE\\\\\nD. 最大似然估计是似然函数的最大值",
-      answer: "选 A、C。A：给定样本后 $L(\\theta)=\\prod f(x_i;\\theta)$ 是参数 $\\theta$ 的函数，正确；B 错（是 $\\theta$ 的函数而非样本的函数）；C：MLE 的不变性（$g$ 连续时 $\\widehat{g(\\theta)}=g(\\hat\\theta)$），正确；D 错：最大似然估计是使似然函数取最大值的参数 $\\theta$ 的值，而非似然函数的最大值本身。",
-      src: { card: "est12", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est12\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[est12] 无条目 → 省略 traps 字段。MNEM[est12] 无条目 → 省略 hint 字段。" }
     },
     {
       id: "cv-st-est13", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "未编号", type: "estimate", star: 4,
@@ -1161,14 +1147,6 @@
       stem: "设取值为非负整数的总体，样本容量 $n=800$，取值 $0,1,2,3,4,5$ 的频数分别为 $250,200,180,100,50,20$。(1) 求经验分布函数；(2) 求 $P(X=0)$ 与 $P(2<X\\le4)$",
       answer: "(1) $F_n(x)=\\dfrac{1}{800}\\sum_{i=1}^{800}I\\{X_i\\le x\\}$，在 $0,1,2,3,4,5$ 处依次取值 $0.3125,0.5625,0.7875,0.9125,0.975,1$。\n(2) $P(X=0)=\\dfrac{250}{800}=0.3125$；$P(2<X\\le4)=\\dfrac{100+50}{800}=0.1875$。",
       src: { card: "sy04", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy04\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[sy04] 无条目 → 省略 traps 字段。MNEM[sy04] 无条目 → 省略 hint 字段。" }
-    },
-    {
-      id: "cv-st-sy05", origin: 'card', year: 2026, school: "北大光华 431 统计真题 2026 年", no: "未编号", type: "numchar", star: 4,
-      tags: ["sy05"],
-      stem: "设 $X\\sim P(\\lambda)$。(1) 对期望存在的 $g$，证明 $E[X\\,g(X)]=\\lambda E[g(X+1)]$；(2) 求 $E[X^3]$ 与 $E[X^4]$",
-      answer: "(1) $E[Xg(X)]=\\sum_{k\\ge1}k g(k)\\frac{\\lambda^k}{k!}e^{-\\lambda}=\\lambda\\sum_{j\\ge0}g(j+1)\\frac{\\lambda^j}{j!}e^{-\\lambda}=\\lambda E[g(X+1)]$。\n(2) $E[X^2]=\\lambda^2+\\lambda$，$E[X^3]=\\lambda E[(X+1)^2]=\\lambda(\\lambda^2+3\\lambda+1)=\\lambda^3+3\\lambda^2+\\lambda$；$E[X^4]=\\lambda E[(X+1)^3]=\\lambda[(\\lambda^3+3\\lambda^2+\\lambda)+3(\\lambda^2+\\lambda)+3\\lambda+1]=\\lambda^4+6\\lambda^3+7\\lambda^2+\\lambda$。",
-      altAnswer: "💡巧解（矩母函数）：$X\\sim P(\\lambda)$ 的矩母函数 $M(t)=e^{\\lambda(e^t-1)}$。逐阶求导：\n$$E[X]=M'(0)=\\lambda,\\quad E[X^2]=M''(0)=\\lambda^2+\\lambda,\\quad E[X^3]=\\lambda^3+3\\lambda^2+\\lambda,\\quad E[X^4]=\\lambda^4+6\\lambda^3+7\\lambda^2+\\lambda$$\n与 Stein 等式递推结果一致，且更便于机械化求高阶矩。",
-      src: { card: "sy05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"sy05\"]）来源原文：2026 北大光华 431 统计真题。PITFALL[sy05] 无条目 → 省略 traps 字段。MNEM[sy05] 无条目 → 省略 hint 字段。" }
     },
     {
       id: "cv-st-sy06", origin: 'card', year: 2020, school: "北大光华 431 统计真题 2020 年", no: "未编号", type: "dist", star: 4,
@@ -2092,7 +2070,7 @@
       school: "北京大学光华-431 金融学统计 2026 年",
       tags: ["rv07", "est22", "sy05", "test06", "est02"],
       stem: "设随机变量 $X$ 服从参数为 $\\lambda\\ (\\lambda>0)$ 的泊松分布．\n(1) 设 $g(X)$ 使期望存在，证明 $E[Xg(X)]=\\lambda E[g(X+1)]$；\n(2) 求 $X$ 的三阶原点矩 $E[X^3]$ 与四阶原点矩 $E[X^4]$；\n(3) 设 $X_1,X_2$ 为来自该总体的简单随机样本，考虑 $\\hat\\lambda_1=\\dfrac{X_1+X_2}{2}$ 与 $\\hat\\lambda_2=\\dfrac{(X_1-X_2)^2}{2}$，计算它们的均方误差并比较优劣；\n(4) 设 $X_1,\\dots,X_n$ 为简单随机样本，$\\bar X$ 为样本均值，利用 $\\bar X$ 构造统计量，在置信水平 $\\alpha$ 下对 $H_0:\\lambda=1\\leftrightarrow H_1:\\lambda\\ne1$ 进行检验（写出统计量、大样本近似分布与拒绝域）．",
-      answer: "(1) 用泊松分布求和：\n$$E[Xg(X)]=\\sum_{k\\ge0}k\\,g(k)\\frac{\\lambda^ke^{-\\lambda}}{k!}=\\lambda\\sum_{k\\ge1}g(k)\\frac{\\lambda^{k-1}e^{-\\lambda}}{(k-1)!}=\\lambda\\sum_{j\\ge0}g(j+1)\\frac{\\lambda^je^{-\\lambda}}{j!}=\\lambda E[g(X+1)] .$$\n(2) 反复用 (1)：$E[X^2]=\\lambda E[X+1]=\\lambda^2+\\lambda$；\n$$E[X^3]=\\lambda E[(X+1)^2]=\\lambda\\bigl[(\\lambda^2+\\lambda)+2\\lambda+1\\bigr]=\\lambda^3+3\\lambda^2+\\lambda ;$$\n$$E[X^4]=\\lambda E[(X+1)^3]=\\lambda\\bigl[\\lambda^3+3\\lambda^2+\\lambda+3\\lambda^2+3\\lambda+3+1\\bigr]=\\lambda^4+6\\lambda^3+7\\lambda^2+4\\lambda .$$\n(3) $\\hat\\lambda_1=\\frac{X_1+X_2}2$：$E=\\lambda$，$\\mathrm{Var}=\\frac{2\\lambda}4=\\frac\\lambda2$ ⇒ $\\mathrm{MSE}(\\hat\\lambda_1)=\\frac\\lambda2$．\n记 $D=X_1-X_2$：$E(D)=0$，$\\mathrm{Var}(D)=2\\lambda$；泊松分布的累积量 $\\kappa_j=\\lambda$，故 $D$ 的偶数阶累积量为 $2\\lambda$、奇数阶为 0，\n$$\\kappa_4(D)=2\\lambda,\\quad E[D^4]=\\kappa_4+3\\kappa_2^2=2\\lambda+12\\lambda^2 .$$\n于是 $E(\\hat\\lambda_2)=\\frac{E[D^2]}2=\\lambda$（无偏），\n$$\\mathrm{MSE}(\\hat\\lambda_2)=\\mathrm{Var}(\\hat\\lambda_2)=\\frac{E[D^4]}4-\\lambda^2=\\frac{2\\lambda+12\\lambda^2}4-\\lambda^2=\\frac\\lambda2+2\\lambda^2 .$$\n比较：$\\mathrm{MSE}(\\hat\\lambda_2)-\\mathrm{MSE}(\\hat\\lambda_1)=2\\lambda^2>0$，故对任意 $\\lambda>0$，$\\hat\\lambda_1$ 更优（无偏且方差更小；$\\hat\\lambda_2$ 虽无偏但方差含 $2\\lambda^2$ 项）．\n(4) 由中心极限定理 $\\sqrt n\\,\\dfrac{\\bar X-\\lambda}{\\sqrt\\lambda}\\xrightarrow{d}N(0,1)$．在 $H_0:\\lambda=1$ 下取\n$$Z=\\sqrt n\\,(\\bar X-1)\\ \\approx\\ N(0,1),\\qquad\\text{拒绝域：}\\ |Z|\\ \\ge\\ z_{1-\\alpha/2}$$\n（即 $|\\bar X-1|\\ge z_{1-\\alpha/2}/\\sqrt n$；若要更稳健可把方差用 $\\bar X$ 估计：$Z^*=\\frac{\\sqrt n(\\bar X-1)}{\\sqrt{\\bar X}}$，$H_0$ 下渐近 $N(0,1)$）．",
+      answer: "(1) 用泊松分布求和：\n$$E[Xg(X)]=\\sum_{k\\ge0}k\\,g(k)\\frac{\\lambda^ke^{-\\lambda}}{k!}=\\lambda\\sum_{k\\ge1}g(k)\\frac{\\lambda^{k-1}e^{-\\lambda}}{(k-1)!}=\\lambda\\sum_{j\\ge0}g(j+1)\\frac{\\lambda^je^{-\\lambda}}{j!}=\\lambda E[g(X+1)] .$$\n(2) 反复用 (1)：$E[X^2]=\\lambda E[X+1]=\\lambda^2+\\lambda$；\n$$E[X^3]=\\lambda E[(X+1)^2]=\\lambda\\bigl[(\\lambda^2+\\lambda)+2\\lambda+1\\bigr]=\\lambda^3+3\\lambda^2+\\lambda ;$$\n$$E[X^4]=\\lambda E[(X+1)^3]=\\lambda\\bigl[(\\lambda^3+3\\lambda^2+\\lambda)+3(\\lambda^2+\\lambda)+3\\lambda+1\\bigr]=\\lambda^4+6\\lambda^3+7\\lambda^2+\\lambda .$$\n(3) $\\hat\\lambda_1=\\frac{X_1+X_2}2$：$E=\\lambda$，$\\mathrm{Var}=\\frac{2\\lambda}4=\\frac\\lambda2$ ⇒ $\\mathrm{MSE}(\\hat\\lambda_1)=\\frac\\lambda2$．\n记 $D=X_1-X_2$：$E(D)=0$，$\\mathrm{Var}(D)=2\\lambda$；泊松分布的累积量 $\\kappa_j=\\lambda$，故 $D$ 的偶数阶累积量为 $2\\lambda$、奇数阶为 0，\n$$\\kappa_4(D)=2\\lambda,\\quad E[D^4]=\\kappa_4+3\\kappa_2^2=2\\lambda+12\\lambda^2 .$$\n于是 $E(\\hat\\lambda_2)=\\frac{E[D^2]}2=\\lambda$（无偏），\n$$\\mathrm{MSE}(\\hat\\lambda_2)=\\mathrm{Var}(\\hat\\lambda_2)=\\frac{E[D^4]}4-\\lambda^2=\\frac{2\\lambda+12\\lambda^2}4-\\lambda^2=\\frac\\lambda2+2\\lambda^2 .$$\n比较：$\\mathrm{MSE}(\\hat\\lambda_2)-\\mathrm{MSE}(\\hat\\lambda_1)=2\\lambda^2>0$，故对任意 $\\lambda>0$，$\\hat\\lambda_1$ 更优（无偏且方差更小；$\\hat\\lambda_2$ 虽无偏但方差含 $2\\lambda^2$ 项）．\n(4) 由中心极限定理 $\\sqrt n\\,\\dfrac{\\bar X-\\lambda}{\\sqrt\\lambda}\\xrightarrow{d}N(0,1)$．在 $H_0:\\lambda=1$ 下取\n$$Z=\\sqrt n\\,(\\bar X-1)\\ \\approx\\ N(0,1),\\qquad\\text{拒绝域：}\\ |Z|\\ \\ge\\ z_{1-\\alpha/2}$$\n（即 $|\\bar X-1|\\ge z_{1-\\alpha/2}/\\sqrt n$；若要更稳健可把方差用 $\\bar X$ 估计：$Z^*=\\frac{\\sqrt n(\\bar X-1)}{\\sqrt{\\bar X}}$，$H_0$ 下渐近 $N(0,1)$）．",
       traps: "(1) 的关键是 $k/k!\\to1/(k-1)!$ 的指标平移，证明要写出指标替换；(2) 必须借 (1) 递推，直接求 $E[X^3]$ 的四项求和容易出错；(3) $\\hat\\lambda_2$ 无偏但方差含 $2\\lambda^2$，只比较“是否无偏”会得出错误的“同优”结论；MSE＝方差＋偏差²；(4) $H_0$ 下方差为 $\\lambda=1$，检验统计量用 $\\sqrt n(\\bar X-1)$，不能漏 $\\sqrt n$",
       hint: "(1) 指标平移；(2) 递推；(3) MSE＝Var＋偏差²，并借泊松累积量 $\\kappa_j=\\lambda$ 算 $E[D^4]$；(4) CLT + $H_0$ 下方差已知。",
       src: {"file":"参考文件/真题/统计/JYSG真题册_2026_02_01 (1).txt","page":30,"no":"2026 统计部分 四","note":"题面取自真题册「2026 统计部分真题」（北京大学光华-431 金融学统计 2026 年，2026 年）对应 txt 第 30–31 页；答案为独立重推并与解析册口径核对；三层去重判定与转写批次见 backup/scratch/bank-statq/。"},

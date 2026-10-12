@@ -545,15 +545,19 @@ function bankNoText(q) {
 // 题目「可纳入错题本」的载体：题型 + 钩子（wrongId 便于回跳定位）
 // t32：卡片派生题没有真题册文件，来源串回退到 src.card/note（不渲染 undefined）
 // S5：卡片派生题的来源串改为「年份 · 题号」（题号取不到则只留年份；再退一步才写「卡片例题」，绝不出现卡片 id）
+// T148：真题侧不再渲染 src.file 的库内文件名（形如「参考文件/真题/…/*.pdf · 一(2)」——那是开发期的取证件路径，
+//   对学生没有意义），一律给「院校/卷 · 年份 · 题号」，与题库列表页徽标同源（院校经 bankYearSourceLabel 去掉
+//   尾部「<年份> 年」，避免与年份段重复）；src.note 的取证说明同样不再渲染。题号取不到时跳过，不渲染占位符。
 function bankSourceText(q) {
   var s = q && q.src;
   if (!s) return '';
-  if (s.file) return String(s.file) + (s.no ? (' · ' + s.no) : '');
   if (s.card) {
-    var bits = [q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; });
-    return bits.length ? bits.join(' · ') : '卡片例题';
+    var cardBits = [q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; });
+    return cardBits.length ? cardBits.join(' · ') : '卡片例题';
   }
-  return s.note ? String(s.note) : '';
+  var school = bankYearSourceLabel(q.year, q.school || '') || bankSchoolLabel(q);
+  var bits = [school, q.year, bankNoText(q)].filter(function (v) { return v != null && v !== ''; });
+  return bits.length ? bits.join(' · ') : '';
 }
 
 function bankBuildCard(q) {
@@ -1011,5 +1015,7 @@ export {
   // t14：年份/卷 维度（选项派生 + 谓词 + 选中态自愈）
   bankYearSelected, bankYearSourceLabel, bankYearRows, bankYearOptions, bankNormalizeYearFilter,
   // t7：选择题答案字母（渲染「答案：X」标识与正确项 is-answer 标记用，口径同期望答案护栏）
-  bankChoiceLetter
+  bankChoiceLetter,
+  // T148：题目来源串（错题本「📚 来源」）——真题侧只给「院校/卷 · 年份 · 题号」，不渲染库内文件名
+  bankNoText, bankSourceText
 };

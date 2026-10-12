@@ -421,58 +421,89 @@ const coverRatio = (a, b) => {
   return hit / A.size;
 };
 
-test('小问级不重复收录（t74/T142）：题库不得并存同一小问的两条条目，且每条 subOf 压制都必须被证实', () => {
-  const S = SUBJECTS.stats;
-  const EXAMPLE = S.EXAMPLE || {};
-  const qs = BANK.stats.questions;
-  const byId = new Map(qs.map((q) => [q.id, q]));
-  const yearQs = qs.filter((q) => q.origin !== 'card');
+// 三科各自的口径来源：math3 由 T149 登记（21 条逐字相同 + 2 条同一道题的不同问法），T144 返修又为 ★5 卡
+// `int33-2` 补挂 2012 三(19) 第 2 问（该 year 题的小问子集）⇒ 24 条；stats 由 T142 登记
+// （st-2025-1 第 2/3 小问、st-2026-2 第 (1)(2) 问），econ 经校准量具复测无同题重复（下限 0）。
+const SUBOF_SPECS = [
+  { sid: 'math3', prefix: 'cv-m3', file: 'data/math3.js', min: 24 },
+  { sid: 'econ', prefix: 'cv-ec', file: 'data/econ.js', min: 0 },
+  { sid: 'stats', prefix: 'cv-st', file: 'data/stats.js', min: 3 }
+];
 
-  // ① 每个 subOf：目标 year 题必须真实存在、例题题干确实被它的小问覆盖，且该派生条不得进题库
-  const marked = [];
-  for (const key of Object.keys(EXAMPLE)) {
-    const val = EXAMPLE[key];
-    const arr = Array.isArray(val) ? val : [val];
-    arr.forEach((e, i) => {
-      if (e && e.subOf && e.subOf.id) marked.push({ key, entry: e, id: 'cv-st-' + key + (i > 0 ? '-' + (i + 1) : '') });
-    });
-  }
-  assert.ok(marked.length > 0, '本用例不得空转：统计科应有 subOf 压制条目');
-  for (const m of marked) {
-    assert.ok(m.entry.subOf.item && String(m.entry.subOf.item).trim().length > 0,
-      m.id + ' 的 subOf 必须写明小问编号（item）');
-    const target = byId.get(m.entry.subOf.id);
-    assert.ok(target, m.id + ' 的 subOf.id 必须是题库里真实存在的题：' + m.entry.subOf.id);
-    assert.notEqual(target.origin, 'card', m.id + ' 的 subOf.id 必须指向 year 真题而非卡片派生题');
-    // 例题题干是 year 题小问的**精简转写**（「无偏估计的有」vs「无偏估计的有的（ ）」、A. vs (A)、
-    // MLE vs 极大似然估计），逐字覆盖率天然只有 0.3–0.6 ⇒ 这里不比绝对值，而是要求：
-    // 声明的小问确实是全库里与该例题最相似的那条 year 题，且相似度非平凡（≥0.25）。指错题必转红。
-    const scored = yearQs.map((y) => ({ id: y.id, r: coverRatio(m.entry.q, y.stem) }))
-      .sort((a, b) => b.r - a.r);
-    const r = coverRatio(m.entry.q, target.stem);
-    assert.ok(r >= 0.25, m.id + ' 与声明的 ' + m.entry.subOf.id + ' 相似度过低（' + r.toFixed(3) + '）：压制指错了题？');
-    assert.equal(scored[0].id, m.entry.subOf.id, m.id + ' 声明压制的应为全库最相似的 year 题：实际最相似是 '
-      + scored[0].id + '（' + scored[0].r.toFixed(3) + '），声明是 ' + m.entry.subOf.id + '（' + r.toFixed(3) + '）');
-    assert.ok(!byId.has(m.id), m.id + ' 已被 subOf 压制，仍出现在题库里');
-  }
-
-  // ② 的反证：合成一条「未标注的逐字重复」与一条无关题干，扫描器必须分别判红/判绿（否则 ② 是空转）
+test('小问级不重复收录（t74/T142 + T149）：三科题库都不得并存同一道题的两条条目，且每条 subOf 压制都必须被证实', () => {
+  // ① 反证：合成一条「未标注的逐字重复」与一条无关题干，扫描器必须分别判红/判绿（否则下面 ② 是空转）
   const probeCard = { origin: 'card', id: 'cv-probe-dup', stem: '设 $X\\sim P(\\lambda)$，求 $E[X^3]$ 与 $E[X^4]$ 的值（反证样本）' };
   const probeYear = { origin: 'year', id: 'probe-year', stem: probeCard.stem + '；并求方差。' };
   assert.ok(coverRatio(probeCard.stem, probeYear.stem) >= 0.9, '反证失败：逐字重复样本应被判为重复');
   assert.ok(coverRatio(probeCard.stem, '毫不相干的题干：求极限与导数') < 0.25, '反证失败：无关题干不应被判为重复');
 
-  // ② 未被压制的卡片派生题：不得整体落在任何一条 year 题里（否则就是未标注的小问级重复）
-  for (const q of qs) {
-    if (q.origin !== 'card') continue;
-    if (marked.some((m) => m.id === q.id)) continue;
-    for (const y of yearQs) {
-      const r = coverRatio(q.stem, y.stem);
-      assert.ok(r < 0.9, q.id + ' 与 year 题 ' + y.id + ' 是同一小问（覆盖率 ' + r.toFixed(3)
-        + '）却未登记 subOf：要么在 data/stats.js 的例题里标 subOf，要么改写例题来源');
+  for (const spec of SUBOF_SPECS) {
+    const S = SUBJECTS[spec.sid];
+    const EXAMPLE = S.EXAMPLE || {};
+    const qs = BANK[spec.sid].questions;
+    const byId = new Map(qs.map((q) => [q.id, q]));
+    const yearQs = qs.filter((q) => q.origin !== 'card');
+
+    // ② 每个 subOf：目标 year 题必须真实存在、例题题干确实被它覆盖，且该派生条不得进题库
+    const marked = [];
+    for (const key of Object.keys(EXAMPLE)) {
+      const val = EXAMPLE[key];
+      const arr = Array.isArray(val) ? val : [val];
+      arr.forEach((e, i) => {
+        if (e && e.subOf && e.subOf.id) marked.push({ key, entry: e, id: spec.prefix + '-' + key + (i > 0 ? '-' + (i + 1) : '') });
+      });
+    }
+    assert.ok(marked.length >= spec.min, spec.sid + ' 应有 ≥' + spec.min + ' 条 subOf 压制条目，实际 ' + marked.length + ' 条');
+    for (const m of marked) {
+      assert.ok(m.entry.subOf.item && String(m.entry.subOf.item).trim().length > 0,
+        m.id + ' 的 subOf 必须写明覆盖范围（item）');
+      const target = byId.get(m.entry.subOf.id);
+      assert.ok(target, m.id + ' 的 subOf.id 必须是题库里真实存在的题：' + m.entry.subOf.id);
+      assert.notEqual(target.origin, 'card', m.id + ' 的 subOf.id 必须指向 year 真题而非卡片派生题');
+      // 例题题干可能是 year 题小问的**精简转写**（「无偏估计的有」vs「无偏估计的有的（ ）」、A. vs (A)、
+      // MLE vs 极大似然估计），也可能是同一道题的不同问法（「求…」vs「…=______」）⇒ 这里不比绝对值，
+      // 而是要求：声明的目标确实是全库里与该例题最相似的那条 year 题，且相似度非平凡（≥0.25）。指错题必转红。
+      const scored = yearQs.map((y) => ({ id: y.id, r: coverRatio(m.entry.q, y.stem) }))
+        .sort((a, b) => b.r - a.r);
+      const r = coverRatio(m.entry.q, target.stem);
+      assert.ok(r >= 0.25, m.id + ' 与声明的 ' + m.entry.subOf.id + ' 相似度过低（' + r.toFixed(3) + '）：压制指错了题？');
+      assert.equal(scored[0].id, m.entry.subOf.id, m.id + ' 声明压制的应为全库最相似的 year 题：实际最相似是 '
+        + scored[0].id + '（' + scored[0].r.toFixed(3) + '），声明是 ' + m.entry.subOf.id + '（' + r.toFixed(3) + '）');
+      assert.ok(!byId.has(m.id), m.id + ' 已被 subOf 压制，仍出现在题库里');
+    }
+
+    // ③ 未被压制的卡片派生题：不得整体落在任何一条 year 题里（否则就是未标注的重复）
+    for (const q of qs) {
+      if (q.origin !== 'card') continue;
+      if (marked.some((m) => m.id === q.id)) continue;
+      for (const y of yearQs) {
+        const r = coverRatio(q.stem, y.stem);
+        assert.ok(r < 0.9, q.id + ' 与 year 题 ' + y.id + ' 是同一道题（覆盖率 ' + r.toFixed(3)
+          + '）却未登记 subOf：要么在 ' + spec.file + ' 的例题里标 subOf，要么改写例题来源');
+      }
     }
   }
 });
+
+// ------------------------------------------------- T144 返修 P5：统计合卷题小问答案回归
+// 背景：T138/t68 按解析册第 92 页官方答案把 st-2025-1 第 3 小问由 ABC 更正为 **AC**（B 项错）。
+// 该值此前没有任何护栏——T144 的反证 CX4 把 `答案：AC．` 改成 `答案：ABC．` 后四道闸门全绿（判绿＝缺口），
+// 故此用例把它钉死；改回错误答案会立刻转红。
+test('题库：st-2025-1 第 3 小问答案不得回退（t68 按解析册裁定为 AC）', () => {
+  const q = BANK.stats.questions.find((x) => x.id === 'st-2025-1');
+  assert.ok(q, 'st-2025-1（2025 北大光华-431 统计，不定项选择题合卷题）应存在');
+  assert.equal(q.origin, 'year', 'st-2025-1 应是真题侧条目');
+  const ans = String(q.answer);
+  const ac = (ans.match(/答案：AC．/g) || []).length;
+  const abc = (ans.match(/答案：ABC．/g) || []).length;
+  assert.equal(ac, 1, 'st-2025-1 的「答案：AC．」（第 3 小问）应恰出现 1 次，实为 ' + ac + ' 次');
+  assert.equal(abc, 0, 'st-2025-1 不得出现「答案：ABC．」：第 3 小问 B 项错，已由 t68 更正，不得回退');
+  // 同批核对：被 subOf 压制的两条卡片例题（est02/est12）确实指向这道 year 题的第 2/3 小问
+  const st = SUBJECTS.stats.EXAMPLE || {};
+  assert.equal((st.est02 && st.est02.subOf && st.est02.subOf.id) || '', 'st-2025-1');
+  assert.equal((st.est12 && st.est12.subOf && st.est12.subOf.id) || '', 'st-2025-1');
+});
+
 // ------------------------------------------------- t49：卡片例题 → 题库 逐题对拍（数学三 / 微观经济学）
 // 与上方统计块同口径、同强度（期望值一律从 data/math3.js、data/econ.js 现算，不读生成脚本中间产物），
 // 另加两条本科特有断言：①数学三卷名按官方更名口径（2014 年及以前「入学统一考试」，2015 年起「招生考试」）；
@@ -500,11 +531,14 @@ const cardEntriesOf = (EXAMPLE, prefix) => {
 // 例题 src 无四位年份即排除（例题仅真题红线，不编造年份/来源）：数学三 0 条，微观仅 mk31 第 1 条
 // poc = 非卡片派生题（手写真题）条数：math3 由 t53 前的 24 增至 181（t53 全量入库 2010–2022 的 157 条）
 // t62：微观期望值改为从 data/econ.js 现算（t51 新增 13 张卡后，写死 148 会立刻过期），另用 floor 锁住已入库量；
-// 数学三写死值（t49 起）：t49 时 150；T140 因 T139 给数学三补挂 55 条例题（EXAMPLE 键 124→179）而更新为 205；
-// 它与 poc=181 交叉锁定（150+181=331 → 205+181=386），故仍不改为现算——任一侧漂移都会立刻转红。
+// 数学三写死值（t49 起）：t49 时 150；T140 因 T139 给数学三补挂 55 条例题（EXAMPLE 键 124→180）而更新为 205；
+// T149：数学三 23 条例题与 year 真题同题（21 条逐字相同 + int24/zt01 与 m3-2016-10 是同一道题的不同问法）
+// 标 subOf 后不再重复入库 ⇒ kept 205 → 182；T144 返修又给 ★5 卡 int33-2 补挂 2012 三(19) 第 2 问（同为该 year 题的小问子集）
+// ⇒ skip 0 → 24（23 条 T149 + 1 条 T144 返修）；它与 poc=181 交叉锁定
+// （150+181=331 → 205+181=386 → 182+181=363），故仍不改为现算——任一侧漂移都会立刻转红。
 const ECON_CARD_PARTS = cardEntriesOf(SUBJECTS.econ.EXAMPLE || {}, CARD_PREFIX.econ);
 const T49_CARDS = [
-  { sid: 'math3', cardFile: 'data/math3.js', kept: 205, skip: 0, poc: 181 },
+  { sid: 'math3', cardFile: 'data/math3.js', kept: 182, skip: 24, poc: 181 },
   // poc（既有手写真题）＝题库总题数 − 卡片派生题：math3 181（t53 全量入库 2010–2022）；
   // econ 15（t49 起）→ 174（T143a 第一批微观真题题面 159 条入库：15 + 159 = 174）。
   { sid: 'econ', cardFile: 'data/econ.js', kept: ECON_CARD_PARTS.kept.length,
@@ -524,7 +558,7 @@ test('卡片派生题（t49 数学三 / 微观）：id/标签/星级/题干/答�
     const skipped = parts.skipped;
     const derived = BANK[spec.sid].questions.filter((q) => q.origin === 'card');
     assert.equal(kept.length, spec.kept, spec.sid + ' 卡片例题（src 带四位年份）条数应为 ' + spec.kept);
-    assert.equal(skipped.length, spec.skip, spec.sid + ' 例题 src 无四位年份的条目数应为 ' + spec.skip);
+    assert.equal(skipped.length, spec.skip, spec.sid + ' 被排除的卡片例题条目数（无四位年份 或 subOf 压制）应为 ' + spec.skip);
     assert.equal(derived.length, spec.kept, spec.sid + ' 题库 origin=card 的卡片派生题条数应为 ' + spec.kept);
     // t62 下限护栏：微观期望值虽改为现算，但派生题量不得低于 t62 入库时点（161），
     // 防止「例题 src 年份被改掉」导致期望值与题库同时缩水而用例仍然自洽通过。
@@ -1087,7 +1121,39 @@ test('T148 来源串：真题题不渲染库内文件名，三科逐题给「院
     }
   }
   assert.equal(yearRows, 445, '三科真题题应为 445 条（题量口径变化须同批更新）');
-  assert.equal(cardRows, 533, '三科卡片派生题应为 533 条（题量口径变化须同批更新）');
+  assert.equal(cardRows, 510, '三科卡片派生题应为 510 条（T149 后：533 − math3 23 条同题压制；口径变化须同批更新）');
+});
+
+// ------------------------------------------------- T149：学生可见字段不得含开发痕迹
+// 起因：T148 只把「来源串」去了痕（src.note / src.file 不再渲染），但 traps 等字段同样直接显示给用户——
+// data/bank_stats.js 的 st-2022-1 traps 里就留着一句「（必须回读裁片）」。这条用例把「学生可见」的范围钉住：
+// stem / answer / traps / hint / altAnswer / options 一律不得出现内部路径、裁片、PDF 页码、参考文件路径等痕迹；
+// 唯一允许的例外是 econ 那批尚未补录的「【答案待批】…」占位（条数断言锁住补录进度，只许减少）。
+test('T149 学生可见字段（stem/answer/traps/hint/altAnswer/options）不得含开发痕迹；仅允许 econ 的「答案待批」占位', () => {
+  const TRACE_VISIBLE = /裁片|backup\/|scratch\/|refs-vision|cards-micro|\.png|\.jpg|micro\.json|参考文件|PDF/i;
+  const PLACEHOLDER = /^【答案待批】/;
+  const FIELDS = ['stem', 'answer', 'traps', 'hint', 'altAnswer'];
+  let placeholders = 0;
+  for (const sid of BANKS) {
+    for (const q of BANK[sid].questions) {
+      for (const f of FIELDS) {
+        const v = q[f];
+        if (typeof v !== 'string') continue;
+        if (PLACEHOLDER.test(v)) {
+          // 占位只应出现在 econ 的 answer 字段（答案册原文为手写批注，待后续批次亲读裁片补录）
+          assert.equal(sid, 'econ', sid + ' ' + q.id + ' 的 ' + f + ' 出现「答案待批」占位');
+          assert.equal(f, 'answer', sid + ' ' + q.id + ' 的 ' + f + ' 出现「答案待批」占位');
+          placeholders++;
+          continue;
+        }
+        assert.ok(!TRACE_VISIBLE.test(v), sid + ' ' + q.id + ' 的 ' + f + ' 含开发痕迹：' + v.slice(0, 80));
+      }
+      for (const o of q.options || []) {
+        if (typeof o === 'string') assert.ok(!TRACE_VISIBLE.test(o), sid + ' ' + q.id + ' 的选项含开发痕迹：' + o.slice(0, 80));
+      }
+    }
+  }
+  assert.equal(placeholders, 159, 'econ「答案待批」占位应为 159 条（补录后同步下调；只许减少）');
 });
 
 test('错题本状态：未入册 → false；入册后 → true（并回传命中条目）', () => {

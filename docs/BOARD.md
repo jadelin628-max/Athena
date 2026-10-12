@@ -113,7 +113,7 @@
 
 | # | 验收 | 结果 | 船长证据 |
 |---|---|---|---|
-| 1 | ★5 无例题逐卡补挂 | **passed** | 自建 `backup/scratch/cards-math3/captain-verify-c5{,b}.mjs` 独立 vm 重算：`META` 权威下 ★5 卡 **108 / 有例题 108 / 缺 0**（改前 68）；★4 有例题 54 |
+| 1 | ★5 无例题逐卡补挂 | **passed** | 自建 `backup/scratch/cards-math3/captain-verify-c5{,b}.mjs` 独立 vm 重算：`META` 权威下 ★5 卡 **108 / 有例题 108 / 缺 0**（改前 68）；★4 有例题 54（**T144 独立验证补注**：第二波新增卡 `int33-2`〔`data/math3.js:2255`，`[5,'变限积分函数拐点判别']`〕使 ★5 总数升到 109、其中 1 张当时缺例题；T144 返修已为它补挂「2012 年数三 三(19)」第 2) 问的真实真题例题并标 `subOf`，故 2.1.6 交付面 ★5 为 **109 / 有例题 109 / 缺 0**） |
 | 2 | 4 张标题改写 + `zb01` 迁例题 | **passed** | `gx32`「偶函数减半」/`gx50`「平方与任意子列」/`gx51`「条件收敛时都发散」/`kn23`「$A^{T}A$ 与 $A+A^{T}$ 必对称；$A+B$ 对称 ⇔ $AB=BA$」四张逐字命中；`EXAMPLE.zb01` 存在；`git diff` 删行恰为 4 条标题行 + 1 条 182 字符内联例题行（2016 数三 $\sin1-\cos1$） |
 | 3 | 线代例题率 ≥50% | **passed** | `linalg` 84 张中 **45 有例题 = 53.6%**（改前 17 = 20.2%），船长独立重算一致 |
 | 4 | 两条闸门 PASS + 最小改动 + 前后 sha256 | **passed** | 船长亲跑 `node tools/check_data.mjs` **exit 0**（ERR=0；WARN=159 全为 econ 题库在途写入触发的同源规则告警，与本任务无关）、`node tools/check_render.mjs` **exit 0**（2809 卡 / **10115** 渲染字段 / 0 问题）；`EXAMPLE` 键 124→**179**（0 重复键）、`REL` 394 / `MNEM` 16 / `PITFALL` 70 / 卡片 397 逐项不变 |
@@ -268,9 +268,9 @@
 
 ---
 ### T144 2.2.0 第二波独立验证（T138–T143 + T141）
-- 状态: open
-- 负责: verifier2（团队任务 t76）
-- 文件集: 仅 `backup/scratch/verify-wave-b/`
+- 状态: verified（两轮独立复核：第一轮 `needs_revision（轻）`——数据侧与结构侧承诺全部独立复算通过、四闸门全绿，无需重做数据，P1–P7 已逐条返修；第二轮复核判 `needs_revision（轻）` 但只余 6 处文档面错值 F1–F6，已全部闭合（见报告 §10），数据侧与闸门零返工）
+- 负责: verifier2（团队任务 t76）；实际执行＝只读子代理 `86357ce5-6806-4ee8-be5c-8b44f94668dd`（独立上下文，当时无活团队故团队邮箱不可达，报告经父子消息投递）
+- 文件集: 仅 `backup/scratch/verify-wave-b/`（只读被验文件；T144 返修由船长执行，另改 `docs/refs/rulings/math3-ans.md`、`data/bank_stats.js:1`、`data/bank_math3.js:1`、`data/math3.js`（`int33-2` 例题）、`tests/bank.test.mjs`、`docs/COVERAGE.md`、`docs/refs/2.2.0-PLAN.md`、`docs/CARD-STANDARD.md`、`docs/ARCHITECTURE.md`、`docs/BOARD.md`）
 - 依据: `docs/WORKFLOW.md` §5–§6 + `AGENTS.md` 验收口径
 - 依赖: T138、T139、T140、T141、T142、T143
 - 验收:
@@ -278,12 +278,23 @@
   2. 反证 ≥3（改 star / 改 school 不同源 / 删派生题 / 回退 AC）点名判红
   3. 四闸门亲跑 exit 0：`check_data`（ERR=0 WARN=0）、`bank.test`、`npm test`、`check_render`
   4. T141 生成器沙盒复现（哨兵原位 + math3 默认 exit 2 + 两例判红）；范围审计与诚实未覆盖清单
-- 升版: 待升版
+- 升版: 随 2.1.6（与 T149 同批交付）
 
 #### 派单摘要（可直接粘贴为切片开场，含三句话）
 工作区 `D:\deepseek harness work\考研\Athena`；先读 `AGENTS.md`，再读 `docs/WORKFLOW.md` §5–§6 与各任务报告。文件集仅 `backup/scratch/verify-wave-b/`（只读被验文件）；独立复算 + 反证 + 四闸门亲跑，未覆盖项如实登记。
 
 ### 报告
+
+1. **判据基线（含竞态声明）**：开工 `git status` 为空 ⇒ 全部判据建立在 **HEAD `ac16e12` 的冻结副本** `backup/scratch/verify-wave-b/head/`（`git archive HEAD`）。验证途中工作树被 T149 波次持续改写（`data/bank_math3.js` 448,223→424,219、`data/math3.js` 357,755→358,836、`data/bank_stats.js` 388,242→388,210、`data/econ.js` 341,953→331,952、`tools/bank-cv.mjs` 44,207→44,234、`tests/bank.test.mjs` 146,526→149,646、`docs/refs/2.2.0-PLAN.md` 41,729→43,661），登记为**竞态、不据此判失败**；未变文件（本波产物未污染）：`docs/refs/rulings/math3-ans.md`、`docs/refs/math3.json`、`data/stats.js`、`data/bank_econ.js`、`tools/check_data.mjs`、`tests/bank-cv.test.mjs`、`tests/fixtures/bank-answer-manifest.json`、`package.json`。
+2. **①(a) 答案亲读复算 ✓**：亲读 **9 张裁片、逐项核对 33 个答案 → 33/33 一致、0 不一致**（含 `m3-2012-17` 的 C(24,26)=**11118** 亲读反驳 OCR 的 11524；`2011_ans_p9` 独立复算矩阵 A 与裁定一致）；62 张声明裁片 sha256/字节/像素 **0 mismatch**；136 条裁定＝填空 46 + 解答 90，置信度全 high、三源全 all，`answer_manifest.answers` **297 键**、136 条 id 全并入；在库可对拍 10 条全一致；6 条「宽松归一不一致」复核为同值不同书写（`\dfrac` vs `\frac`）。
+3. **①(b) 例题回读 ✓**：抽 5 条（`lim09`/`trig01`/`gx04`/`zb10`/`ext20`）`src` 全为「年份 + 卷名 + 题号」（如 `2018 年数三 一(2)`）且无 `参考文件`/`裁片`/`backup`/`scratch`/PDF 页码等内部痕迹；卡片 `EXAMPLE` 与题库派生行 stem/answer **逐字同源 5/5**。
+4. **①(c) 结构复算 ✓**：自建 `s1-structure.mjs <head>` → **PASS 45 / FAIL 0**：math3 386＝181+205、econ 335＝174+161、stats 257＝90+167（派生数现算全等）；`origin` 仅 `year`/`card`；id 唯一、`no` 非空、type 命中；stats 三条被压制 id（`cv-st-est02`/`cv-st-est12`/`cv-st-sy05`）**不在题库**；全库 **978＝445+533**。T143 护栏只核不改 ✓（`:85` `MIN_QUESTIONS {math3:331,econ:176,stats:257}`、`:86` 派生 `MIN_TOTAL`＝764；实测 386/335/257 全 ≥）。T141 生成器 ✓：`--subject math3` 无 `--allow-math3-reorder` → **exit 2**；块外骨架逐字节不变（块内改 star / 删整条派生行 → `--write` 均**逐字节复原＝HEAD**）；两例坏输入判红；哨兵自检有效、`--write` 幂等。
+5. **② 反证**：CX1 star 3→9 → `[ERR] math3 m3-2012-17 难度 star 非 1..5 整数: 9` + s1 exit 1；CX2 删 `src.file` → `[ERR] src 缺 file`；CX3b 派生行 `origin card→year` → check_data exit 1、bank.test **fail 5**、s1 PASS 40/FAIL 5；**CX4 `st-2025-1` 第 3 小问 `答案：AC．`→`答案：ABC．` 三闸门全绿 ⇒ 判绿（当时无护栏 → P5）**；GS4 `EXAMPLE` src 去年份 → `bank-cv` exit 0 静默删派生行（978→977/533→532）→ bank.test fail 2 + s1 FAIL 2；GS5 `subOf` 指向不存在题 → `[ERR] stats EXAMPLE["est12"].subOf.id 指向题库里不存在的题: st-9999-9`。
+6. **③ 四闸门（HEAD 冻结副本，全部 exit 0）**：`check_data`（学科 25｜卡片 2897｜真题 **978**｜派生 533｜subOf 压制 3；ERR=0 WARN=0）、`node --test tests/bank.test.mjs` **45/45**、`npm test` **385/385**、`check:render`（卡片 2897｜渲染字段 10421｜问题 0）。
+7. **④ 问题与返修对照（本批逐条处置）**：**P1** `docs/refs/rulings/math3-ans.md:15` 就绪量「297→433」→ 改 **161→297**（108 + 189）；**P2** 同文件 `:14` 裁片「62 张＝59+31」→ 改 **71 张＝59 计划内 + 12 补渲**（`crops/` 实测 71 文件 / 7,133,290 B）；**P3** T139「★5 108/108」在第二波后不成立（★5 109、缺 1＝`int33-2`）→ 已为该卡补挂「2012 年数三 三(19)」第 2) 问真实真题例题并标 `subOf`（math3 压制 23 → **24**、subOf 总 **27**、★5 **109/109**）；**P4** `data/bank_stats.js:1` 头注释仍 260/170 → 改 **257/167**（同批修 `data/bank_math3.js:1` → 363/182）；**P5** 缺「`st-2025-1` 第 3 小问 `答案：AC．`」回归断言 → 新增用例，反证实测「改 ABC → 判红（46 pass / 1 fail）、还原 47/47」；**P6** `docs/ARCHITECTURE.md:144` 行号引用错位（`:81-82`/`:247`/`:257-258`/`:420`）→ 已在 T149 波次改为 `:85-86`/`:251`/`:261-262`/`:266`，本批再校正为 `:433`/`:1132`；**P7** `docs/refs/2.2.0-PLAN.md:58`「978＝286+533」与 `docs/COVERAGE.md` §6 表旧值 → §6 三科行按 2.1.6 实测重写、§0 终值条目与 `:59` 状态段同步。
+8. **⑤ 未覆盖（诚实清单）**：136 条只亲读 9 张 / 33 项；math3 126 条「题面无」未验题库落地；108 条选择题字母三源未复核；2023–2025 批次不在 T138 清单；未逐题把 stem 回读到 PDF 页码；未亲跑 `npm run check` 与 `check_plan.mjs`（由船长在本批补跑）；`tests/bank-cv.test.mjs` 21 用例未逐条复跑；econ/stats 答案未人工亲读；工作树在途期间未在其上跑判据（故判据一律基于 HEAD 冻结副本）。
+9. **证据落盘**：`backup/scratch/verify-wave-b/T144-report.md`、`s1-structure.mjs`、`s1-structure-head.txt`、`s2-answers-head.txt`、`s3-crops/`、`s4-examples-head.txt`、`cx-results.txt`、`gs-results.txt`、`gates-head.txt`、`sha256-before.txt`/`sha256-after.txt`。
+10. **第二轮独立复核（返修后，只读子代理 `f1e30cde-f2d9-4b9e-b4fa-de3108ad2b54`，报告 `backup/scratch/verify-wave-b/t144fix/REVERIFY-report.md`）**：判 `needs_revision（轻）`——**P1/P3(红线)/P4/P5/P7 全部 pass**，P2、P6 部分（计数对、新写入的尺寸/行号有误）；`P3 最强证据链`＝`crops/2012_ans_p9.png` 实测 sha256 `405c56b1…76d7e9` 与 `docs/refs/rulings/math3-ans.md:617`、`docs/refs/math3.json` 的 `answers["m3-2012-19"].evidence[0]` 逐位一致，读图亲见「（19）…f''+f'−2f=0 及 f'+f=2e^x 1）求 f(x) 2）求拐点…故 f(x)=e^x…(0,0) 唯一拐点」⇒ `EXAMPLE["int33-2"]` 逐式一致、非编造；独立复算 y'' 符号 ⇒ 唯一拐点正确；6-gram Jaccard 对全 math3 其它例题题干最大 **0.023**（同父键 `int33` 0.013）⇒ 不构成照抄；`subOf` 目标存在、非卡片派生、覆盖率 0.6333＝真题侧最高。**失败项与闭合（F1–F6，只动 docs/）**：**F1**（中）`rulings/math3-ans.md:14` 引用的 `coverage.non_choice_verified` 字面仍是 t4 快照 53 → 改引 `answer_manifest._meta.counts`（`{total:297,choice:108,fill:189}`）并注明该字段是 t4 时点；**F2**（中）同文件 `:13`「最大 1041×471」为假 → 改「最大单边 **1331**（`2014_ans_p2.png` 932×1331）、最大宽 **1041**（`2013_ans_p4_band.png`）」（船长复算 71 文件证实）；**F3**（中，4 处行号）`docs/DATA_SCHEMA.md:320` `:1802`/`:1872` → **`:1824`/`:1894`**；`:322` `:432` → **`:433`**；`:328` `:526` → **`:548`**；`docs/ARCHITECTURE.md:210` stats `:352` → **`:341`**（并注明期望由 `cardEntryIds` 现算、math3+econ 期望值表＝`T49_CARDS` `:540`）——四处均由船长在 `tests/bank.test.mjs` 上复核命中行；**F4**（低）`docs/DATA_SCHEMA.md:139` 前半句 `math3 124 键 150 条` 是 t49 时点 → 加「（t49 时点读数）」；**F5**（中）`docs/BOARD.md:441` 渲染字段 10385 → **10387**、`:438` `424,269 B` → **424,310 B**（`data/bank_math3.js` 磁盘实测；Δ41 为 P4 头注释）；**F6**（低）`docs/CARD-STANDARD.md:134` subOf 26 / npm test 386 → **27 / 387**、`docs/refs/2.2.0-PLAN.md:54` Q4c 目标 ~207 → 记实测 **297**，并把该行从 `:220` 的「未执行」清单移出（T138 已闭环）。复核方另有 3 处「疑似实为正常」的排除：`bank_math3.js` id 行 364＝容器 `id:'math3'`、`int33-2` 的 `subOf` 指向 POC 手写题（`origin` 缺失）合法、Jaccard 0.4903 不触 `S1_MAX`（S1 量 card.front ↔ 本卡例题）。闸门（复核方亲跑，无 `--write`）：check_data 0（25/2888/955/510/27）、bank.test 47/47、npm test 387/387、check_render 0（2888/10387/0）、三科 `bank-cv` 干跑「无变化」、check_plan 61/0、`npm run check` 0，跑完 `git status` 仍同样 13 个 M ⇒ 无写盘。
 
 ---
 ### T145 第二波文档与计数终值回写
@@ -309,7 +320,7 @@
 1. **本次回写的计数终值**（量具 `backup/scratch/docs-wave-a/measure-cards.mjs` / `measure-examples.mjs` / `measure-bank.mjs`）
    - **卡片**：全库 **2897 张**（学科 25）；本项目三科 **1012 张** ＝ stats **272** / econ **342** / math3 **398**（cat 9 / 18 / 14）。
    - **题库**：**981 题** = 真题侧 **445** + 卡片派生 **536**；逐科 math3 **386**（派生 205 + 真题侧 181）/ econ **335**（派生 161 + 真题侧 174）/ stats **260**（派生 170 + 真题侧 90）；题型 13 / 10 / 11，年份 math3 2000–2026、econ 1995–2026、stats 2001–2026；沿革 **767 → 822（T139）→ 981（T143a 微观手写真题 159 条：econ 176→335）**。
-   - **`EXAMPLE`**：三科合计 键 **489** / 条目 **544**（stats 166/177、math3 179/205、econ 144/162）。
+   - **`EXAMPLE`**：三科合计 键 **489** / 条目 **544**（stats 166/177、math3 179/205、econ 144/162）。（T144 返修后为 键 **490** / 条目 **545**：math3 **180/206**，`int33-2` 补挂第 180 键。）
    - **`check_data` 汇总行**：学科 25 / 卡片 2897 / 题库科目 3 / 真题 981 / 派生 536 / 来源分组 147 组 / 同组多写法 0，**ERR=0 WARN=0**。
 2. **S8 三科超限卡处置结论**：P1–P3 共 **89 张**超限卡全部处置完毕（第一波新增 29 张 + 既有 23 张 net>400 + 37 张 300<net≤400，方式＝拆分或收紧到 net ≤ 300）；`recon23.mjs all --min 300` 实测 econ 342 卡 / stats 272 卡 / math3 398 卡，**net > 300 三科均为 0 张**；三科卡片 econ 301→342、stats 226→272、math3 397→398（math3 唯一拆分 `int33` → `int33` + `int33-2`），全库 **2809 → 2897**。处置口径见 `docs/CARD-STANDARD.md` §3、§5.2。
 3. **证据命令与结果**：`node tools/check_data.mjs` ✅ **ERR=0 WARN=0**；`node backup/scratch/captain-recon-b/recon23.mjs all --min 300` → 三科 **0 张**；`node --test tests/bank.test.mjs` → **43/43 pass**；四个量具文件＝`backup/scratch/docs-wave-a/measure-cards.mjs`、`backup/scratch/docs-wave-a/measure-examples.mjs`、`backup/scratch/docs-wave-a/measure-bank.mjs`、`backup/scratch/captain-recon-b/recon23.mjs`。
@@ -402,6 +413,36 @@
 8. **本轮发现的题库侧问题处置**：①**题库真题侧 445 条**（math3 181 / econ 174 / stats 90）在错题本里显示开发文件路径——**已修**（见第 10 条）。②题库内的开发痕迹（`data/bank_econ.js` `答案待批` 159 处、`data/bank_math3.js` `裁片` 365 处、`data/bank_stats.js` `backup/scratch` 76 处与文件头注释里的生成命令）**未处置**，待用户裁定。③`gm21` 在 `data/econ.js` 与 `data/math3.js` 同名 id（`REL` 不带学科）待确认渲染是否指错卡。
 9. **未做（如实登记）**：T143（护栏派生化）、T144（独立验证）仍 open；题库跨源重复（math3 32 组 66 条 / econ 7 组 14 条）、题号「未编号」占 48% 两项口径未动。
 10. **错题本来源串修复（用户追加裁定①，只改渲染层、数据零改动）**：`src/bank.mjs` 的 `bankSourceText()` 删去 `src.file`/`src.note` 两个分支——真题侧改为「院校/卷 · 年份 · 题号」（院校经既有 `bankYearSourceLabel` 去掉尾部「<年份> 年」避免与年份段重复），卡片派生题维持 S5 的「年份 · 题号」；调用点 `src/bank.mjs:569`（详情/卡片）与 `:583`（入库错题本）不变，故 `src/wrong.mjs:250/451` 的「📚 来源」随之变干净，题库列表页的来源徽标（本来就只显示「院校 · 年度 · 题号」）不受影响；数据侧 `src.file` **必须保留**（`tools/check_data.mjs:263-287` 的 school 同源校验与 `tests/bank.test.mjs:307` 都依赖它）。守卫＝`tests/bank.test.mjs` 新增用例「T148 来源串：真题题不渲染库内文件名，三科逐题给『院校/卷 · 年份 · 题号』」——先反证量具（路径判红、正常串不误伤），再源码级断言函数体内不再出现 `s.file`/`s.note` 且院校经 `bankYearSourceLabel`，最后逐题断言三科 **978 条**（445 真题 + 533 派生）来源串非空、不含 `参考文件|/|\\|.pdf|.png|裁片|答案册|解析册|真题册|backup|scratch|复核|转写`、真题串含年份且以院校名开头、卡片派生串为「年份 · 题号」；为驱动该用例，测试夹具把块外的 `BANK_NO_UNKNOWN`/`bankNoText`/`bankSourceText` 一并注入 vm（先例＝既有常量表注入）。
+
+### T149 第一波信息经济学卡删除 + 数学三同题不重复收录 + 学生可见痕迹守卫（切片 B，用户反馈）
+- 状态: accepted（2026-10-12 落地；代码/数据/文档/闸门均已收口，**已随 2.1.6 提交推送**）
+- 负责: 船长（主对话；用户直接指令）
+- 文件集: `data/econ.js`、`data/math3.js`、`data/bank_math3.js`、`data/bank_stats.js`、`tools/bank-cv.mjs`、`tests/bank.test.mjs`、`docs/CARD-STANDARD.md`、`docs/COVERAGE.md`、`docs/ARCHITECTURE.md`、`docs/DATA_SCHEMA.md`、`docs/refs/2.2.0-PLAN.md`、`docs/BOARD.md`；量具与改写脚本在 `backup/scratch/cardfix/`（`probe-wave1.mjs`、`probe-wave1b.mjs`、`del-info-cards.mjs`、`probe-subof-m3.mjs`、`probe-cover-all.mjs`、`mark-m3-subof.mjs`、`fix-stats-traps.mjs`）；回滚点 `backup/econ.js.pre-t149`（blob `87f9bc20…`）、`backup/math3.js.pre-t149`、`backup/bank_math3.js.pre-t149`、`backup/bank_stats.js.pre-t149`
+- 依据: 用户裁定「先把微观第一波卡片中新增的信息经济学的卡片删除了吧，我审阅了以下仍然质量不够而且内容也基本根据题目来的，无意义」；同批指令「接着做21重复，修复traps，跑144」「读图留待下一版本」
+- 依赖: T148（切片 A 已交付）、T142（`subOf` 抑制机制与不变量用例）
+- 验收:
+  1. 第一波新增的 9 张 `cat=information` 卡删除彻底：DATA/META/REL/PITFALL/EXAMPLE/题库文本中无残留、无悬挂引用
+  2. 数学三「同一道题以两条独立条目并存」清零，且每条压制都必须被证实（声明目标＝最相似 year 题、覆盖率 ≥ 0.25、题库确实不再收录该派生题）
+  3. 学生可见字段（`stem`/`answer`/`traps`/`hint`/`altAnswer`/`options`）不再出现任何开发痕迹，唯一例外是 econ 的「答案待批」占位（条数只许减少）
+  4. 题库与卡片计数、护栏、文档终值同批同步且互相一致
+  5. 总闸全绿：`node tools/check_data.mjs`、`npm test`、`npm run check:render`、`npm run check`、`recon23.mjs all --min 300`、`check_plan.mjs`
+- 升版: **2.1.6**（用户裁定；T142 与 T148 已随 2.1.5 交付，本批与 T144 返修同批升格并提交推送——七处版本标记 + CHANGELOG 条目）
+
+### 报告
+
+**T149 已落地（2026-10-12）**
+
+1. **删除范围与判据**：以 2.1.2 基线 `cac5bc1` 的 `data/econ.js`（导出到 `backup/scratch/cardfix/econ-baseline-212.js`）做 diff，量具 `probe-wave1.mjs` 报出第一波新增 **41 张**（按 cat：uncertainty 5 / **information 9** / game 9 / consumer 2 / cost 1 / oligopoly 4 / externality 3 / production 3 / welfare 1 / factor 1 / auction 1 / monopoly 2），`probe-wave1b.mjs` 逐项确认 9 张目标：`fl15-2`、`xr02-2`、`ad10-2`、`ad12-2`、`ad12-3`、`ad13-2`、`ad13-3`、`ad14-2`、`ad14-3`——删前先证实它们**没有** `EXAMPLE` 条目、**没有**题库派生行（⇒ 题库零连带），另有 3 处父卡 REL「延伸」引用需一并清理。
+2. **删除执行**：`backup/scratch/cardfix/del-info-cards.mjs`（默认干跑、`--write` 落盘）按行删卡片块、按段删 `META`/`REL`/`PITFALL` 键、去掉 `ad12 → ad12-2`、`ad13 → ad13-2`、`ad14 → ad14-2` 的 REL 引用，收尾用 vm 载入校验「目标 id 在 DATA/META/EXAMPLE/REL/PITFALL 与文件文本中全部消失、REL 无悬挂」。结果：卡片 **342 → 333**（`information` cat **20 → 11**）、META 342 → 333、REL 340 → 331、PITFALL 102 → 93、字节 341,953 → **331,952**；全库卡片 **2897 → 2888**；`node --check` 通过。
+3. **数学三同题不重复收录（T149 核 23 条；T144 返修再补 1 条 ⇒ 终值 24 条）**：量具 `probe-subof-m3.mjs`（6-gram 对称 Jaccard）判 **21 对派生↔真题逐字相同（j=1.000）且「年+题号」完全对应**；`probe-cover-all.mjs`（覆盖率 = 派生行题干的 6-gram 有多大比例出现在某条 year 行题干里）另报 `cv-m3-int24`、`cv-m3-zt01` 对 `m3-2016-10` 各 **0.923**——两者 `EXAMPLE` 的 `src` 都是「2016 年数三真题」（无题号 ⇒ 派生 `no` 为「未编号」），题干是同一道 2016 三(10) 极限题的不同问法 ⇒ 一并压制。数学三 ≥0.9 共 23 条（次高仅 0.858 `/ext07-2`、0.857 `/ode03`、0.857 `/la11`、0.806 `/dr02`）；**econ 最高仅 0.415、stats 最高 0.659，两科 ≥0.9 为 0**。
+4. **压制机制**：`backup/scratch/cardfix/mark-m3-subof.mjs`（断言计划恰 23 条）在 `data/math3.js` 的 `EXAMPLE` 条目行内、`"src":"…"` 之后插入 `,"subOf":{"id":"<yearId>","item":"整题"}`（声明目标＝覆盖率最高的 year 行；收尾校验「只有 subOf 新增、其余 JSON 逐字不变」）；`tools/bank-cv.mjs:519-529` 的排除原因改为「例题已被 year 真题覆盖（T142/T149 口径：不重复收录）→ <id>（<item>）」，走既有 `excluded` 通道（卡片例题与 year 真题两处记录都保留）。`data/math3.js` 357,755 → **358,836 B**、卡片仍 398。
+5. **题库重生成与幂等**：`node tools/bank-cv.mjs --subject math3 --allow-math3-reorder` 干跑「EXAMPLE 179 键 → 条目 205（入库 **182**，排除 **23**）｜386 → **363**（派生 205 → **182**）｜448,223 → **424,219 B**」→ `--write --allow-workspace-write --allow-math3-reorder` 落盘 → 复跑干跑「**无变化（已与生成口径一致，424,219 B）**」＝幂等（T144 返修为 `int33-2` 补挂 1 条例题后复跑干跑报「**无变化（已与生成口径一致，424,310 B）**」（头注释随 P4 更新 +41 B），EXAMPLE **180 键 / 条目 206**、入库 182、排除 **24**）；`check_data` 计数：学科 25 / 卡片 **2888** / 真题 **955**（真题侧 445 + 派生 **510**）/ subOf 压制 **27**（T142 3 + T149 23 + T144 返修 1）。
+6. **学生可见痕迹守卫（新用例）**：`tests/bank.test.mjs` 新增「T149 学生可见字段（stem/answer/traps/hint/altAnswer/options）不得含开发痕迹；仅允许 econ 的『答案待批』占位」——`TRACE_VISIBLE = /裁片|backup\/|scratch\/|refs-vision|cards-micro|\.png|\.jpg|micro\.json|参考文件|PDF/i`，占位必须且只能是 econ 的 `answer`，并断言占位恰 **159** 条（只许减少）。起因是 `data/bank_stats.js` 的 `st-2022-1` `traps` 里留着「（必须回读裁片）」（`:1504`）——已由 `backup/scratch/cardfix/fix-stats-traps.mjs` 改为学生向表述「要按 $c(1-x^2)$ 整体计」（备份 `backup/bank_stats.js.pre-t149`，388,242 → **388,210 B**，题数仍 257）；同批排查确认 `st-2024-1` 的「真题册编者生成」是正当来源说明、`st-2022-1` `answer` 的「复核」是数学用语（假阳），均不改。
+7. **测试改口径**：「小问级不重复收录」不变量用例由只扫 stats 扩到**三科**（`SUBOF_SPECS = [{math3, cv-m3, min 24}, {econ, cv-ec, min 0}, {stats, cv-st, min 3}]`，`:427`/`:433`；T144 返修把 math3 下限由 23 提到 **24**）——逐条 `subOf` 必须成立（`item` 非空、目标存在且非卡片派生题、覆盖率 ≥ 0.25、声明目标必须是全库最相似 year 题、题库不得仍收录该派生题），并扫该科所有未标记派生行断言对任何 year 行覆盖率 < 0.9；`T49_CARDS` 的 math3 项改为 `{ kept: 182, skip: 24, poc: 181 }`（`:540`）；T148 来源串用例的派生计数 533 → **510**（`:1124`）。`node --test tests/bank.test.mjs` **47/47**（T144 返修新增「`st-2025-1` 第 3 小问答案不得回退」用例）、`npm test` **387/387**。
+8. **闸门证据（全部亲跑；下列为 T144 返修后的终值）**：`node tools/check_data.mjs` → ✅ 学科 25 / 卡片 2888 / 题库科目 3 / 真题 955 / 派生 510 / subOf 压制 **27** / 来源分组 147 / 同组多写法 0（ERR=0 WARN=0）；`node --test tests/bank.test.mjs` → **47/47**；`npm test` → **387/387**；`npm run check:render` → 卡片 2888 / 渲染字段 **10387** / 问题 0；`npm run check` → **exit 0**（跑该闸门时版本七处仍 2.1.5、`ms3-v118`、`?v=79,79,79`、CHANGELOG 116 条；本批随后统一升格为 **2.1.6**，见下方第 11 条）；`node backup/scratch/captain-recon-b/recon23.mjs all --min 300` → econ 333 / stats 272 / math3 398，net > 300 **均 0 张**；`node backup/scratch/refs-plan/check_plan.mjs` → **61 PASS / 0 FAIL**（文档同步前首跑 59 PASS / 2 FAIL，失败项为尚未写入新计数的 G1/G3）。
+9. **文档同批同步**：`docs/CARD-STANDARD.md` 新增 `## 8 第一波信息经济学卡删除（2026-10-12，用户裁定，T149）`（并注明 §6/§7 里的 `ad12-2`/`ad13-2`/`ad13-3`/`ad14-2` 等 id 属历史留痕、现已被删，不要再按它们找卡）；`docs/COVERAGE.md` 新增「T149 卡片终值」（2888 = stats 272 / econ 333 / math3 398；三科 1003）与 §1.3 终值 **955**（445 + 510，subOf **27**）、`BANK.math3` 行改 **363**（派生 182 + 真题侧 181）并重算题型分布；`docs/ARCHITECTURE.md:144` 沿革链补 `→ 981 → 978 → 955` 与「第二波现算终值 955 = 445 + 510」，`:210` 期望表段同步 math3 派生 182、行号改 `:352`/`:549-579`/`:685-725`/`:680-684`/`:671`；`docs/DATA_SCHEMA.md` ERR 口径表新增「学生的可见字段含开发痕迹」一行、下限行补「下限仍是护栏、未随 T149 下调」；`docs/refs/2.2.0-PLAN.md` §0 新增「T142 + T149 终值」条目、§1.2 Q7 行尾追加 T149 登记、`:59` 状态段终值改 955（445 + 510）。
+10. **未做（如实登记）**：T143（护栏派生化）仍 open；T144（独立验证）已由只读子代理完成并判 `needs_revision（轻）`，其 P1–P7 已在本批返修中逐条处置（见 `### T144` 块）；题库跨源重复与「未编号」占 48% 两项口径未动；econ **159** 条「答案待批」与 math3 **126** 条「答案就绪·题面无」按用户指示**留待下一版本**（读图授权）。
+11. **2.1.6 升格与交付（用户裁定「升 2.1.6」+「提交并推送」）**：七处版本标记 2.1.5 → **2.1.6**（`src/app.mjs:8` `VERSION` + 新增 CHANGELOG 条目、`package.json:3`、`src-tauri/tauri.conf.json:4`、`sw.js:5` `ms3-v118` → **`ms3-v119`**、`index.html:11-13` 三处 `?v=79` → **`?v=80`**、`dist/` 由 `npm run build` 同步），`npm run changelog` 重生成 `CHANGELOG.md`（**117** 个版本条目），`node tools/check_version.mjs` ✅ 七处一致；`docs/ARCHITECTURE.md:202-205` 版本段同步为「现行 2.1.6 / `?v=80` / `ms3-v119` / 117 条」。升格后闸门全部亲跑：`npm run check` **exit 0**、`npm test` **387/387**、`check_data` ✅（25 / 2888 / 955 / 510 / 压制 27）、`check:render` 卡片 2888 / 渲染字段 **10387** / 问题 0、`node backup/scratch/captain-recon-b/recon23.mjs all --min 300` 三科 net>300 **均 0 张**（econ 333 / stats 272 / math3 398）、三科 `bank-cv` 干跑「无变化」（stats 388,265 B / econ 460,064 B / math3 424,310 B）、`check_plan.mjs` **61 PASS / 0 FAIL**。同批订正 T144 第二轮复核的 F1–F6 文档错值（见 `### T144` 报告第 10 条）。
 
 <!-- 已归档：T122–T137 Athena 2.1.2 / 2.2.0 第一波（题库扩至 767 题、卡片补写 40 张、微观 49 页闭合与重取证、跨来源判重、生成器防护与闸门换代）→ backup/docs-archive/board/2026-10-11-V2.1.2-T122-T137.md -->
 

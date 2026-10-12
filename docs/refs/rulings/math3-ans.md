@@ -10,8 +10,8 @@
 - 覆盖：**136/136**（填空 46 + 解答 90），未裁定 0 条；
 - 三源一致：all = 136、partial = 0、none = 0；
 - 置信度：high = 136、medium = 0、low = 0；
-- 裁片：62 张（计划内 59 页 + 计划外补渲 31 张），全部 ≤1400 px / ≤400 KB；
-- 并入答案清单后 `docs/refs/math3.json` → `answer_manifest` 就绪量 **297 → 433** 条；
+- 裁片：**71 张**（计划内 59 页〔`crop-plan.json` `_meta.pages`〕+ 计划外补渲 **12 张**〔`extra-crops.json` `crops[]`〕；`crops/` 目录实测 71 个文件、合计 7,133,290 B、最大单边 **1331**（`2014_ans_p2.png` 932×1331）、最大宽 **1041**（`2013_ans_p4_band.png` 1041×471）、最大单张 172,473 B），全部 ≤1400 px / ≤400 KB；
+- 并入答案清单后 `docs/refs/math3.json` → `answer_manifest` 就绪量 **161 → 297** 条（选择题 108 + 非选择题已验证 **53 → 189**；以该文件的 `answer_manifest._meta.counts`（`{total: 297, choice: 108, fill: 189}`）与 `answers` 297 键为准，`coverage.non_choice_verified` 仍是 t4 时点快照 53）；
 - 源书与独立复算不一致：`m3-2012-17`（逐条见 §4）
 
 ## 2. 逐年索引

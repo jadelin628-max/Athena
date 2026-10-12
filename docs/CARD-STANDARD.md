@@ -121,3 +121,14 @@
 - **例题来源清理 68 条**：math3 **55**（形态 `2016 年数三 二(9)（真题册 PDF p25；答案 6）`，含内嵌答案）、econ **13**（形态 `…真题 一、（20 分）（答案册 PDF p141，裁片 backup/scratch/…png）`）、stats **0**；清理后只留「年份 + 卷名/学校 + 题号」。清理后按 §4 重生成 `data/bank_math3.js`（448,223 B）与 `data/bank_econ.js`（460,064 B），题数与 `no` 不变（386 / 335），干跑幂等「无变化」。
 - **判为正常、未改（留档）**：`ad04-2` 的「价格竞争温和 → 最小差异化／激烈 → 最大差异化」经复核**正确**（同批子代理报的「温和/激烈对调」是自相矛盾的假阳：其修正说明与本卡原文完全一致）；`ad02-2`/`xr03-2`/`gm21-3`/`fl16-2`/`ad13-3` 为边界表述；`ad12`/`ad13` 避坑条目引用父例题常数属正常。
 - **复算**：`node tools/check_data.mjs` 全绿（25 学科 / 2897 卡 / 978 真题 / 卡片派生 533）、`npm test` **384/384**、`npm run check:render` 问题数 0、`npm run check` exit 0、`recon23.mjs all --min 300` 三科 net > 300 均为 0。
+
+## 8 第一波信息经济学卡删除（2026-10-12，用户裁定，T149）
+
+用户复检第一波新增的微观卡后裁定：「信息经济学的卡片删除了吧，我审阅了以下仍然质量不够而且内容也基本根据题目来的，无意义」。
+
+- **删除范围**：第一波（T51）新增的 9 张 `cat = information` 卡——`fl15-2`、`xr02-2`、`ad10-2`、`ad12-2`、`ad12-3`、`ad13-2`、`ad13-3`、`ad14-2`、`ad14-3`（判定依据：与 2.1.2 基线 `cac5bc1` 的 diff；量具 `backup/scratch/cardfix/probe-wave1.mjs` / `probe-wave1b.mjs`）。删前先确认这 9 张**没有**任何 `EXAMPLE` 条目、**没有**题库派生行 ⇒ 题库零连带。
+- **执行**：`backup/scratch/cardfix/del-info-cards.mjs`（干跑/`--write`）按行删卡片块，并按段删 `META`/`REL`/`PITFALL` 键、去掉父卡（`ad12`/`ad13`/`ad14`）指向它们的 REL「延伸」引用；收尾用 vm 载入校验「目标 id 在 DATA/META/EXAMPLE/REL/PITFALL 与文件文本中全部消失、无悬挂引用」。结果：卡片 **342 → 333**（`information` cat **20 → 11**）、META 342→333、REL 340→331、PITFALL 102→93、全库卡片 **2897 → 2888**。
+- **文档影响**：§6/§7 里出现过的 `ad12-2`/`ad13-2`/`ad13-3`/`ad14-2` 等 id 是**当时**的修正记录（现已被本节删除，属历史留痕，不要再按它们找卡）；`docs/BOARD.md` 的 T148 报告同样如此。
+- **同批（数学三同题不重复收录）**：`data/math3.js` 的 24 条例题（21 条与 year 真题逐字相同 + `cv-m3-int24`/`cv-m3-zt01` 与 `m3-2016-10` 是同一道题的不同问法 + T144 返修为 `int33-2` 补挂的「2012 年数三 三(19)」第 2) 问，同属小问子集）标 `subOf`，题库不再重复收录对应派生题（math3 386 → 363、全库 978 → 955）。口径见 `docs/refs/2.2.0-PLAN.md` §1.2 Q7。
+- **新增守卫**：`tests/bank.test.mjs` 的「小问级不重复收录」用例扩到三科（`SUBOF_SPECS`），另新增「学生可见字段不得含开发痕迹」用例（`stem`/`answer`/`traps`/`hint`/`altAnswer`/`options`；唯一例外是 econ 的「答案待批」占位）——后者起因是 `data/bank_stats.js` 的 `st-2022-1` `traps` 里留着「（必须回读裁片）」，已改为学生向表述。
+- **复算**：`node tools/check_data.mjs` 全绿（25 学科 / **2888** 卡 / **955** 真题 / 卡片派生 **510** / subOf 压制 **27**）、`npm test` **387/387**、`npm run check:render` 问题数 0、`npm run check` exit 0、`recon23.mjs all --min 300` 三科 net > 300 均为 0、`check_plan.mjs` 61 PASS / 0 FAIL。

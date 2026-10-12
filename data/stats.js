@@ -511,7 +511,7 @@ MSE 小者优（同 MSE 时方差小者优）；偏差换方差是常见取舍�
 
     // ============ 补充：真题补卡（统计真题缺口知识点） ============
     F('sx01', 'testing', '两变量相关性检验',
-      R`如何检验两个变量（如两只股票的日回报）是否线性相关？`,
+      R`如何检验两个变量是否线性相关（相关系数的显著性检验）？`,
       R`计算样本相关系数 $r=\dfrac{\sum(x_i-\bar x)(y_i-\bar y)}{\sqrt{\sum(x_i-\bar x)^2\sum(y_i-\bar y)^2}}$，检验 $H_0:\rho=0$ 对 $H_1:\rho\ne0$，统计量$$t=\frac{r\sqrt{n-2}}{\sqrt{1-r^2}}\sim t(n-2)$$当 $|t|>t_{\alpha/2}(n-2)$ 时拒绝 $H_0$，认为两变量显著相关。`),
     F('sx02', 'dist', '贝塔分布',
       R`贝塔分布 $\mathrm{Beta}(\alpha,\beta)$ 的密度与数字特征`,
@@ -538,19 +538,19 @@ $$\frac{\partial}{\partial\theta}\ln L(\theta;x)=a(\theta)\,\big[\hat\theta-\the
 - \textbf{贝叶斯估计}：平方损失下取后验均值 $\hat\theta=E(\theta\,|\,x)$（共轭场合有显式解，如 Beta-二项下是「成功次数 + 先验」的加权平均）；绝对值损失取后验中位数。
 - 频率派与贝叶斯派的分野：频率派视 $\theta$ 为未知常数（用置信区间表述不确定性），贝叶斯派视 $\theta$ 为随机变量（用先验吸收既有知识）。`),
     F('sy01', 'estimation', '泊松分布的置信区间',
-      R`设 $X\sim P(\lambda)$，$x_1,\dots,x_n$ 为简单随机样本，求 $\lambda$ 的置信区间`,
+      R`泊松总体参数 $\lambda$ 的置信区间怎么构造？`,
       R`$\lambda$ 的 MLE 为 $\bar X$，且 $E(\bar X)=\lambda$、$D(\bar X)=\lambda/n$。由中心极限定理 $\sqrt n(\bar X-\lambda)/\sqrt{\lambda}\overset{d}{\to}N(0,1)$，用 $\bar X$ 估计方差得近似区间$$\bar X\pm z_{\alpha/2}\sqrt{\frac{\bar X}{n}}$$`),
     F('sy02', 'estimation', '总体比例的置信区间与检验',
       R`大样本下总体比例 $p$ 的置信区间、假设检验与样本量`,
       R`$\hat p=X/n$，近似 $\hat p\ \dot\sim\ N\left(p,\ \dfrac{p(1-p)}{n}\right)$。置信区间$$\hat p\pm z_{\alpha/2}\sqrt{\frac{\hat p(1-\hat p)}{n}}$$检验 $H_0:p=p_0$ 用$$Z=\frac{\hat p-p_0}{\sqrt{p_0(1-p_0)/n}}\sim N(0,1)$$误差 $d$ 下样本量 $n\ge\dfrac{z_{\alpha/2}^{2}\,p(1-p)}{d^{2}}$`),
     F('sy03', 'regress', '对数线性模型与弹性',
-      R`给定模型 $\ln y=\alpha+\beta\ln x+\varepsilon$，解释 $\beta$ 的经济学含义并给出估计`,
+      R`对数线性模型 $\ln y=\alpha+\beta\ln x+\varepsilon$ 的 $\beta$ 为什么是弹性？`,
       R`$\beta$ 是 $y$ 对 $x$ 的弹性：$x$ 每变动 $1\%$，$y$ 平均变动 $\beta\%$。令 $\tilde y=\ln y,\ \tilde x=\ln x$，OLS 估计$$\hat\beta=\frac{\sum(\tilde x_i-\bar{\tilde x})(\tilde y_i-\bar{\tilde y})}{\sum(\tilde x_i-\bar{\tilde x})^2}$$当 $E(\varepsilon\,|\,\ln x)=0$（严格外生）时 $\hat\beta$ 无偏。`),
     F('sy04', 'sampling', '经验分布函数',
       R`经验分布函数的定义与用途`,
       R`$$F_n(x)=\frac{1}{n}\sum_{i=1}^{n}I\{X_i\le x\}$$它是总体分布函数 $F(x)$ 的一致估计（格里文科定理）。样本取某值的频率即为其经验概率。`),
     F('sy05', 'numchar', '泊松分布的 Stein 等式',
-      R`设 $X\sim P(\lambda)$，证明 $E[X\,g(X)]=\lambda\,E[g(X+1)]$，并求 $E[X^3],E[X^4]$`,
+      R`泊松分布的 Stein 等式 $E[X\,g(X)]=\lambda\,E[g(X+1)]$ 为什么成立？`,
       R`$$E[Xg(X)]=\sum_{k=1}^{\infty}k\,g(k)\frac{\lambda^k}{k!}e^{-\lambda}=\lambda\sum_{j=0}^{\infty}g(j+1)\frac{\lambda^j}{j!}e^{-\lambda}=\lambda E[g(X+1)]$$由此 $E[X^3]=\lambda^3+3\lambda^2+\lambda$，$E[X^4]=\lambda^4+6\lambda^3+7\lambda^2+\lambda$。`),
     F('sy06', 'dist', '泊松分布的可加性',
       R`独立泊松随机变量之和的分布；$2X_1$ 是否仍为泊松？`,
@@ -559,7 +559,7 @@ $$\frac{\partial}{\partial\theta}\ln L(\theta;x)=a(\theta)\,\big[\hat\theta-\the
       R`正态总体均值区间估计的样本量公式`,
       R`给定置信水平 $1-\alpha$ 与误差 $d$，样本量$$n\ge\left(\frac{z_{\alpha/2}\,\sigma}{d}\right)^{2}$$（$\sigma$ 已知时向上取整）。`),
     F('sy08', 'numchar', '单边切比雪夫不等式',
-      R`设 $E\xi=0,\ D\xi=\sigma^2<\infty$，证明 $P(\xi\ge a)\le\dfrac{\sigma^2}{\sigma^2+a^2}$`,
+      R`单边（坎特利）不等式 $P(\xi\ge a)\le\dfrac{\sigma^{2}}{\sigma^{2}+a^{2}}$ 怎么来的？`,
       R`对任意 $t>0$，$P(\xi\ge a)=P(\xi+t\ge a+t)\le\dfrac{E(\xi+t)^2}{(a+t)^2}=\dfrac{\sigma^2+t^2}{(a+t)^2}$。令 $t=\dfrac{\sigma^2}{a}$ 得最小上界$$\frac{\sigma^2+\sigma^4/a^2}{(a+\sigma^2/a)^2}=\frac{\sigma^2}{\sigma^2+a^2}$$（坎特利不等式）。`),
     F('sy09', 'dist', '两标准正态之比的分布',
       R`$X,Y\overset{iid}{\sim}N(0,1)$，求 $\dfrac{X}{Y}$ 的分布`,
@@ -638,7 +638,7 @@ $r$ 是 $H_{0}$ 下被约束掉的自由参数个数；做近似分布时用 $-2
 
     // ============ 补充：真题补卡（xt 前缀·次序统计量/完备统计/UMVUE/特征函数/泊松过程/大数定律/多种现实计量/非参数/分布拟合） ============
     F('xt01', 'multidim', '次序统计量的分布与联合分布',
-      R`设总体分布函数为 $F$、密度为 $f$，样本 i.i.d.，求 $X_{(k)}$ 与全体次序统计量的密度`,
+      R`次序统计量 $X_{(k)}$ 的密度与全体次序统计量的联合密度怎么来的？`,
       R`第 $k$ 个次序统计量 $X_{(k)}$ 的密度：
 $$f_{X_{(k)}}(x)=\frac{n!}{(k-1)!\,(n-k)!}\,f(x)\,[F(x)]^{k-1}\,[1-F(x)]^{n-k}$$
 全体次序统计量 $(X_{(1)},\dots,X_{(n)})$ 的\textbf{联合密度}为
@@ -652,14 +652,14 @@ $$f_{ij}(u,v)=\frac{n!}{(i-1)!(j-i-1)!(n-j)!}f(u)f(v)\,[F(u)]^{i-1}\,[F(v)-F(u)]
 **用途**：求极差 $X_{(n)}-X_{(1)}$、中位数、样本分位数的分布，或做区间覆盖概率计算时积分该联合密度。
 **易混**：$u<v$ 是定义域约束，写成全平面会漏项；$i=j$ 时退化为单点密度，不能套用。`),
     F('xt02', 'multidim', '均匀分布次序统计量与贝塔分布',
-      R`设 $X_1,\dots,X_n$ i.i.d. $\sim U(0,1)$，求 $X_{(k)}$ 的分布、期望与方差`,
+      R`均匀总体 $U(0,1)$ 的第 $k$ 个次序统计量服从什么分布？`,
       R`$X_{(k)}\sim\mathrm{Beta}(k,\ n-k+1)$，即
 $$f_{X_{(k)}}(x)=\frac{n!}{(k-1)!(n-k)!}x^{k-1}(1-x)^{n-k},\qquad 0<x<1$$
 $$E(X_{(k)})=\frac{k}{n+1},\qquad \mathrm{Var}(X_{(k)})=\frac{k(n-k+1)}{(n+1)^{2}(n+2)}$$
 关键事实：对\textbf{任意}连续总体 $X$，$F(X)\sim U(0,1)$，故 $F(X_{(k)})\sim\mathrm{Beta}(k,\ n-k+1)$——均匀分布次序统计量是研究一般连续总体次序统计量的“标尺”。
-$X_{(n)}=X_{(n)}-X_{(1)}$ 相关结论：$U_{(n)}-U_{(1)}\sim\mathrm{Beta}(n-1,\ 2)$；均匀分布次序统计量常与极值、截尾寿命问题相连。`),
+**相关结论**：极差 $X_{(n)}-X_{(1)}$ 的分布为 $\mathrm{Beta}(n-1,\ 2)$；均匀分布次序统计量常与极值、截尾寿命问题相连。`),
     F('xt03', 'multidim', '次序统计量之比与次序统计量的独立性',
-      R`对连续总体 $X$，证明 $\dfrac{X_{(i)}}{X_{(j)}}$ 与 $X_{(j)}$（$i<j$）相互独立`,
+      R`次序统计量之比 $\dfrac{X_{(i)}}{X_{(j)}}$ 为什么与 $X_{(j)}$ 独立？`,
       R`由 $(X_{(i)},X_{(j)})$ 联合密度，作变量变换 $Z=\dfrac{X_{(i)}}{X_{(j)}}$、$V=X_{(j)}$，雅可比 $|J|=\dfrac{\partial(X_{(i)},X_{(j)})}{\partial(Z,V)}=V$，可把联合密度分离为 $f_{Z}(z)\cdot f_{V}(v)$，故 $Z$ 与 $V=X_{(j)}$ 独立。
 \underline{常用结论}（$X\sim U(0,1)$）：对 $1\le i\le n$，$X_{(i)}\sim\mathrm{Beta}(i,n-i+1)$；比值 $\dfrac{X_{(i)}}{X_{(j)}}$ 与 $X_{(j)}$ 独立；$X_{(n)}-X_{(1)}\sim\mathrm{Beta}(n-1,2)$；对 $0<i_1<\cdots<i_r\le n$，$\dfrac{X_{(i_1)}}{X_{(i_2)}},\ \dfrac{X_{(i_2)}}{X_{(i_3)}},\dots$ 相互独立。
 该独立性是处理“乘积形式／比值形式次序统计量”与截尾样本推断的核心技巧。`),
@@ -721,12 +721,12 @@ $$\frac{1}{n}\sum_{i=1}^{n}X_i-\frac{1}{n}\sum_{i=1}^{n}E(X_i)\ \overset{P}{\lon
 $$\lim_{n\to\infty}E\left[\frac{(Y_n-a_n)^{2}}{1+(Y_n-a_n)^{2}}\right]=0$$
 此式对方差无穷（只有一阶矩）的情形也适用。`),
     F('xt10', 'regress', R`多元线性回归模型与 $\mathrm{Var}(\hat\beta)$`,
-      R`多元回归 $Z=Y\beta+e$ 中 $E(e)=0$、$\mathrm{Var}(e)=\sigma^{2}I_n$ 且 $Y$ 列满秩，证明 $\mathrm{Var}(\hat\beta)=\sigma^{2}(Y^{T}Y)^{-1}$ 与 $E[Q(\hat\beta)]=(n-d)\sigma^{2}$`,
-      R`$\hat\beta=(Y^{T}Y)^{-1}Y^{T}Z$。由 $\mathrm{Var}(Z)=\sigma^{2}I_n$：
+      R`多元回归 $\hat\beta$ 的协方差阵与残差平方和的期望怎么推？`,
+      R`**系数**：$\hat\beta=(Y^{T}Y)^{-1}Y^{T}Z$，由 $\mathrm{Var}(Z)=\sigma^{2}I_n$ 得
 $$\mathrm{Var}(\hat\beta)=(Y^{T}Y)^{-1}Y^{T}\,\mathrm{Var}(Z)\,Y(Y^{T}Y)^{-1}=\sigma^{2}(Y^{T}Y)^{-1}$$
-又 $E[Z^{T}Z]=\dots$，而残差平方和 $Q(\hat\beta)=\|Z-Y\hat\beta\|^{2}$，投影阵 $H=Y(Y^{T}Y)^{-1}Y^{T}$ 幂等且 $\mathrm{rank}(H)=d$，故
-$$E[Q(\hat\beta)]=\sigma^{2}\,\mathrm{tr}(I_n-H)=\sigma^{2}(n-d)$$
-即 $\hat\sigma^{2}=\dfrac{Q(\hat\beta)}{n-d}$ 为 $\sigma^{2}$ 的无偏估计。配合调整 $R^{2}=1-\dfrac{SSE/(n-k-1)}{SST/(n-1)}$ 评价多解释变量的拟合优度。`),
+**残差平方和**：$Q(\hat\beta)=\|Z-Y\hat\beta\|^{2}$，残差 $=Z-Y\hat\beta=(I_n-H)Z$，其中 $H=Y(Y^{T}Y)^{-1}Y^{T}$ 是幂等投影阵且 $\mathrm{rank}(H)=d$（$Y$ 列满秩），故
+$$E[Q(\hat\beta)]=E\big[Z^{T}(I_n-H)Z\big]=\sigma^{2}\,\mathrm{tr}(I_n-H)=\sigma^{2}(n-d)$$
+**要点**：幂等阵的迹等于它的秩，也等于解释变量个数 $d$——这正是 $\hat\sigma^{2}=Q(\hat\beta)/(n-d)$ 无偏与“残差自由度 $n-d$”的来源。`),
     F('xt11', 'regress', '多重共线性',
       R`什么是多重共线性？如何判断与消除？`,
       R`\underline{定义}：回归模型中某些自变量之间存在（近似）线性关系，使得 $X^{T}X$ 接近奇异（列向量高度相关）。

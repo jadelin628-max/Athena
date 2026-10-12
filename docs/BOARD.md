@@ -334,6 +334,35 @@
 7. **闸门证据（全部亲跑）**：`npm test` → **379/379 pass**（较 2.1.2 的 377 增 2＝两条新用例）；`npm run check` → **exit 0**（`check_data` ERR=0 WARN=0 + `check_version` 一致 + `changelog --check` 一致 + `build --check` 同步）；`npm run check:render` → ✅ 卡片 2897 / 渲染字段 10421 / 问题 0；`node tools/check_data.mjs` → ✅ 学科 25 / 卡片 2897 / 题库科目 3 / 真题 981 / 派生 536 / 来源分组 147 / 同组多写法 0；`node backup/scratch/captain-recon-b/recon23.mjs all --min 300` → 三科 0 张；`node backup/scratch/bank-econq/check-econq.mjs` → FAIL=0 WARN=0 exit 0。
 8. **未做（如实登记）**：**不 commit、不 push、不部署**——按约定推送时机由用户决定；T142（统计合卷题拆分口径）、T143（护栏派生化）、T144（第二波独立验证）仍 open，留 2.2.0。
 
+---
+### T147 Athena 2.1.4 交付（卡片例题化正文整改 75 张 + 数据级守卫）
+- 状态: accepted
+- 负责: 船长（主对话；用户直接指令）
+- 文件集: `data/math3.js`、`data/econ.js`、`data/stats.js`、`tests/card-content.test.mjs`（新增）、`package.json`（`npm test` 文件清单 + 版本）、`docs/CARD-STANDARD.md`、`src/app.mjs`、`sw.js`、`index.html`、`src-tauri/tauri.conf.json`、`app.js` + `dist/`（构建产物）、`CHANGELOG.md`、`docs/BOARD.md`
+- 依据: 用户指令「某些卡片的题面与答案直接出现例题甚至其他题目的数字设定与题干答案，而不是用文字与公式来阐释解释知识点…修复这些卡片后再推送2.1.3」（版本号经用户确认为 **2.1.4**：2.1.3 已推送过 `423da59`）+ `AGENTS.md` 闸门
+- 依赖: T146（2.1.3 已交付并推送）
+- 验收:
+  1. 75 张卡的 front/back 不再是例题题干／解答、不再写死真题数字设定；`title`/`cat` 零误改
+  2. 新增 `tests/card-content.test.mjs` 并入 `npm test`（含判红/判绿反证）
+  3. 七处版本标记 2.1.3 → 2.1.4 一致；`node tools/check_version.mjs` → PASS
+  4. 五道总闸 PASS：`npm test`、`npm run check`、`npm run check:render`、`node tools/check_data.mjs`、`recon23.mjs all --min 300`
+- 升版: 2.1.3 → 2.1.4（已在主对话完成）
+
+### 报告
+
+**T147 已验收（Athena 2.1.4 交付，2026-10-12）**
+
+1. **量具**（只读，均在 `backup/scratch/question-leak/`）：`scan7.mjs`（双向覆盖率 max-cov，短题面／共享公式假阳率高，**废口径**）、`scan8.mjs`（对称 Jaccard + 长度门槛，**定为判据**）、`scan9.mjs` / `scan10.mjs`（题目式 front 与数值解答式正文全 25 科普查）、`dump-cards.mjs`（逐卡全文，含 EXAMPLE/REL/PITFALL）、`verify-edit.mjs`（改前改后逐卡对比）。
+2. **定位结论**：文本层「照抄例题」全库仅 5 张（math3 `mvt05` S3=0.691、stats `sy01` S1=0.500、`sy08` S2=0.415、`sx01` 0.404、`xt15` 0.387）；语义层「以具体题目数字设定为正文」集中在 math3/econ/stats 三科，**非考试 22 科 0 张**。
+3. **整改 75 张**（math3 59 / econ 7 / stats 9）：`mvt05` 题面原为 2025 数三真题、解答与 `tp03` 例题重复 ⇒ 重写为「直观／桥梁／两向互推」；48 张公式卡题面前缀改「重要极限：／基本求导公式：／基本积分公式：」；econ 7 张的真题数字（$Q=100$、$q=2/3$、抵押 80 变卖 50、$F=1200/7$、$p=100/3$）全改符号参数；stats 8 张题面改知识点问句。顺带修三处实质错误：`ad11-2` 无差异条件 `4p=3[1-(1-p)^{k-1}]+4(1-p)^{k-1}` → `v-c=v[1-(1-p)^{k-1}]`、`xt10` 字面占位符 `\dots` 补全为「幂等阵迹＝秩＝解释变量个数」推理、`xt02` 笔误 `$X_{(n)}=X_{(n)}-X_{(1)}$` → 极差 $X_{(n)}-X_{(1)}$。
+4. **误改与修复（如实登记）**：`reword.mjs` 按「标题独占 `F(...)` 行 + front 独占下一行」的假设定位，遇 math3 中 5 张 **title 独占一行**的卡（`kn04`/`gx60`/`kn17`/`kn18`/`kn19`）把新文本写进了 `title`；`verify-edit.mjs` 与备份逐卡对比发现后，`fix5.mjs` 还原 title 并把新文本下移为真正的 front，复跑「标题/cat/back 异常 0」。
+5. **守卫**：`tests/card-content.test.mjs`（4 例，已并入 `package.json` 的 `npm test` 清单）＝反证（合成照抄样本判红、方法卡判绿、邻近不误伤）+ 全 25 科 Jaccard（S1 0.45 / S2 0.55 / S3 0.45，长度门槛 front≥24、back≥48、例题侧≥24、shingle≥8）+ 三科题目式题面（前缀 `求(极限|导数|不定积分|导函数)：` 或 陈述式开头＋任务动词；方法卡以 通用/套路/路线/流程/步骤/方法/怎么/如何/有哪些/哪几/类题目 豁免）。
+6. **判为正常、未改**：方法卡 `tp03`/`gx38`/`ext21`/`ta02`/`ta07`/`te04`/`ys02`；公式卡 `zb28`/`gx37`/`mk24`（数值是公式自身常数或判定阈值）；`test17`/`sx01`/`xt15`/`sy08` 的 back（知识点本体即推导，实测 Jaccard 0.387–0.415 < 0.55 门槛）。
+7. **版本升格七处**：`src/app.mjs`（`VERSION` = `2.1.4` + 新增 2.1.4 更新日志条目）、`sw.js` `ms3-v116 → ms3-v117`、`index.html` `?v=77 → 78`（3 处）、`package.json`、`src-tauri/tauri.conf.json`、构建产物 `app.js` 与 `dist/`；`npm run changelog` 重生成 `CHANGELOG.md`（115 条）。
+8. **闸门证据（全部亲跑）**：`npm test` → **383/383 pass**（较 2.1.3 的 379 增 4）；`npm run check` → **exit 0**；`npm run check:render` → ✅ 卡片 2897 / 渲染字段 10421 / 问题 0；`node tools/check_data.mjs` → ✅ 学科 25 / 卡片 2897 / 题库科目 3 / 真题 981 / 派生 536 / 来源分组 147 / 同组多写法 0（ERR=0 WARN=0）；`node backup/scratch/captain-recon-b/recon23.mjs all --min 300` → 三科 **0 张**。
+9. **文档**：`docs/CARD-STANDARD.md` 新增第 4 条硬标准（题面与正文不得照抄例题、不得写死题目数字设定）与 §6 整改记录（量具清单、75 张明细、判为正常的清单）。
+10. **未做（如实登记）**：T142（统计合卷题拆分口径）、T143（护栏派生化）、T144（第二波独立验证）仍 open，留 2.2.0。
+
 <!-- 已归档：T122–T137 Athena 2.1.2 / 2.2.0 第一波（题库扩至 767 题、卡片补写 40 张、微观 49 页闭合与重取证、跨来源判重、生成器防护与闸门换代）→ backup/docs-archive/board/2026-10-11-V2.1.2-T122-T137.md -->
 
 <!-- 已归档：T77–T121 Athena 2.1.1 / 2.2.0 前置（题库渲染与筛选、自测星标、专注链 UI 与组合语义、错题入口、四族转录基线）→ backup/docs-archive/board/2026-10-10-V2.1.1-T77-T121.md -->

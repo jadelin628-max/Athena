@@ -114,6 +114,15 @@ import {
   focusArchiveTreeRows,
   focusArchiveLabel,
   focusSanitizeArchiveRecord,
+  // T152：老标记补归档 + 状态页警告的显示/关闭
+  focusPlanOrgArchiveOut,
+  focusPlanOrgLegacyExpired,
+  focusDefaultWarnClosed,
+  focusSanitizeWarnClosed,
+  focusWarnExpiredOpen,
+  focusCloseExpiredWarn,
+  focusArchiveHintRec,
+  focusCloseArchiveHint,
   focusPlanAutoSettleApply,
   FOCUS_LEVEL_KEYS,
   FOCUS_LEVEL_RANK,
@@ -902,7 +911,7 @@ test('T151 计划层到期结算：只清归属链 + 编制整体移出并归档
   assert.equal(focusOrgCanFormalize(st2, org2Id).ok, true);
   const filled = focusPlanOrgAutoSettle(st2, NOW);
   assert.equal(filled.changed, true);
-  assert.deepEqual(filled.settled, [{ id: org2Id, cleared: false, formalized: true, archived: null }]);
+  assert.deepEqual(filled.settled, [{ id: org2Id, cleared: false, formalized: true, legacy: false, archived: null }]);
   assert.equal(focusFindOrg(filled.state, org2Id).formalized, true);
   assert.equal(focusFindOrg(filled.state, org2Id).expiredAt == null, true, '转正的节点不该带逾期标记');
   assert.equal(focusFindChain(filled.state, 'n1').status, 'idle', '转正不清链');
@@ -951,6 +960,104 @@ test('T151 归档：压缩为记录后仍能还原完整编制层级（父子节
   assert.equal(focusArchiveList(after).length, 1, '不传链筛选即全部');
 });
 
+test('T152 老「已逾期」标记（2.1.7 只打戳没移出）在下一次结算时补做归档', () => {
+  const DAY = 86400000;
+  const OLD = NOW - 5 * DAY;   // 2.1.7 当初打戳的时刻
+  let st = makeState();
+  st = focusCreateOrg(st, { level: 'group', name: '概率第四章', fromPlan: true, dueAt: focusYmd(NOW - 2 * DAY), minChildCount: 2 }, NOW).state;
+  const orgId = st.orgs[0].id;
+  st = startAndFinish(st, 'n1', NOW + 60 * MIN, NOW + 85 * MIN, { completion: 100 }).state;
+  st = focusAssignUnit(st, st.units[0].id, orgId, NOW).state;
+  // 复刻 2.1.7 现场：只给节点打 expiredAt，编制（节点 + 已编入单元）仍在树上
+  st.orgs[0].expiredAt = OLD;
+  assert.equal(focusPlanOrgOverdue(st, NOW).length, 0, '老标记不该再进「新逾期」列（否则每秒重复入档）');
+  assert.equal(focusPlanOrgLegacyExpired(st).length, 1, '老标记必须被识别出来');
+  assert.ok(focusFindOrg(st, orgId), '前置：老标记的编制还在树上（这就是用户看到的残留）');
+
+  const auto = focusPlanOrgAutoSettle(st, NOW);
+  assert.equal(auto.changed, true, '老标记必须触发一次结算');
+  assert.equal(auto.settled.length, 1);
+  assert.equal(auto.settled[0].legacy, true, '补归档要标 legacy（toast 文案分流）');
+  assert.equal(auto.settled[0].cleared, true);
+  const after = auto.state;
+  // ① 编制整体移出 → 状态栏不再残留
+  assert.equal(focusFindOrg(after, orgId), null, '补归档后编制必须移出');
+  assert.equal(after.units.filter(function (u) { return u.orgId === orgId; }).length, 0);
+  // ② 归档可回溯，且时间线用**原逾期时刻**而不是「今天」
+  const rec = focusArchiveList(after)[0];
+  assert.ok(rec, '必须落一条归档');
+  assert.equal(rec.orgId, orgId);
+  assert.equal(rec.clearedAt, OLD, '历史计划不得被盖章成今天清空');
+  assert.equal(rec.nodes[0].expiredAt, OLD, '归档节点沿用原逾期时刻');
+  assert.equal(rec.units.length, 1, '归档保留被移出的编制单元');
+  // ③ 归属链按 T151 口径清空
+  assert.equal(focusFindChain(after, 'n1').status, 'cleared');
+  assert.equal(focusFindChain(after, 'n1').clearReason, 'plan:' + orgId);
+  // ④ 幂等：补完就不再是老标记
+  assert.equal(focusPlanOrgLegacyExpired(after).length, 0);
+  assert.equal(focusPlanOrgAutoSettle(after, NOW + 1000).changed, false, '补归档必须幂等');
+  assert.equal(focusArchiveList(after).length, 1, '不得重复入档');
+});
+
+test('T152 状态页警告的显示与关闭：已逾期/归档提示可关，临近截止自动消失', () => {
+  const DAY = 86400000;
+  const clone = (s) => focusSanitizeState(JSON.parse(JSON.stringify(s)));
+  let st = makeState();
+  // 临近截止：截止在 12 小时内（focusPlanOrgDueSoon 口径）
+  st = focusCreateOrg(st, { level: 'group', name: '线代第三章', fromPlan: true, dueAt: focusYmd(NOW + 1 * DAY), minChildCount: 1 }, NOW).state;
+  const soonId = st.orgs[0].id;
+  assert.equal(focusPlanOrgDueSoon(st, NOW).length, 1, '前置：应进「临近截止」');
+  // 完成（转正）⇒ 自动消失，不需要用户点关闭
+  st = startAndFinish(st, 'n1', NOW + 60 * MIN, NOW + 85 * MIN, { completion: 100 }).state;
+  st = focusAssignUnit(st, st.units[0].id, soonId, NOW).state;
+  const formal = focusFormalizeOrg(st, soonId, NOW);
+  assert.equal(formal.ok, true, '前置：填满后应当能转正');
+  assert.equal(focusFindOrg(formal.state, soonId).formalized, true, '前置：已完成转正');
+  assert.equal(focusPlanOrgDueSoon(formal.state, NOW).length, 0, '完成 ⇒ 临近截止自动消失（T152 要求③）');
+  // 违规（逾期）⇒ 结算后节点移出，临近截止也自动消失
+  let st2 = makeState();
+  st2 = focusCreateOrg(st2, { level: 'group', name: '概率第四章', fromPlan: true, dueAt: focusYmd(NOW - 1 * DAY), minChildCount: 2 }, st2 ? NOW : NOW).state;
+  const lateId = st2.orgs[0].id;
+  const late = focusPlanOrgAutoSettle(st2, NOW).state;
+  assert.equal(focusPlanOrgDueSoon(late, NOW).length, 0, '逾期结算后节点已移出 ⇒ 临近截止消失');
+
+  // 已逾期提醒的关闭：默认展示，关闭后不再展示，且经 sanitize 往返仍在
+  let st3 = makeState();
+  st3.orgs.push({
+    id: 'org_legacy_warn', level: 'group', seq: 1, name: '历史逾期计划', parentId: null, planId: null,
+    fromPlan: true, formalized: false, dueAt: NOW - 3 * DAY, expiredAt: NOW - 2 * DAY,
+    minChildCount: 2, createdAt: NOW, updatedAt: NOW
+  });
+  assert.deepEqual(focusWarnExpiredOpen(st3).map(function (o) { return o.id; }), ['org_legacy_warn'], '默认应展示已逾期提醒');
+  const closed = focusCloseExpiredWarn(clone(st3), ['org_legacy_warn']).state;
+  assert.equal(focusWarnExpiredOpen(closed).length, 0, '关闭后不得再展示');
+  assert.equal(focusSanitizeState(closed).warnClosed.expired.indexOf('org_legacy_warn') >= 0, true, '关闭态必须落盘且过 sanitize');
+
+  // 归档提示：有新归档 ⇒ 出现；关闭 ⇒ 消失；再来一条新归档 ⇒ 重新出现
+  const base = clone(closed);
+  assert.equal(focusArchiveHintRec(base), null, '没有归档时不该有归档提示');
+  let st4 = makeState();
+  st4 = focusCreateOrg(st4, { level: 'group', name: '线代第三章', fromPlan: true, dueAt: focusYmd(NOW - 2 * DAY), minChildCount: 2 }, NOW).state;
+  st4 = startAndFinish(st4, 'n1', NOW + 60 * MIN, NOW + 85 * MIN, { completion: 100 }).state;
+  st4 = focusAssignUnit(st4, st4.units[0].id, st4.orgs[0].id, NOW).state;
+  const settled4 = focusPlanOrgAutoSettle(st4, NOW).state;
+  assert.ok(focusArchiveHintRec(settled4), '刚归档 ⇒ 必须有提示');
+  const hintClosed = focusCloseArchiveHint(clone(settled4)).state;
+  assert.equal(focusArchiveHintRec(hintClosed), null, '关闭后提示消失');
+  assert.equal(focusSanitizeState(hintClosed).warnClosed.archiveSeenAt, NOW, '已读时间戳必须落盘');
+  // 再来一条更新的归档（更晚的 now）⇒ 重新出现
+  let st5 = clone(hintClosed);
+  const r5 = focusCreateOrg(st5, { level: 'group', name: '概率第四章', fromPlan: true, dueAt: focusYmd(NOW - 2 * DAY), minChildCount: 2 }, NOW + 10 * MIN);
+  st5 = r5.state;
+  const org5Id = r5.org.id;
+  st5 = startAndFinish(st5, 'n1', NOW + 20 * MIN, NOW + 45 * MIN, { completion: 100 }).state;
+  const unit5 = st5.units[st5.units.length - 1];
+  st5 = focusAssignUnit(st5, unit5.id, org5Id, NOW + 10 * MIN).state;
+  const settled5 = focusPlanOrgAutoSettle(st5, NOW + 60 * MIN).state;
+  assert.ok(focusArchiveHintRec(settled5), '新归档要重新弹出提示');
+});
+
+
 test('T151 源码级守卫（+反证）：逾期结算不得再清「所有链」，必须走归档', () => {
   const srcText = fs.readFileSync(new URL('../src/focus.mjs', import.meta.url), 'utf8');
   const bodyOf = (src, name) => {
@@ -960,20 +1067,25 @@ test('T151 源码级守卫（+反证）：逾期结算不得再清「所有链�
     return j < 0 ? '' : String(src).slice(i, j);
   };
   // 守卫：逾期结算必须「先快照 → 移出编制 → 只清归属链 → 落归档」
+  // T152：结算与归档拆成 focusPlanOrgArchiveOut（结算体只负责调它），故次序在它体内校验 + 断言调用关系
   const settledByArchive = (src) => {
-    const body = bodyOf(src, 'focusPlanOrgSettle');
+    const body = bodyOf(src, 'focusPlanOrgArchiveOut');
     const iSnap = body.indexOf('focusArchiveSnapshot(');
     const iOut = body.indexOf('focusRemoveSubtree(');
     const iClear = body.indexOf('focusClearScopedChains(');
     const iPush = body.indexOf('archive.unshift(');
     if (iSnap < 0 || iOut < iSnap || iClear < iOut || iPush < iClear) return false;
     // 旧实现的特征：直接把所有链的 workCount 抹平
-    return body.indexOf('next.chains.forEach') < 0 && body.indexOf('c.workCount = 0') < 0;
+    if (body.indexOf('next.chains.forEach') >= 0 || body.indexOf('c.workCount = 0') >= 0) return false;
+    // 结算体必须真的调用它（抽出去了但没人调＝功能消失）
+    return bodyOf(src, 'focusPlanOrgSettle').indexOf('focusPlanOrgArchiveOut(') >= 0;
   };
   // 反证 1：2.1.7 及以前的实现（遍历所有链清空 + 只打 expiredAt）必须判红
   assert.equal(settledByArchive(' function focusPlanOrgSettle(state, orgId, now) {\n    next.chains.forEach(function (c) { c.workCount = 0; c.status = \'cleared\'; });\n    org.expiredAt = t;\n  }'), false, '守卫失效：全清实现应判红');
   // 反证 2：顺序反了（先移出编制、后取快照）⇒ 归档会拿到空快照，判红
-  assert.equal(settledByArchive(' function focusPlanOrgSettle(state, orgId, now) {\n    focusRemoveSubtree(next, orgId);\n    const rec = focusArchiveSnapshot(next, org, t);\n    focusClearScopedChains(next, scope, reason, t);\n    next.archive.unshift(rec);\n  }'), false, '守卫失效：先移出后快照应判红');
+  assert.equal(settledByArchive(' function focusPlanOrgArchiveOut(next, org, t) {\n    focusRemoveSubtree(next, orgId);\n    const rec = focusArchiveSnapshot(next, org, t);\n    focusClearScopedChains(next, scope, reason, t);\n    next.archive.unshift(rec);\n  }\n  function focusPlanOrgSettle(state, orgId, now) { const r = focusPlanOrgArchiveOut(next, org, t); }'), false, '守卫失效：先移出后快照应判红');
+  // 反证 3：归档体写对了、结算体却没接线（拆开后忘了调）⇒ 判红
+  assert.equal(settledByArchive(' function focusPlanOrgArchiveOut(next, org, t) {\n    const rec = focusArchiveSnapshot(next, org, t);\n    focusRemoveSubtree(next, orgId);\n    focusClearScopedChains(next, scope, reason, t);\n    next.archive.unshift(rec);\n  }\n  function focusPlanOrgSettle(state, orgId, now) { org.expiredAt = t; }'), false, '守卫失效：结算体没走归档应判红');
   // 真身
   assert.equal(settledByArchive(srcText), true, '逾期结算未走「快照 → 移出 → 只清归属链 → 归档」——用户要求会复发');
   // 预约链护栏：清链工具必须显式跳过预约链，且只有一处定义
@@ -987,6 +1099,39 @@ test('T151 源码级守卫（+反证）：逾期结算不得再清「所有链�
   // 归档记录必须进 sanitize 白名单（否则每秒节拍会把它丢掉）
   const stateBody = bodyOf(srcText, 'focusSanitizeState');
   assert.ok(stateBody.indexOf('focusSanitizeArchiveRecord(') >= 0, 'focusSanitizeState 必须清洗（即保留）archive');
+  // T152：警告关闭态同样必须进白名单，否则「关闭」会在下一秒被 sanitize 抹掉
+  assert.ok(stateBody.indexOf('focusSanitizeWarnClosed(') >= 0, 'focusSanitizeState 必须清洗（即保留）warnClosed');
+});
+
+test('T152 源码级守卫：归档是专注链页签、老标记补归档、警告可关闭', () => {
+  const srcText = fs.readFileSync(new URL('../src/focus.mjs', import.meta.url), 'utf8');
+  const learnText = fs.readFileSync(new URL('../src/learn.mjs', import.meta.url), 'utf8');
+  const actText = fs.readFileSync(new URL('../src/act.mjs', import.meta.url), 'utf8');
+  const actionsText = fs.readFileSync(new URL('../src/actions.mjs', import.meta.url), 'utf8');
+  // ① 归档是专注链自己的页签（与 seat/tree/stats 同级），不再是行动模块的二级导航项
+  assert.ok(/\[\s*'seat'[\s\S]{0,160}'archive'[\s\S]{0,80}'stats'/.test(srcText), '专注链页签表必须含 archive');
+  assert.ok(srcText.indexOf("focusUiState.tab === 'archive'") >= 0, 'renderFocusSection 必须按 tab 渲染归档');
+  assert.ok(learnText.indexOf('actArchive') < 0, '行动二级导航不得再出现 actArchive（T152 要求归档在专注链下一级）');
+  assert.ok(actText.indexOf('isArchive') < 0, 'act.mjs 不得再保留 isArchive 分支');
+  assert.ok(actionsText.indexOf('focusGoArchive();') >= 0, '命令面板入口要指向专注链归档页签');
+  // ② 老标记（2.1.7 只打 expiredAt、没移出编制）必须被补做归档，否则编制永远留在状态栏
+  assert.ok(srcText.indexOf('function focusPlanOrgLegacyExpired(') >= 0, '缺少老标记识别函数');
+  const autoBody = (() => {
+    const i = srcText.indexOf('function focusPlanOrgAutoSettle(');
+    const j = srcText.indexOf('\n  }', i);
+    return i < 0 ? '' : srcText.slice(i, j);
+  })();
+  assert.ok(autoBody.indexOf('focusPlanOrgLegacyExpired(') >= 0, '结算入口必须跑「老标记补归档」');
+  assert.ok(autoBody.indexOf('focusPlanOrgArchiveOut(') >= 0, '补归档必须走同一个归档体');
+  assert.ok(autoBody.indexOf('legacy: true') >= 0, '补归档要能被调用方识别（toast 文案分流）');
+  // ③ 警告关闭：已逾期手动关、归档提示手动关、临近截止自动（不得接关闭动作）
+  assert.ok(srcText.indexOf("el('button', 'btn small', '关闭提醒')") >= 0, '已逾期/归档提示要有「关闭提醒」按钮');
+  assert.ok(srcText.indexOf('focusCloseExpiredWarn(') >= 0 && srcText.indexOf('focusCloseArchiveHint(') >= 0, '关闭动作必须落盘');
+  assert.ok(srcText.indexOf('function focusArchiveHintRec(') >= 0, '归档提示必须只在「有未确认的新归档」时出现');
+  // 反证：把「临近截止」也塞成手动关闭（提示块里接上全局过期关闭）必须判红
+  const dueSoonManual = (src) => /'临近截止'[\s\S]{0,400}focusCloseExpiredWarn/.test(src);
+  assert.equal(dueSoonManual(srcText), false, '临近截止必须自动消失，不得改手动关闭');
+  assert.equal(dueSoonManual("el('div', 'focus-await-title', '临近截止'); focusCloseExpiredWarn(s, ids);"), true, '守卫失效：手动关闭的临近截止应判红');
 });
 
 test('T150 源码级守卫（+反证）：运行期结算入口必须同时覆盖 state.plans 与 state.orgs', () => {

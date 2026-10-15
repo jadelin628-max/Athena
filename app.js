@@ -21,11 +21,12 @@
  */
 (function () {
   'use strict';
-  const VERSION = '2.1.8';
+  const VERSION = '2.1.9';
 
   // ---------------- 更新日志（设置页「更新日志」展示） ----------------
   const CHANGELOG = [
-    { v: '2.1.8', date: '2026-10', items: ['专注链（按反馈修正到期结算的范围）：计划任务过了截止日期仍未转正时，不再「清空所有任务链」——现在**只清这份计划编制所归属的链**（按被移出的任务单元反推链，链上还编着别的单元就只扣掉移出条数、链继续可用，减到 0 才标记「已清空」），**预约链永不参与**（一个字节都不动）；清空的同时把这份编制整体移出编制树——计划节点、它的下级节点与已编入单元一起进归档，现场不留痕迹', '归档栏目（新，专注链的下级功能）：二级导航「专注链 → 归档 → 计划 → 习惯树 → 帮助」，逐条查看被清空的历史编制——计划名（含层级与番号）、截止日期、清空时间、涉及哪些链（各自移出条数、已清空还是剩余）、编制规模；可展开还原完整层级（父节点 → 子节点 → 已编入单元，含达成与结束状态）。归档记录只增不改（上限 200 条），专注链视图同时给出最近 3 条摘要与「查看归档」入口', '工程：结算次序固定为「快照 → 移出 → 清链 → 入档」并补源码级守卫（含反证：清所有链、先移出后快照都判红）与浏览器端检查（headless Chrome 17 项：导航接线、SVG 图标、归档卡片与统计、展开画树、空态、无未捕获异常）；顺带修掉归档树引用 `focusTreeLabelEl` 抛 ReferenceError 的问题（该函数原定义在渲染函数内部，已提升到模块作用域）'] },
+    { v: '2.1.9', date: '2026-10', items: ['归档换了位置（按反馈调整）：归档不再占行动模块的二级导航，而是**专注链自己的页签**，与「专注 / 状态」同级——专注链页签顺序为 `专注 | 状态 | 归档 | 统计`，行动二级导航回到四项「专注链 → 计划 → 习惯树 → 帮助」；命令面板的「行动 · 归档」直接跳到该页签', '补归档（用户报的残留）：2.1.7 只给逾期未转正的计划打了「已逾期」标记、编制仍留在状态栏里。现在这类历史标记会在下一次结算时**补做归档**——编制整体移出并归档、归属链按只清归属链的规则清空，归档里的清空时间沿用当初的逾期时刻（不会被盖章成"今天清空"）；幂等，不会重复入档', '状态页警告提示的显示/关闭：**已逾期**与**已归档**提示可以点「关闭提醒」收起（关闭态随专注链状态持久化，刷新后仍然关闭），**临近截止**提示保持自动——计划完成（转正）或违规（逾期结算）后它自己消失，不需要手动关'] },
+  { v: '2.1.8', date: '2026-10', items: ['专注链（按反馈修正到期结算的范围）：计划任务过了截止日期仍未转正时，不再「清空所有任务链」——现在**只清这份计划编制所归属的链**（按被移出的任务单元反推链，链上还编着别的单元就只扣掉移出条数、链继续可用，减到 0 才标记「已清空」），**预约链永不参与**（一个字节都不动）；清空的同时把这份编制整体移出编制树——计划节点、它的下级节点与已编入单元一起进归档，现场不留痕迹', '归档栏目（新，专注链的下级功能）：二级导航「专注链 → 归档 → 计划 → 习惯树 → 帮助」，逐条查看被清空的历史编制——计划名（含层级与番号）、截止日期、清空时间、涉及哪些链（各自移出条数、已清空还是剩余）、编制规模；可展开还原完整层级（父节点 → 子节点 → 已编入单元，含达成与结束状态）。归档记录只增不改（上限 200 条），专注链视图同时给出最近 3 条摘要与「查看归档」入口', '工程：结算次序固定为「快照 → 移出 → 清链 → 入档」并补源码级守卫（含反证：清所有链、先移出后快照都判红）与浏览器端检查（headless Chrome 17 项：导航接线、SVG 图标、归档卡片与统计、展开画树、空态、无未捕获异常）；顺带修掉归档树引用 `focusTreeLabelEl` 抛 ReferenceError 的问题（该函数原定义在渲染函数内部，已提升到模块作用域）'] },
     { v: '2.1.7', date: '2026-10', items: ['修复（用户反馈）：专注链里计划任务过了截止日期仍未转正时，任务链没有按规则清空。根因是「到期结算」只挂在旧计划数据上，而界面上建的「计划任务」全部落在计划层节点（`fromPlan` + 未转正 + 截止日期），那套旧口径在运行期没有任何入口——等于规则没生效。现在两条口径同序结算：悬浮提醒挂载时、每秒心跳、渲染前各兜底一次，所以停在浏览 / 统计页也会到期结算；逾期且未达转正门槛 ⇒ 清空该计划下的**所有任务链**并标记「已逾期 · 任务链已清空」（幂等，不重复清），已达门槛 ⇒ 自动转正为已完成层次。树内字段（是否计划中 / 计划截止日期）、专注链面板（临近截止 / 已逾期）与 toast 提示同步，逾期节点仍可手动转正补救', '界面去 emoji：界面文案不再出现 emoji。承担图标职责的改用统一的 24×24 单色 SVG 线稿（新增「加号 / 朗读 / 对 / 错」四枚，题库、浏览、自测、错题本与主页的功能键全部换掉），学科图标统一走 `assets/subject_icon/` 资源表（`data/*.js` 的 `icon` 字段整体删除）；知识库的分类与条目 emoji 删除、证据分级改为语义键加文字标签（高 / 中 / 争议）；卡片正文与题库正文里的装饰 emoji 清理为纯文字（「巧解」「注意：」「朗读」「×」等）。排版符号与纯文字字形（→ ★ ✓ ✗ ☰ 与乐谱符号）不属于 emoji，保留'] },
     { v: '2.1.6', date: '2026-10', items: ['知识卡片（按反馈清理）：第一波新增的信息经济学 9 张卡整体删除（微观 342 → 333、「information」类 20 → 11、全库 2897 → 2888）——逐条重读后仍以题目内容为正文、质量不达标；删前确认这些卡没有例题、没有题库派生行，父卡指向它们的「延伸」引用一并清理', '题库：数学三与真题逐字相同的卡片派生题不再重复收录（21 对逐字相同 + 2 条同一道题的不同问法，共 24 条），让位于它们所出的真题（数学三 386 → 363、卡片派生 205 → 182、全库 978 → 955）；补齐 1 张卡缺失的真实真题例题（2012 年数三第 19 题第 2 问），并为统计合卷题第 3 小问的答案裁定补上回归守卫；统计题陷阱里残留的开发用词（回读裁片）改为学生向表述', '独立验证：只读子代理两轮复核裁片、答案与题库结构，红线与七道闸门全绿；其报出的 6 处文档错值（裁片尺寸、测试行号、渲染字段数、题库字节数等）已全部订正'] },
     { v: '2.1.5', date: '2026-10', items: ['知识卡片（按反馈复检）：第一波新增的微观卡逐条重读并复算，修正 13 张——4 张把某道题的具体数字设定当成了卡片正文（te10-3 的 $C=F+0.5aQ^{2}$ 算例、ad12-2 的抵押 80 变卖 50、ad13-2 的确定收益 220、un12-2 的 $u=\\ln x$ 与 CE=4）改为符号参数讲一般规律；3 张内容错误（ad11-2 / fl17-2 的「个人告发概率随人数上升」方向反了——正确是随人数递减、$k\\to\\infty$ 趋向 0；ad13-2 的「$F$ 越高越留不住人」方向反了）；2 张标题不实（ta06-2 无投票内容却许诺「众数加总规则」、we16-3 无算例却叫「经典算例」）；2 张内容缺漏（ad08-2 的跨期预算线占位、ad11 与 fl17 把「全员行动／全员告发」误判为纯策略均衡）；gm22-3 的举例改为题设的参数临界值。连带修正例题与避坑条目 5 处，其中 2025 卖空真题的政策判据改为 $2v-c\\le0$（原写 $v-c<0$），并把该例题改挂到与模型匹配的 fl17-3 卡', '例题「来源」串去痕：三科 68 条例题来源只保留「年份 + 卷名/学校 + 题号」（数学三 55 条原形如「2016 年数三 二(9)（真题册 PDF p25；答案 6）」，微观 13 条把答案册页码／裁片路径／复核批次／内嵌答案一并清掉，统计 0 条）。来源串是学生可见字段，另行写进 docs/CARD-STANDARD.md 的硬标准；题库由 tools/bank-cv.mjs 重新生成，逐科复核幂等', '题库：错题本里的「来源」不再显示库内文件名（如「参考文件/真题/数学/…/2012年数学三真题答案解析.pdf · 一(1)」这类开发期取证件路径），真题题一律给「院校/卷 · 年份 · 题号」，与题库列表页徽标同源；统计合卷题与其卡片派生题的小问级重复不再重复收录——3 条派生题让位于它们所出的 year 题（题库 981 → 978、统计 260 → 257），并修正 2026 北大光华第 (2) 问 $E[X^{4}]$ 的算术错误（$+4\\lambda$ → $+\\lambda$）', '工程：题量下限改为存量口径（数学三 331 · 微观 176 · 统计 257，合计由分项派生），新增「小问级不重复收录」闸门校验（check_data 计数 + 单测不变量：每条压制都要被目标 year 题证实）与来源串守卫（源码级断言不再渲染 src.file/src.note，并逐题断言 978 条来源串不含路径痕迹）；三份题库头注释与文档里的题量计数同步'] },
@@ -2228,12 +2229,12 @@
     const items = currentModule === 'wrong'
       ? [['wrong', '重做'], ['wrongQuiz', '自测'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
       : currentModule === 'act'
-        ? [['actFocus', '专注链'], ['actArchive', '归档'], ['actPlan', '计划'], ['actHabit', '习惯树'], ['actHelp', '帮助']]
+        ? [['actFocus', '专注链'], ['actPlan', '计划'], ['actHabit', '习惯树'], ['actHelp', '帮助']]
         : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['bank', '题库'], ['statistics', '统计'], ['help', '帮助']];
     const icons = currentModule === 'wrong'
       ? { wrong: 'wrong', wrongQuiz: 'pencil', wrongBrowse: 'search', wrongStats: 'chart' }
       : currentModule === 'act'
-        ? { actPlan: 'act', actHabit: 'habit', actFocus: 'act', actArchive: 'archive', actHelp: 'help' }
+        ? { actPlan: 'act', actHabit: 'habit', actFocus: 'act', actHelp: 'help' }
         : { learn: 'deck', browse: 'search', quiz: 'pencil', bank: 'bank', statistics: 'chart', help: 'help' };
     // 「错题自测」是错题模块的二级视图（currentModule='wrong' + currentView='quiz'，与 src/wrong.mjs 的
     // wrongQuizEntry 同一状态对）：高亮必须映射到自己的那一项，否则自测进行时四项全部不高亮。
@@ -2301,7 +2302,7 @@
     else if (currentView === 'principle') renderPrinciples();
     else if (currentView === 'settings') renderSettings();
     else if (currentView === 'mile') renderMile();
-    else if (currentView === 'actPlan' || currentView === 'actHabit' || currentView === 'actFocus' || currentView === 'actArchive' || currentView === 'actHelp') renderAct();
+    else if (currentView === 'actPlan' || currentView === 'actHabit' || currentView === 'actFocus' || currentView === 'actHelp') renderAct();
     // 高亮一级 tab + 渲染二级导航
     document.querySelectorAll('.module-tab').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-arg') === currentModule);
@@ -9767,7 +9768,7 @@ function bankDetailNode(q) {
   }
 
   // ---------------- 会话级 UI 状态（不落盘） ----------------
-  let actView = 'plan';          // plan | habit | focus | archive | help（由 currentView 驱动，见 renderAct）
+  let actView = 'plan';          // plan | habit | focus | help（由 currentView 驱动，见 renderAct；归档是 focus 内的页签，不再是独立 actView）
   let actWoopStep = 0;           // WOOP 向导 0–3
   let actWoopDraft = null;       // { wish, outcome, obstacle, cues[], planIf, planThen }
   const homePlanFold = { woop: false }; // 主页计划入口折叠态
@@ -10237,8 +10238,7 @@ function bankDetailNode(q) {
     const isHelp = currentView === 'actHelp';
     const isHabit = currentView === 'actHabit';
     const isFocus = currentView === 'actFocus';
-    const isArchive = currentView === 'actArchive';
-    actView = isHelp ? 'help' : (isHabit ? 'habit' : (isFocus ? 'focus' : (isArchive ? 'archive' : 'plan')));
+    actView = isHelp ? 'help' : (isHabit ? 'habit' : (isFocus ? 'focus' : 'plan'));
 
     if (isHelp) {
       renderActHelp(wrap);
@@ -10254,16 +10254,9 @@ function bankDetailNode(q) {
     }
 
     if (isFocus) {
+      // 归档是专注链的下级页签（2.1.9 起），随 renderFocusSection 的 tab 一起渲染，不再单独占一级视图
       wrap.appendChild(el('h2', null, '专注链'));
       renderFocusSection(wrap);
-      app.appendChild(wrap);
-      return;
-    }
-
-    // 归档（专注链模块的下级功能，T151）：逾期未转正 ⇒ 被清空的计划编制快照
-    if (isArchive) {
-      wrap.appendChild(el('h2', null, '归档'));
-      renderFocusArchiveSection(wrap);
       app.appendChild(wrap);
       return;
     }
@@ -12626,6 +12619,29 @@ function bankDetailNode(q) {
 
   // ---------------- 纯函数：工具 ----------------
 
+  // 状态页警告的关闭态（T152）：
+  //   expired[]     —— 已逾期提示被手动关闭的计划节点 id（关闭后不再就这条提醒）
+  //   archiveSeenAt —— 归档提示已确认到的 clearedAt：只有出现更新的归档记录才重新提示
+  function focusDefaultWarnClosed() {
+    return { expired: [], archiveSeenAt: 0 };
+  }
+
+  function focusSanitizeWarnClosed(raw) {
+    const def = focusDefaultWarnClosed();
+    if (!raw || typeof raw !== 'object') return def;
+    const seen = {};
+    const expired = [];
+    ((raw.expired) || []).forEach(function (id) {
+      if (id == null) return;
+      const key = String(id);
+      if (!key || seen[key]) return;
+      seen[key] = 1;
+      if (expired.length < 200) expired.push(key);
+    });
+    const at = Number(raw.archiveSeenAt);
+    return { expired: expired, archiveSeenAt: Number.isFinite(at) && at > 0 ? at : def.archiveSeenAt };
+  }
+
   function focusDefaultState() {
     return {
       chains: [{
@@ -12652,6 +12668,7 @@ function bankDetailNode(q) {
       orgs: [],
       plans: [],
       archive: [],                   // 归档：被逾期结算清空的「计划编制」快照（只增不改，T151）
+      warnClosed: focusDefaultWarnClosed(),   // 状态页警告的关闭态（T152）：已逾期提示手关、归档提示关到有新记录
       planMode: false,               // 计划模式（状态模块内开关）
       seq: { unit: 0, group: 0, corps: 0, army: 0 },
       settings: focusDefaultSettings()
@@ -13057,6 +13074,9 @@ function bankDetailNode(q) {
     });
     out.archive.sort(function (a, b) { return b.clearedAt - a.clearedAt; });
     if (out.archive.length > FOCUS_ARCHIVE_MAX) out.archive.length = FOCUS_ARCHIVE_MAX;
+    // 警告关闭态（T152）：只在「确有其事」时保留 —— 已逾期 id 必须仍指向一个计划节点（否则下次仍会提示）
+    out.warnClosed = focusSanitizeWarnClosed(raw.warnClosed);
+    out.warnClosed.expired = out.warnClosed.expired.filter(function (id) { return !!oseen[id]; });
     const sq = raw.seq && typeof raw.seq === 'object' ? raw.seq : {};
     FOCUS_LEVEL_KEYS.forEach(function (k) {
       const n = Number(sq[k]);
@@ -15173,6 +15193,32 @@ function bankDetailNode(q) {
     });
   }
 
+  // 逾期未转正的归档落地（T151 口径，T152 抽成公共函数供「历史已逾期」补做复用）：
+  //   快照（节点 / 单元 / 链归属，此刻都还在）→ 打逾期标记 → 整体移出编制树 → 只清归属链 → 记录入 archive。
+  // 预约链永不参与；archive 超上限截断。返回新入档的记录。
+  function focusPlanOrgArchiveOut(next, org, t) {
+    // T152：老标记（2.1.7 打过 expiredAt、但编制没移出）补归档时沿用**原逾期时刻**，
+    // 否则历史计划会被盖章成「今天清空」，归档里的时间线是假的。新逾期路径 org.expiredAt 为空 ⇒ 取 t。
+    const stamp = Number(org && org.expiredAt) || Number(t) || 0;
+    const rec = focusArchiveSnapshot(next, org, stamp);
+    org.expiredAt = stamp;      // 快照里带逾期标记（现场节点稍后即被移出）
+    rec.nodes.forEach(function (n) {
+      if (String(n.id) === String(org.id)) n.expiredAt = stamp;
+    });
+    focusRemoveSubtree(next, org.id);
+    const scope = { chainIds: rec.chainIds, counts: {} };
+    rec.chains.forEach(function (c) { scope.counts[c.id] = c.removed; });
+    focusClearScopedChains(next, scope, 'plan:' + org.id, stamp);
+    rec.chains.forEach(function (c) {
+      const ch = focusFindChain(next, c.id);
+      c.workCountAfter = ch ? (Number(ch.workCount) || 0) : 0;
+      c.cleared = !!ch && c.workCountAfter === 0;
+    });
+    next.archive.unshift(rec);
+    if (next.archive.length > FOCUS_ARCHIVE_MAX) next.archive.length = FOCUS_ARCHIVE_MAX;
+    return rec;
+  }
+
   function focusPlanOrgSettle(state, orgId, now) {
     const next = focusCloneState(state);
     const org = focusFindOrg(next, orgId);
@@ -15188,23 +15234,7 @@ function bankDetailNode(q) {
       org.updatedAt = t;
       return { ok: true, state: next, org: org, cleared: false, formalized: true };
     }
-    // 逾期未转正：先取快照（此时节点/单元/链计数都还在），再整体移出编制树，最后只清归属链
-    const rec = focusArchiveSnapshot(next, org, t);
-    org.expiredAt = t;          // 快照里带逾期标记（现场节点稍后即被移出）
-    rec.nodes.forEach(function (n) {
-      if (String(n.id) === String(org.id)) n.expiredAt = t;
-    });
-    focusRemoveSubtree(next, orgId);
-    const scope = { chainIds: rec.chainIds, counts: {} };
-    rec.chains.forEach(function (c) { scope.counts[c.id] = c.removed; });
-    focusClearScopedChains(next, scope, 'plan:' + org.id, t);
-    rec.chains.forEach(function (c) {
-      const ch = focusFindChain(next, c.id);
-      c.workCountAfter = ch ? (Number(ch.workCount) || 0) : 0;
-      c.cleared = !!ch && c.workCountAfter === 0;
-    });
-    next.archive.unshift(rec);
-    if (next.archive.length > FOCUS_ARCHIVE_MAX) next.archive.length = FOCUS_ARCHIVE_MAX;
+    const rec = focusPlanOrgArchiveOut(next, org, t);
     return {
       ok: true,
       state: next,
@@ -15221,7 +15251,16 @@ function bankDetailNode(q) {
     };
   }
 
-  // 把所有已逾期的计划层逐个结掉；已被结算过的（expiredAt 已写）不再入列 ⇒ 天然幂等。
+  // 2.1.7 及以前只给计划节点打「已逾期」标记、编制仍留在树上（当时不清编制、不归档）。
+  // 这类历史标记在 2.1.9 起补做归档：判据 = fromPlan + 未转正 + 已有 expiredAt（标记即结论，不再重新判转正）。
+  function focusPlanOrgLegacyExpired(state) {
+    return ((state && state.orgs) || []).filter(function (o) {
+      return o && o.fromPlan && !o.formalized && o.expiredAt;
+    });
+  }
+
+  // 把所有已逾期的计划层逐个结掉；已被结算过的（编制已移出）不在 orgs 里 ⇒ 天然幂等。
+  // 紧接着把「历史已逾期标记」（2.1.7 老数据）补做归档 —— 否则那批节点会永远留在状态栏里。
   function focusPlanOrgAutoSettle(state, now) {
     const st = state || focusDefaultState();
     const overdue = focusPlanOrgOverdue(st, now);
@@ -15231,7 +15270,28 @@ function bankDetailNode(q) {
       const r = focusPlanOrgSettle(next, overdue[i].id, now);
       if (!r || !r.ok) continue;
       next = r.state;
-      settled.push({ id: overdue[i].id, cleared: !!r.cleared, formalized: !!r.formalized, archived: r.archived || null });
+      settled.push({
+        id: overdue[i].id, cleared: !!r.cleared, formalized: !!r.formalized,
+        legacy: false, archived: r.archived || null
+      });
+    }
+    const legacy = focusPlanOrgLegacyExpired(next);
+    for (let i = 0; i < legacy.length; i++) {
+      const id = legacy[i].id;
+      const org = focusFindOrg(next, id);
+      if (!org) continue;
+      const t = Number(now) || Number(org.expiredAt) || Date.now();
+      const rec = focusPlanOrgArchiveOut(next, org, t);
+      settled.push({
+        id: id, cleared: true, formalized: false, legacy: true,
+        archived: {
+          id: rec.id,
+          chainIds: rec.chainIds,
+          nodeCount: rec.nodes.length,
+          unitCount: rec.units.length,
+          clearedChains: rec.chains.filter(function (c) { return c.cleared; }).map(function (c) { return c.id; })
+        }
+      });
     }
     return { changed: settled.length > 0, state: next, settled: settled };
   }
@@ -15250,6 +15310,41 @@ function bankDetailNode(q) {
   // 已逾期清空的计划层清单（面板里如实显示「链已清空」）
   function focusPlanOrgExpiredList(state) {
     return ((state && state.orgs) || []).filter(function (o) { return focusOrgExpired(o); });
+  }
+
+  // ---------------- 纯函数：状态页警告的显示与关闭（T152） ----------------
+  // 「临近截止」是**自动关闭**的提示：条目只来自未转正且未逾期的计划层，
+  //   计划一旦完成（转正 ⇒ `formalized`）或违规（逾期 ⇒ 结算后节点已移出/`expiredAt`），它就不再入列 ⇒ 面板自动消失。
+  // 「已逾期」「已归档」是**手动关闭**的提示：关闭态落在 `state.warnClosed`（随专注链状态一起持久化）。
+  function focusWarnExpiredOpen(state) {
+    const closed = (((state || {}).warnClosed) || {}).expired || [];
+    return focusPlanOrgExpiredList(state).filter(function (o) {
+      return closed.indexOf(String(o.id)) < 0;
+    });
+  }
+
+  function focusCloseExpiredWarn(state, ids) {
+    const next = focusCloneState(state);
+    const list = (Array.isArray(ids) ? ids : [ids]).filter(function (x) { return x != null; }).map(String);
+    const seen = {};
+    next.warnClosed.expired.forEach(function (id) { seen[id] = 1; });
+    list.forEach(function (id) { if (id && !seen[id]) { seen[id] = 1; next.warnClosed.expired.push(id); } });
+    return { ok: true, state: next };
+  }
+
+  // 需要提示的归档记录：只提示「比上次确认更新」的那条（关闭后不再重复打扰，出现新归档才会再提示）
+  function focusArchiveHintRec(state) {
+    const newest = focusArchiveList(state)[0];
+    if (!newest) return null;
+    const seen = Number((((state || {}).warnClosed) || {}).archiveSeenAt) || 0;
+    return Number(newest.clearedAt) > seen ? newest : null;
+  }
+
+  function focusCloseArchiveHint(state) {
+    const newest = focusArchiveList(state)[0];
+    const next = focusCloneState(state);
+    next.warnClosed.archiveSeenAt = newest ? Number(newest.clearedAt) || 0 : Date.now();
+    return { ok: true, state: next };
   }
 
   // ---------------- 存储 ----------------
@@ -15285,10 +15380,12 @@ function bankDetailNode(q) {
     chainFilter: 'all',
     expanded: {}
   };
-  // 「查看归档」跳转（与二级导航同一状态对：currentModule='act' + currentView='actArchive'）
+  // 「查看归档」跳转：归档是专注链模块的下级页签（与「专注 / 状态 / 统计」同级），
+  // 故只切页签、不换视图（2.1.9 起；此前是行动模块的二级导航项 actArchive）。
   function focusGoArchive() {
     currentModule = 'act';
-    currentView = 'actArchive';
+    currentView = 'actFocus';
+    focusUiState.tab = 'archive';
     renderApp();
   }
 
@@ -15440,9 +15537,9 @@ function bankDetailNode(q) {
     const st = loadFocus();
     const now = Date.now();
 
-    // tabs：专注 | 状态 | 统计（计划已并入状态）
+    // tabs：专注 | 状态 | 归档 | 统计（计划已并入状态；归档是专注链的下级页签，2.1.9）
     const tabs = el('div', 'chips act-tabs');
-    [['seat', '专注'], ['tree', '状态'], ['stats', '统计']].forEach(function (t) {
+    [['seat', '专注'], ['tree', '状态'], ['archive', '归档'], ['stats', '统计']].forEach(function (t) {
       const chip = el('button', 'chip' + (focusUiState.tab === t[0] ? ' active' : ''), t[1]);
       chip.addEventListener('click', function () { focusUiState.tab = t[0]; renderApp(); });
       tabs.appendChild(chip);
@@ -15451,6 +15548,10 @@ function bankDetailNode(q) {
 
     if (focusUiState.tab === 'tree') {
       focusRenderTree(wrap, st, now);
+      return;
+    }
+    if (focusUiState.tab === 'archive') {
+      renderFocusArchiveSection(wrap);
       return;
     }
     if (focusUiState.tab === 'stats') {
@@ -15961,13 +16062,20 @@ function bankDetailNode(q) {
     // T151：节点已从编制树移出 ⇒ 名字要从结算返回的归档信息里取（不能再 focusFindOrg）。
     const gone = (b.settled || []).filter(function (s) { return s && s.cleared; });
     if (gone.length && typeof toast === 'function') {
-      const names = gone.map(function (s) {
+      const pick = function (s) {
         const rec = (focusArchiveList(next) || []).filter(function (r) {
           return s.archived && String(r.id) === String(s.archived.id);
         })[0];
         return (rec && (rec.orgName || focusArchiveLabel(rec, next.settings))) || '计划任务';
-      });
-      toast('计划已逾期未转正 · 编制已移出并归档、归属链已清空：' + names.join('、'));
+      };
+      const legacy = gone.filter(function (s) { return s.legacy; });
+      const fresh = gone.filter(function (s) { return !s.legacy; });
+      if (fresh.length) {
+        toast('计划已逾期未转正 · 编制已移出并归档、归属链已清空：' + fresh.map(pick).join('、'));
+      } else if (legacy.length) {
+        // 2.1.7 老数据：当时只打了「已逾期」标记、编制仍留在树上；这里补做归档，必须告知用户
+        toast('历史逾期计划已补做归档 · 编制已移出、归属链已清空：' + legacy.map(pick).join('、'));
+      }
     }
     try { renderApp(); } catch (e) { /* 重绘失败不影响已落盘的结算结果，下个节拍会再同步 */ }
     return true;
@@ -16011,8 +16119,9 @@ function bankDetailNode(q) {
     // 计划摘要（合并自原计划页）——两条口径都给：旧 state.plans + 运行期真正的计划层 orgs
     const dueSoon = focusPlanDueSoon(st, now);
     const orgSoon = focusPlanOrgDueSoon(st, now);
-    const orgExpired = focusPlanOrgExpiredList(st);
     if (dueSoon.length || orgSoon.length) {
+      // 临近截止：**自动关闭**——计划完成（转正 ⇒ 不再入列）或违规（逾期 ⇒ 结算后节点已移出、链已清）后面板自行消失，
+      // 因此这里没有关闭按钮（判据见 focusPlanOrgDueSoon / focusPlanDueSoon）。
       const warn = el('div', 'act-panel focus-plan-warn');
       warn.appendChild(el('div', 'focus-await-title', '临近截止'));
       dueSoon.forEach(function (p) {
@@ -16023,27 +16132,46 @@ function bankDetailNode(q) {
       });
       wrap.appendChild(warn);
     }
+    // 已逾期提示（**手动关闭**，T152）：只看没被关掉的那些；2.1.7 老标记会在下一次结算时补做归档，届时本条自然消失
+    const orgExpired = focusWarnExpiredOpen(st);
     if (orgExpired.length) {
-      // 老数据兼容：2.1.7 及以前逾期结算只打标记、节点仍留在树上（不清编制）
       const gone = el('div', 'act-panel focus-plan-warn');
-      gone.appendChild(el('div', 'focus-await-title', '已逾期 · 任务链已清空'));
+      const goneHead = el('div', 'focus-warn-head');
+      goneHead.appendChild(el('div', 'focus-await-title', '已逾期 · 任务链已清空'));
+      const closeGone = el('button', 'btn small', '关闭提醒');
+      closeGone.addEventListener('click', function () {
+        focusApply(function (s) {
+          return focusCloseExpiredWarn(s, orgExpired.map(function (o) { return o.id; }));
+        }, '已关闭逾期提醒');
+      });
+      goneHead.appendChild(closeGone);
+      gone.appendChild(goneHead);
       orgExpired.forEach(function (o) {
         gone.appendChild(el('div', null, o.name + ' · 截止 ' + focusFmtTs(o.dueAt) + ' · 未转正，链已清空'));
       });
       wrap.appendChild(gone);
     }
-    // 归档摘要（T151）：逾期未转正 ⇒ 编制整体移出并归档；这里只提示最近几条，明细在「归档」栏目
-    const recentArc = focusArchiveList(st).slice(0, 3);
-    if (recentArc.length) {
+    // 已归档提示（**手动关闭**，T152）：只在出现「比上次确认更新」的归档记录时出现；明细在专注链的「归档」页签
+    const arcHint = focusArchiveHintRec(st);
+    if (arcHint) {
+      const recentArc = focusArchiveList(st).slice(0, 3);
       const arcPanel = el('div', 'act-panel focus-archive-hint');
-      const arcHead = el('div', 'focus-await-title', '已归档 · 逾期未转正');
+      const arcHead = el('div', 'focus-warn-head');
+      arcHead.appendChild(el('div', 'focus-await-title', '已归档 · 逾期未转正'));
+      const closeArc = el('button', 'btn small', '关闭提醒');
+      closeArc.addEventListener('click', function () {
+        focusApply(function (s) { return focusCloseArchiveHint(s); }, '已关闭归档提醒');
+      });
+      arcHead.appendChild(closeArc);
       arcPanel.appendChild(arcHead);
       recentArc.forEach(function (rec) {
         arcPanel.appendChild(el('div', null, focusArchiveLabel(rec, st.settings) + ' · 清空于 ' + focusFmtTs(rec.clearedAt)
           + ' · 编制 ' + (rec.nodes.length - 1) + ' 下级 / ' + rec.units.length + ' 单元'
           + (rec.chains.length ? ' · 链：' + rec.chains.map(function (c) { return c.label + (c.cleared ? '（已清空）' : '（剩余 ' + c.workCountAfter + '）'); }).join('、') : '')));
       });
-      const more = el('button', 'btn small', '查看归档');
+      const more = el('button', 'btn small');
+      if (typeof icon === 'function') more.appendChild(icon('archive'));
+      more.appendChild(document.createTextNode(' 查看归档'));
       more.addEventListener('click', function () { focusGoArchive(); });
       arcPanel.appendChild(more);
       wrap.appendChild(arcPanel);
@@ -18437,7 +18565,7 @@ function bankDetailNode(q) {
         currentView = (arg === 'wrongQuiz') ? 'quiz' : arg;
         if (arg === 'wrong' || arg === 'wrongQuiz' || arg === 'wrongBrowse' || arg === 'wrongStats') currentModule = 'wrong';
         else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics' || arg === 'bank') currentModule = 'cards';
-        else if (arg === 'actPlan' || arg === 'actHabit' || arg === 'actFocus' || arg === 'actArchive' || arg === 'actHelp') currentModule = 'act';
+        else if (arg === 'actPlan' || arg === 'actHabit' || arg === 'actFocus' || arg === 'actHelp') currentModule = 'act';
         else if (arg === 'mile') currentModule = 'cards';
         if (arg === 'wrongQuiz') enterWrongQuiz();
         renderApp();
@@ -19071,7 +19199,7 @@ function bankDetailNode(q) {
       { label: '学习 · 知识卡', hint: 'learn', run: function () { currentModule = 'cards'; currentView = 'learn'; renderApp(); } },
       { label: '错题本', hint: 'wrong', run: function () { currentModule = 'wrong'; currentView = 'wrong'; renderApp(); } },
       { label: '行动 · 专注链', hint: 'actFocus', run: function () { currentModule = 'act'; currentView = 'actFocus'; renderApp(); } },
-      { label: '行动 · 归档', hint: 'actArchive', run: function () { currentModule = 'act'; currentView = 'actArchive'; renderApp(); } },
+      { label: '行动 · 归档', hint: '专注链 · 归档', run: function () { focusGoArchive(); } },
       { label: '行动 · 计划', hint: 'actPlan', run: function () { currentModule = 'act'; currentView = 'actPlan'; renderApp(); } },
       { label: '行动 · 习惯树', hint: 'actHabit', run: function () { currentModule = 'act'; currentView = 'actHabit'; renderApp(); } },
       { label: '行动 · 帮助', hint: 'actHelp', run: function () { currentModule = 'act'; currentView = 'actHelp'; renderApp(); } },

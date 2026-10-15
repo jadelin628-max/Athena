@@ -151,7 +151,7 @@
   }
 
   // ---------------- 会话级 UI 状态（不落盘） ----------------
-  let actView = 'plan';          // plan | habit | focus | archive | help（由 currentView 驱动，见 renderAct）
+  let actView = 'plan';          // plan | habit | focus | help（由 currentView 驱动，见 renderAct；归档是 focus 内的页签，不再是独立 actView）
   let actWoopStep = 0;           // WOOP 向导 0–3
   let actWoopDraft = null;       // { wish, outcome, obstacle, cues[], planIf, planThen }
   const homePlanFold = { woop: false }; // 主页计划入口折叠态
@@ -621,8 +621,7 @@
     const isHelp = currentView === 'actHelp';
     const isHabit = currentView === 'actHabit';
     const isFocus = currentView === 'actFocus';
-    const isArchive = currentView === 'actArchive';
-    actView = isHelp ? 'help' : (isHabit ? 'habit' : (isFocus ? 'focus' : (isArchive ? 'archive' : 'plan')));
+    actView = isHelp ? 'help' : (isHabit ? 'habit' : (isFocus ? 'focus' : 'plan'));
 
     if (isHelp) {
       renderActHelp(wrap);
@@ -638,16 +637,9 @@
     }
 
     if (isFocus) {
+      // 归档是专注链的下级页签（2.1.9 起），随 renderFocusSection 的 tab 一起渲染，不再单独占一级视图
       wrap.appendChild(el('h2', null, '专注链'));
       renderFocusSection(wrap);
-      app.appendChild(wrap);
-      return;
-    }
-
-    // 归档（专注链模块的下级功能，T151）：逾期未转正 ⇒ 被清空的计划编制快照
-    if (isArchive) {
-      wrap.appendChild(el('h2', null, '归档'));
-      renderFocusArchiveSection(wrap);
       app.appendChild(wrap);
       return;
     }

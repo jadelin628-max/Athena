@@ -627,12 +627,12 @@
     const items = currentModule === 'wrong'
       ? [['wrong', '重做'], ['wrongQuiz', '自测'], ['wrongBrowse', '浏览'], ['wrongStats', '统计']]
       : currentModule === 'act'
-        ? [['actFocus', '专注链'], ['actArchive', '归档'], ['actPlan', '计划'], ['actHabit', '习惯树'], ['actHelp', '帮助']]
+        ? [['actFocus', '专注链'], ['actPlan', '计划'], ['actHabit', '习惯树'], ['actHelp', '帮助']]
         : [['learn', '学习'], ['browse', '浏览'], ['quiz', '自测'], ['bank', '题库'], ['statistics', '统计'], ['help', '帮助']];
     const icons = currentModule === 'wrong'
       ? { wrong: 'wrong', wrongQuiz: 'pencil', wrongBrowse: 'search', wrongStats: 'chart' }
       : currentModule === 'act'
-        ? { actPlan: 'act', actHabit: 'habit', actFocus: 'act', actArchive: 'archive', actHelp: 'help' }
+        ? { actPlan: 'act', actHabit: 'habit', actFocus: 'act', actHelp: 'help' }
         : { learn: 'deck', browse: 'search', quiz: 'pencil', bank: 'bank', statistics: 'chart', help: 'help' };
     // 「错题自测」是错题模块的二级视图（currentModule='wrong' + currentView='quiz'，与 src/wrong.mjs 的
     // wrongQuizEntry 同一状态对）：高亮必须映射到自己的那一项，否则自测进行时四项全部不高亮。

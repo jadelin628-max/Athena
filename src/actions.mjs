@@ -43,7 +43,7 @@
         currentView = (arg === 'wrongQuiz') ? 'quiz' : arg;
         if (arg === 'wrong' || arg === 'wrongQuiz' || arg === 'wrongBrowse' || arg === 'wrongStats') currentModule = 'wrong';
         else if (arg === 'learn' || arg === 'browse' || arg === 'quiz' || arg === 'statistics' || arg === 'bank') currentModule = 'cards';
-        else if (arg === 'actPlan' || arg === 'actHabit' || arg === 'actFocus' || arg === 'actHelp') currentModule = 'act';
+        else if (arg === 'actPlan' || arg === 'actHabit' || arg === 'actFocus' || arg === 'actArchive' || arg === 'actHelp') currentModule = 'act';
         else if (arg === 'mile') currentModule = 'cards';
         if (arg === 'wrongQuiz') enterWrongQuiz();
         renderApp();
@@ -677,6 +677,7 @@
       { label: '学习 · 知识卡', hint: 'learn', run: function () { currentModule = 'cards'; currentView = 'learn'; renderApp(); } },
       { label: '错题本', hint: 'wrong', run: function () { currentModule = 'wrong'; currentView = 'wrong'; renderApp(); } },
       { label: '行动 · 专注链', hint: 'actFocus', run: function () { currentModule = 'act'; currentView = 'actFocus'; renderApp(); } },
+      { label: '行动 · 归档', hint: 'actArchive', run: function () { currentModule = 'act'; currentView = 'actArchive'; renderApp(); } },
       { label: '行动 · 计划', hint: 'actPlan', run: function () { currentModule = 'act'; currentView = 'actPlan'; renderApp(); } },
       { label: '行动 · 习惯树', hint: 'actHabit', run: function () { currentModule = 'act'; currentView = 'actHabit'; renderApp(); } },
       { label: '行动 · 帮助', hint: 'actHelp', run: function () { currentModule = 'act'; currentView = 'actHelp'; renderApp(); } },

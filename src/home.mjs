@@ -193,7 +193,9 @@
     plus: '<path d="M12 5 V19 M5 12 H19"/>',
     speak: '<path d="M4 9.5 H7.5 L12 6.2 V17.8 L7.5 14.5 H4 Z"/><path d="M15.2 9.8 a3.4 3.4 0 0 1 0 4.4"/><path d="M17.8 7.6 a6.6 6.6 0 0 1 0 8.8"/>',
     check: '<path d="M4.5 12.6 L9.6 17.6 L19.5 6.4"/>',
-    cross: '<path d="M6.2 6.2 L17.8 17.8"/><path d="M17.8 6.2 L6.2 17.8"/>'
+    cross: '<path d="M6.2 6.2 L17.8 17.8"/><path d="M17.8 6.2 L6.2 17.8"/>',
+    // 2.1.8：归档（专注链下级功能）—— 带盖的档案箱 + 抽手
+    archive: '<rect x="3.5" y="5" width="17" height="4.2" rx="1.2"/><path d="M5.5 9.2 V18.6 A1.6 1.6 0 0 0 7.1 20.2 H16.9 A1.6 1.6 0 0 0 18.5 18.6 V9.2"/><path d="M10 13.2 H14"/>'
   };
   function icon(name) {
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

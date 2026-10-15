@@ -13,7 +13,7 @@
     else if (currentView === 'principle') renderPrinciples();
     else if (currentView === 'settings') renderSettings();
     else if (currentView === 'mile') renderMile();
-    else if (currentView === 'actPlan' || currentView === 'actHabit' || currentView === 'actFocus' || currentView === 'actHelp') renderAct();
+    else if (currentView === 'actPlan' || currentView === 'actHabit' || currentView === 'actFocus' || currentView === 'actArchive' || currentView === 'actHelp') renderAct();
     // 高亮一级 tab + 渲染二级导航
     document.querySelectorAll('.module-tab').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-arg') === currentModule);

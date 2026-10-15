@@ -208,7 +208,7 @@
       });
       const d = new Date(); d.setDate(d.getDate() + i);
       const t = svgEl('title', {});
-      t.textContent = (i === 0 ? '今天' : (d.getMonth() + 1) + '月' + d.getDate() + '日') + '：到期 ' + cnt + ' 张' + (i === examIdx ? '（考试日 🎯）' : '');
+      t.textContent = (i === 0 ? '今天' : (d.getMonth() + 1) + '月' + d.getDate() + '日') + '：到期 ' + cnt + ' 张' + (i === examIdx ? '（考试日）' : '');
       rect.appendChild(t);
       svg.appendChild(rect);
       if (cnt > 0) svg.appendChild(svgText('text', x + bw / 2, base - h - 5, String(cnt), { 'text-anchor': 'middle', 'font-weight': '600', fill: i === examIdx ? '#D4537E' : '#888780' }));
@@ -265,18 +265,18 @@
   function renderStatistics() {
     const app = document.getElementById('app');
     const wrap = el('div', 'principles-wrap');
-    wrap.appendChild(el('h2', null, '📈 学习统计'));
+    wrap.appendChild(el('h2', null, '学习统计'));
 
     const s = stats();
     const sc = stateCounts();
 
     // —— 学习报告（日/周/月/年聚合）——
-    wrap.appendChild(el('h3', null, '📋 学习报告'));
+    wrap.appendChild(el('h3', null, '学习报告'));
     wrap.appendChild(renderStudyReport());
 
     // —— 自测统计（T51：可配置队列 + 表现差入重学；记录见 DB.log.quiz）——
     // 聚合窗口跟随上方「学习报告」周期 chips（日报/周报/月报/年报）
-    wrap.appendChild(el('h3', null, '📝 自测统计'));
+    wrap.appendChild(el('h3', null, '自测统计'));
     const qDays = REPORT_DAYS[reportPeriod];
     const qAll = quizLogStats(DB.log && DB.log.quiz, 0);
     const qWin = quizLogStats(DB.log && DB.log.quiz, Date.now() - qDays * DAY);
@@ -301,11 +301,11 @@
     }
 
     // —— 未来负载预测 ——
-    wrap.appendChild(el('h3', null, '📅 未来负载预测（14 天）'));
+    wrap.appendChild(el('h3', null, '未来负载预测（14 天）'));
     wrap.appendChild(renderForecastCard());
 
     // —— 记忆算法关键指标趋势（每日快照 DB.log.metrics）——
-    wrap.appendChild(el('h3', null, '🧠 记忆趋势（每日）'));
+    wrap.appendChild(el('h3', null, '记忆趋势（每日）'));
     const metrics = (DB.log && DB.log.metrics) || {};
     const mKeys = Object.keys(metrics).sort();
     const mSeries = function (f) { return mKeys.map(function (k) { return { label: k, value: metrics[k][f] }; }); };
@@ -316,7 +316,7 @@
     wrap.appendChild(el('p', 'muted', '每天打开应用自动记录一次指标（掌握度按存储强度），积累几天后即可看趋势。'));
 
     // —— 学习日历热力图（紧凑 8 周 · 可展开 26 周 + 汇总）——
-    wrap.appendChild(el('h3', null, '🔥 学习日历'));
+    wrap.appendChild(el('h3', null, '学习日历'));
     const daily = (DB.log && DB.log.daily) || {};
     const detailLog = (DB.log && DB.log.detail) || {};
     const weeks = heatWeeksExpanded ? 26 : 8;
@@ -394,7 +394,7 @@
       const selCnt = daily[heatSel] || 0;
       const det = el('div', 'stat-card heat-detail');
       const dhead = el('div', 'heat-detail-head');
-      dhead.appendChild(el('strong', null, '📅 ' + heatSel + ' · 共复习 ' + selCnt + ' 张'));
+      dhead.appendChild(el('strong', null, heatSel + ' · 共复习 ' + selCnt + ' 张'));
       const dclose = el('button', 'btn small', '关闭');
       dclose.setAttribute('data-action', 'heatclose');
       dhead.appendChild(dclose);
@@ -420,7 +420,7 @@
     }
 
     // —— 记忆状态分布 ——
-    wrap.appendChild(el('h3', null, '📌 记忆状态分布（共 ' + s.total + ' 张 · 平均掌握 ' + s.avg + '%）'));
+    wrap.appendChild(el('h3', null, '记忆状态分布（共 ' + s.total + ' 张 · 平均掌握 ' + s.avg + '%）'));
     const sd = el('div', 'stat-card');
     [['新卡', sc.fresh], ['学习中', sc.learn], ['复习中', sc.review], ['已毕业', sc.grad]].forEach(function (p) {
       const row = el('div', 'cat-bar-row');
@@ -436,7 +436,7 @@
     });
     wrap.appendChild(sd);
 
-    wrap.appendChild(el('h3', null, '📊 各分类掌握度'));
+    wrap.appendChild(el('h3', null, '各分类掌握度'));
     const cc = el('div', 'stat-card');
     catOrder().forEach(function (c) {
       const avg = categoryAvg(c);

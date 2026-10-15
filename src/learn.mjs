@@ -228,7 +228,7 @@
     wrap.appendChild(head);
     wrap.appendChild(el('div', 'chart-label muted', '每次评分后的掌握度 · 虚线为目标 100%'));
     if (hist.length < 2) {
-      wrap.appendChild(el('p', 'muted chart-empty', '📈 数据积累中——学习 2 次后显示趋势。'));
+      wrap.appendChild(el('p', 'muted chart-empty', '数据积累中——学习 2 次后显示趋势。'));
       return wrap;
     }
     const minT = hist[0].t;
@@ -285,14 +285,14 @@
   function memoryBox(id, hiddenClass) {
     const c = card(id);
     const box = el('div', 'memory-box' + (hiddenClass || ''));
-    box.appendChild(el('div', 'memory-badge', '🧠 记忆'));
-    box.appendChild(el('div', 'memory-sched muted', '🗓 ' + nextReviewText(c)));
+    box.appendChild(el('div', 'memory-badge', '记忆'));
+    box.appendChild(el('div', 'memory-sched muted', nextReviewText(c)));
     if (c.state === 'review') {
       const h = cardHalflife(c);
       const targetText = targetLinked()
         ? ('目标：稳至' + goalTitle() + '(≥' + Math.round(TARGET_CONFIDENCE * 100) + '%) · 距' + goalTitle() + ' ' + countdownDays() + ' 天')
         : ('目标 S_N=' + Math.round(targetS()) + ' 天');
-      box.appendChild(el('div', 'memory-fsrs muted', '📐 难度 ' + (c.diff || 5).toFixed(1) + ' · 稳定性 S=' + (c.stab || 0).toFixed(1) + ' 天 · ' + targetText + (isGraduated(c) ? ' · ✔已毕业' : '')));
+      box.appendChild(el('div', 'memory-fsrs muted', '难度 ' + (c.diff || 5).toFixed(1) + ' · 稳定性 S=' + (c.stab || 0).toFixed(1) + ' 天 · ' + targetText + (isGraduated(c) ? ' · ✔已毕业' : '')));
     }
     box.appendChild(svgMasteryTrend(id));
     box.appendChild(revlogList(id));
@@ -304,14 +304,14 @@
     const all = ((DB.log && Array.isArray(DB.log.revlogs)) ? DB.log.revlogs : []).filter(function (e) { return e.cid === cid; });
     const box = el('div', 'revlog-box');
     if (!all.length) {
-      box.appendChild(el('div', 'revlog-empty muted', '📋 评分记录：暂无（v1.44.0 起记录）'));
+      box.appendChild(el('div', 'revlog-empty muted', '评分记录：暂无（v1.44.0 起记录）'));
       return box;
     }
     const ordered = all.slice().sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
     const RATING_LABELS = ['再来一次', '困难', '良好', '简单'];
     const WRONG_LABELS = ['不会', '思路错', '算错', '会做对'];
     const STATE_LABELS = { 0: '新学', 1: '学习中', 2: '复习', 3: '重学' };
-    box.appendChild(el('div', 'revlog-title muted', '📋 评分记录（共 ' + all.length + ' 次）'));
+    box.appendChild(el('div', 'revlog-title muted', '评分记录（共 ' + all.length + ' 次）'));
     ordered.slice(0, 10).forEach(function (e) {
       const row = el('div', 'revlog-row');
       const d = new Date(e.t || 0);
@@ -415,13 +415,13 @@
       // 节律提示：连续学习约 50 分钟，温和提醒起身休息（脚手架，非强制）
       if (now - continuousSince >= 50 * 60000 && now - lastBreakNudgeMs >= 50 * 60000) {
         lastBreakNudgeMs = now;
-        try { toast('⏳ 已连续学习约 50 分钟——起身远眺 5 分钟再回来，专注与巩固都会更好。'); } catch (e) {}
+        try { toast('已连续学习约 50 分钟——起身远眺 5 分钟再回来，专注与巩固都会更好。'); } catch (e) {}
       }
       // 深夜提示：23 点后每次会话提醒一次（「学前睡好编码、学后睡够巩固」，A 级证据）
       const hour = new Date(now).getHours();
       if (!nightNudged && (hour >= 23 || hour < 5)) {
         nightNudged = true;
-        try { toast('🌙 睡眠是记忆巩固的最后一道工序——今晚早睡，比熬夜多刷十张卡更值。'); } catch (e) {}
+        try { toast('睡眠是记忆巩固的最后一道工序——今晚早睡，比熬夜多刷十张卡更值。'); } catch (e) {}
       }
     } else {
       continuousSince = now; // 切后台：连续计时清零

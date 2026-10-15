@@ -392,5 +392,5 @@ OAS：把嵌入期权的影响剥离后，债券相对基准曲线的利差—�
     al04: R`商品长期收益 ≠ 现货涨幅：contango 结构下滚动收益持续为负。`
   });
 
-  return { id: 'inv', group: 'acad', name: '投资学', short: '投资学', icon: '📈', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['mk', 'pt', 'cm', 'em', 'fi', 'dr', 'pe'] };
+  return { id: 'inv', group: 'acad', name: '投资学', short: '投资学', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['mk', 'pt', 'cm', 'em', 'fi', 'dr', 'pe'] };
 })();

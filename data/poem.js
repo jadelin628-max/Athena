@@ -809,5 +809,5 @@ window.SUBJECTS.poem = (function () {
     pn196: R`「万马齐喑究可哀」的「喑」读 yīn（哑）——勿写成「暗」。`
   };
 
-  return { id: 'poem', group: 'hobby', name: '古诗词背诵', short: '古诗词', icon: '📜', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['pre', 'tang', 'song', 'late'] };
+  return { id: 'poem', group: 'hobby', name: '古诗词背诵', short: '古诗词', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['pre', 'tang', 'song', 'late'] };
 })();

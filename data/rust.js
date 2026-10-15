@@ -1481,5 +1481,5 @@ main 是入口，println! 负责输出（带感叹号——宏的标志）。
   ];
 
   const BEGINNER = ['start', 'base'];
-  return { BEGINNER: BEGINNER, id: 'rust', name: 'Rust', short: 'Rust', icon: '🦀', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'base', 'own', 'struct', 'enum', 'mod', 'coll', 'err', 'gen', 'test', 'smart', 'conc'] };
+  return { BEGINNER: BEGINNER, id: 'rust', name: 'Rust', short: 'Rust', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'base', 'own', 'struct', 'enum', 'mod', 'coll', 'err', 'gen', 'test', 'smart', 'conc'] };
 })();

@@ -745,7 +745,7 @@ Está embarazada. —— 她怀孕了。（不是「她很尴尬」）
 ~~~text
 Poco a poco se llega lejos. —— 慢慢来，能走很远。（西语谚语）
 ~~~
-**活用限制**：大舌音 rr **不要堵在门口**——先近似音可懂度优先；每天 10 张卡 + 15 分钟跟读（es-ES 🔊）比周末突击有效；整科重置后进度从零滚动，按 BEGINNER 章（语音/名词与冠词）起步。`)
+**活用限制**：大舌音 rr **不要堵在门口**——先近似音可懂度优先；每天 10 张卡 + 15 分钟跟读（es-ES 朗读）比周末突击有效；整科重置后进度从零滚动，按 BEGINNER 章（语音/名词与冠词）起步。`)
   ];
 
   const META = {
@@ -825,12 +825,12 @@ Poco a poco se llega lejos. —— 慢慢来，能走很远。（西语谚语）
     { id: 'help05', title: '常见放弃点与对策', body: R`三大放弃点：
 ① **变位膨胀**——先只用现在时 + ir a + 原形就能聊；② **ser/estar**——对比卡反复，写十句自介；③ **两套过去时**——用「点 vs 段」口诀，叙事文按情节/背景拆。
 总对策：每天 10 张卡是纪律不是热情；大舌音、速度、变位都靠时间，不靠天赋。` },
-    { id: 'help06', title: '朗读与跟读：🔊 按钮怎么用', body: R`学习页 🔊 走 Web Speech（es-ES），SENTENCES 每日一句也可朗读。
+    { id: 'help06', title: '朗读与跟读：朗读 按钮怎么用', body: R`学习页 朗读 走 Web Speech（es-ES），SENTENCES 每日一句也可朗读。
 跟读三步：① 裸听一遍；② 看原文再听；③ 影子跟读（shadowing）。
 语音阶段每天 5–10 分钟跟读；长句按意群停顿再连——西语节奏靠音节等长，不是靠重读弱读。` }
   ];
 
   const BEGINNER = ['phon', 'noun'];
-  return { BEGINNER: BEGINNER, id: 'es', name: '西班牙语', short: '西语', icon: '🌞', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['phon', 'noun', 'verb', 'sent', 'words', 'culture'] };
+  return { BEGINNER: BEGINNER, id: 'es', name: '西班牙语', short: '西语', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['phon', 'noun', 'verb', 'sent', 'words', 'culture'] };
 })();
 

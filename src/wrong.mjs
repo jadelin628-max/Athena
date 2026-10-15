@@ -121,7 +121,7 @@
     const mSum = all.reduce(function (a, wid) { return a + wrongMastery(wid).pct; }, 0);
     const bar = el('div', 'stats-bar');
     bar.appendChild(el('span', 'stat', '待重做 ' + dueN + ' 张'));
-    bar.appendChild(el('span', 'stat', '🆕 今日已重做 ' + doneToday + ' 张'));
+    bar.appendChild(el('span', 'stat', '今日已重做 ' + doneToday + ' 张'));
     bar.appendChild(el('span', 'stat', '平均掌握 ' + (all.length ? Math.round(mSum / all.length) : 0) + '%'));
     bar.appendChild(el('span', 'stat', '总计 ' + all.length));
     return bar;
@@ -152,7 +152,9 @@
     const total = Object.keys(DB.wrongs || {}).length;
     const tb = el('div', 'learn-top');
     // 左上角：移动端首屏即可点到（t28；热区由 style.css 的 `.learn-top .btn.small` 统一给出，不再内联）
-    const add = el('button', 'btn small primary', '➕ 手动录入');
+    const add = el('button', 'btn small primary');
+    add.appendChild(icon('plus'));
+    add.appendChild(document.createTextNode(' 手动录入'));
     add.addEventListener('click', openWrongInput);
     tb.appendChild(add);
     tb.appendChild(el('span', 'muted', '共 ' + total + ' 道'));
@@ -161,7 +163,7 @@
     if (total > 0) app.appendChild(wrongStatsBar());
     if (total === 0) {
       const wrap = el('div', 'center-card');
-      wrap.appendChild(el('h2', null, '📕 错题本'));
+      wrap.appendChild(el('h2', null, '错题本'));
       wrap.appendChild(el('p', 'muted', '还没有错题。在「浏览」页的真题处点「标记为错题」，即可把做错的题收进来，按记忆算法重现、重做、补漏。'));
       app.appendChild(wrap);
       return;
@@ -185,7 +187,7 @@
     //（浏览位置停在已重做题上时仍可回看，← 可从完成页退回最后一题）
     if (wrongFrontier >= wrongDeck.length && wrongPos >= wrongFrontier) {
       const wrap = el('div', 'center-card');
-      wrap.appendChild(el('h2', null, '🎉 错题本轮完成'));
+      wrap.appendChild(el('h2', null, '错题本轮完成'));
       wrap.appendChild(illus('wrong-done'));
       wrap.appendChild(el('p', 'muted', '本轮错题已做完——按排期到期的错题会自动重现。'));
       app.appendChild(wrap);
@@ -198,11 +200,11 @@
   function wrongMemoryBox(wid, hiddenClass) {
     const w = DB.wrongs[wid];
     const box = el('div', 'memory-box' + (hiddenClass || ''));
-    box.appendChild(el('div', 'memory-badge', '🧠 记忆'));
-    box.appendChild(el('div', 'memory-sched muted', '🗓 ' + wrongNextText(w)));
+    box.appendChild(el('div', 'memory-badge', '记忆'));
+    box.appendChild(el('div', 'memory-sched muted', wrongNextText(w)));
     const diff = (typeof w.diff === 'number') ? w.diff : 5;
     const stab = (typeof w.stab === 'number') ? w.stab : 0;
-    box.appendChild(el('div', 'memory-fsrs muted', '📐 难度 ' + diff.toFixed(1) + ' · 稳定性 S=' + stab.toFixed(1) + ' 天 · 遗忘 ' + (w.lapses || 0) + ' 次' + (isWrongGraduated(w) ? ' · ✔已稳固' : '')));
+    box.appendChild(el('div', 'memory-fsrs muted', '难度 ' + diff.toFixed(1) + ' · 稳定性 S=' + stab.toFixed(1) + ' 天 · 遗忘 ' + (w.lapses || 0) + ' 次' + (isWrongGraduated(w) ? ' · ✔已稳固' : '')));
     box.appendChild(svgTrendCore(w.hist || []));
     box.appendChild(revlogList(wid));
     return box;
@@ -215,7 +217,7 @@
     const wrap = el('div', 'learn-wrap');
 
     const top = el('div', 'learn-top');
-    top.appendChild(el('span', 'badge', '📕 错题'));
+    top.appendChild(el('span', 'badge', '错题'));
     wrap.appendChild(top);
 
     const m = wrongMastery(wid);
@@ -240,14 +242,14 @@
 
     if (w.a2) {
       const a2b = el('div', 'wrong-a2' + (reviewed ? '' : ' hidden'));
-      a2b.appendChild(el('div', 'mini-label', '💡 巧解'));
+      a2b.appendChild(el('div', 'mini-label', '巧解'));
       const a2c = el('div', 'example-a');
       renderTex(a2c, w.a2);
       a2b.appendChild(a2c);
       cardEl.appendChild(a2b);
     }
     if (w.src) {
-      cardEl.appendChild(el('div', 'wrong-src' + (reviewed ? '' : ' hidden'), '📚 来源：' + w.src));
+      cardEl.appendChild(el('div', 'wrong-src' + (reviewed ? '' : ' hidden'), '来源：' + w.src));
     }
     if (w.linked && w.linked.length) {
       const rb = el('div', 'rel-box');
@@ -397,7 +399,9 @@
     const ids = Object.keys(DB.wrongs || {});
     const tb = el('div', 'learn-top');
     // 左上角：与重做视图同款（t28；热区同上，由 style.css 统一，不再内联）
-    const add = el('button', 'btn small primary', '➕ 手动录入');
+    const add = el('button', 'btn small primary');
+    add.appendChild(icon('plus'));
+    add.appendChild(document.createTextNode(' 手动录入'));
     add.addEventListener('click', openWrongInput);
     tb.appendChild(add);
     tb.appendChild(el('span', 'muted', '共 ' + ids.length + ' 道'));
@@ -405,7 +409,7 @@
 
     if (!ids.length) {
       const wrap = el('div', 'center-card');
-      wrap.appendChild(el('h2', null, '📕 错题本'));
+      wrap.appendChild(el('h2', null, '错题本'));
       wrap.appendChild(illus('empty-wrong'));
       wrap.appendChild(el('p', 'muted', '还没有错题。可在「知识卡·浏览」页的真题处标记，或点上方「手动录入」。'));
       app.appendChild(wrap);
@@ -422,7 +426,7 @@
       head.setAttribute('data-action', 'wtoggle');
       head.setAttribute('data-arg', wid);
       const left = el('div', 'browse-title');
-      left.appendChild(el('span', 'badge', '📕 错题'));
+      left.appendChild(el('span', 'badge', '错题'));
       left.appendChild(texEl('span', 'browse-name', w.q));
       const mark = el('span', 'browse-state');
       mark.textContent = m.label + ' ' + m.pct + '%';
@@ -444,11 +448,11 @@
         body.appendChild(a);
         if (w.a2) {
           const a2b = el('div', 'browse-a');
-          a2b.appendChild(el('div', 'mini-label', '💡 巧解'));
+          a2b.appendChild(el('div', 'mini-label', '巧解'));
           renderTex(a2b, w.a2);
           body.appendChild(a2b);
         }
-        if (w.src) body.appendChild(el('p', 'muted', '📚 来源：' + w.src));
+        if (w.src) body.appendChild(el('p', 'muted', '来源：' + w.src));
         // 记忆模块（与重做页同构：FSRS 状态 + 掌握度趋势），浏览展开即可查
         body.appendChild(wrongMemoryBox(wid));
         body.lastChild.classList.remove('hidden');
@@ -491,7 +495,7 @@
   function renderWrongStats() {
     const app = document.getElementById('app');
     const wrap = el('div', 'principles-wrap');
-    wrap.appendChild(el('h2', null, '📊 错题统计'));
+    wrap.appendChild(el('h2', null, '错题统计'));
 
     const ids = Object.keys(DB.wrongs || {});
     if (!ids.length) {
@@ -523,7 +527,7 @@
     kpi('累计遗忘', lapses);
     wrap.appendChild(ov);
 
-    wrap.appendChild(el('h3', null, '📌 状态分布'));
+    wrap.appendChild(el('h3', null, '状态分布'));
     const sd = el('div', 'stat-card');
     [['未做', fresh], ['复习中', review], ['已稳固', grad]].forEach(function (p) {
       const row = el('div', 'cat-bar-row');
@@ -539,7 +543,7 @@
     });
     wrap.appendChild(sd);
 
-    wrap.appendChild(el('h3', null, '💪 掌握度分布'));
+    wrap.appendChild(el('h3', null, '掌握度分布'));
     const dist = {};
     ids.forEach(function (wid) { const l = wrongMastery(wid).label; dist[l] = (dist[l] || 0) + 1; });
     const dd = el('div', 'stat-card');
@@ -561,7 +565,7 @@
     // —— 自测统计（错题自测，记录来自 DB.log.quiz，见 docs/DATA_SCHEMA）——
     const recs = (DB.log && Array.isArray(DB.log.quiz) ? DB.log.quiz : []).filter(function (r) { return r && r.mode === 'wrong'; });
     const qs = quizLogStats(recs, 0);
-    wrap.appendChild(el('h3', null, '📝 自测统计'));
+    wrap.appendChild(el('h3', null, '自测统计'));
     const qb = el('div', 'stat-card');
     if (!qs.n) {
       qb.appendChild(el('p', 'muted', '还没有错题自测记录——点二级功能栏「自测」按范围抽题（配置数量 / 章节 / 难度 / 掌握度），做完给出成绩、章节表现、用时与预测差距。'));
@@ -604,7 +608,7 @@
     modal.appendChild(backdrop);
 
     const cardBox = el('div', 'map-modal-card wrong-input-card');
-    cardBox.appendChild(el('h3', null, '➕ 手动录入错题'));
+    cardBox.appendChild(el('h3', null, '手动录入错题'));
 
     const q = el('textarea', 'wrong-input');
     q.placeholder = '题目（必填）…';
@@ -615,7 +619,7 @@
     cardBox.appendChild(wrongField('解析', a));
 
     const a2 = el('textarea', 'wrong-input');
-    a2.placeholder = '💡 巧解（可选）…';
+    a2.placeholder = '巧解（可选）…';
     cardBox.appendChild(wrongField('巧解', a2));
 
     const src = el('input', 'wrong-input');

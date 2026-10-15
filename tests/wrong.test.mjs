@@ -388,6 +388,8 @@ function renderWrongToolbar(fnName) {
   const ctx = {
     DB: { wrongs: {} }, wrongDeck: [], wrongFrontier: 0, wrongPos: 0,
     openWrongInput() {}, illus: () => mkNode('span'),
+    // 2.1.7 起按钮图标是 SVG（src/home.mjs 的 UI_ICONS）：沙箱同样提供 icon()，与真实环境一致
+    icon(name) { return mkNode('span'); },
     document: {
       createElement: (t) => mkNode(t),
       createTextNode: (t) => ({ tag: '#text', text: String(t) }),
@@ -464,7 +466,9 @@ test('t28 页内入口已删除：二级功能栏「自测」是唯一入口（w
   assert.ok(!/function\s+wrongQuizEntry\s*\(/.test(SRC_WRONG), 'wrongQuizEntry 函数应整体删除');
   assert.ok(!SRC_WRONG.includes('tb.appendChild(wrongQuizEntry'), '三个工具条都不得再挂页内自测入口');
   assert.ok(!SRC_WRONG.includes('📝 错题自测'), '错题本页内不得再渲染「📝 错题自测」按钮');
+  assert.ok(!SRC_WRONG.includes("'错题自测'"), '错题本页内不得再渲染「错题自测」按钮（2.1.7 起文案已去 emoji，判据同步到无 emoji 形态）');
   assert.ok(!SRC_WRONG.includes('点上方「📝 错题自测」'), '错题统计页文案不得再指向已删除的页内按钮');
+  assert.ok(!SRC_WRONG.includes('点上方「错题自测」'), '错题统计页文案不得再指向已删除的页内按钮（无 emoji 形态同样判红）');
   assert.match(SRC_WRONG, /入口已改为二级功能栏/, '删除处必须留注释说明入口已改为二级功能栏');
   // 唯一入口的行为零回归：nav 与 module 两条路径都落 wrong/quiz，且不丢进行中的会话
   const nav = dispatchNav({ quiz: { mode: 'cards' } }, 'nav', 'wrongQuiz');
@@ -484,7 +488,9 @@ test('t28 「手动录入」在重做/浏览两视图里都是 .learn-top 首个
     assert.ok(tb.children.length >= 2, fnName + ' 工具条应至少含「手动录入」+ 计数两段');
     const first = tb.children[0];
     assert.equal(first.tag, 'button', fnName + ' 的 .learn-top 首个子元素必须是按钮（左上角，移动端首屏可点）');
-    assert.ok(/手动录入/.test(first.textContent), fnName + ' 首个子元素应是「➕ 手动录入」，实际：' + first.textContent);
+    // 2.1.7 起文案在文本节点里（第一个子节点是 SVG 图标）：从子节点取标签，与 renderSubnavOf 的取法同源
+    const firstLabel = (first.children.find((c) => c.tag === '#text') || { text: '' }).text.trim();
+    assert.ok(/手动录入/.test(firstLabel), fnName + ' 首个子元素应是「手动录入」按钮，实际：' + firstLabel);
     assert.ok(/\bprimary\b/.test(first.className), fnName + ' 手动录入应沿用既有 primary 按钮类（不新建类名）');
     // t31 起热区不再内联：由 style.css 的 `.learn-top .btn.small` 统一给出（.btn.small 默认 30px）
     assert.ok(!/style\.minHeight/.test(SRC_WRONG), fnName + ' 手动录入不得再内联 min-height（t31 起样式归 style.css）');

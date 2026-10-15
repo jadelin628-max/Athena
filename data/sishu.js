@@ -512,5 +512,5 @@ window.SUBJECTS.sishu = (function () {
     mz44: R`「万物皆备于我」并非唯我论——落点在「反身而诚」：向内求诚则乐莫大焉。`
   };
 
-  return { id: 'sishu', group: 'hobby', name: '四书背诵', short: '四书', icon: '📖', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['dx', 'zy', 'ly', 'mz'] };
+  return { id: 'sishu', group: 'hobby', name: '四书背诵', short: '四书', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['dx', 'zy', 'ly', 'mz'] };
 })();

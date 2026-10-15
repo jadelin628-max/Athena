@@ -213,7 +213,7 @@
       { key: 'plan', label: 'P · 计划', title: '计划（Plan）→ 如果-那么', ph: '' }
     ];
     const step = STEPS[actWoopStep];
-    card.appendChild(el('h3', null, (actWoopDraft.id ? '✏️ 编辑' : '🌈') + ' WOOP · ' + step.label + '（' + (actWoopStep + 1) + '/4）'));
+    card.appendChild(el('h3', null, (actWoopDraft.id ? '编辑' : '新建') + ' WOOP · ' + step.label + '（' + (actWoopStep + 1) + '/4）'));
     card.appendChild(el('p', 'muted', '顺序：愿望 → 结果 → 内心障碍（可附外部提示）→ 计划。'));
 
     function goStep(n) {
@@ -483,7 +483,7 @@
   }
 
   function renderActHelp(wrap) {
-    wrap.appendChild(el('h2', null, '📖 RSIP · 设计手册'));
+    wrap.appendChild(el('h2', null, 'RSIP · 设计手册'));
     wrap.appendChild(el('p', 'muted', '按二级导航顺序速查：专注链 → 计划 → 习惯树（含规则）+ 设计四攻略。科学依据见知识库，这里只给可执行要点。'));
 
     // 目录：点按跳到对应小节；锚点 = 各小节面板 id
@@ -630,21 +630,21 @@
     }
 
     if (isHabit) {
-      wrap.appendChild(el('h2', null, '🌳 习惯树'));
+      wrap.appendChild(el('h2', null, '习惯树'));
       renderHabitSection(wrap);
       app.appendChild(wrap);
       return;
     }
 
     if (isFocus) {
-      wrap.appendChild(el('h2', null, '⛓️ 专注链'));
+      wrap.appendChild(el('h2', null, '专注链'));
       renderFocusSection(wrap);
       app.appendChild(wrap);
       return;
     }
 
     // 计划区：WOOP 主干（如果-那么 = P 步，外部提示 = 障碍步）
-    wrap.appendChild(el('h2', null, '📋 计划 · WOOP'));
+    wrap.appendChild(el('h2', null, '计划 · WOOP'));
     const head = el('div', 'act-section-head');
     head.appendChild(el('h3', null, 'WOOP 记录'));
     const add = el('button', 'btn primary', '开始 WOOP');
@@ -730,7 +730,7 @@
     const d = loadAct();
     const box = el('div', 'act-home-entry act-home-plan');
     const head = el('div', 'act-home-plan-head');
-    head.appendChild(el('div', 'act-home-entry-title', '📋 计划 · WOOP'));
+    head.appendChild(el('div', 'act-home-entry-title', '计划 · WOOP'));
     const go = el('button', 'act-home-entry-go', '进入 ▶');
     go.type = 'button';
     go.addEventListener('click', function () {
@@ -761,7 +761,7 @@
     }
     const box = el('button', 'act-home-entry act-home-habit');
     const left = el('div', 'act-home-entry-main');
-    left.appendChild(el('div', 'act-home-entry-title', '🌳 习惯树'));
+    left.appendChild(el('div', 'act-home-entry-title', '习惯树'));
     left.appendChild(el('div', 'muted', '待检 ' + due + ' · 今日 ' + done + '/' + total + ' · 活跃 ' + total));
     box.appendChild(left);
     box.appendChild(el('span', 'act-home-entry-go', '进入 ▶'));

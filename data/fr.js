@@ -870,7 +870,7 @@ Un peu chaque jour. —— 每天一点。
 正确顺序：先攻语音章的组合规则，此后生词有七成以上能读对——别被拼写吓退，拼写靠词汇量慢慢补。` },
     { id: 'h02', title: '发音三座小山', body: R`① **小舌音 r**（漱口位置轻擦，可先用喉部近似）；② **鼻化元音**（口型做元音、气流走鼻腔）；③ **联诵**（前词尾辅音复活连读）。
 假坑排除：词尾辅音大多不发音、h 永远不发音——这是送分规律，不是难点。
-跟读工具：学习页 🔊（fr-FR），每天跟三遍。` },
+跟读工具：学习页 朗读（fr-FR），每天跟三遍。` },
     { id: 'h03', title: '语法两大主山：阴阳性与变位', body: R`① **名词阴阳性**——无生命物也有性，连冠词整体记；② **动词变位**——人称 × 时态的词形体系。
 应对：阴阳性靠「第一天就带 le/la 记忆」的习惯；变位先吃透 être/avoir/第一组模板，再上复合过去时与 imparfait 分工。` },
     { id: 'h04', title: '第一周怎么过', body: R`① **拼读规则先吃透**（语音章每天 2–3 张 + 朗读）；② 初学者模式勾「语音 + 名词与冠词」；③ 大声跟读五分钟——法语靠节奏组整块模仿。
@@ -883,11 +883,11 @@ Un peu chaque jour. —— 每天一点。
     { id: 'h06', title: '简明法语教程：本卡组怎么走', body: R`本卡组按《简明法语教程》章节骨架重组：**语音 → 名词与冠词 → 动词变位 → 句型场景 → 高频词汇 → 文化与场景**。
 建议顺序即 ORDER；初学者模式默认语音 + 名词与冠词。
 **进度策略=整科重置**：旧卡 id 已全部替换，FSRS 进度重新开始——当作一门新课从语音章开跑。` },
-    { id: 'h07', title: '朗读与跟读：🔊 按钮的用法', body: R`学习页 🔊 走 Web Speech（fr-FR），每日一句（SENTENCES）也可朗读。
+    { id: 'h07', title: '朗读与跟读：朗读 按钮的用法', body: R`学习页 朗读 走 Web Speech（fr-FR），每日一句（SENTENCES）也可朗读。
 跟读三步：① 只听不看字；② 看原文再听；③ 遮住原文影子跟读。
 发音阶段每天 5–10 分钟跟读比背字母表更有效；长句按节奏组停顿再连。` }
   ];
 
   const BEGINNER = ['phon', 'noun'];
-  return { BEGINNER: BEGINNER, id: 'fr', name: '法语', short: '法语', icon: '🗼', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['phon', 'noun', 'verb', 'sent', 'words', 'culture'] };
+  return { BEGINNER: BEGINNER, id: 'fr', name: '法语', short: '法语', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['phon', 'noun', 'verb', 'sent', 'words', 'culture'] };
 })();

@@ -37,8 +37,8 @@
     const firstToday = DATA.filter(function (f) { return card(f.id).firstLearn === today; }).length;
     const bar = el('div', 'stats-bar');
     bar.appendChild(el('span', 'stat', '今天已学习 ' + todayReviewed() + ' 张'));
-    bar.appendChild(el('span', 'stat', '🆕 今日新学 ' + firstToday + ' 张'));
-    bar.appendChild(el('span', 'stat', '⏱ 今日已学 ' + todayStudyMin() + ' 分钟'));
+    bar.appendChild(el('span', 'stat', '今日新学 ' + firstToday + ' 张'));
+    bar.appendChild(el('span', 'stat', '今日已学 ' + todayStudyMin() + ' 分钟'));
     bar.appendChild(el('span', 'stat', '待复习 ' + s.due + ' 张'));
     bar.appendChild(el('span', 'stat', '未学完新卡 ' + incNew + ' 张'));
     bar.appendChild(el('span', 'stat', '总计 ' + s.total));
@@ -229,7 +229,9 @@
     const app = document.getElementById('app');
     surfaceDue();
     const tb = el('div', 'learn-top');
-    const add = el('button', 'btn small', '➕ 录入知识点');
+    const add = el('button', 'btn small');
+    add.appendChild(icon('plus'));
+    add.appendChild(document.createTextNode(' 录入知识点'));
     add.addEventListener('click', openCardInput);
     tb.appendChild(add);
     // 重排队列：按当前设置（每日上限/初学者模式）重新生成学习顺序
@@ -254,10 +256,12 @@
       if (stepDues.length) {
         stepDues.sort(function (a, b) { return a - b; });
         const waitMs = stepDues[0] - Date.now();
-        wrap.appendChild(el('h2', null, '⏳ 巩固步进中'));
+        wrap.appendChild(el('h2', null, '巩固步进中'));
         wrap.appendChild(illus('empty-learn'));
         wrap.appendChild(el('p', 'muted', stepDues.length + ' 张卡在短间隔巩固中——最早约 ' + fmtPreview(waitMs) + '后自动回到队列，本页到点会自动刷新。'));
-        const back = el('button', 'btn', '🏠 回主页');
+        const back = el('button', 'btn');
+        back.appendChild(icon('home'));
+        back.appendChild(document.createTextNode(' 回主页'));
         back.setAttribute('data-action', 'nav');
         back.setAttribute('data-arg', 'home');
         wrap.appendChild(back);
@@ -267,7 +271,7 @@
           if (currentView === 'learn' && currentModule === 'cards') renderApp();
         }, Math.min(waitMs + 250, 15 * 60 * 1000));
       } else {
-        wrap.appendChild(el('h2', null, '🎉 本轮已完成'));
+        wrap.appendChild(el('h2', null, '本轮已完成'));
         wrap.appendChild(illus('learn-done'));
         const waiting = DATA.filter(function (f) {
           const c = card(f.id);
@@ -277,7 +281,9 @@
           ? '今日的队列已清空——另有 ' + waiting + ' 张新卡将按「每日新卡上限」在之后的日期逐步引入；到期复习卡会按排期自动进入队列。'
           : '全部知识点已纳入学习计划，暂无更多内容——按排期到期的卡片会自动进入复习队列。'));
         if (waiting > 0) {
-          const more = el('button', 'btn primary', '➕ 再来一批（' + Math.min(waiting, (function () { const v = prefGet('dailyNew'); return (typeof v === 'number' && v >= 0) ? v : 10; })()) + ' 张）');
+          const more = el('button', 'btn primary');
+          more.appendChild(icon('plus'));
+          more.appendChild(document.createTextNode(' 再来一批（' + Math.min(waiting, (function () { const v = prefGet('dailyNew'); return (typeof v === 'number' && v >= 0) ? v : 10; })()) + ' 张）'));
           more.addEventListener('click', introMore);
           wrap.appendChild(more);
         }
@@ -296,7 +302,7 @@
     modal.appendChild(backdrop);
 
     const cardBox = el('div', 'map-modal-card wrong-input-card');
-    cardBox.appendChild(el('h3', null, '➕ 手动录入知识点'));
+    cardBox.appendChild(el('h3', null, '手动录入知识点'));
 
     const title = el('input', 'wrong-input');
     title.type = 'text';
@@ -400,7 +406,7 @@
     a.placeholder = '解析';
     a.value = e.a || '';
     const a2 = el('textarea', 'wrong-input');
-    a2.placeholder = '💡 巧解（可选）';
+    a2.placeholder = '巧解（可选）';
     a2.value = e.a2 || '';
     const src = el('input', 'wrong-input');
     src.type = 'text';
@@ -439,7 +445,7 @@
     modal.appendChild(backdrop);
 
     const box = el('div', 'map-modal-card wrong-input-card edit-card');
-    box.appendChild(el('h3', null, '✏️ 编辑知识点'));
+    box.appendChild(el('h3', null, '编辑知识点'));
 
     const title = el('textarea', 'wrong-input');
     title.value = f.title;
@@ -481,7 +487,9 @@
     const exWrap = el('div', 'wrong-field');
     exWrap.appendChild(el('span', 'mini-label', '例题（可增删改，题目留空则不保存该例题）'));
     exs.forEach(function (e) { exWrap.appendChild(renderExampleEditor(e)); });
-    const addEx = el('button', 'btn small', '➕ 添加例题');
+    const addEx = el('button', 'btn small');
+    addEx.appendChild(icon('plus'));
+    addEx.appendChild(document.createTextNode(' 添加例题'));
     addEx.addEventListener('click', function () { exWrap.insertBefore(renderExampleEditor({ q: '', a: '', a2: '', src: '' }), addEx); });
     exWrap.appendChild(addEx);
     box.appendChild(exWrap);
@@ -537,7 +545,7 @@
     const box = el('div', 'extras' + hiddenClass);
     exs.forEach(function (ex, i) {
       const eb = el('div', 'example-box');
-      const label = exs.length > 1 ? ('📝 ' + (ex.src ? '真题' : '例题') + ' ' + (i + 1)) : (ex.src ? '📝 真题' : '📝 经典例题');
+      const label = exs.length > 1 ? ((ex.src ? '真题' : '例题') + ' ' + (i + 1)) : (ex.src ? '真题' : '经典例题');
       eb.appendChild(el('div', 'example-label', label));
       const q = el('div', 'example-q');
       renderTex(q, ex.q);
@@ -547,13 +555,13 @@
       renderTex(a, ex.a);
       eb.appendChild(a);
       if (ex.a2) {
-        eb.appendChild(el('div', 'mini-label', '💡 巧解'));
+        eb.appendChild(el('div', 'mini-label', '巧解'));
         const a2 = el('div', 'example-a');
         renderTex(a2, ex.a2);
         eb.appendChild(a2);
       }
-      if (ex.src) eb.appendChild(el('div', 'example-src', '📚 来源：' + ex.src));
-      const mark = el('button', 'btn small', '📕 标记为错题');
+      if (ex.src) eb.appendChild(el('div', 'example-src', '来源：' + ex.src));
+      const mark = el('button', 'btn small', '标记为错题');
       mark.addEventListener('click', function () { markAsWrong(ex, id); });
       eb.appendChild(mark);
       box.appendChild(eb);
@@ -612,14 +620,18 @@
     top.appendChild(catBadge);
     // 今日新学标签：仅当该卡今日首次评分进入复习规划（新卡首学；复习中重学不刷新标记）
     const fc = card(id);
-    if (fc.firstLearn === todayStr()) top.appendChild(el('span', 'badge first-learn-badge', '🆕 今日新学'));
+    if (fc.firstLearn === todayStr()) top.appendChild(el('span', 'badge first-learn-badge', '今日新学'));
     if (BASE_SUBJ && BASE_SUBJ.group === 'lang' && 'speechSynthesis' in window) {
-      const speakBtn = el('button', 'btn small learn-speak', '🔊 朗读');
+      const speakBtn = el('button', 'btn small learn-speak');
+      speakBtn.appendChild(icon('speak'));
+      speakBtn.appendChild(document.createTextNode(' 朗读'));
       speakBtn.addEventListener('click', function () { speakCardText(reviewed ? f.back : f.front); });
       top.appendChild(speakBtn);
     }
     // 直接编辑当前卡（桌面/移动通用；沉浸模式下随 learn-top 一并隐藏）
-    const editBtn = el('button', 'btn small learn-edit', '✏️ 编辑');
+    const editBtn = el('button', 'btn small learn-edit');
+    editBtn.appendChild(icon('pencil'));
+    editBtn.appendChild(document.createTextNode(' 编辑'));
     editBtn.addEventListener('click', function () { openCardEdit(id); });
     top.appendChild(editBtn);
     wrap.appendChild(top);
@@ -649,14 +661,14 @@
     cardEl.appendChild(backBox);
 
     const useBox = el('div', 'use-box' + (reviewed ? '' : ' hidden'));
-    useBox.appendChild(el('span', 'use-label', subjKind() === 'qa' ? '📌 考查方式：' : '📌 常考题型：'));
+    useBox.appendChild(el('span', 'use-label', subjKind() === 'qa' ? '考查方式：' : '常考题型：'));
     useBox.appendChild(el('span', null, metaOf(id)[1]));
     cardEl.appendChild(useBox);
 
     const mn = mnemOf(id);
     if (mn) {
       const mb = el('div', 'mnem-box' + (reviewed ? '' : ' hidden'));
-      mb.appendChild(el('span', 'mnem-label', '🗝️ 助记：'));
+      mb.appendChild(el('span', 'mnem-label', '助记：'));
       mb.appendChild(texEl('span', null, mn));
       cardEl.appendChild(mb);
     }
@@ -664,20 +676,20 @@
     const pf = pitfallOf(id);
     if (pf) {
       const pfb = el('div', 'pitfall-box' + (reviewed ? '' : ' hidden'));
-      pfb.appendChild(el('span', 'pitfall-label', '⚠️ 常见陷阱：'));
+      pfb.appendChild(el('span', 'pitfall-label', '常见陷阱：'));
       pfb.appendChild(texEl('span', null, pf));
       cardEl.appendChild(pfb);
     }
 
     const hint = el('div', 'hint muted' + (reviewed ? '' : ' hidden'),
       reviewed
-        ? (pendingAdvance ? '✅ ' + masteryDeltaText() + '，' + scheduleText(st) + '，点击「下一张」继续。' : '这是你已复习过的卡片（答案已展示），点「回到当前卡片」继续。')
+        ? (pendingAdvance ? masteryDeltaText() + '，' + scheduleText(st) + '，点击「下一张」继续。' : '这是你已复习过的卡片（答案已展示），点「回到当前卡片」继续。')
         : '回想后再点击「显示答案」核对，主动回忆效果最佳。');
     cardEl.appendChild(hint);
 
     // 笔记模块置于真题/相关知识点模块之前
     const notesBox = el('div', 'notes-box' + (reviewed ? '' : ' hidden'));
-    notesBox.appendChild(el('div', 'mini-label', '📝 我的笔记（感想 / 补充 / 易错点）'));
+    notesBox.appendChild(el('div', 'mini-label', '我的笔记（感想 / 补充 / 易错点）'));
     const notes = el('textarea', 'card-notes');
     notes.placeholder = '在这里记录你的理解、补充或易错点…';
     notes.value = st.notes || '';
@@ -891,7 +903,7 @@
       const dueLabel = browseDueLabel(c.due);
       const row = el('div', 'browse-relearn');
       row.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 16px 12px;';
-      const btn = el('button', 'btn small browse-relearn-btn', '⏰ 立即重学');
+      const btn = el('button', 'btn small browse-relearn-btn', '立即重学');
       btn.type = 'button';
       btn.setAttribute('data-action', 'relearnnow');
       btn.setAttribute('data-arg', id);

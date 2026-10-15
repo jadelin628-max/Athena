@@ -880,7 +880,7 @@ window.SUBJECTS.kr = (function () {
 进度策略=**整科重置**：学习状态从零开始，旧 id 全部替换为新编号，不必试图合并旧进度。` },
     { id: 'h02', title: '韩语入门最快的一段路：直读 한글', body: R`한글 是表音文字，拼读规则极规律——坚持的话两三天能见字读音，这是韩语对初学者最大的善意。
 真正难的是**松音/紧音/送气音**与**收音音变**，不是字母表本身。
-对策：字母表跟读（卡组 🔊）→ 对比 가/까/카 → 收音词按听感记读法，罗马字只作应急。` },
+对策：字母表跟读（卡组 朗读）→ 对比 가/까/카 → 收音词按听感记读法，罗马字只作应急。` },
     { id: 'h03', title: '敬语压力：先用 요体 走天下', body: R`韩语按对方身份换词尾，是真实的语法负担，但**初学只需一档**：요体（-아요/어요）适合陌生人与平辈日常。
 합쇼体 留给职场、广播、初见长辈的正式场合；平语留给亲密朋友。
 韩国人对学习者用错敬语很宽容——敢说即达标，语体会随输入自然升级。` },
@@ -889,11 +889,11 @@ window.SUBJECTS.kr = (function () {
 检验：地铁站名、购物价签上的 한글 能拆读几个字母——能拆就算过关。` },
     { id: 'h05', title: '常见放弃点', body: R`① **音变一堆表**——不背总表，听词内化；② **敬语选档**——先 요体，再扩阶；③ **双轨数词**——时间点/金额/日期用汉字词，年龄与小时数用固有词。
 总对策：每天 10 张卡 + 十分钟跟读，把「学一点」变纪律而不是热情。` },
-    { id: 'h06', title: '朗读按钮与跟读方法', body: R`学习页卡面 🔊 与每日一句走 Web Speech（ko-KR）。
+    { id: 'h06', title: '朗读按钮与跟读方法', body: R`学习页卡面 朗读 与每日一句走 Web Speech（ko-KR）。
 跟读三步：先只听、再看原文听、最后影子跟读（shadowing）。
 发音阶段每天 5–10 分钟跟读比死记规则更有效；长句按助词后的语节停顿再连。` }
   ];
 
   const BEGINNER = ['hw', 'gram'];
-  return { BEGINNER: BEGINNER, id: 'kr', name: '韩语', short: '韩语', icon: '🇰🇷', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['hw', 'gram', 'dial', 'vocab', 'cult'] };
+  return { BEGINNER: BEGINNER, id: 'kr', name: '韩语', short: '韩语', kind: 'qa', group: 'lang', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, SENTENCES: SENTENCES, ORDER: ['hw', 'gram', 'dial', 'vocab', 'cult'] };
 })();

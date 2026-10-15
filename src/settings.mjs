@@ -210,7 +210,7 @@
   function renderSettings() {
     const app = document.getElementById('app');
     const wrap = el('div', 'settings-wrap');
-    wrap.appendChild(el('h2', null, '⚙️ 设置'));
+    wrap.appendChild(el('h2', null, '设置'));
     const brand = illus('brand-settings');
     brand.classList.add('settings-brand-illus');
     wrap.appendChild(brand);
@@ -218,7 +218,7 @@
     // 分栏（会话内切换）：学习偏好 / 行动 / 数据与同步 / 关于
     let settingsTab = renderSettings._tab || 'study';
     const tabs = el('div', 'chips');
-    [['study', '🎛 学习偏好'], ['act', '🎯 行动'], ['data', '💾 数据与同步'], ['about', 'ℹ️ 关于']].forEach(function (t) {
+    [['study', '学习偏好'], ['act', '行动'], ['data', '数据与同步'], ['about', '关于']].forEach(function (t) {
       const b = el('button', 'chip' + (settingsTab === t[0] ? ' active' : ''), t[1]);
       b.addEventListener('click', function () { renderSettings._tab = t[0]; renderApp(); });
       tabs.appendChild(b);
@@ -438,7 +438,7 @@
     if (!globItems.length) {
       wrap.appendChild(el('p', 'muted', '（当前没有全局生效的可调项——点上方任一项旁的「全局」即可移入本区）'));
     }
-    wrap.appendChild(el('p', 'muted', '「行动」模块设置见「🎯 行动」栏；云同步见「💾 数据与同步」栏——它们本身就是全局配置。'));
+    wrap.appendChild(el('p', 'muted', '「行动」模块设置见「行动」栏；云同步见「数据与同步」栏——它们本身就是全局配置。'));
 
     }
 
@@ -815,7 +815,7 @@
     wrap.appendChild(s3);
 
     const s5 = el('div', 'setting-row changelog-row');
-    s5.appendChild(el('span', null, '📜 更新日志'));
+    s5.appendChild(el('span', null, '更新日志'));
     const tog = el('button', 'btn small', '展开');
     tog.setAttribute('data-action', 'togglog');
     s5.appendChild(tog);

@@ -31,7 +31,7 @@
         });
         mastery = cnt ? Math.round(sum / cnt) : 0;
       }
-      rows.push({ sid: sid, name: meta.name, short: meta.short, icon: meta.icon, due: due, wrongDue: wrongDue, learned: learned, min: min, mastery: mastery, has: has, current: sid === currentSubjectId });
+      rows.push({ sid: sid, name: meta.name, short: meta.short, due: due, wrongDue: wrongDue, learned: learned, min: min, mastery: mastery, has: has, current: sid === currentSubjectId });
     });
     return rows;
   }
@@ -155,7 +155,8 @@
     box.appendChild(card);
     const acts = el('div', 'home-quote-actions');
     if (opts.onSpeak) {
-      const sp = el('button', 'home-speak', '🔊');
+      const sp = el('button', 'home-speak');
+      sp.appendChild(icon('speak'));
       sp.type = 'button';
       sp.title = '朗读';
       sp.setAttribute('aria-label', '朗读');
@@ -187,7 +188,12 @@
     habit: '<path d="M12 20 V11"/><path d="M12 11 C12 11 8 9.5 8 6.5 C8 6.5 12 7.5 12 11"/><path d="M12 13 C12 13 16 11.5 16 8.5 C16 8.5 12 9.5 12 13"/>',
     mile: '<path d="M7 20 V4"/><path d="M7 5 H18 L15 9 L18 13 H7"/><path d="M5 20 H12"/>',
     // bank（题库/真题集）：合上的卡册 + 书脊 + 题签，与 deck（叠放的卡片）区分
-    bank: '<rect x="4.5" y="4" width="15" height="16" rx="2"/><path d="M9 4 V20"/><path d="M15.5 13.5 H18.5 V20 L17 18.6 L15.5 20 Z"/>'
+    bank: '<rect x="4.5" y="4" width="15" height="16" rx="2"/><path d="M9 4 V20"/><path d="M15.5 13.5 H18.5 V20 L17 18.6 L15.5 20 Z"/>',
+    // 2.1.7：以下四枚替代原先的 ➕/🔊/✅/❌ emoji（同一套 24×24 手绘线稿、currentColor）
+    plus: '<path d="M12 5 V19 M5 12 H19"/>',
+    speak: '<path d="M4 9.5 H7.5 L12 6.2 V17.8 L7.5 14.5 H4 Z"/><path d="M15.2 9.8 a3.4 3.4 0 0 1 0 4.4"/><path d="M17.8 7.6 a6.6 6.6 0 0 1 0 8.8"/>',
+    check: '<path d="M4.5 12.6 L9.6 17.6 L19.5 6.4"/>',
+    cross: '<path d="M6.2 6.2 L17.8 17.8"/><path d="M17.8 6.2 L6.2 17.8"/>'
   };
   function icon(name) {
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -272,7 +278,7 @@
   // 左栏：今日复习（知识卡 due，按科聚合）
   function homeDueReviewPanel(rows) {
     const panel = el('div', 'home-panel home-due');
-    panel.appendChild(el('div', 'home-panel-title', '📖 今日复习'));
+    panel.appendChild(el('div', 'home-panel-title', '今日复习'));
     const dueRows = rows.filter(function (r) { return (r.due || 0) > 0 || (r.wrongDue || 0) > 0; })
       .sort(function (a, b) { return (b.due || 0) - (a.due || 0); });
     if (!dueRows.length) {
@@ -283,7 +289,7 @@
         const row = el('button', 'home-due-row');
         row.appendChild(el('span', 'home-due-name', r.short || r.name));
         const bits = [];
-        if (r.due) bits.push('⏳' + r.due);
+        if (r.due) bits.push('待复习 ' + r.due);
         if (r.wrongDue) bits.push('✗' + r.wrongDue);
         row.appendChild(el('span', 'muted', bits.join(' · ')));
         row.addEventListener('click', function () {
@@ -302,7 +308,7 @@
   // 右栏：习惯树 + 专注链摘要
   function homeActionPanel(sum) {
     const panel = el('div', 'home-panel home-action');
-    panel.appendChild(el('div', 'home-panel-title', '🌱 习惯 · 专注'));
+    panel.appendChild(el('div', 'home-panel-title', '习惯 · 专注'));
 
     const h = sum.habit;
     const hBox = el('button', 'home-act-block');
@@ -389,7 +395,7 @@
     // 今日功成：全库无待复习且今天确实学过
     if (totalDue === 0 && totalLearned > 0) {
       wrap.appendChild(illus('all-clear'));
-      wrap.appendChild(el('p', 'muted', '🎉 今日所有科目的复习都已完成——好好休息，明天见。'));
+      wrap.appendChild(el('p', 'muted', '今日所有科目的复习都已完成——好好休息，明天见。'));
     }
 
     // 继续学习 Hero
@@ -398,7 +404,7 @@
       const hero = el('button', 'home-hero');
       const left = el('div', 'home-hero-main');
       left.appendChild(el('div', 'home-hero-title', (cur.has ? '继续学习' : '开始学习') + ' · ' + cur.short));
-      left.appendChild(el('div', 'muted', '⏳ 待复习 ' + cur.due + ' · ✅ 今日已学 ' + cur.learned + ' · 掌握 ' + (cur.mastery != null ? cur.mastery + '%' : '—')));
+      left.appendChild(el('div', 'muted', '待复习 ' + cur.due + ' · 今日已学 ' + cur.learned + ' · 掌握 ' + (cur.mastery != null ? cur.mastery + '%' : '—')));
       hero.appendChild(left);
       hero.appendChild(el('span', 'home-hero-go', '进入 ▶'));
       hero.addEventListener('click', function () {
@@ -445,7 +451,7 @@
     });
     wrap.appendChild(catChips);
     const cat = renderHome._cat;
-    wrap.appendChild(el('h3', null, cat === 'all' ? '📚 全部学科' : '📚 ' + CAT_LABELS[cat]));
+    wrap.appendChild(el('h3', null, cat === 'all' ? '全部学科' : CAT_LABELS[cat]));
     const grid = el('div', 'home-grid');
     rows.filter(function (r) { return cat === 'all' || (subjectList()[r.sid].group || 'acad') === cat; }).forEach(function (r) {
       const card = el('button', 'home-card' + (r.current ? ' current' : ''));
@@ -456,11 +462,11 @@
         img.className = 'home-card-icon';
         img.alt = '';
         card.appendChild(img);
-      } else {
-        card.appendChild(el('span', 'home-card-icon', r.icon || '📘'));
       }
+      // 2.1.7：学科图标统一走 assets/subject_icon/*.svg（src/store.mjs 的 SUBJECT_ICON_URLS），
+      // 数据里不再有 icon 字段，也不再需要 emoji 兜底。
       card.appendChild(el('div', 'home-card-name', r.short));
-      card.appendChild(el('div', 'muted', (r.mastery != null ? '掌握 ' + r.mastery + '%' : '尚未开始') + (r.due ? ' · ⏳' + r.due : '')));
+      card.appendChild(el('div', 'muted', (r.mastery != null ? '掌握 ' + r.mastery + '%' : '尚未开始') + (r.due ? ' · 待复习 ' + r.due : '')));
       if (r.current) card.appendChild(el('span', 'home-card-now', '继续'));
       card.addEventListener('click', function () {
         if (r.sid !== currentSubjectId) switchSubject(r.sid);
@@ -475,7 +481,7 @@
     const qPool = quotePool();
     const q = pickDaily(qPool, 'quote');
     if (q) {
-      wrap.appendChild(el('h3', null, '🗓 每日精选'));
+      wrap.appendChild(el('h3', null, '每日精选'));
       wrap.appendChild(dailyCard({
         text: '「' + (q.item.text.split('。')[0]) + '。」',
         sub: '—— ' + q.item.title,

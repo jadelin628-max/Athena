@@ -352,5 +352,5 @@ P/E 与 P/B 联动：P/E = P/B ÷ ROE——高 ROE 支撑高估值（与杜邦�
     ea02: R`稀释 EPS 只纳入稀释性工具：反稀释（增量 EPS 更高）的忽略。`
   });
 
-  return { id: 'fsa', group: 'acad', name: '财务报表分析', short: '财报分析', icon: '📊', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['stmt', 'ratio', 'dupont', 'cash', 'quality', 'val'] };
+  return { id: 'fsa', group: 'acad', name: '财务报表分析', short: '财报分析', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['stmt', 'ratio', 'dupont', 'cash', 'quality', 'val'] };
 })();

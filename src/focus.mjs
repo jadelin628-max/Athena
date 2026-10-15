@@ -218,6 +218,9 @@
       fromPlan: !!raw.fromPlan,
       formalized: raw.formalized == null ? !raw.fromPlan : !!raw.formalized,
       dueAt: raw.dueAt == null ? null : (Number(raw.dueAt) || null),
+      // 逾期结算标记（T150）：计划层过截止日期仍未转正 ⇒ 记结算时刻 + 清空所有任务链；
+      // 必须进 sanitize 白名单，否则 focusCloneState（= focusSanitizeState）会把标记丢掉、每秒重复清空。
+      expiredAt: raw.expiredAt == null ? null : (Number(raw.expiredAt) || null),
       minChildCount: focusNormalizeMinChildCount(Number.isFinite(minChild) ? minChild : null, 1),
       createdAt: Number(raw.createdAt) || 0,
       updatedAt: Number(raw.updatedAt) || 0
@@ -647,9 +650,15 @@
     return !!org && !focusOrgPending(org);
   }
 
-  // 节点的文字状态（只用文字区分层次性质，不用颜色/图标）：计划中 / 已完成 / ''（未知）
+  // 「计划层已逾期」（T150）：计划模式创建、未转正、且过截止日期已被结算 ⇒ 任务链已清空。
+  function focusOrgExpired(org) {
+    return !!(org && org.fromPlan && !org.formalized && org.expiredAt);
+  }
+
+  // 节点的文字状态（只用文字区分层次性质，不用颜色/图标）：计划中 / 已逾期 / 已完成 / ''（未知）
   function focusOrgStateLabel(org) {
     if (!org) return '';
+    if (focusOrgExpired(org)) return '已逾期 · 任务链已清空';
     return focusOrgPending(org) ? '计划中' : '已完成';
   }
 
@@ -1029,7 +1038,8 @@
     const childLevel = focusChildLevelOf(org.level);
     const names = settings.levelNames || {};
     const childName = names[childLevel] || childLevel || '';
-    const planned = !!(org.fromPlan && !org.formalized);
+    const expired = focusOrgExpired(org);
+    const planned = !!(org.fromPlan && !org.formalized) && !expired;
     const needN = Math.max(1, Number(org.minChildCount) || 1);
     const vis = focusLevelVisual(org.level);
     return {
@@ -1043,8 +1053,8 @@
         ['平均完成度', agg.unitCount ? String(agg.avgCompletion) + '%' : '暂无'],
         ['下级数量', String(nextCount) + (childName ? ' 个' + childName : '')],
         ['单元数量', String(agg.unitCount) + ' 个'],
-        ['是否计划中', planned ? '是 · 转正需下级全部完成（≥ ' + needN + ' 个）' : '否（已完成层次）'],
-        ['计划截止日期', org.dueAt ? focusFmtTs(org.dueAt) : '未设置']
+        ['是否计划中', planned ? '是 · 转正需下级全部完成（≥ ' + needN + ' 个）' : (expired ? '否（已逾期未转正 · 任务链已清空）' : '否（已完成层次）')],
+        ['计划截止日期', org.dueAt ? (focusFmtTs(org.dueAt) + (expired ? '（已逾期）' : '')) : '未设置']
       ],
       parent: parent
     };
@@ -1181,7 +1191,7 @@
       const dl = Number(reserved.reservation.deadline) || 0;
       return {
         visible: true, mode: 'reserve', chainId: String(reserved.id), nodeId: String(reserved.id),
-        key: 'reserve:' + String(reserved.id) + ':' + dl, level: 'reserve', symbol: '⏳',
+        key: 'reserve:' + String(reserved.id) + ':' + dl, level: 'reserve', symbol: '○',
         title: '预约待就座', subtitle: '座位保留' + (dl ? '至 ' + focusFmtTs(dl) : ''),
         remainMs: remain, expired: remain <= 0, clock: focusFmtClock(remain),
         startedAt: 0, plannedMin: 0, elapsedMin: 0, progressPct: 0,
@@ -2225,6 +2235,85 @@
     return { changed: settled.length > 0, state: next, settled: settled };
   }
 
+  // ---------------- 计划层（高层次计划任务）到期结算：运行期真正的路径 ----------------
+  // 2.1.3 的修复只接了上方的 `state.plans`，但计划任务在运行期**从不写进 state.plans**：
+  // `focusPlanCreate` 没有任何运行期调用点（只有 tests/focus.test.mjs 在调），用户从 UI 建的
+  // 「计划模式 · 高层次任务」全部落在 `state.orgs` 上（`fromPlan:true` + `formalized:false` + `dueAt`
+  // + `minChildCount`，见 focusCreateOrg / focusTemplateTriad / 计划表单）。
+  // 因此「过截止日期仍未转正」这条规则此前实际没有任何入口 —— 复现见
+  // backup/scratch/focusplan/repro-org-overdue.mjs（过期两天、链仍 running，changed=false）。
+  // 现按与 state.plans 同一判据接到 orgs：
+  //   转正判据已满足（下级数量达下限且下级全部为完成单元）→ 记「已完成层次」（formalized），**不动任务链**；
+  //   否则 → 判为逾期未完成：写 `org.expiredAt`，并把**所有任务链**清空（workCount 归零、current 清空、
+  //   未结束的链 status 'cleared' + clearReason 'plan:<orgId>'），与 focusPlanSettle 同口径。
+  function focusPlanOrgOverdue(state, now) {
+    const t = Number(now) || 0;
+    return ((state && state.orgs) || []).filter(function (o) {
+      return o && o.fromPlan && !o.formalized && !o.expiredAt && o.dueAt && o.dueAt < t;
+    });
+  }
+
+  function focusPlanOrgSettle(state, orgId, now) {
+    const next = focusCloneState(state);
+    const org = focusFindOrg(next, orgId);
+    if (!org) return { ok: false, reason: 'not_found', state: next };
+    if (!org.fromPlan) return { ok: false, reason: 'not_plan', state: next };
+    if (org.formalized) return { ok: false, reason: 'already_formal', state: next };
+    if (!org.dueAt) return { ok: false, reason: 'no_due', state: next };
+    const t = Number(now) || 0;
+    if (org.dueAt >= t) return { ok: false, reason: 'not_overdue', state: next };
+    if (focusOrgCanFormalize(next, orgId).ok) {
+      // 到期时转正判据已满足（下级填够且全部完成）⇒ 视为完成，不惩罚、不清链
+      org.formalized = true;
+      org.updatedAt = t;
+      return { ok: true, state: next, org: org, cleared: false, formalized: true };
+    }
+    org.expiredAt = t;
+    org.updatedAt = t;
+    next.chains.forEach(function (c) {
+      if (!c) return;
+      c.workCount = 0;
+      c.current = null;
+      if (c.status === 'running' || c.status === 'scouting' || c.status === 'reserved' || c.status === 'awaiting_verdict') {
+        c.status = 'cleared';
+        c.clearedAt = t;
+        c.clearReason = 'plan:' + org.id;
+      }
+    });
+    return { ok: true, state: next, org: org, cleared: true, formalized: false };
+  }
+
+  // 把所有已逾期的计划层逐个结掉；已被结算过的（expiredAt 已写）不再入列 ⇒ 天然幂等。
+  function focusPlanOrgAutoSettle(state, now) {
+    const st = state || focusDefaultState();
+    const overdue = focusPlanOrgOverdue(st, now);
+    let next = st;
+    const settled = [];
+    for (let i = 0; i < overdue.length; i++) {
+      const r = focusPlanOrgSettle(next, overdue[i].id, now);
+      if (!r || !r.ok) continue;
+      next = r.state;
+      settled.push({ id: overdue[i].id, cleared: !!r.cleared, formalized: !!r.formalized });
+    }
+    return { changed: settled.length > 0, state: next, settled: settled };
+  }
+
+  // 临近截止的计划层（悬浮摘要面板用）：未逾期、未转正、截止日在提醒窗内
+  function focusPlanOrgDueSoon(state, now) {
+    const t = Number(now) || 0;
+    const days = ((state && state.settings) || focusDefaultSettings()).planDueRemindDays;
+    const win = days * 86400000;
+    return ((state && state.orgs) || []).filter(function (o) {
+      if (!o || !o.fromPlan || o.formalized || o.expiredAt) return false;
+      return o.dueAt && o.dueAt - t <= win && o.dueAt >= t;
+    });
+  }
+
+  // 已逾期清空的计划层清单（面板里如实显示「链已清空」）
+  function focusPlanOrgExpiredList(state) {
+    return ((state && state.orgs) || []).filter(function (o) { return focusOrgExpired(o); });
+  }
+
   // ---------------- 存储 ----------------
   function loadFocus() {
     if (typeof window !== 'undefined' && window.__focusData) return window.__focusData;
@@ -2392,9 +2481,13 @@
   // ---------------- UI：主入口 ----------------
   function renderFocusSection(wrap) {
     focusClearTick();
-    // 到期结算兜底：后台标签页的 1s 表会被节流，打开专注链时先按当前时间结一次（无逾期时零开销）
-    const autoSettled = focusPlanAutoSettle(loadFocus(), Date.now());
-    if (autoSettled.changed) saveFocus(autoSettled.state);
+    // 到期结算兜底：后台标签页的 1s 表会被节流，打开专注链时先按当前时间结一次（无逾期时零开销）。
+    // T150：两条口径都要跑（与 focusPlanAutoSettleApply 同序），否则计划层到期在这里仍漏判。
+    const baseSt = loadFocus();
+    const autoPlans = focusPlanAutoSettle(baseSt, Date.now());
+    const autoOrgs = focusPlanOrgAutoSettle(autoPlans.changed ? autoPlans.state : baseSt, Date.now());
+    if (autoOrgs.changed) saveFocus(autoOrgs.state);
+    else if (autoPlans.changed) saveFocus(autoPlans.state);
     const st = loadFocus();
     const now = Date.now();
 
@@ -2905,10 +2998,25 @@
 
   // 运行期入口：结算 + 落盘 + 重绘（只有真的结掉计划时才写盘/重绘；无逾期计划时只是读一次筛选）。
   // 挂在悬浮提醒的节拍上，因此在「浏览 / 统计」等任意视图下都会到期结算，不要求用户先打开专注链。
+  // T150：两条口径都跑 —— 旧 `state.plans`（focusPlanAutoSettle）与运行期真正的计划层
+  // `state.orgs`（focusPlanOrgAutoSettle）；任一有变化即落盘并重绘一次。
   function focusPlanAutoSettleApply(now) {
-    const r = focusPlanAutoSettle(loadFocus(), Number(now) || Date.now());
-    if (!r.changed) return false;
-    saveFocus(r.state);
+    const t = Number(now) || Date.now();
+    const base = loadFocus();
+    const a = focusPlanAutoSettle(base, t);
+    const b = focusPlanOrgAutoSettle(a.changed ? a.state : base, t);
+    if (!a.changed && !b.changed) return false;
+    const next = b.changed ? b.state : a.state;
+    saveFocus(next);
+    // 清空是破坏性动作（链上未完成的单元会被抹掉）：结算那一刻必须让用户知道，不能静默消失。
+    const gone = (b.settled || []).filter(function (s) { return s && s.cleared; });
+    if (gone.length && typeof toast === 'function') {
+      const names = gone.map(function (s) {
+        const o = focusFindOrg(next, s.id);
+        return (o && o.name) || '计划任务';
+      });
+      toast('计划已逾期未转正 · 任务链已清空：' + names.join('、'));
+    }
     try { renderApp(); } catch (e) { /* 重绘失败不影响已落盘的结算结果，下个节拍会再同步 */ }
     return true;
   }
@@ -2948,15 +3056,28 @@
       wrap.appendChild(el('div', 'act-hint', '计划模式：可创建高层次任务；须手动填充至少一个下级，完成后可「转正」为正式层次。'));
     }
 
-    // 计划摘要（合并自原计划页）
+    // 计划摘要（合并自原计划页）——两条口径都给：旧 state.plans + 运行期真正的计划层 orgs
     const dueSoon = focusPlanDueSoon(st, now);
-    if (dueSoon.length) {
+    const orgSoon = focusPlanOrgDueSoon(st, now);
+    const orgExpired = focusPlanOrgExpiredList(st);
+    if (dueSoon.length || orgSoon.length) {
       const warn = el('div', 'act-panel focus-plan-warn');
       warn.appendChild(el('div', 'focus-await-title', '临近截止'));
       dueSoon.forEach(function (p) {
         warn.appendChild(el('div', null, p.title + ' · 截止 ' + focusFmtTs(p.dueAt) + ' · 已填 ' + focusPlanFilledCount(st, p.id) + '/' + p.targetCount));
       });
+      orgSoon.forEach(function (o) {
+        warn.appendChild(el('div', null, o.name + ' · 截止 ' + focusFmtTs(o.dueAt) + ' · 待转正'));
+      });
       wrap.appendChild(warn);
+    }
+    if (orgExpired.length) {
+      const gone = el('div', 'act-panel focus-plan-warn');
+      gone.appendChild(el('div', 'focus-await-title', '已逾期 · 任务链已清空'));
+      orgExpired.forEach(function (o) {
+        gone.appendChild(el('div', null, o.name + ' · 截止 ' + focusFmtTs(o.dueAt) + ' · 未转正，链已清空'));
+      });
+      wrap.appendChild(gone);
     }
 
     // 树工具：是否编入 + 链 筛选（两类），以及多选/计划操作
@@ -4319,6 +4440,12 @@ export {
   focusPlanOverdue,
   focusPlanSettle,
   focusPlanAutoSettle,
+  // T150：计划层（state.orgs）到期结算 —— 用户实测的「计划任务过期未转正仍不清链」修复入口
+  focusPlanOrgOverdue,
+  focusPlanOrgSettle,
+  focusPlanOrgAutoSettle,
+  focusPlanOrgDueSoon,
+  focusPlanOrgExpiredList,
   FOCUS_LEVEL_VISUALS,
   FOCUS_LEVEL_VISUAL_KEYS,
   FOCUS_LEVEL_VISUAL_ORDER,

@@ -1110,5 +1110,5 @@ C 对缩进无强制（编译器不管），但风格必须统一：四空格缩
   ];
 
   const BEGINNER = ['intro', 'types'];
-  return { BEGINNER: BEGINNER, id: 'clang', name: 'C 语言', short: 'C 语言', icon: '🅲', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['intro', 'types', 'flow', 'fn', 'ptr', 'struct', 'io', 'unix'] };
+  return { BEGINNER: BEGINNER, id: 'clang', name: 'C 语言', short: 'C 语言', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['intro', 'types', 'flow', 'fn', 'ptr', 'struct', 'io', 'unix'] };
 })();

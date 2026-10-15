@@ -963,5 +963,5 @@ script 放 body 末尾或加 defer——页面元素就绪后再执行，避免�
   ];
 
   const BEGINNER = ['lang', 'mem'];
-  return { BEGINNER: BEGINNER, id: 'js', group: 'skill', name: 'JavaScript 知识', short: 'JavaScript', icon: '🌐', kind: 'qa', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['lang', 'mem', 'ref', 'fn', 'oop', 'dom', 'evt', 'err', 'net', 'mod'] };
+  return { BEGINNER: BEGINNER, id: 'js', group: 'skill', name: 'JavaScript 知识', short: 'JavaScript', kind: 'qa', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['lang', 'mem', 'ref', 'fn', 'oop', 'dom', 'evt', 'err', 'net', 'mod'] };
 })();

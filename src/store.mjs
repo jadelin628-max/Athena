@@ -577,7 +577,7 @@
     if (storageWarned) return;
     storageWarned = true;
     try { console.error('Athena: localStorage 写入失败（存储空间可能已满或处于隐私模式），学习进度无法保存！'); } catch (e) {}
-    try { toast('⚠️ 学习进度写入失败（存储空间可能已满）——请立即到「设置」导出备份，避免进度丢失！'); } catch (e) {}
+    try { toast('学习进度写入失败（存储空间可能已满）——请立即到「设置」导出备份，避免进度丢失！'); } catch (e) {}
   }
 
   // 合并写：短时间窗口内的多次 saveDB 只落一次盘，且把序列化挪出评分点击的绘制路径。

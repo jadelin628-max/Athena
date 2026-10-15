@@ -214,5 +214,5 @@ window.SUBJECTS.social = (function () {
     gi02: R`人情不是记账式等价交换：心意与持续的轻量维护比一次等价回礼更维系关系。`
   };
 
-  return { id: 'social', name: '社交礼仪', short: '社交', icon: '🤝', kind: 'qa', group: 'hobby', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['base', 'comm', 'work', 'dine', 'online', 'gift'] };
+  return { id: 'social', name: '社交礼仪', short: '社交', kind: 'qa', group: 'hobby', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['base', 'comm', 'work', 'dine', 'online', 'gift'] };
 })();

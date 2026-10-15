@@ -944,7 +944,7 @@
 
     const app = document.getElementById('app');
     const wrap = el('div', 'mile-wrap');
-    wrap.appendChild(el('h2', null, '🏁 里程碑'));
+    wrap.appendChild(el('h2', null, '里程碑'));
     wrap.appendChild(el('p', 'muted mile-intro', '叙事路标，不是积分。风味名是玩笑，条件与「这说明」才是正事。'));
 
     // 分类筛选

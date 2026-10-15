@@ -1396,7 +1396,7 @@ $$f\ \text{在}\ x_0\ \text{可导}\iff f_{-}'(x_0)\ \text{与}\ f_{+}'(x_0)\ \t
     F('gx16', 'drule', '高阶导数的存在性推论',
       R`$f$ 在某点有 $n$ 阶导数，能推出什么？`,
       R`**逐级退化**：若 $f$ 在 $x_0$ 处有 $n$ 阶导数，则 $f$ 在 $x_0$ 的**某邻域内**有 $1,\dots,n-1$ 阶导数，且 $f$ 在该邻域内（含 $x_0$）连续；特别地 $n-1$ 阶导函数在 $x_0$ 处**连续**。
-⚠️ 注意措辞：只能保证 $x_0$ 的**某个邻域**内低阶导数存在，不能保证邻域内 $n$ 阶可导。
+注意措辞：只能保证 $x_0$ 的**某个邻域**内低阶导数存在，不能保证邻域内 $n$ 阶可导。
 常用于：题设"$f$ 在 $x_0$ 二阶可导"时，$f'$ 在 $x_0$ 连续——泰勒展开、洛必达的合法性检查点。`),
     F('gx17', 'drule', '可微的判别（四步法）',
       R`怎么按定义判别二元或一元函数在某点可微？`,
@@ -1525,7 +1525,7 @@ $|\eta|>1$ 时降价可增收（需求富有弹性）。`),
       R`设 $f$ 在 $(-\infty,+\infty)$ 上连续：
 ① $f$ 为**偶**函数：$\int_{0}^{+\infty}f\,dx$ **收敛** $\Rightarrow$ $\int_{-\infty}^{+\infty}f\,dx=2\int_{0}^{+\infty}f\,dx$；
 ② $f$ 为**奇**函数：$\int_{0}^{+\infty}f\,dx$ **收敛** $\Rightarrow$ $\int_{-\infty}^{+\infty}f\,dx=0$。
-⚠️ **前提是半区间积分收敛**——否则两侧都发散时不能凑 $0$。反例：$\int_{-\infty}^{+\infty}x\,dx$ 奇函数但发散，不能说等于 $0$。
+注意：**前提是半区间积分收敛**——否则两侧都发散时不能凑 $0$。反例：$\int_{-\infty}^{+\infty}x\,dx$ 奇函数但发散，不能说等于 $0$。
 变限积分版本：连续奇函数的**全体原函数都是偶函数**；连续偶函数的原函数中只有 $\int_0^x f$ 是奇函数。`),
     F('gx33', 'integral', '含 $\ln x$ 的 $p$ 积分判敛',
       R`$\displaystyle\int_{0}^{1}\frac{\ln x}{x^{p}}dx$ 与 $\displaystyle\int_{1}^{+\infty}\frac{\ln x}{x^{p}}dx$ 的敛散性？`,
@@ -1594,7 +1594,7 @@ $$V=\frac{\pi}{\left(A^{2}+B^{2}\right)^{\frac32}}\int_a^b\left[Ax+Bf(x)+C\right
     F('gx41', 'multi', '二元函数的拉格朗日定理',
       R`$f_x=f_y=0$ 处处成立能推出 $f$ 是常数吗？`,
       R`**二元拉格朗日定理**：设 $f$ 在**区域** $D$ 内 $f_x=f_y=0$，且 $D$ 具有性质"**对区域内任意两点，其水平线段与竖直线段仍在 $D$ 内**"（先水平后竖直可连通行走），则 $f$ 在 $D$ 内恒为常数。
-⚠️ 反例警示：仅 $f_x=0$ 只能说 $f$ **与 $x$ 无关**（$f$ 只是 $y$ 的函数 $\varphi(y)$）——但不能写 $f=\varphi(y)$ 就当常数；若 $D$ 不是"矩形状"区域（如圆环），$f_x=0$ 也推不出与 $x$ 无关的简单结论。
+反例警示：仅 $f_x=0$ 只能说 $f$ **与 $x$ 无关**（$f$ 只是 $y$ 的函数 $\varphi(y)$）——但不能写 $f=\varphi(y)$ 就当常数；若 $D$ 不是"矩形状"区域（如圆环），$f_x=0$ 也推不出与 $x$ 无关的简单结论。
 本质：把一元"导数为零则常数"定理沿水平/竖直两个方向分别应用。`),
     F('gx42', 'multi', '最远最近点的垂线原理',
       R`曲线外一点到曲线的最远/最近点处有什么几何性质？`,
@@ -1676,7 +1676,7 @@ $$\sum_{n=1}^{\infty}u_n\ \text{与}\ \int_1^{+\infty}f(x)\,dx\ \text{敛散性�
       R`设 $\sum a_n$ 为**正项**（或至少非负）级数且收敛，则
 $$\sum a_n^{2},\quad \sum a_n^{3},\quad \sum a_{2n},\quad \sum a_{2n+1}\ \text{都收敛}$$
 理由：$n$ 充分大时 $a_n<1\Rightarrow a_n^{2}\le a_n$（比较判别）；$\sum a_{2n}$ 的部分和不超过原级数隔项和（收敛正项级数任意"抽子列"求和仍收敛）。
-⚠️ 反向不真：$\sum a_n^2$ 收敛推不出 $\sum a_n$ 收敛（$\sum\frac{1}{n^2}$ vs $\sum\frac1n$）。
+反向不真：$\sum a_n^2$ 收敛推不出 $\sum a_n$ 收敛（$\sum\frac{1}{n^2}$ vs $\sum\frac1n$）。
 **任意项级数无此结论**——如 $\sum\frac{(-1)^n}{\sqrt n}$ 条件收敛但 $\sum\frac{1}{n}$ 发散。`),
     F('gx51', 'series', '绝对收敛时正负项子级数都收敛；条件收敛时都发散',
       R`绝对收敛与条件收敛的级数，正项子列、负项子列各如何？`,
@@ -1793,7 +1793,7 @@ $n>m$ 时为 $0$——多项式导 $n$ 次后为零。
       R`$f_{xy}$ 与 $f_{yx}$ 什么时候相等？`,
       R`**定理**：若 $f_{xy}$ 与 $f_{yx}$ 都在点 $(x_0,y_0)$（或区域）内**连续**，则二者相等——混合偏导与求导次序无关。
 $$f_{xy}(x_0,y_0)=f_{yx}(x_0,y_0)\quad\Leftarrow\quad \text{两者在}\ (x_0,y_0)\ \text{连续}$$
-⚠️ 无连续性保证时可能不等（经典反例 $f(x,y)=\frac{xy(x^{2}-y^{2})}{x^{2}+y^{2}}$ 在原点 $f_{xy}\ne f_{yx}$）。
+无连续性保证时可能不等（经典反例 $f(x,y)=\frac{xy(x^{2}-y^{2})}{x^{2}+y^{2}}$ 在原点 $f_{xy}\ne f_{yx}$）。
 用途：极值判别中 $B=f_{xy}=f_{yx}$（AC−B² 判别式的前提）；二阶混合偏导计算时可自由选择求导顺序（先易后难）。`),
     F('gx62', 'doubleint', '极坐标与直角坐标的选择原则',
       R`二重积分什么时候用极坐标？`,
@@ -3098,5 +3098,5 @@ $\bullet$ 若 $B=P^{-1}AP$，则 $B$ 的特征值仍为 $\lambda$，特征向量
     zt07: R`幂级数求和目标：凑成 $\frac{1}{1-x}$、$\ln(1-x)$、$\arctan x$ 等已知展开；"分母有 n 先求导、分子有 n 先积分"。`,
   };
 
-  return { id: 'math3', group: 'acad', name: '考研数学三', short: '数三', icon: '📐', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['limit', 'infinitesimal', 'derivative', 'drule', 'taylor', 'mvt', 'integral', 'multi', 'doubleint', 'series', 'ode', 'trig', 'inequality', 'linalg'] };
+  return { id: 'math3', group: 'acad', name: '考研数学三', short: '数三', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['limit', 'infinitesimal', 'derivative', 'drule', 'taylor', 'mvt', 'integral', 'multi', 'doubleint', 'series', 'ode', 'trig', 'inequality', 'linalg'] };
 })();

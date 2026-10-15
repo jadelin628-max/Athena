@@ -299,5 +299,5 @@ arch: '概念与架构',
   ];
 
   const BEGINNER = ['princ', 'prompt'];
-  return { BEGINNER: BEGINNER, id: 'ai', name: 'AI 基础', short: 'AI', icon: '🤖', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['arch', 'princ', 'prompt', 'tools', 'front'] };
+  return { BEGINNER: BEGINNER, id: 'ai', name: 'AI 基础', short: 'AI', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['arch', 'princ', 'prompt', 'tools', 'front'] };
 })();

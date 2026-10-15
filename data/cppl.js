@@ -1729,5 +1729,5 @@ int main()
   ];
 
   const BEGINNER = ['start', 'types'];
-  return { BEGINNER: BEGINNER, id: 'cppl', name: 'C++', short: 'C++', icon: '➕', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'types', 'seq', 'expr', 'cls', 'mem', 'stl', 'modern'] };
+  return { BEGINNER: BEGINNER, id: 'cppl', name: 'C++', short: 'C++', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['start', 'types', 'seq', 'expr', 'cls', 'mem', 'stl', 'modern'] };
 })();

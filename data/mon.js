@@ -357,5 +357,5 @@ IMF 立场的演变：从一律反对到承认——资本流动**过度波动**
     in06: R`2% 目标的三大理由：工资粘性、零利率安全垫、统计偏差——不是"鼓励通胀"。`
   });
 
-  return { id: 'mon', group: 'acad', name: '货币金融学', short: '货币金融', icon: '🏦', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['money', 'rate', 'bank', 'cb', 'islm', 'infl', 'fx', 'reg'] };
+  return { id: 'mon', group: 'acad', name: '货币金融学', short: '货币金融', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['money', 'rate', 'bank', 'cb', 'islm', 'infl', 'fx', 'reg'] };
 })();

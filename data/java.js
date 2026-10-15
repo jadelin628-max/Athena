@@ -1126,5 +1126,5 @@ IDE 负责一键编译运行、补全与重构；构建工具 Maven/Gradle 管�
   ];
 
   const BEGINNER = ['intro', 'types'];
-  return { BEGINNER: BEGINNER, id: 'java', name: 'Java', short: 'Java', icon: '☕', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['intro', 'types', 'oop', 'coll', 'lib', 'thr'] };
+  return { BEGINNER: BEGINNER, id: 'java', name: 'Java', short: 'Java', kind: 'qa', group: 'skill', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['intro', 'types', 'oop', 'coll', 'lib', 'thr'] };
 })();

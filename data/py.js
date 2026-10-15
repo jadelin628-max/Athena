@@ -716,5 +716,5 @@ def test_middle(self):
   ];
 
   const BEGINNER = ['var', 'list'];
-  return { BEGINNER: BEGINNER, id: 'py', group: 'skill', name: 'Python 知识', short: 'Python', icon: '🐍', kind: 'qa', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['var', 'list', 'cond', 'dict', 'loop', 'func', 'cls', 'file', 'test'] };
+  return { BEGINNER: BEGINNER, id: 'py', group: 'skill', name: 'Python 知识', short: 'Python', kind: 'qa', CATS: CATS, DATA: DATA, META: META, HELP: HELP, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['var', 'list', 'cond', 'dict', 'loop', 'func', 'cls', 'file', 'test'] };
 })();

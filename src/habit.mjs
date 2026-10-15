@@ -1996,7 +1996,7 @@
     backdrop.addEventListener('click', function () { modal.remove(); });
     modal.appendChild(backdrop);
     const card = el('div', 'map-modal-card wrong-input-card');
-    const titleText = isEdit ? '✏️ 编辑习惯' : (isLibraryOnly ? '➕ 新建习惯（习惯库）' : '🌱 入树 · 新习惯');
+    const titleText = isEdit ? '编辑习惯' : (isLibraryOnly ? '新建习惯（习惯库）' : '入树 · 新习惯');
     card.appendChild(el('h3', null, titleText));
 
     if (!isEdit && !isLibraryOnly) {

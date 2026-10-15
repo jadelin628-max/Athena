@@ -95,6 +95,12 @@ import {
   focusPlanDueSoon,
   focusPlanSettle,
   focusPlanAutoSettle,
+  // T150：计划层（state.orgs）到期结算 —— 用户实测口径
+  focusPlanOrgOverdue,
+  focusPlanOrgSettle,
+  focusPlanOrgAutoSettle,
+  focusPlanOrgDueSoon,
+  focusPlanOrgExpiredList,
   focusPlanAutoSettleApply,
   FOCUS_LEVEL_KEYS,
   FOCUS_LEVEL_RANK,
@@ -750,6 +756,98 @@ test('临近截止提醒', () => {
   const soon = focusPlanDueSoon(st, NOW);
   assert.equal(soon.length, 1);
   assert.equal(soon[0].title, '快到期');
+});
+
+test('T150 计划层到期结算（用户报 bug 的本体）：逾期未转正 → 清空所有任务链 + 记 expiredAt', () => {
+  const DAY = 86400000;
+  // 走 UI 真实路径：计划模式建「高层次计划任务」（带截止日期 + 转正最低下级数）
+  let st = makeState();
+  st = focusCreateOrg(st, { level: 'group', name: '线代第三章', fromPlan: true, dueAt: focusYmd(NOW - 2 * DAY), minChildCount: 1 }, NOW).state;
+  const orgId = st.orgs[0].id;
+  assert.ok(focusFindOrg(st, orgId).dueAt < NOW, '前置：截止日期应在 NOW 之前（当天 23:59:59 已过）');
+  // 链上先有一条已完成单元（workCount > 0），再坐进任务开始工作 ⇒ 结算时链是 running
+  st = startAndFinish(st, 'n1', NOW + 60 * MIN, NOW + 85 * MIN, { completion: 100 }).state;
+  st = focusSitDown(st, 'n1', NOW + 2 * 3600000, { taskText: '线代第三章 · 第 1 题' }).state;
+  assert.ok(focusFindChain(st, 'n1').workCount > 0, '前置：链上应有已完成单元计数');
+  assert.equal(focusFindChain(st, 'n1').status, 'running');
+
+  // 截止日之前：不动
+  assert.equal(focusPlanOrgAutoSettle(st, NOW - 3 * DAY).changed, false);
+  // 旧口径（state.plans）对同一状态无任何动作 —— 计划任务从不写进 state.plans，这就是漏判根因
+  assert.equal(focusPlanAutoSettle(st, NOW).changed, false);
+  assert.equal(focusPlanOrgOverdue(st, NOW).length, 1);
+
+  const auto = focusPlanOrgAutoSettle(st, NOW);
+  assert.equal(auto.changed, true);
+  assert.deepEqual(auto.settled, [{ id: orgId, cleared: true, formalized: false }]);
+  const after = auto.state;
+  const ch = focusFindChain(after, 'n1');
+  assert.equal(ch.workCount, 0, '逾期未转正 ⇒ 任务链必须清空');
+  assert.equal(ch.status, 'cleared');
+  assert.equal(ch.clearReason, 'plan:' + orgId);
+  assert.equal(ch.current, null);
+  const org = focusFindOrg(after, orgId);
+  assert.equal(org.formalized, false, '逾期清空是惩罚，不是转正');
+  assert.equal(org.expiredAt, NOW);
+
+  // 幂等：expiredAt 已写 ⇒ 不再入列（否则每秒节拍会重复清空，把用户新开的链也抹掉）
+  assert.equal(focusPlanOrgAutoSettle(after, NOW + 1000).changed, false);
+  assert.equal(focusPlanOrgOverdue(after, NOW + 1000).length, 0);
+  // sanitize 白名单必须保留 expiredAt —— 丢失会让每秒节拍重复结算（focusCloneState 会过一遍 sanitize）
+  const roundTrip = focusSanitizeState(JSON.parse(JSON.stringify(after)));
+  assert.equal(focusFindOrg(roundTrip, orgId).expiredAt, NOW);
+
+  // 到期时转正判据已满足（下级填够且全部完成）⇒ 视为完成，不惩罚、不清链
+  let st2 = makeState();
+  st2 = focusCreateOrg(st2, { level: 'group', name: '写完了', fromPlan: true, dueAt: focusYmd(NOW - 2 * DAY), minChildCount: 1 }, NOW).state;
+  const org2Id = st2.orgs[0].id;
+  st2 = startAndFinish(st2, 'n1', NOW + 60 * MIN, NOW + 85 * MIN, { completion: 100 }).state;
+  st2 = focusAssignUnit(st2, st2.units[0].id, org2Id, NOW).state;
+  assert.equal(focusOrgCanFormalize(st2, org2Id).ok, true);
+  const filled = focusPlanOrgAutoSettle(st2, NOW);
+  assert.equal(filled.changed, true);
+  assert.deepEqual(filled.settled, [{ id: org2Id, cleared: false, formalized: true }]);
+  assert.equal(focusFindOrg(filled.state, org2Id).formalized, true);
+  assert.equal(focusFindOrg(filled.state, org2Id).expiredAt == null, true, '转正的节点不该带逾期标记');
+  assert.equal(focusFindChain(filled.state, 'n1').status, 'idle', '转正不清链');
+
+  // 已逾期节点在树里如实显示（展开字段里「是否计划中」不再是计划中），不再算「计划中」
+  assert.equal(focusPlanOrgExpiredList(after).length, 1);
+  const row = focusTreeRows(after, {}).filter(function (x) { return x.kind === 'org' && x.id === orgId; })[0];
+  const info = focusTreeExpandFields(after, row);
+  const field = info.fields.filter(function (f) { return f[0] === '是否计划中'; })[0];
+  assert.equal(field[1], '否（已逾期未转正 · 任务链已清空）');
+  const dueField = info.fields.filter(function (f) { return f[0] === '计划截止日期'; })[0];
+  assert.ok(/（已逾期）$/.test(dueField[1]), '截止日期行应标出已逾期：' + dueField[1]);
+  assert.equal(focusPlanOrgDueSoon(after, NOW - 3 * DAY).length, 0, '已逾期不再进「临近截止」提醒');
+});
+
+test('T150 源码级守卫（+反证）：运行期结算入口必须同时覆盖 state.plans 与 state.orgs', () => {
+  const srcText = fs.readFileSync(new URL('../src/focus.mjs', import.meta.url), 'utf8');
+  const applyBodyOf = (src) => {
+    const i = String(src).indexOf('function focusPlanAutoSettleApply(');
+    if (i < 0) return '';
+    const j = String(src).indexOf('\n  }', i);
+    return j < 0 ? '' : String(src).slice(i, j);
+  };
+  // 守卫：入口里必须先跑旧口径（state.plans），再跑计划层（state.orgs，吃前者的结果）
+  const coversOrgs = (src) => {
+    const body = applyBodyOf(src);
+    const iPlans = body.indexOf('focusPlanAutoSettle(');
+    const iOrgs = body.indexOf('focusPlanOrgAutoSettle(');
+    return iPlans >= 0 && iOrgs > iPlans;
+  };
+  // 反证 1：只接 state.plans 的旧实现（就是用户报的 bug）必须判红
+  assert.equal(coversOrgs(' function focusPlanAutoSettleApply(now) {\n    const r = focusPlanAutoSettle(loadFocus(), now);\n    if (!r.changed) return false;\n    saveFocus(r.state);\n  }'), false, '守卫失效：只接 state.plans 的旧实现应判红');
+  // 反证 2：顺序反了（orgs 拿不到 plans 的结果）也判红
+  assert.equal(coversOrgs(' function focusPlanAutoSettleApply(now) {\n    const b = focusPlanOrgAutoSettle(base, now);\n    const a = focusPlanAutoSettle(base, now);\n  }'), false, '守卫失效：两条口径顺序反了应判红');
+  // 真身
+  assert.equal(coversOrgs(srcText), true, '运行期入口未同时覆盖两条口径 —— 用户报的 bug 会复发');
+  // 规则本体不得复制：计划层结算只有一处定义，且复用 focusOrgCanFormalize 的转正判据
+  assert.equal(srcText.split('function focusPlanOrgSettle(').length - 1, 1, 'focusPlanOrgSettle 定义应唯一');
+  assert.equal(srcText.indexOf('focusOrgCanFormalize(next, orgId).ok') >= 0, true, '计划层结算未复用转正判据（口径会漂）');
+  // 无 DOM 环境：默认状态没有逾期计划 ⇒ 不写盘、不重绘
+  assert.equal(focusPlanAutoSettleApply(NOW), false);
 });
 
 test('t42 源码级守卫（+反证）：提醒窗落在壳层之下 / 计划到期有运行期结算入口', () => {

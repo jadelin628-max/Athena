@@ -13,7 +13,6 @@
 | `id` | 是 | string | 学科 id，如 `py` / `math3` |
 | `name` | 是 | string | 全名 |
 | `short` | 是 | string | 短名（选择器） |
-| `icon` | 是 | string | emoji 图标 |
 | `group` | 是 | `'acad' \| 'skill' \| 'lang' \| 'hobby'` | 主页分组 |
 | `kind` | 否 | `'formula' \| 'qa'`（默认 formula） | 公式科 vs 背诵科 UI |
 | `CATS` | 是 | `{ [catKey]: 显示名 }` | 章节 |
@@ -29,6 +28,8 @@
 | `BEGINNER` | 否 | string[] | 初学者模式默认章（catKey） |
 
 `check_data` 强制：`META` 覆盖每张 `DATA` 卡；`REL`/`EXAMPLE`/`PITFALL`/`MNEM` 的 key 与 `to` 必须存在；`cat` 必须在 `CATS`。
+
+> **学科图标不在数据里**（2.1.7 起）：`data/*.js` 不再有 `icon` 字段（旧值多为 emoji）；学科图标统一由 `src/store.mjs` 的 `SUBJECT_ICON_URLS`（学科 id → `assets/subject_icon/icon-<id>.svg`）经 `subjectIconUrl(id)` 提供，新增学科时在那里补一行 SVG 路径。全局 UI 文案**不得再出现 emoji**：图标一律走 `src/home.mjs` 的 `UI_ICONS` / `icon(name)`（见 `docs/ARCHITECTURE.md` §设计）。
 
 ### Card（`F(id, cat, title, front, back)`）
 

@@ -446,5 +446,5 @@ ESG 双重重大性：**财务重大性**（环境风险影响现金流）与**�
     ma06: R`商誉占净资产超 30% 即警戒：承诺期满后第一年是最危险的减值窗口。`
   });
 
-  return { id: 'corp', group: 'acad', name: '公司金融', short: '公司金融', icon: '💰', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['tv', 'sec', 'cb', 'rr', 'cs', 'div', 'wc', 'ma'] };
+  return { id: 'corp', group: 'acad', name: '公司金融', short: '公司金融', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['tv', 'sec', 'cb', 'rr', 'cs', 'div', 'wc', 'ma'] };
 })();

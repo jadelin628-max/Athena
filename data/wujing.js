@@ -316,5 +316,5 @@ window.SUBJECTS.wujing = (function () {
     cz11: R`「欲加之罪，何患无辞」是后人通行语——《左传》原文作「欲加之罪，其无辞乎」。`
   };
 
-  return { id: 'wujing', group: 'hobby', name: '五经选读', short: '五经', icon: '📕', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['yi', 'shu', 'li', 'shi', 'cq'] };
+  return { id: 'wujing', group: 'hobby', name: '五经选读', short: '五经', kind: 'qa', CATS: CATS, DATA: DATA, META: META, REL: {}, PITFALL: PITFALL, MNEM: {}, ORDER: ['yi', 'shu', 'li', 'shi', 'cq'] };
 })();

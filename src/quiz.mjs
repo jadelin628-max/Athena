@@ -6,7 +6,7 @@
     const app = document.getElementById('app');
     app.innerHTML = ''; // 搜索/展开会直接重入本函数：先清容器，避免 DOM 叠加
     const wrap = el('div', 'help-wrap');
-    wrap.appendChild(el('h2', null, '❓ 帮助 · ' + (BASE_SUBJ ? BASE_SUBJ.name : '')));
+    wrap.appendChild(el('h2', null, '帮助 · ' + (BASE_SUBJ ? BASE_SUBJ.name : '')));
     wrap.appendChild(el('p', 'muted', '本科目的学习方法、环境准备与常见疑问——供检索查阅，不进入学习队列与统计。'));
 
     const search = el('input', 'help-search');
@@ -180,27 +180,27 @@
       renderTex(ab, f.back);
       a.appendChild(ab);
       const ub = el('div', 'use-box');
-      ub.appendChild(el('span', 'use-label', subjKind() === 'qa' ? '📌 考查方式：' : '📌 常考题型：'));
+      ub.appendChild(el('span', 'use-label', subjKind() === 'qa' ? '考查方式：' : '常考题型：'));
       ub.appendChild(el('span', null, metaOf(f.id)[1]));
       a.appendChild(ub);
       body.appendChild(a);
       const mn = mnemOf(f.id);
       if (mn) {
         const mb = el('div', 'mnem-box');
-        mb.appendChild(el('span', 'mnem-label', '🗝️ 助记：'));
+        mb.appendChild(el('span', 'mnem-label', '助记：'));
         mb.appendChild(texEl('span', null, mn));
         body.appendChild(mb);
       }
       const pf = pitfallOf(f.id);
       if (pf) {
         const pfb = el('div', 'pitfall-box');
-        pfb.appendChild(el('span', 'pitfall-label', '⚠️ 常见陷阱：'));
+        pfb.appendChild(el('span', 'pitfall-label', '常见陷阱：'));
         pfb.appendChild(texEl('span', null, pf));
         body.appendChild(pfb);
       }
       // 笔记模块置于真题/相关知识点模块之前（与学习页一致）
       const notesBox = el('div', 'notes-box');
-      notesBox.appendChild(el('div', 'mini-label', '📝 我的笔记（感想 / 补充 / 易错点）'));
+      notesBox.appendChild(el('div', 'mini-label', '我的笔记（感想 / 补充 / 易错点）'));
       const notes = el('textarea', 'card-notes');
       notes.placeholder = '在这里记录你的理解、补充或易错点…';
       notes.value = card(f.id).notes || '';
@@ -216,7 +216,9 @@
       const extras = buildExtras(f.id, '');
       if (extras) body.appendChild(extras);
       body.appendChild(memoryBox(f.id));
-      const edit = el('button', 'btn small', '✏️ 编辑');
+      const edit = el('button', 'btn small');
+      edit.appendChild(icon('pencil'));
+      edit.appendChild(document.createTextNode(' 编辑'));
       edit.addEventListener('click', function () { openCardEdit(f.id); });
       body.appendChild(edit);
       const reset = el('button', 'btn small danger', '重置此卡片进度');
@@ -706,7 +708,7 @@
     const wrap = el('div', 'quiz-wrap');
 
     const top = el('div', 'learn-top');
-    top.appendChild(el('span', 'muted', mode === 'wrong' ? '📝 错题自测' : '📝 知识卡自测'));
+    top.appendChild(el('span', 'muted', mode === 'wrong' ? '错题自测' : '知识卡自测'));
     if (mode === 'wrong') {
       const back = el('button', 'btn small', '← 返回错题本');
       back.addEventListener('click', function () { currentView = 'wrong'; renderApp(); });
@@ -825,7 +827,10 @@
     const wrap = document.querySelector('.quiz-wrap');
     if (wrap) {
       const fb = el('div', 'quiz-fb' + (correct ? ' ok' : ' no'));
-      fb.appendChild(el('span', null, correct ? '✅ 正确' : '❌ 错误'));
+      const fbMark = el('span');
+      fbMark.appendChild(icon(correct ? 'check' : 'cross'));
+      fbMark.appendChild(document.createTextNode(correct ? ' 正确' : ' 错误'));
+      fb.appendChild(fbMark);
       if (!correct) {
         const ans = el('div', 'quiz-fb-ans');
         ans.appendChild(el('span', 'muted', quiz.mode === 'wrong' ? '正确答案：' : '正确名称：'));
@@ -897,7 +902,7 @@
     const wrap = el('div', 'quiz-wrap quiz-report');
 
     const top = el('div', 'learn-top');
-    top.appendChild(el('span', 'muted', wrongMode ? '📝 错题自测 · 报告' : '📝 知识卡自测 · 报告'));
+    top.appendChild(el('span', 'muted', wrongMode ? '错题自测 · 报告' : '知识卡自测 · 报告'));
     wrap.appendChild(top);
 
     // —— 成绩 ——
@@ -929,7 +934,7 @@
     wrap.appendChild(ov);
 
     // —— 章节表现 ——
-    wrap.appendChild(el('h3', null, '📚 章节表现'));
+    wrap.appendChild(el('h3', null, '章节表现'));
     const cb = el('div', 'stat-card');
     if (!rep.byCat.length) cb.appendChild(el('p', 'muted', '本次没有可统计的章节数据。'));
     rep.byCat.forEach(function (c) {
@@ -947,7 +952,7 @@
     wrap.appendChild(cb);
 
     // —— 与预测掌握度的差距 ——
-    wrap.appendChild(el('h3', null, '🎯 与预测掌握度的差距'));
+    wrap.appendChild(el('h3', null, '与预测掌握度的差距'));
     const pb = el('div', 'stat-card');
     pb.appendChild(el('p', null, '预测掌握度（本组题平均）' + rep.predicted + '% · 实际正确率 ' + rep.pct + '% · 差距 ' + (rep.gap >= 0 ? '+' : '') + rep.gap + '%'));
     if (rep.predictedR !== null) {
@@ -962,7 +967,7 @@
     wrap.appendChild(pb);
 
     // —— 表现差 → 重学队列 ——
-    wrap.appendChild(el('h3', null, '🔁 表现差 → 重学队列'));
+    wrap.appendChild(el('h3', null, '表现差 → 重学队列'));
     const wb = el('div', 'stat-card');
     wb.appendChild(el('p', null, '表现差 ' + rep.weakIds.length + ' 题 · 已提前加入' + (wrongMode ? '重做' : '复习') + '队列 ' + rep.queued.length + ' 张'));
     if (rep.weakIds.length) {

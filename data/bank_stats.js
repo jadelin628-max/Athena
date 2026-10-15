@@ -227,7 +227,7 @@
       tags: ["pb08"],
       stem: "三个人独立地同时破译同一密码，三人能破译的概率分别为 $\\frac15,\\ \\frac13,\\ \\frac14$。求此密码能够被破译的概率",
       answer: "密码被破译 = 至少一人破译。利用独立性取对立事件：\n$$P(\\text{被破译})=1-P(\\text{三人均未破译})=1-\\left(1-\\frac15\\right)\\left(1-\\frac13\\right)\\left(1-\\frac14\\right)=1-\\frac45\\cdot\\frac23\\cdot\\frac34=1-\\frac25=\\frac35$$",
-      altAnswer: "💡巧解（容斥/加法公式）：设 $A,B,C$ 为三人各自破译成功，所求\n$$P(A\\cup B\\cup C)=P(A)+P(B)+P(C)-P(AB)-P(AC)-P(BC)+P(ABC)$$\n由独立性 $=\\dfrac15+\\dfrac13+\\dfrac14-\\dfrac1{15}-\\dfrac1{20}-\\dfrac1{12}+\\dfrac1{60}=\\dfrac35$。",
+      altAnswer: "巧解（容斥/加法公式）：设 $A,B,C$ 为三人各自破译成功，所求\n$$P(A\\cup B\\cup C)=P(A)+P(B)+P(C)-P(AB)-P(AC)-P(BC)+P(ABC)$$\n由独立性 $=\\dfrac15+\\dfrac13+\\dfrac14-\\dfrac1{15}-\\dfrac1{20}-\\dfrac1{12}+\\dfrac1{60}=\\dfrac35$。",
       src: { card: "pb08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"pb08\"]）来源原文：2016 复旦大学 432 统计学真题。PITFALL[pb08] 无条目 → 省略 traps 字段。MNEM[pb08] 无条目 → 省略 hint 字段。" }
     },
     {
@@ -343,7 +343,7 @@
       tags: ["rv15"],
       stem: "设 $X\\sim N(0,1)$，求 $Y=X^{2}$ 的密度函数",
       answer: "对 $y>0$，$F_Y(y)=P(X^2\\le y)=P(-\\sqrt y\\le X\\le\\sqrt y)=2\\Phi(\\sqrt y)-1$。求导：\n$$f_Y(y)=2\\cdot\\frac{1}{\\sqrt{2\\pi}}e^{-y/2}\\cdot\\frac{1}{2\\sqrt y}=\\frac{1}{\\sqrt{2\\pi y}}\\,e^{-y/2},\\quad y>0$$\n即 $Y\\sim\\chi^{2}(1)$（自由度为 1 的卡方分布）。",
-      altAnswer: "💡巧解（卡方定义）：$X\\sim N(0,1)$ 时，由 $\\chi^2$ 分布定义直接得 $Y=X^2\\sim\\chi^2(1)$，密度为\n$$f_Y(y)=\\frac{1}{\\sqrt{2\\pi y}}\\,e^{-y/2}\\quad(y>0)$$\n免去分布函数法求导，一步到位。",
+      altAnswer: "巧解（卡方定义）：$X\\sim N(0,1)$ 时，由 $\\chi^2$ 分布定义直接得 $Y=X^2\\sim\\chi^2(1)$，密度为\n$$f_Y(y)=\\frac{1}{\\sqrt{2\\pi y}}\\,e^{-y/2}\\quad(y>0)$$\n免去分布函数法求导，一步到位。",
       traps: "分布函数法求导时勿漏链式法则（$g(X)\\le y$ 的界对 $y$ 求导）；密度定义域要分段写出。",
       src: { card: "rv15", note: "卡片例题（data/stats.js 的 EXAMPLE[\"rv15\"]）来源原文：2016 复旦大学 432 统计学真题。traps 取自 PITFALL[rv15]。MNEM[rv15] 无条目 → 省略 hint 字段。" }
     },
@@ -416,7 +416,7 @@
       tags: ["mv05"],
       stem: "设 $(X,Y)$ 服从二维正态分布 $N(\\mu_1,\\mu_2,\\sigma_1^{2},\\sigma_2^{2},\\rho)$。证明：$X$ 与 $Y$ 相互独立的充要条件是相关系数 $\\rho=0$",
       answer: "二维正态联合密度为\n$$f(x,y)=\\frac{1}{2\\pi\\sigma_1\\sigma_2\\sqrt{1-\\rho^{2}}}\\exp\\left\\{-\\frac{1}{2(1-\\rho^{2})}\\left[\\frac{(x-\\mu_1)^{2}}{\\sigma_1^{2}}-2\\rho\\frac{(x-\\mu_1)(y-\\mu_2)}{\\sigma_1\\sigma_2}+\\frac{(y-\\mu_2)^{2}}{\\sigma_2^{2}}\\right]\\right\\}$$\n当 $\\rho=0$ 时交叉项消失，$f(x,y)=f_X(x)f_Y(y)$，故 $X,Y$ 独立；反之若 $X,Y$ 独立则 $\\mathrm{Cov}(X,Y)=0$，即 $\\rho=0$。",
-      altAnswer: "💡巧解（协方差矩阵 / 特征函数）：二维正态的联合特征函数\n$$\\varphi(s,t)=\\exp\\left\\{i(s\\mu_1+t\\mu_2)-\\tfrac12(s^2\\sigma_1^2+2\\rho st\\sigma_1\\sigma_2+t^2\\sigma_2^2)\\right\\}$$\n当 $\\rho=0$ 时 $\\varphi(s,t)=\\varphi_X(s)\\varphi_Y(t)$，由特征函数唯一性即得 $X,Y$ 独立（等价地：协方差矩阵 $\\Sigma$ 为对角阵）。",
+      altAnswer: "巧解（协方差矩阵 / 特征函数）：二维正态的联合特征函数\n$$\\varphi(s,t)=\\exp\\left\\{i(s\\mu_1+t\\mu_2)-\\tfrac12(s^2\\sigma_1^2+2\\rho st\\sigma_1\\sigma_2+t^2\\sigma_2^2)\\right\\}$$\n当 $\\rho=0$ 时 $\\varphi(s,t)=\\varphi_X(s)\\varphi_Y(t)$，由特征函数唯一性即得 $X,Y$ 独立（等价地：协方差矩阵 $\\Sigma$ 为对角阵）。",
       src: { card: "mv05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"mv05\"]）来源原文：2013 年人大 805 统计学真题。PITFALL[mv05] 无条目 → 省略 traps 字段。MNEM[mv05] 无条目 → 省略 hint 字段。" }
     },
     {
@@ -502,7 +502,7 @@
       tags: ["nc06"],
       stem: "设 $X\\sim U(0,1)$，$Z\\sim U(0,\\frac1{10})$，且 $X$ 与 $Z$ 相互独立，令 $Y=X+Z$。求 $\\mathrm{Cov}(X,Y)$ 与 $\\mathrm{Corr}(X,Y)$",
       answer: "$D(X)=\\frac1{12}$，$D(Z)=\\frac{(1/10)^2}{12}=\\frac1{1200}$，且 $X,Z$ 独立。\n$$\\mathrm{Cov}(X,Y)=\\mathrm{Cov}(X,X+Z)=D(X)+\\mathrm{Cov}(X,Z)=\\frac1{12}$$\n$D(Y)=D(X)+D(Z)=\\frac1{12}+\\frac1{1200}=\\frac{101}{1200}$，故\n$$\\mathrm{Corr}(X,Y)=\\frac{\\mathrm{Cov}(X,Y)}{\\sqrt{D(X)D(Y)}}=\\frac{1/12}{\\sqrt{\\frac1{12}\\cdot\\frac{101}{1200}}}=\\frac{10}{\\sqrt{101}}\\approx0.995$$",
-      altAnswer: "💡巧解（协方差定义直接算）：$\\mathrm{Cov}(X,Y)=E(XY)-E(X)E(Y)$。由 $Y=X+Z$ 与 $X,Z$ 独立：\n$$E(XY)=E(X^2+XZ)=E(X^2)+E(X)E(Z)=\\frac13+\\frac12\\cdot\\frac1{20}=\\frac{43}{120}$$\n$E(X)=\\frac12$，$E(Y)=\\frac12+\\frac1{20}=\\frac{11}{20}$，故 $\\mathrm{Cov}=\\frac{43}{120}-\\frac12\\cdot\\frac{11}{20}=\\frac{10}{120}=\\frac1{12}$，与协方差线性性结果一致。",
+      altAnswer: "巧解（协方差定义直接算）：$\\mathrm{Cov}(X,Y)=E(XY)-E(X)E(Y)$。由 $Y=X+Z$ 与 $X,Z$ 独立：\n$$E(XY)=E(X^2+XZ)=E(X^2)+E(X)E(Z)=\\frac13+\\frac12\\cdot\\frac1{20}=\\frac{43}{120}$$\n$E(X)=\\frac12$，$E(Y)=\\frac12+\\frac1{20}=\\frac{11}{20}$，故 $\\mathrm{Cov}=\\frac{43}{120}-\\frac12\\cdot\\frac{11}{20}=\\frac{10}{120}=\\frac1{12}$，与协方差线性性结果一致。",
       src: { card: "nc06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"nc06\"]）来源原文：2026 北大光华 431 统计真题。PITFALL[nc06] 无条目 → 省略 traps 字段。MNEM[nc06] 无条目 → 省略 hint 字段。" }
     },
     {
@@ -725,7 +725,7 @@
       tags: ["est05"],
       stem: "设 $Y_1,\\dots,Y_n$ 独立同分布，密度 $f(y;\\theta)=\\dfrac1\\theta\\ (0\\le y\\le\\theta)$，$\\theta>0$ 未知。求 $\\theta$ 的矩估计量，并计算其均方误差（MSE）",
       answer: "$E(Y)=\\dfrac\\theta2$，令 $\\bar Y=\\dfrac\\theta2$，得矩估计 $\\hat\\theta_1=2\\bar Y$。\n$E(\\hat\\theta_1)=2E(\\bar Y)=\\theta$（无偏），$D(\\hat\\theta_1)=4D(\\bar Y)=\\dfrac4n\\cdot\\dfrac{\\theta^{2}}{12}=\\dfrac{\\theta^{2}}{3n}$。\n$$\\mathrm{MSE}(\\hat\\theta_1)=D(\\hat\\theta_1)=\\dfrac{\\theta^{2}}{3n}$$",
-      altAnswer: "💡巧解（二阶矩法）：$E(Y^2)=\\dfrac{\\theta^2}{3}$，令样本二阶矩 $\\dfrac1n\\sum Y_i^2=\\dfrac{\\theta^2}{3}$，得另一矩估计 $\\hat\\theta=\\sqrt{\\dfrac3n\\sum Y_i^2}$，说明矩估计随所取矩的阶数不同而不同、不唯一。",
+      altAnswer: "巧解（二阶矩法）：$E(Y^2)=\\dfrac{\\theta^2}{3}$，令样本二阶矩 $\\dfrac1n\\sum Y_i^2=\\dfrac{\\theta^2}{3}$，得另一矩估计 $\\hat\\theta=\\sqrt{\\dfrac3n\\sum Y_i^2}$，说明矩估计随所取矩的阶数不同而不同、不唯一。",
       traps: "矩估计用低阶矩最简，但可能无解或多解；选择不同阶矩会得到不同的估计量。",
       src: { card: "est05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est05\"][0]）来源原文：2021 复旦大学 861 概率论与数理统计真题。traps 取自 PITFALL[est05]。MNEM[est05] 无条目 → 省略 hint 字段。" }
     },
@@ -924,7 +924,7 @@
       tags: ["test06"],
       stem: "某产品尺寸 $X\\sim N(4.55,0.108^2)$，抽查 $n=9$ 件得平均尺寸 $\\bar x=4.84$。若方差未改变，在 $\\alpha=0.05$ 下检验 $H_0:\\mu=4.55$ 对 $H_1:\\mu\\ne4.55$（$z_{0.025}=1.96$）",
       answer: "$Z=\\dfrac{\\bar x-\\mu_0}{\\sigma/\\sqrt n}=\\dfrac{4.84-4.55}{0.108/3}=\\dfrac{0.29}{0.036}\\approx8.06$。因 $|Z|=8.06>z_{0.025}=1.96$，落入拒绝域，拒绝 $H_0$，认为现在生产的产品平均尺寸已显著异于 4.55。",
-      altAnswer: "💡巧解（$p$ 值法）：双侧 $p$ 值 $=2P(Z>|8.06|)=2[1-\\Phi(8.06)]\\approx0$。因 $p\\ll\\alpha=0.05$，拒绝 $H_0$，结论与临界值法一致。",
+      altAnswer: "巧解（$p$ 值法）：双侧 $p$ 值 $=2P(Z>|8.06|)=2[1-\\Phi(8.06)]\\approx0$。因 $p\\ll\\alpha=0.05$，拒绝 $H_0$，结论与临界值法一致。",
       traps: "区分单双侧：双侧拒绝域 $|Z|>z_{\\alpha/2}$，单侧用 $z_\\alpha$ 且方向要与 $H_1$ 一致；$p$ 值与显著性水平 $\\alpha$ 别混淆。",
       src: { card: "test06", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test06\"]）来源原文：2023 上海财经大学 432 统计学真题。traps 取自 PITFALL[test06]。MNEM[test06] 无条目 → 省略 hint 字段。" }
     },
@@ -933,7 +933,7 @@
       tags: ["test07"],
       stem: "某培训对 10 位分析师预测误差（培训前－培训后）的影响，差值 $d_i$ 为 $0.5,0.3,0.3,0.4,0.2,0.3,0.2,0.4,0.4,0.4$。在 $\\alpha=0.05$ 下用配对 $t$ 检验判断培训是否显著降低预测误差（$t_{0.025}(9)=2.262$）",
       answer: "$\\bar d=0.34$，$S_d^2=\\dfrac{\\sum d_i^2-(\\sum d_i)^2/n}{n-1}=\\dfrac{1.24-1.156}{9}=0.00933$（$S_d\\approx0.0966$）。\n$$t=\\frac{\\bar d}{S_d/\\sqrt n}=\\frac{0.34}{0.0966/\\sqrt{10}}\\approx11.13$$\n因 $|t|=11.13>t_{0.025}(9)=2.262$，拒绝 $H_0$，培训显著降低了预测误差。",
-      altAnswer: "💡巧解（置信区间法）：$d$ 的 95% 置信区间为\n$$\\bar d\\pm t_{0.025}(9)\\frac{S_d}{\\sqrt n}=0.34\\pm2.262\\times\\frac{0.0966}{\\sqrt{10}}\\approx(0.271,\\ 0.409)$$\n区间不含 $0$，故在 $\\alpha=0.05$ 下拒绝 $H_0$，与 $t$ 检验结论一致。",
+      altAnswer: "巧解（置信区间法）：$d$ 的 95% 置信区间为\n$$\\bar d\\pm t_{0.025}(9)\\frac{S_d}{\\sqrt n}=0.34\\pm2.262\\times\\frac{0.0966}{\\sqrt{10}}\\approx(0.271,\\ 0.409)$$\n区间不含 $0$，故在 $\\alpha=0.05$ 下拒绝 $H_0$，与 $t$ 检验结论一致。",
       src: { card: "test07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"test07\"]）来源原文：2024 北大光华 431 统计真题。PITFALL[test07] 无条目 → 省略 traps 字段。MNEM[test07] 无条目 → 省略 hint 字段。" }
     },
     {
@@ -1297,7 +1297,7 @@
       tags: ["xt05"],
       stem: "设 $X_1,X_2,X_3$ 是取自 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$ 的简单随机样本，$T=\\sum_{i=1}^{n}\\ln X_i$。叙述并运用充分完备统计量判断（或求 UMVUE）",
       answer: "$X\\sim\\mathrm{Beta}(\\theta,1)$ 为指数族，故 $T'=\\sum\\ln X_i$（等价地 $-\\sum\\ln X_i$）是充分完备统计量。又 $Y=-\\ln X\\sim Exp(\\theta)$，$\\sum Y_i\\sim\\Gamma(n,\\theta)$，可由此构造 $\\theta$ 的无偏、基于充分完备统计量的估计，由 Lehmann-Scheffé 定理即得其 UMVUE。",
-      altAnswer: "💡巧解（指数族结论直接判完备）：凡形如 $f(x;\\theta)=h(x)\\exp\\{c(\\theta)T(x)+d(\\theta)\\}$ 的单参指数族，其 $T=\\sum T(x_i)$ 自动满足“充分 $+$ 完备”，无需从头证完备性。",
+      altAnswer: "巧解（指数族结论直接判完备）：凡形如 $f(x;\\theta)=h(x)\\exp\\{c(\\theta)T(x)+d(\\theta)\\}$ 的单参指数族，其 $T=\\sum T(x_i)$ 自动满足“充分 $+$ 完备”，无需从头证完备性。",
       hint: "指数族「充分+完备」：形如 $h(x)e^{c(\\theta)T(x)+d(\\theta)}$，其 $T=\\sum T(x_i)$ 自动既充分又完备，免去冗长证明。",
       src: { card: "xt05", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt05\"]）来源原文：2024 复旦大学 432 统计学真题。PITFALL[xt05] 无条目 → 省略 traps 字段。hint 取自 MNEM[xt05]。" }
     },
@@ -1322,7 +1322,7 @@
       tags: ["xt08"],
       stem: "$\\{N(t),t\\ge0\\}$ 是强度为 $\\lambda$ 的泊松过程，当 $0<t<s$ 时，计算 $E[N(s)\\,|\\,N(t)]$ 以及当 $N(s)=n$ 时 $N(t)$ 的条件分布",
       answer: "由独立增量性与增量分布 $N(s)-N(t)\\sim P(\\lambda(s-t))$：\n$$E[N(s)\\,|\\,N(t)]=E[N(t)+N(s)-N(t)\\,|\\,N(t)]=N(t)+\\lambda(s-t)$$\n（条件期望中 $N(t)$ 已知、增量期望为 $\\lambda(s-t)$。）\n$N(t)\\,|\\,N(s)=n\\ \\sim\\ B\\!\\left(n,\\ \\frac{t}{s}\\right)$，因为 $[0,s]$ 内 $n$ 个到达时刻独立均匀分布，落入 $[0,t]$ 的概率为 $\\dfrac{t}{s}$。",
-      altAnswer: "💡巧解（条件分布二项）：把 $N(t)$ 看作 $N(s)$ 个点中落入前 $t$ 段的个数，逐点独立同概率 $p=t/s$，故 $N(t)\\,|\\,N(s)=n\\sim B(n,t/s)$。",
+      altAnswer: "巧解（条件分布二项）：把 $N(t)$ 看作 $N(s)$ 个点中落入前 $t$ 段的个数，逐点独立同概率 $p=t/s$，故 $N(t)\\,|\\,N(s)=n\\sim B(n,t/s)$。",
       src: { card: "xt08", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt08\"]）来源原文：2018 北京大学数院 431 金融学综合真题。PITFALL[xt08] 无条目 → 省略 traps 字段。MNEM[xt08] 无条目 → 省略 hint 字段。" }
     },
     {
@@ -1351,7 +1351,7 @@
       tags: ["xt12"],
       stem: "假设 $y_1,\\dots,y_n$ 独立同服从下述异方差线性回归模型：$y_i=\\beta_0+\\beta_1x_i+\\varepsilon_i$，其中 $\\varepsilon_i\\sim N(0,i^{2})$，$x_1,\\dots,x_n$ 是已知数。(1) 求对数似然函数；(2) 写出 $(\\beta_0,\\beta_1)$ 极大似然估计的数学公式（等价于加权最小二乘）",
       answer: "$\\varepsilon_i\\sim N(0,i^{2})$，$\\mathrm{Var}(\\varepsilon_i)=i^{2}$ 为异方差。对数似然\n$$\\ell(\\beta_0,\\beta_1)=-\\frac{n}{2}\\ln 2\\pi-\\sum_{i=1}^{n}\\ln i-\\frac{1}{2}\\sum_{i=1}^{n}\\frac{(y_i-\\beta_0-\\beta_1x_i)^{2}}{i^{2}}$$\n对 $\\beta$ 求导为 0，得 MLE（即加权最小二乘，权重 $w_i=1/i^{2}$）满足\n$$\\sum\\frac{y_i-\\hat\\beta_0-\\hat\\beta_1x_i}{i^{2}}=0,\\quad \\sum\\frac{x_i(y_i-\\hat\\beta_0-\\hat\\beta_1x_i)}{i^{2}}=0$$\n即对变换 $\\dfrac{y_i}{i}=\\beta_0\\frac1i+\\beta_1\\frac{x_i}{i}+\\dfrac{\\varepsilon_i}{i}$ 做 OLS。",
-      altAnswer: "💡巧解（White 检验对应）：若方差具体形式 $\\mathrm{Var}(\\varepsilon_i)=i^{2}$ 已知，直接用 WLS（等价 GLS）；若未知，则用 White 检验 $W=nR^{2}\\sim\\chi^{2}(p)$ 诊断异方差后取稳健标准误。",
+      altAnswer: "巧解（White 检验对应）：若方差具体形式 $\\mathrm{Var}(\\varepsilon_i)=i^{2}$ 已知，直接用 WLS（等价 GLS）；若未知，则用 White 检验 $W=nR^{2}\\sim\\chi^{2}(p)$ 诊断异方差后取稳健标准误。",
       traps: "White 检验统计量是 $W=nR^{2}\\sim\\chi^{2}(p)$（$R^{2}$ 为残差平方对解释变量及其平方/交叉的辅助回归判定系数），别把 $R^{2}$ 当原回归判定系数；异方差下 OLS 依然\\textbf{无偏}，只是方差估计有偏。",
       src: { card: "xt12", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt12\"]）来源原文：2011 北京大学光华 431 金融学综合真题。traps 取自 PITFALL[xt12]。MNEM[xt12] 无条目 → 省略 hint 字段。" }
     },
@@ -1367,7 +1367,7 @@
       tags: ["xt14"],
       stem: "设总体 $X$ 的概率分布为：$P(X=-1)=2p$，$P(X=0)=1-5p$，$P(X=1)=3p$，其中 $p>0$ 为未知参数。现有一样本容量 $n=60$ 的简单随机样本，其中 0 出现了 30 次，1 和 -1 均出现 15 次。(1) 求 $p$ 的极大似然估计 $\\hat p$；(2) 在显著性水平 $\\alpha=0.05$ 下，用 $\\hat p$ 和拟合优度检验判断该组样本是否来自总体 $X$",
       answer: "(1) 似然 $L(p)\\propto(3p)^{15}(1-5p)^{30}(2p)^{15}$，$\\ln L=30\\ln p+30\\ln(1-5p)+\\text{const}$，令 $\\frac{d}{dp}=0$：\n$$\\frac{30}{p}-\\frac{150}{1-5p}=0\\Rightarrow\\hat p=\\frac{1}{10}=0.1$$\n（$1-5p=0.5\\ge0$ 成立）。\n(2) $\\chi^{2}$ 拟合优度检验：期望频数 $np_i$ 为 $(2\\hat p\\cdot60,\\ (1-5\\hat p)\\cdot60,\\ 3\\hat p\\cdot60)=(12,30,18)$，观测为 $(15,30,15)$：\n$$\\chi^{2}=\\frac{(15-12)^{2}}{12}+\\frac{(30-30)^{2}}{30}+\\frac{(15-18)^{2}}{18}=\\frac{9}{12}+\\frac{9}{18}=1.25$$\n自由度 $=3-1-1=1$（估计了 $p$），$\\chi^{2}_{0.05}(1)=3.84$，因 $1.25<3.84$，\\textbf{不拒绝} $H_0$，可以认为该组样本来自总体 $X$。",
-      altAnswer: "💡巧解（K-S/经验分布印证）：拟合优度亦可比较经验分布 $F_n$ 与理论分布 $F_0$（$K$-$S$ 统计量 $D_n=\\sup|F_n-F_0|$），此处用 $\\chi^{2}$ 组合更简单高效。",
+      altAnswer: "巧解（K-S/经验分布印证）：拟合优度亦可比较经验分布 $F_n$ 与理论分布 $F_0$（$K$-$S$ 统计量 $D_n=\\sup|F_n-F_0|$），此处用 $\\chi^{2}$ 组合更简单高效。",
       traps: "$\\chi^{2}$ 拟合优度自由度是 $k-1-r$（$r$ 为\\textbf{估计的}参数个数），不是 $k-1$；$K$-$S$ 检验要求 $F_0$ 参数完全已知，参数需估计时必需 Lilliefors 修正。",
       hint: "拟合优度选型：分布已知、小样本、连续 → $K$-$S$；大样本、分类、含估计参数 → $\\chi^{2}$（自由度 $k-1-r$）。",
       src: { card: "xt14", note: "卡片例题（data/stats.js 的 EXAMPLE[\"xt14\"]）来源原文：2016 中国科学技术大学 812 概率论与数理统计真题。traps 取自 PITFALL[xt14]。hint 取自 MNEM[xt14]。" }

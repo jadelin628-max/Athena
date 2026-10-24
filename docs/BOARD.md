@@ -545,7 +545,7 @@
 6. **闸门证据（全部亲跑，2.2.0 上）**：`npm run build` ✅（22 模块 + dist/ 同步）；`npm test` **405/405**；`npm run check` **exit 0**（`check_data` 25 科 / 卡片 2888 / 真题 955；版本七处一致 `2.2.0` · `ms3-v123` · `?v=84`；`CHANGELOG.md` 121 条与应用内日志一致；`app.js` 与 `src/` 同步）。`npm run check:render` 未跑——本次未动 `data/*.js` 与卡面模板，且该闸门只覆盖卡面渲染。
 7. **文档同步**：`docs/ARCHITECTURE.md` 调度段新增「学习队列顺序」条目（两会话定义、步进卡短路、默认顺序恒真、`queueSortFront` 排序理由、`scheduleStepRefresh` 定时器、`reorderQueue` 与 `rebuildQueue` 的分工），测试段文件数 19 → 20，版本七处段改到 2.2.0；`docs/DATA_SCHEMA.md` 的 `settings` 表补 `queueOrder` 行。
 8. **未做（如实登记）**：①未改 FSRS 公式与 `sched.mjs` 状态机（本次只改队列拼装与插队时机）；②未升 major；③`verify-refs.mjs` 的测试文件数基线仍是旧值（历史债，见 T152 报告第 9 条）。
-9. **交付**：本切片（T152 之后）随 **2.2.0** 交付（提交哈希见下一条提交记录）。
+9. **交付**：本切片（T152 之后）随 **2.2.0** 交付，提交 **`03a2861`**「feat: Athena 2.2.0 —— 学习顺序设置（先复习 / 先新学）、三种队列兼容、学习中卡到点不回队首修复」（15 files changed / +605 −53）。
 
 <!-- 已归档：T122–T137 Athena 2.1.2 / 2.2.0 第一波（题库扩至 767 题、卡片补写 40 张、微观 49 页闭合与重取证、跨来源判重、生成器防护与闸门换代）→ backup/docs-archive/board/2026-10-11-V2.1.2-T122-T137.md -->
 

@@ -332,6 +332,16 @@
         }
       },
       {
+        key: 'queueOrder', label: '学习顺序', type: 'choice',
+        options: [['review', '先复习'], ['new', '先新学']],
+        title: '每天先做哪一条队列（学习中/重学的步进卡在两种模式下都优先回到队首）',
+        note: '先复习：到期复习先做，再引入当天新卡（默认）。先新学：先把新卡与今日新学的步进做完，再进入复习队列。切换只重排未学队列，已学进度与当前卡片保留。',
+        commit: function (v) {
+          reorderQueue();
+          toast(v === 'new' ? '已切换：先新学（未学队列已重排，进度保留）' : '已切换：先复习（未学队列已重排，进度保留）');
+        }
+      },
+      {
         key: 'fdr', label: '期望保留率', type: 'number', min: 0.8, max: 0.98, step: 0.01, width: '96px',
         title: 'FSRS 按此保留率计算下次复习间隔（0.80–0.98，默认 0.90）',
         note: 'FSRS 按期望保留率计算下次复习间隔：调高（如考前 0.95）间隔更短、复习更密，调低更省时。',
@@ -391,6 +401,22 @@
           renderApp();
         });
         r.appendChild(lab);
+      } else if (item.type === 'choice') {
+        const box = el('div', 'chips');
+        box.style.margin = '0';
+        (item.options || []).forEach(function (o) {
+          const b = el('button', 'chip' + (val === o[0] ? ' active' : ''), o[1]);
+          b.type = 'button';
+          if (item.title) b.title = item.title;
+          b.addEventListener('click', function () {
+            if (prefGet(item.key) === o[0]) return;
+            prefSet(item.key, o[0], sc);
+            saveDB();
+            if (item.commit) item.commit(o[0]);
+          });
+          box.appendChild(b);
+        });
+        r.appendChild(box);
       } else {
         const input = el('input', 'num');
         input.type = item.type === 'date' ? 'date' : (item.type === 'text' ? 'text' : 'number');

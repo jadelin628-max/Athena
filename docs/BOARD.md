@@ -523,6 +523,30 @@
 9. **未做（如实登记）**：①`verify-refs.mjs` 末尾 4 条结构计数仍冻结在 t41/t42（`MIN_QUESTIONS` 331/176、`MIN_TOTAL`、测试文件 17 vs 19）——已在 `docs/ACT.md:213` 注明是过时基线而非回归；②代码注释里 18 处 emoji 按 T150 判据保留；③econ **159** 条「答案待批」与 math3 **126** 条「题面无」仍待读图授权；④T143（护栏派生化）open。
 10. **交付**：本切片（T152）随 **2.1.9** 交付，提交 **`7eaa947`**「feat: Athena 2.1.9 —— 归档改为专注链页签、历史逾期编制补归档、状态页警告可关闭」（17 files changed / +618 −162），推送 `36ee1f2..7eaa947 main -> main`。
 
+### T153 学习顺序设置（先复习 / 先新学）+ 学习中卡到点不回队首修复（用户反馈）
+- 状态: accepted（2026-10-24 落地；代码 / 测试 / 文档 / 闸门均在 2.2.0 上收口）
+- 负责: 船长（主对话；用户直接指令）
+- 文件集: `src/browse.mjs`、`src/store.mjs`、`src/settings.mjs`、`src/app.mjs`、`tests/queue-order.test.mjs`（新增）、`tests/pref-scope.test.mjs`、`package.json`、`sw.js`、`index.html`、`src-tauri/tauri.conf.json`、`docs/ARCHITECTURE.md`、`docs/DATA_SCHEMA.md`、`docs/BOARD.md`；量具在 `backup/scratch/queue-order-smoke.mjs`（gitignored）
+- 依据: 用户指令——①「新增一个设置选项，能够使用户自行选择先进行复习或者先进行新学，当先新学时，做好完成新学队列，以及学习中队列，以及复习队列这些队列的兼容。先不推送」；②「一旦进入复习队列，位于学习中队列的卡片似乎就不会到期自动回到队首了，修改这个问题」；③「提交并推送，小版本更新」
+- 依赖: 无（只动学习队列编排与偏好层，不碰 FSRS 公式与 `sched.mjs` 状态机）
+- 验收:
+  1. 设置 →「学习偏好」新增「学习顺序」二选一（`先复习` = 默认 = 历史行为 / `先新学`），本课与全局两段都可单独设
+  2. 先新学时「新学会话」（未学新卡 + 学习中步进）排在「复习会话」之前；分钟级步进卡在两种顺序下都优先回队首；完成新学队列后复习会话自动接管
+  3. 切换顺序只重排未学队列，已学进度与当前卡片原地保留（与「↻ 重排队列」的重建归零区分）
+  4. 进入复习队列后，学习中卡到点仍排在队首区第一位（组内按到期升序），并挂到点自动刷新定时器（≤15 分钟）
+  5. `npm run build` → `npm test` 405/405 → `npm run check` 全绿
+
+### 报告
+1. **设置项与偏好层**：新偏好键 `queueOrder`（`'review' | 'new'`，默认 `'review'`）——`src/store.mjs:204` 进 `PREF_OVERLAP_KEYS`（本课/全局共用）、`prefDefaults` 补默认、`prefSanitizeGlobal` 白名单净化（非法值回退默认）、`normalizeDB` 兜底（老库加载即落默认，行为不变）。UI 在 `src/settings.mjs` 的 `overlapItems` 新增 `type:'choice'` 项与 `renderOverlapRow` 的 choice 分支（chip 组，复用既有 `.chip` 样式），切换后调 `reorderQueue()`（只重排）而非 `rebuildQueue()`（重建归零）。
+2. **队列编排（`src/browse.mjs`）**：新增 TESTABLE 纯函数块——`queueOrderOf` / `queueSessionOf` / `queueStepState` / `queueSessions` / `queueSessionRankOf` / `queueCardRank` / `queueSurfacesNow` / `queueGroupBySession` / `queueActiveSession` / `queueMergeDeferred` / `queueSortFront`（测试用 vm 抽取，不新增模块、不动 ORDER/STRIP）。`buildSession` 把 `learningDue` / `relearningDue` 拆两组，按顺序拼 `segNew` / `segReview`；`surfaceDue` 用「活动会话 = frontier 处卡片的会话」判据决定到期卡是「吸回队首区」还是「移出已学区、进 deferred 后按会话归位」（`queueMergeDeferred` 插回同会话组最前）；新增 `reorderQueue()` 原地重排。
+3. **三队列兼容语义**：新学会话 = 未学新卡 + 学习中步进；复习会话 = 到期复习 + 重学步进；**分钟级步进卡两种顺序下都尽早回队首**（短时记忆窗口只有 2/10 分钟）；只有「尚未开始的那个会话里的到期复习卡」按设置延后（先新学时留在待学区，做完新学队列自动接管）。默认「先复习」下判据恒成立，与 2.1.9 的队列逐字一致（有回归锁用例）。
+4. **bug 修复（用户反馈 m00357）**：根因是 `surfaceDue` 队首区只按到期时间升序——步进卡只逾期几分钟、复习积压逾期数天，刚评「再来一次」的学习卡被压到整条积压之后。修法：①`queueSortFront` 让步进卡整组优先（组内 due 升序）、到期复习卡在后；②`scheduleStepRefresh(now)` 单例定时器（`src/browse.mjs:338`，≤15 分钟、每次渲染重设、`.map-modal` 打开时不抢渲染），到点自动重渲染把步进卡接回队首，不必等下一次评分。
+5. **测试**：新增 `tests/queue-order.test.mjs`（10 条，含「默认顺序下所有到期卡都会被吸回」的回归锁、「步进卡抢占队首区」排序用例、源码接线守卫）；`tests/pref-scope.test.mjs` 更新键序 / 默认值 / 净化用例；`package.json` 的 `test` 脚本登记第 20 个测试文件。一次性量具 `backup/scratch/queue-order-smoke.mjs` 用 vm 抽取真实 `browse.mjs`（补 `renderApp` 前缀与 `deck/pos/frontier` 绑定）驱动 `buildSession` / `surfaceDue` / `reorderQueue`，**38/38 通过**。
+6. **闸门证据（全部亲跑，2.2.0 上）**：`npm run build` ✅（22 模块 + dist/ 同步）；`npm test` **405/405**；`npm run check` **exit 0**（`check_data` 25 科 / 卡片 2888 / 真题 955；版本七处一致 `2.2.0` · `ms3-v123` · `?v=84`；`CHANGELOG.md` 121 条与应用内日志一致；`app.js` 与 `src/` 同步）。`npm run check:render` 未跑——本次未动 `data/*.js` 与卡面模板，且该闸门只覆盖卡面渲染。
+7. **文档同步**：`docs/ARCHITECTURE.md` 调度段新增「学习队列顺序」条目（两会话定义、步进卡短路、默认顺序恒真、`queueSortFront` 排序理由、`scheduleStepRefresh` 定时器、`reorderQueue` 与 `rebuildQueue` 的分工），测试段文件数 19 → 20，版本七处段改到 2.2.0；`docs/DATA_SCHEMA.md` 的 `settings` 表补 `queueOrder` 行。
+8. **未做（如实登记）**：①未改 FSRS 公式与 `sched.mjs` 状态机（本次只改队列拼装与插队时机）；②未升 major；③`verify-refs.mjs` 的测试文件数基线仍是旧值（历史债，见 T152 报告第 9 条）。
+9. **交付**：本切片（T152 之后）随 **2.2.0** 交付（提交哈希见下一条提交记录）。
+
 <!-- 已归档：T122–T137 Athena 2.1.2 / 2.2.0 第一波（题库扩至 767 题、卡片补写 40 张、微观 49 页闭合与重取证、跨来源判重、生成器防护与闸门换代）→ backup/docs-archive/board/2026-10-11-V2.1.2-T122-T137.md -->
 
 <!-- 已归档：T77–T121 Athena 2.1.1 / 2.2.0 前置（题库渲染与筛选、自测星标、专注链 UI 与组合语义、错题入口、四族转录基线）→ backup/docs-archive/board/2026-10-10-V2.1.1-T77-T121.md -->

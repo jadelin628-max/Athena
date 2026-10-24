@@ -27,7 +27,7 @@ const prefResolveValue = (k, s, g, m) => sandbox.prefResolveValue(k, s, g, m);
 test('GLOBAL_PREFS_KEY 与 PREF_OVERLAP_KEYS', () => {
   assert.equal(sandbox.GLOBAL_PREFS_KEY, 'athena_global_prefs_v1');
   assert.deepEqual(Array.from(sandbox.PREF_OVERLAP_KEYS), [
-    'goalTitle', 'examDate', 'dailyNew', 'fdr', 'bareRecall', 'targetS', 'targetLinkExam'
+    'goalTitle', 'examDate', 'dailyNew', 'queueOrder', 'fdr', 'bareRecall', 'targetS', 'targetLinkExam'
   ]);
 });
 
@@ -36,6 +36,7 @@ test('prefDefaults：学习偏好默认值', () => {
   assert.equal(d.goalTitle, '考研');
   assert.equal(d.examDate, '');
   assert.equal(d.dailyNew, 10);
+  assert.equal(d.queueOrder, 'review');
   assert.equal(d.fdr, 0.9);
   assert.equal(d.bareRecall, false);
   assert.equal(d.targetS, 90);
@@ -73,4 +74,17 @@ test('prefSanitizeGlobal：夹取与非法回退', () => {
   assert.equal(prefSanitizeGlobal({ examDate: '2026-12-25' }).examDate, '2026-12-25');
   assert.equal(prefSanitizeGlobal({ goalTitle: '  四六级  ' }).goalTitle, '四六级');
   assert.equal(prefSanitizeGlobal({ bareRecall: 1 }).bareRecall, true);
+});
+
+test('prefSanitizeGlobal：学习顺序 queueOrder 只认 new/review，缺省先复习', () => {
+  assert.equal(prefSanitizeGlobal(null).queueOrder, 'review');
+  assert.equal(prefSanitizeGlobal({ queueOrder: 'new' }).queueOrder, 'new');
+  assert.equal(prefSanitizeGlobal({ queueOrder: 'review' }).queueOrder, 'review');
+  // 大小写/任意字符串/非字符串一律回退默认（白名单，不猜）
+  assert.equal(prefSanitizeGlobal({ queueOrder: 'NEW' }).queueOrder, 'review');
+  assert.equal(prefSanitizeGlobal({ queueOrder: 'xx' }).queueOrder, 'review');
+  assert.equal(prefSanitizeGlobal({ queueOrder: 1 }).queueOrder, 'review');
+  // 解析口径：本课设 new + 本课作用域 → new；切全局 → 用全局值（未设即默认 review）
+  assert.equal(prefResolveValue('queueOrder', 'new', 'review', {}), 'new');
+  assert.equal(prefResolveValue('queueOrder', 'new', 'review', { queueOrder: 'global' }), 'review');
 });

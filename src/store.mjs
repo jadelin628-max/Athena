@@ -201,13 +201,14 @@
   // 全局值存 athena_global_prefs_v1（跨科共享）；本课值存各科 DB.settings。
   // 作用域标记存 DB.settings.prefScope（每科独立选择跟全局还是用本课值）。
   const GLOBAL_PREFS_KEY = 'athena_global_prefs_v1';
-  const PREF_OVERLAP_KEYS = ['goalTitle', 'examDate', 'dailyNew', 'fdr', 'bareRecall', 'targetS', 'targetLinkExam'];
+  const PREF_OVERLAP_KEYS = ['goalTitle', 'examDate', 'dailyNew', 'queueOrder', 'fdr', 'bareRecall', 'targetS', 'targetLinkExam'];
 
   function prefDefaults() {
     return {
       goalTitle: GOAL_DEFAULT,
       examDate: '',
       dailyNew: 10,
+      queueOrder: 'review', // 学习顺序：review = 先复习（历史行为）/ new = 先新学
       fdr: 0.9,
       bareRecall: false,
       targetS: TARGET_S_DEFAULT,
@@ -222,6 +223,7 @@
       goalTitle: (typeof r.goalTitle === 'string' && r.goalTitle.trim()) ? r.goalTitle.trim().slice(0, 10) : d.goalTitle,
       examDate: (typeof r.examDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.examDate)) ? r.examDate : '',
       dailyNew: (typeof r.dailyNew === 'number' && isFinite(r.dailyNew)) ? Math.max(0, Math.min(99, Math.round(r.dailyNew))) : d.dailyNew,
+      queueOrder: r.queueOrder === 'new' ? 'new' : d.queueOrder,
       fdr: (typeof r.fdr === 'number' && r.fdr >= 0.8 && r.fdr <= 0.98) ? r.fdr : d.fdr,
       bareRecall: r.bareRecall == null ? d.bareRecall : !!r.bareRecall,
       targetS: (typeof r.targetS === 'number' && isFinite(r.targetS)) ? Math.max(7, Math.min(730, Math.round(r.targetS))) : d.targetS,
@@ -384,6 +386,9 @@
     if (!DB.cards) DB.cards = {};
     if (!DB.settings) DB.settings = {};
     if (DB.settings.dailyNew == null) DB.settings.dailyNew = 10;
+    // 学习队列顺序（v2.2.0 起）：review = 先复习（历史行为，老库默认落这里）/ new = 先新学。
+    //   非白名单值一律回退默认，保证 browse.mjs 的队列编排只看到两种合法值。
+    if (DB.settings.queueOrder !== 'new' && DB.settings.queueOrder !== 'review') DB.settings.queueOrder = 'review';
     // 旧版本用 targetH（半衰期天）作为固定毕业目标；迁移到 targetS（稳定度天）。
     //   旧 90 天半衰期 ≈ 90/K ≈ 1 天稳定度，语义已变：直接采用新默认值（不再沿用旧数值，避免误把「半衰期天」当「稳定度天」）。
     if (DB.settings.targetS == null) DB.settings.targetS = TARGET_S_DEFAULT;

@@ -123,6 +123,7 @@ IndexedDB `kv` 作为同 key 备份；加载时 `localStorage` 优先，缺失�
 - **毕业/掌握度**：稳定度 S 对目标 `targetS` 的对数压缩（自创展示指标，标 ⚠️）。
 - **提前复习接口** `sched.mjs` 的 `markCardDueNow(c, now)`：只把到期时间移到「现在」、**不动记忆历史**（export 供对拍；自测入队与浏览页「立即重学」都走它）。
 - **错题卡** `wrong.mjs`：v1.16.0 起纯复习态 FSRS（添加即视为当日遗忘）；失败可降级关联知识卡（受 `linkedMastery` 开关约束，见下）。
+- **学习队列顺序**（`browse.mjs` · 偏好键 `queueOrder`，2.2.0 起）：设置项「学习顺序」二选一——`review` 先复习（默认、历史行为）/ `new` 先新学。队列按两个会话切段：**复习会话** = 到期复习（`state=review`）+ 重学步进（`relearning`）；**新学会话** = 未学新卡（`new`）+ 学习步进（`learning`）。唯一的例外是分钟级步进卡：`learning`/`relearning` 受短时记忆步进窗口约束，两种顺序下都立刻回队首（`queueSurfacesNow` 的步进卡短路）。因此两种顺序只差「尚未开始的会话里的到期复习卡是否插队」：判据 `queueCardRank(order, state) ≤ queueSessionRankOf(order, 活动会话)`，默认顺序下活动会话恒为复习会话（rank 0），判据恒真 = 与历史行为逐字一致（回归锁见 `tests/queue-order.test.mjs`）。`buildSession` 拼 `segNew`/`segReview`；`surfaceDue` 把「晚于活动会话」的到期卡**先移出 head** 再经 `queueMergeDeferred` 插回待学区同会话组最前（必须移出再插回，否则它停在 `max(pos,frontier)` 之前永远轮不到、活动会话也被钉死在前一会话）；切换设置调 `reorderQueue()` **只重排未学队列**（head 与 `pos` 原地保留，区别于 `rebuildQueue()` 的重建归零）。队首区（`front`）由 `queueSortFront` 排序：**步进卡整组排在到期复习卡之前**（组内各自按 due 升序）——只按 due 混排会让刚点过「忘记」的学习卡排到逾期数天的复习卡之后，+2/+10 分钟窗口白等，用户进了复习会话就再也等不到它；`surfaceDue` 末尾 `scheduleStepRefresh(now)` 再按最近一张未到点步进卡设一次性定时器（≤15 分钟，单例、每次渲染重设），到点自动重渲染把卡拉回队首，不依赖用户下一次评分。纯函数在 `src/browse.mjs` 的 `BEGIN/END TESTABLE queue order helpers` 标记块（测试用 vm 抽取，不新增模块 → 不动拼接表），偏好净化在 `store.mjs` 的 `PREF_OVERLAP_KEYS` / `prefSanitizeGlobal` / `normalizeDB`（非法值一律回退 `review`）。
 
 ### 错题卡 ↔ 知识点联动（`linkedMastery`）
 
@@ -199,15 +200,15 @@ IndexedDB `kv` 作为同 key 备份；加载时 `localStorage` 优先，缺失�
 | `check_render.mjs` | 真实 KaTeX 渲染后 katex-error / 残留命令 / 字面 `**` | 改 data 或 render |
 | `check_version.mjs` | 版本七处一致 | 升版 |
 | `changelog.mjs --check` | `CHANGELOG.md` 与 `src/app.mjs` 同步 | 改日志 |
-| `node --test tests/…` | FSRS 对拍、交错、调度状态机、错题、同步、预测、习惯/专注/里程碑、题库、自测、构建产物（`package.json` 的 `test` 脚本列全 19 个文件，含 `tests/map.test.mjs`、`tests/card-content.test.mjs`） | 改调度/同步/题库/自测/构建 |
+| `node --test tests/…` | FSRS 对拍、交错、调度状态机、错题、同步、预测、习惯/专注/里程碑、题库、自测、构建产物（`package.json` 的 `test` 脚本列全 20 个文件，含 `tests/map.test.mjs`、`tests/card-content.test.mjs`、`tests/queue-order.test.mjs`） | 改调度/同步/题库/自测/构建 |
 | `node --test tests/bank.test.mjs`（题库答案护栏） | 数学三非卡片派生题（**181 条** = 选择题 118 + 填空/解答 63）的答案被悄悄改写（选择题字母不一致 / 填空与解答题结论锚点丢失）、新增 math3 题没同步补进期望表、选择题选项数不为 4 | 改 `data/bank_math3.js` 或增删 math3 题 |
 
-**版本七处（现行 2.1.9）**：
-- 应用源：`VERSION` 在 `src/app.mjs:8`（`const VERSION = '2.1.9';`）；`CHANGELOG` 数组开在 `src/app.mjs:11`、`v` 首条在 `src/app.mjs:12`。
-- 缓存戳：`index.html:11-13` 的 `manifest.webmanifest` / `icons/favicon.png` / `icons/apple-touch-icon.png` 三处 `?v=83`（须一致；`style.css` 无戳）。
-- 离线缓存：`VERSION` 在 `sw.js:5`（`ms3-v122`）——与应用版本是两套体系，不作强相等判定，但每次发版须手动 +1（`tools/check_version.mjs` 只发提示、不判失败）。
-- 元数据：`version` 在 `package.json:3` 与 `src-tauri/tauri.conf.json:4`（均 `2.1.9`）。
-- 日志与规则：`CHANGELOG.md` 首条 `## v2.1.9（2026-10）`（全 120 条，由 `tools/changelog.mjs` 生成）；枚举七处见 `tools/check_version.mjs:6-12`、内部一致性规则见 `tools/check_version.mjs:16-18`。
+**版本七处（现行 2.2.0）**：
+- 应用源：`VERSION` 在 `src/app.mjs:8`（`const VERSION = '2.2.0';`）；`CHANGELOG` 数组开在 `src/app.mjs:11`、`v` 首条在 `src/app.mjs:12`。
+- 缓存戳：`index.html:11-13` 的 `manifest.webmanifest` / `icons/favicon.png` / `icons/apple-touch-icon.png` 三处 `?v=84`（须一致；`style.css` 无戳）。
+- 离线缓存：`VERSION` 在 `sw.js:5`（`ms3-v123`）——与应用版本是两套体系，不作强相等判定，但每次发版须手动 +1（`tools/check_version.mjs` 只发提示、不判失败）。
+- 元数据：`version` 在 `package.json:3` 与 `src-tauri/tauri.conf.json:4`（均 `2.2.0`）。
+- 日志与规则：`CHANGELOG.md` 首条 `## v2.2.0（2026-10）`（全 121 条，由 `tools/changelog.mjs` 生成）；枚举七处见 `tools/check_version.mjs:6-12`、内部一致性规则见 `tools/check_version.mjs:16-18`。
 - 产物：`app.js` 与 `dist/` 由唯一权威构建（T116 / t43）同步——文档任务不跑 `npm run build`、不改版本七处。
 
 **题库答案护栏（t30 起 · 第一波终值）**：`tests/fixtures/bank-answer-manifest.json` 是一份**人工逐题转录**的数学三期望答案表（`_meta.provenance` 明确「手工转录、不得由脚本从数据生成」；`_meta.sources` **18 份来源册**、`evidence` **10 条**含 `backup/scratch/bank-fix2/text/*.txt:行`），**181 条期望 = `kind: 'choice'` 118 条记字母 + `kind: 'fill'` 63 条记源解析末式/关键结论锚点**（与 `BANK.math3` 的全部非卡片派生题一一对应）。守卫在 `tests/bank.test.mjs:685-725`（口径注释 `:680-684`），三条断言：① 期望表 id 集合与 `BANK.math3.questions`（`origin !== 'card'`）的 id 集合 `deepEqual`（新增/删除题必须显式补表，否则转红）；② `choice` → `assert.equal(options.length, 4)` 且正文答案字母（`letterOf()`，`:671` 三条正则，与界面侧 `bankChoiceLetter`（`src/bank.mjs:494`）同口径）与期望表一致；③ `fill` → `assert.equal(options.length, 0)` 且 `answer` 含期望锚点（`indexOf(want.anchor) >= 0`）。负向对照（改 1 题字母 / 改锚点必红；仅内容类改动放行）见 `backup/scratch/bank-fix2/`，独立复核见 `backup/scratch/verify-vision2/t31-report.md`。**边界**：期望表只覆盖 math3 线（181 条）；`econ` 174 条 / `stats` 90 条手写真题的答案尚无人工转录表，卡片派生题（math3 182 / econ 161 / stats 167）改由「卡片例题逐题同源」对拍块把关（`tests/bank.test.mjs:341`（stats，期望由 `cardEntryIds` 现算）/`:548-579`（math3 + econ，期望值表 `T49_CARDS` `:540`）），扩表属 2.2.0 后续批次（见 `docs/refs/2.2.0-PLAN.md` §1.2 Q4c/Q6）。

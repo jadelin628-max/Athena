@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '2.1.9';
+  const VERSION = '2.2.0';
 
   // ---------------- 更新日志（设置页「更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '2.2.0', date: '2026-10', items: ['学习顺序（新设置，设置 →「学习偏好」→「学习顺序」）：可选「先复习」（默认，与之前行为一致）或「先新学」——先新学时先把当天的新卡与今日新学的学习步进做完，再进入复习队列。本课与全局两段可分别设置；切换后只重排还没学到的部分，已学进度与当前卡片原地保留（不重建队列、不重置今日进度）', '三种队列的兼容语义：新学会话 = 未学新卡 + 学习中步进，复习会话 = 到期复习 + 重学步进。**分钟级步进卡（学习中 / 重学）在两种顺序下都尽早回到队首**（短时记忆窗口只有 2/10 分钟，不值得排到复习积压后面），只有「尚未开始的那个会话里的到期复习卡」会按设置延后——先新学时它们留在待学区等复习会话开始，做完新学队列就自动接管。默认「先复习」下判据恒成立，与 2.1.9 的队列逐字一致', '修复（用户反馈）：进入复习队列后，学习中队列的卡到期也不回到队首。根因是队首区只按到期时间升序——步进卡只逾期几分钟，而复习积压逾期好几天，于是刚评过「再来一次」的学习卡被排到整条积压之后，用户在复习会话里再也轮不到它。现在队首区先按「步进卡整组优先、组内按到期升序」排，其后才是到期复习卡；并在当前卡片上挂一个到点自动刷新的定时器（最长等 15 分钟，每次渲染重设），到点把步进卡接回队首，不必等下一次评分', '工程：队列编排抽成纯函数（`queueSortFront` / `queueGroupBySession` / `queueActiveSession` / `queueSurfacesNow` / `queueMergeDeferred`），新增 `tests/queue-order.test.mjs` 10 条（含「默认顺序下所有到期卡都会被吸回」的回归锁与源码接线守卫），全量测试 405 条全绿；另用一次性 vm 冒烟脚本驱动真实 `buildSession` / `surfaceDue` / `reorderQueue` 验证 38 项运行时行为；偏好键 `queueOrder` 进本课/全局共用键表并在加载时净化（非法值回退默认），`docs/ARCHITECTURE.md` 与 `docs/DATA_SCHEMA.md` 同步口径'] },
     { v: '2.1.9', date: '2026-10', items: ['归档换了位置（按反馈调整）：归档不再占行动模块的二级导航，而是**专注链自己的页签**，与「专注 / 状态」同级——专注链页签顺序为 `专注 | 状态 | 归档 | 统计`，行动二级导航回到四项「专注链 → 计划 → 习惯树 → 帮助」；命令面板的「行动 · 归档」直接跳到该页签', '补归档（用户报的残留）：2.1.7 只给逾期未转正的计划打了「已逾期」标记、编制仍留在状态栏里。现在这类历史标记会在下一次结算时**补做归档**——编制整体移出并归档、归属链按只清归属链的规则清空，归档里的清空时间沿用当初的逾期时刻（不会被盖章成"今天清空"）；幂等，不会重复入档', '状态页警告提示的显示/关闭：**已逾期**与**已归档**提示可以点「关闭提醒」收起（关闭态随专注链状态持久化，刷新后仍然关闭），**临近截止**提示保持自动——计划完成（转正）或违规（逾期结算）后它自己消失，不需要手动关'] },
   { v: '2.1.8', date: '2026-10', items: ['专注链（按反馈修正到期结算的范围）：计划任务过了截止日期仍未转正时，不再「清空所有任务链」——现在**只清这份计划编制所归属的链**（按被移出的任务单元反推链，链上还编着别的单元就只扣掉移出条数、链继续可用，减到 0 才标记「已清空」），**预约链永不参与**（一个字节都不动）；清空的同时把这份编制整体移出编制树——计划节点、它的下级节点与已编入单元一起进归档，现场不留痕迹', '归档栏目（新，专注链的下级功能）：二级导航「专注链 → 归档 → 计划 → 习惯树 → 帮助」，逐条查看被清空的历史编制——计划名（含层级与番号）、截止日期、清空时间、涉及哪些链（各自移出条数、已清空还是剩余）、编制规模；可展开还原完整层级（父节点 → 子节点 → 已编入单元，含达成与结束状态）。归档记录只增不改（上限 200 条），专注链视图同时给出最近 3 条摘要与「查看归档」入口', '工程：结算次序固定为「快照 → 移出 → 清链 → 入档」并补源码级守卫（含反证：清所有链、先移出后快照都判红）与浏览器端检查（headless Chrome 17 项：导航接线、SVG 图标、归档卡片与统计、展开画树、空态、无未捕获异常）；顺带修掉归档树引用 `focusTreeLabelEl` 抛 ReferenceError 的问题（该函数原定义在渲染函数内部，已提升到模块作用域）'] },
     { v: '2.1.7', date: '2026-10', items: ['修复（用户反馈）：专注链里计划任务过了截止日期仍未转正时，任务链没有按规则清空。根因是「到期结算」只挂在旧计划数据上，而界面上建的「计划任务」全部落在计划层节点（`fromPlan` + 未转正 + 截止日期），那套旧口径在运行期没有任何入口——等于规则没生效。现在两条口径同序结算：悬浮提醒挂载时、每秒心跳、渲染前各兜底一次，所以停在浏览 / 统计页也会到期结算；逾期且未达转正门槛 ⇒ 清空该计划下的**所有任务链**并标记「已逾期 · 任务链已清空」（幂等，不重复清），已达门槛 ⇒ 自动转正为已完成层次。树内字段（是否计划中 / 计划截止日期）、专注链面板（临近截止 / 已逾期）与 toast 提示同步，逾期节点仍可手动转正补救', '界面去 emoji：界面文案不再出现 emoji。承担图标职责的改用统一的 24×24 单色 SVG 线稿（新增「加号 / 朗读 / 对 / 错」四枚，题库、浏览、自测、错题本与主页的功能键全部换掉），学科图标统一走 `assets/subject_icon/` 资源表（`data/*.js` 的 `icon` 字段整体删除）；知识库的分类与条目 emoji 删除、证据分级改为语义键加文字标签（高 / 中 / 争议）；卡片正文与题库正文里的装饰 emoji 清理为纯文字（「巧解」「注意：」「朗读」「×」等）。排版符号与纯文字字形（→ ★ ✓ ✗ ☰ 与乐谱符号）不属于 emoji，保留'] },
@@ -831,13 +832,14 @@
   // 全局值存 athena_global_prefs_v1（跨科共享）；本课值存各科 DB.settings。
   // 作用域标记存 DB.settings.prefScope（每科独立选择跟全局还是用本课值）。
   const GLOBAL_PREFS_KEY = 'athena_global_prefs_v1';
-  const PREF_OVERLAP_KEYS = ['goalTitle', 'examDate', 'dailyNew', 'fdr', 'bareRecall', 'targetS', 'targetLinkExam'];
+  const PREF_OVERLAP_KEYS = ['goalTitle', 'examDate', 'dailyNew', 'queueOrder', 'fdr', 'bareRecall', 'targetS', 'targetLinkExam'];
 
   function prefDefaults() {
     return {
       goalTitle: GOAL_DEFAULT,
       examDate: '',
       dailyNew: 10,
+      queueOrder: 'review', // 学习顺序：review = 先复习（历史行为）/ new = 先新学
       fdr: 0.9,
       bareRecall: false,
       targetS: TARGET_S_DEFAULT,
@@ -852,6 +854,7 @@
       goalTitle: (typeof r.goalTitle === 'string' && r.goalTitle.trim()) ? r.goalTitle.trim().slice(0, 10) : d.goalTitle,
       examDate: (typeof r.examDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.examDate)) ? r.examDate : '',
       dailyNew: (typeof r.dailyNew === 'number' && isFinite(r.dailyNew)) ? Math.max(0, Math.min(99, Math.round(r.dailyNew))) : d.dailyNew,
+      queueOrder: r.queueOrder === 'new' ? 'new' : d.queueOrder,
       fdr: (typeof r.fdr === 'number' && r.fdr >= 0.8 && r.fdr <= 0.98) ? r.fdr : d.fdr,
       bareRecall: r.bareRecall == null ? d.bareRecall : !!r.bareRecall,
       targetS: (typeof r.targetS === 'number' && isFinite(r.targetS)) ? Math.max(7, Math.min(730, Math.round(r.targetS))) : d.targetS,
@@ -1014,6 +1017,9 @@
     if (!DB.cards) DB.cards = {};
     if (!DB.settings) DB.settings = {};
     if (DB.settings.dailyNew == null) DB.settings.dailyNew = 10;
+    // 学习队列顺序（v2.2.0 起）：review = 先复习（历史行为，老库默认落这里）/ new = 先新学。
+    //   非白名单值一律回退默认，保证 browse.mjs 的队列编排只看到两种合法值。
+    if (DB.settings.queueOrder !== 'new' && DB.settings.queueOrder !== 'review') DB.settings.queueOrder = 'review';
     // 旧版本用 targetH（半衰期天）作为固定毕业目标；迁移到 targetS（稳定度天）。
     //   旧 90 天半衰期 ≈ 90/K ≈ 1 天稳定度，语义已变：直接采用新默认值（不再沿用旧数值，避免误把「半衰期天」当「稳定度天」）。
     if (DB.settings.targetS == null) DB.settings.targetS = TARGET_S_DEFAULT;
@@ -2365,6 +2371,76 @@
     return DATA.filter(function (f) { const c = card(f.id); return (c.state === 'learning' || c.state === 'relearning') && (c.grad | 0) === 0; }).length;
   }
 
+  // ===== BEGIN TESTABLE queue order helpers =====
+  // 学习队列顺序（设置项 queueOrder）：review = 先复习（历史行为，默认）/ new = 先新学。
+  //
+  // 队列按「会话」切两段，先后可换：
+  //   复习会话 = 到期复习卡（state=review） + 重学步进卡（relearning）
+  //   新学会话 = 未学新卡（state=new）   + 学习步进卡（learning）
+  // 唯一的例外是**分钟级步进卡**（learning/relearning）：它们受短时记忆步进窗口（+2/+10 分钟）约束，
+  // 无论顺序设置如何都要尽快回到队首，否则「先复习」会把刚评过的卡压到几十张之后。
+  // 由此两种顺序只差一件事：**尚未开始的会话里的到期复习卡**是立刻插队，还是留在原地等该会话开始。
+  // 默认顺序下活动会话永远是复习会话（rank 0），判据恒真 —— 与旧行为逐字一致（旧逻辑把所有到期卡吸回）。
+  const QUEUE_ORDER_DEFAULT = 'review';
+  const QUEUE_ORDERS = ['review', 'new'];
+
+  function queueOrderOf(v) { return v === 'new' ? 'new' : QUEUE_ORDER_DEFAULT; }
+  // 卡所属会话：new/learning → 新学；review/relearning → 复习
+  function queueSessionOf(state) { return (state === 'new' || state === 'learning') ? 'new' : 'review'; }
+  // 分钟级步进卡：必须立刻回队首的卡（不受队列顺序影响）
+  function queueStepState(state) { return state === 'learning' || state === 'relearning'; }
+  // 会话先后：['先做', '后做']
+  function queueSessions(order) { return queueOrderOf(order) === 'new' ? ['new', 'review'] : ['review', 'new']; }
+  function queueSessionRankOf(order, session) {
+    const i = queueSessions(order).indexOf(session);
+    return i < 0 ? QUEUE_ORDERS.length : i;
+  }
+  function queueCardRank(order, state) { return queueSessionRankOf(order, queueSessionOf(state)); }
+  // 到期卡是否该立刻吸回队首：步进卡恒真；其余卡不晚于当前活动会话就吸回，晚于则留在待学区等该会话开始
+  function queueSurfacesNow(order, activeSession, state) {
+    if (queueStepState(state)) return true;
+    return queueCardRank(order, state) <= queueSessionRankOf(order, activeSession);
+  }
+  // 稳定分组：按会话先后重排（组内保持输入顺序）——不重建会话，只重排未学队列
+  function queueGroupBySession(ids, order, stateOf) {
+    const buckets = { new: [], review: [] };
+    (ids || []).forEach(function (id) {
+      const r = stateOf(id);
+      const k = queueSessionOf(r);
+      if (buckets[k]) buckets[k].push(id);
+    });
+    const s = queueSessions(order);
+    return buckets[s[0]].concat(buckets[s[1]]);
+  }
+  // 当前活动会话：frontier 起第一张卡的会话；队列走空时回落到最后一张卡的会话
+  function queueActiveSession(ids, frontier, order, stateOf) {
+    const list = ids || [];
+    const f = Math.max(0, Math.min(frontier | 0, list.length));
+    if (f < list.length) return queueSessionOf(stateOf(list[f]));
+    if (list.length) return queueSessionOf(stateOf(list[list.length - 1]));
+    return queueSessions(order)[0];
+  }
+  // 把「属于尚未开始会话的到期卡」插回待学区：插到它那一组的最前面（组内 due 由调用方排序保证）
+  function queueMergeDeferred(tail, extra, order, stateOf) {
+    const buckets = { new: [], review: [] };
+    (extra || []).forEach(function (id) { buckets[queueSessionOf(stateOf(id))].push(id); });
+    (tail || []).forEach(function (id) { buckets[queueSessionOf(stateOf(id))].push(id); });
+    const s = queueSessions(order);
+    return buckets[s[0]].concat(buckets[s[1]]);
+  }
+  // 队首区排序：**分钟级步进卡永远排在到期复习卡之前**（组内各自按到期升序，逾期最久者先做）。
+  //   只按 due 混排会让刚评过的卡排到「逾期两天的复习卡」之后——它的 +2/+10 分钟窗口就白等了，
+  //   所以步进卡必须抢占队首区第一位（与 Anki 的 learning-first 一致）。
+  function queueSortFront(ids, stateOf, dueOf) {
+    const stepRank = function (id) { return queueStepState(stateOf(id)) ? 0 : 1; };
+    return (ids || []).slice().sort(function (a, b) {
+      const ra = stepRank(a), rb = stepRank(b);
+      if (ra !== rb) return ra - rb;
+      return dueOf(a) - dueOf(b);
+    });
+  }
+  // ===== END TESTABLE queue order helpers =====
+
   function buildSession(pendingBoost, skipPending) {
     const now = Date.now();
     const all = DATA.map(function (f) { return f.id; });
@@ -2415,12 +2491,17 @@
     });
     // 到期复习：先按重要度/到期排序，再按重要度分层做辨析交错（相关卡较近、同章不连续）
     const dueOrdered = interleaveByImportance(due);
-    // 学习阶段（时间步进到点）的卡：辨析交错（相关卡较近）
-    const resumeLearning = interleaveByIds(all.filter(function (id) { return (card(id).state === 'learning' || card(id).state === 'relearning') && card(id).due <= now; }));
+    // 学习阶段（时间步进到点）的卡：辨析交错（相关卡较近）。
+    // 按会话分两组：learning 属新学会话、relearning 属复习会话（见上方 queue order helpers）。
+    const learningDue = interleaveByIds(all.filter(function (id) { return card(id).state === 'learning' && card(id).due <= now; }));
+    const relearningDue = interleaveByIds(all.filter(function (id) { return card(id).state === 'relearning' && card(id).due <= now; }));
     // 已引入但仍未学的新卡：受每日上限约束（再来一批的 pendingBoost 额外放量），先乱序再辨析交错；判空防御同上
     const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; })).slice(0, room + (skipPending ? (pendingBoost || 0) : 0)));
-    // 队列 = 到期复习 + 续学 + 已引入新卡
-    deck = dueOrdered.concat(resumeLearning, newToStudy);
+    // 两个会话：新学 = 学习步进 + 未学新卡；复习 = 到期复习 + 重学步进
+    const segNew = learningDue.concat(newToStudy);
+    const segReview = dueOrdered.concat(relearningDue);
+    // 队列 = 按「先复习 / 先新学」拼接两个会话（默认先复习，与历史行为一致）
+    deck = queueOrderOf(prefGet('queueOrder')) === 'new' ? segNew.concat(segReview) : segReview.concat(segNew);
     pos = 0;
     frontier = 0;
     pendingAdvance = false;
@@ -2464,12 +2545,35 @@
     toast('学习队列已按当前设置重排');
   }
 
+  // 切换「先复习 / 先新学」：只重排未学队列，不重建会话——
+  // 已学部分（head）与当前 pos 原地保留，避免像 rebuildQueue 那样把今日进度归零。
+  function reorderQueue() {
+    const order = queueOrderOf(prefGet('queueOrder'));
+    const stateOfCard = function (id) { const c = card(id); return c ? c.state : 'new'; };
+    const curId = (pos >= 0 && pos < deck.length) ? deck[pos] : null;
+    const head = deck.slice(0, frontier);
+    deck = head.concat(queueGroupBySession(deck.slice(frontier), order, stateOfCard));
+    if (curId != null) {
+      const idx = deck.indexOf(curId);
+      pos = idx >= 0 ? idx : Math.min(frontier, deck.length);
+    } else {
+      pos = Math.min(frontier, deck.length);
+    }
+    if (pos < 0) pos = 0;
+    saveSession();
+    renderApp();
+  }
+
   function surfaceDue() {
     const now = Date.now();
     const isDue = function (id) {
       const c = card(id);
       return (c.state === 'review' || c.state === 'learning' || c.state === 'relearning') && c.due <= now;
     };
+    // 当前活动会话：决定「后一个会话的到期卡是否插队」（先复习时 = 复习，先新学时 = 新学）
+    const order = queueOrderOf(prefGet('queueOrder'));
+    const stateOfCard = function (id) { const c = card(id); return c ? c.state : 'new'; };
+    const active = queueActiveSession(deck, frontier, order, stateOfCard);
     // 记住当前 pos 指向的卡，重组后尽量保持/正确回退
     const curId = (pos >= 0 && pos < deck.length) ? deck[pos] : null;
     const inDeck = {};
@@ -2484,25 +2588,31 @@
       if (sb !== sa) return sb - sa;
       return card(a).due - card(b).due;
     });
-    // 拆分 head（已学）/tail（待学），把到期卡统一归到「待学区」最前
+    // 拆分 head（已学）/tail（待学）：到期卡一律先离开 head，再决定去处——
+    //   该插队的进 front（队首）；属于「尚未开始的会话」的留在待学区等该会话开始。
+    //   必须「移出 head 再插回去」，否则它会停在 max(pos,frontier) 之前，用户永远轮不到，
+    //   活动会话也会被它钉死在前一个会话上。
     const head = deck.slice(0, frontier);
     const tail = deck.slice(frontier);
     // 学习/重学卡评分后会被推回队尾等待重现，同时留在「已学区」供确认展示；
     // 二者指向同一张卡，到期时必须去重（队尾副本优先），否则 front 会出现重复卡、打乱队列。
-    const surfaced = {};              // 已确定要进入 front 的卡（去重键）
-    const dueTail = [];
-    tail.forEach(function (id) {
-      if (isDue(id) && !surfaced[id]) { surfaced[id] = true; dueTail.push(id); }
-    });
-    const dueHead = [];
-    head.forEach(function (id) {
-      if (isDue(id) && !surfaced[id]) { surfaced[id] = true; dueHead.push(id); }
-    });
+    const surfaced = {};              // 已确定去处的卡（去重键）
+    const front = [];
+    const deferred = [];              // 属于尚未开始会话的到期卡 → 回到待学区等该会话
+    const route = function (id) {
+      if (surfaced[id] || !isDue(id)) return;
+      surfaced[id] = true;
+      if (queueSurfacesNow(order, active, stateOfCard(id))) front.push(id);
+      else deferred.push(id);
+    };
+    tail.forEach(route);
+    head.forEach(route);
+    fresh.forEach(route);
     const keepHead = head.filter(function (id) { return !surfaced[id]; });
     const restTail = tail.filter(function (id) { return !surfaced[id]; });
-    const front = fresh.concat(dueHead, dueTail);
-    front.sort(function (a, b) { return card(a).due - card(b).due; });
-    deck = keepHead.concat(front, restTail);
+    // 队首区：步进卡优先（见 queueSortFront），其余按到期升序
+    const frontOrdered = queueSortFront(front, stateOfCard, function (id) { return card(id).due; });
+    deck = keepHead.concat(frontOrdered, queueMergeDeferred(restTail, deferred, order, stateOfCard));
     frontier = keepHead.length;
     // 恢复 pos：原卡仍在「已学区」（未到期）则保持回看；否则跳到第一张待学卡
     if (curId != null) {
@@ -2513,6 +2623,31 @@
     }
     if (pos < 0) pos = 0;
     if (pos > deck.length) pos = deck.length;
+    // 步进卡到点自动归位：挂在当前卡片上等「下一次评分」太晚（用户可能正停在复习卡上），
+    // 所以按最近一张未到点步进卡的 due 设一个一次性定时器，到点重渲染让 surfaceDue 把它拉回队首。
+    scheduleStepRefresh(now);
+  }
+
+  // 单例定时器：每次渲染先清再设，避免堆积；只在学习视图生效，最长等 15 分钟（与「巩固步进中」兜底同量级）。
+  let stepTimer = null;
+  function scheduleStepRefresh(now) {
+    if (stepTimer) { clearTimeout(stepTimer); stepTimer = null; }
+    let next = 0;
+    DATA.forEach(function (f) {
+      const c = card(f.id);
+      if (!c) return;
+      if (c.state !== 'learning' && c.state !== 'relearning') return;
+      if (c.due <= now) return;
+      if (!next || c.due < next) next = c.due;
+    });
+    if (!next) return;
+    const wait = Math.max(250, Math.min(next - now + 250, 15 * 60 * 1000));
+    stepTimer = setTimeout(function () {
+      stepTimer = null;
+      // 录入弹窗/其它浮层打开时不要抢渲染（弹窗挂在 body 上，虽然不会被冲掉，但打断输入很讨厌）；
+      // 关掉弹窗后的下一次渲染会重新排队列并重设定时器。
+      if (currentView === 'learn' && !document.querySelector('.map-modal')) renderApp();
+    }, wait);
   }
   function renderLearn() {
     const app = document.getElementById('app');
@@ -6298,6 +6433,16 @@ function bankDetailNode(q) {
         }
       },
       {
+        key: 'queueOrder', label: '学习顺序', type: 'choice',
+        options: [['review', '先复习'], ['new', '先新学']],
+        title: '每天先做哪一条队列（学习中/重学的步进卡在两种模式下都优先回到队首）',
+        note: '先复习：到期复习先做，再引入当天新卡（默认）。先新学：先把新卡与今日新学的步进做完，再进入复习队列。切换只重排未学队列，已学进度与当前卡片保留。',
+        commit: function (v) {
+          reorderQueue();
+          toast(v === 'new' ? '已切换：先新学（未学队列已重排，进度保留）' : '已切换：先复习（未学队列已重排，进度保留）');
+        }
+      },
+      {
         key: 'fdr', label: '期望保留率', type: 'number', min: 0.8, max: 0.98, step: 0.01, width: '96px',
         title: 'FSRS 按此保留率计算下次复习间隔（0.80–0.98，默认 0.90）',
         note: 'FSRS 按期望保留率计算下次复习间隔：调高（如考前 0.95）间隔更短、复习更密，调低更省时。',
@@ -6357,6 +6502,22 @@ function bankDetailNode(q) {
           renderApp();
         });
         r.appendChild(lab);
+      } else if (item.type === 'choice') {
+        const box = el('div', 'chips');
+        box.style.margin = '0';
+        (item.options || []).forEach(function (o) {
+          const b = el('button', 'chip' + (val === o[0] ? ' active' : ''), o[1]);
+          b.type = 'button';
+          if (item.title) b.title = item.title;
+          b.addEventListener('click', function () {
+            if (prefGet(item.key) === o[0]) return;
+            prefSet(item.key, o[0], sc);
+            saveDB();
+            if (item.commit) item.commit(o[0]);
+          });
+          box.appendChild(b);
+        });
+        r.appendChild(box);
       } else {
         const input = el('input', 'num');
         input.type = item.type === 'date' ? 'date' : (item.type === 'text' ? 'text' : 'number');

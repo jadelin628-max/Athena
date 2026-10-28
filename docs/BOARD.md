@@ -547,6 +547,96 @@
 8. **未做（如实登记）**：①未改 FSRS 公式与 `sched.mjs` 状态机（本次只改队列拼装与插队时机）；②未升 major；③`verify-refs.mjs` 的测试文件数基线仍是旧值（历史债，见 T152 报告第 9 条）。
 9. **交付**：本切片（T152 之后）随 **2.2.0** 交付，提交 **`03a2861`**「feat: Athena 2.2.0 —— 学习顺序设置（先复习 / 先新学）、三种队列兼容、学习中卡到点不回队首修复」（15 files changed / +605 −53）。
 
+### T154 统计科卡片与考研大纲边界核查（只读报告）
+- 状态: accepted（2026-10-28 收口；只读审计，`data/stats.js` 零改动；执行者=子对话，主对话复核 272/272 判定并并入报告）
+- 负责: 子对话（统计大纲审计）
+- 文件集: 只读 `data/stats.js`、`docs/DATA_SCHEMA.md`、`docs/COVERAGE.md`、`docs/refs/`；产出 `backup/scratch/t154-stats-scope/report.md`（gitignored）。**不改任何源文件**
+- 依据: 用户指令（m00606 第 1 条）「检查统计科目的卡片有无超出北大金融考研专业课大纲的内容」；AGENTS.md「内容范围（北大光华 431 + 数三 + 通识）」「统计 = 茆诗松/何书元/陈家鼎 + 古扎拉蒂/伍德里奇」
+- 依赖: 无
+- 验收:
+  1. 逐卡判定表（id / cat / 标题 / 判定 in-scope · borderline · out-of-scope / 大纲或教材锚点 / 建议动作），覆盖 `stats` 全部卡
+  2. 汇总：out-of-scope 与 borderline 计数、按 cat 分布、最高风险 10 张
+  3. 报告落盘，数据零改动
+
+### 报告
+1. **覆盖与口径**：`data/stats.js` 实载 **272 张**卡，逐卡判定 **272/272**（脚本 `backup/scratch/t154-stats-scope/build-report.mjs` 带 assert：漏判 / 未知 id / 重复规则直接非零退出）。判定基线 = AGENTS.md「内容范围 / 教材锚点」（茆诗松 §1–8 + 古扎拉蒂/伍德里奇），每张卡给锚点；概率统计归本课。（**T158 合并后 stats 为 265 张**：本判定表保留合并前 272/272 口径，被并的 7 张即 §4 ④ 与 §5 列出的重复卡。）
+2. **结论**：`in-scope` **221**（81.3%）/ `borderline` **48**（17.6%）/ `out-of-scope` **3**（1.1%）。唯一超纲 = **`est26` / `est26-2` / `est26-3`**（两分量正态混合模型 EM：责任度、M 步加权闭式、似然无界性与 label switching；茆书 §6.3 只到 EM 框架，431 考纲无混合模型）。
+3. **borderline 热点**（按 cat）：`limit` 7（`xt09` LLN 充要刻画、`ll13-2` 弱与强大数定律、`ll12-2` 二阶 Δ 方法）、`estimation` 16（`xt05` 完备统计量、`est29-2` Basu 边界反例）、`prob_basic` 7（`pb15` 可测空间 / Borel σ-域）、`testing` 6（`xr05-2` Wilks 定理）。最高风险 10 张清单见报告 §4。
+4. **建议动作（待用户裁决，均未执行）**：①`est26` 三卡删卡或转 HELP（移出学习队列）；②派单举例的「贝叶斯 §6.5 / 非参数 §7.6 / 方差分析 §8.1–8.3」共 17 张按教材锚点判 in-scope——若改按「431 真题命中率」从严，可整体降 `borderline`（不删，需重跑判定表）；③borderline 中 13 张建议降级 HELP、22 张保留并标「专题延伸」（清单 §5.3 / §5.4）；④重复卡 5 组建议合并：`pb14-2`≈`pb16`、`nc09`≈`ll07`、`est13`←`est03`/`est03-2`、`sm16`←`test16`、`jj07`←`reg06`。
+5. **顺带记录的数据瑕疵**：`xt15` / `xt15-2` 标题里的 `\times` 在数据中是**制表符**；`est22` 与 `est03-2` 内容重合且编号顺序异常（报告 §6，本切片未修）。
+6. **主对话复核**：`data/stats.js:1157-1178` 确为 EM 混合（E 步责任度 / M 步闭式 / 似然无界）；`xt09`/`pb15`/`xt05`/`xr05-2`/`ll13-2` 标题与判据一致（`data/stats.js` 中 `F('xt09',…)` 等）；`data/stats.js` 零改动（git status 不含 data/）。
+7. **未做**：删卡、改写、合并重复卡均未执行（属数据改动，需拍板）；本切片无代码改动、未跑闸门。
+8. **证据**：`backup/scratch/t154-stats-scope/report.md`（455 行 / 49,648 B，gitignored），生成链 `dump-stats.mjs`（vm 抽卡 → `cards.json`）→ `build-report.mjs`（`R[]` 规则表）。
+
+### T155 新学推送优先前置卡（REL `前置` 分层推送）
+- 状态: accepted（2026-10-28 收口；主对话另补「引入批也走前置分层」并复核；未 build / 未提交，由主对话统一出闸）
+- 负责: 子对话（调度 / 队列）
+- 文件集: `src/browse.mjs`、`tests/queue-prereq.test.mjs`（新增）、`tests/queue-order.test.mjs`（仅允许同步接线断言）
+- 依据: 用户指令（m00606 第 2 条）「新增一个调度算法，在推送新学卡片时，应优先推送卡片关系中的前置卡片」；`docs/DATA_SCHEMA.md:22`（`REL` 的 tag 含 `前置`）；AGENTS.md 算法红线（FSRS-6 公式不得改）
+- 依赖: T153（队列编排的 TESTABLE 纯函数块与 `queueOrder` 两会话语义）
+- 验收:
+  1. 新卡推送顺序满足「前置先于依赖」；环 / 缺目标 / 目标已学 / 自引用等边界有兜底，且不会死锁（新卡池非空时始终能推出下一张）
+  2. 不动 FSRS 公式与 `sched.mjs`；`dailyNew` 上限、初学者章节过滤、交错、`queueOrder`（先复习/先新学）语义不变
+  3. 无 `前置` 关系的科目行为不变；有 500 处 `前置`（econ 196 / math3 142 / stats 124 / politics 19 / fr 7 / es 6 / cppl 4 / ai 1 / clang 1）的科目按拓扑分层
+  4. `node --test tests/queue-prereq.test.mjs` 全绿；`tests/queue-order.test.mjs` 仍全绿（允许同步改接线正则）
+
+### T156 分条标号被误判换行导致内容断开（渲染分段修复）
+- 状态: accepted（2026-10-28 收口；主对话复核根因、diff 与 194 张真实卡抽查；未 build / 未提交，由主对话统一出闸）
+- 负责: 子对话（渲染 / 卡面）
+- 文件集: `src/app.mjs`（**仅**「卡面答案分段增强」块 + 新 TESTABLE 标记；禁止改 `VERSION` / `CHANGELOG`）、`src/render.mjs`（确需时）、`tests/render-bullets.test.mjs`（新增）
+- 依据: 用户指令（m00606 第 3 条）「在卡片内容进行分条列举时，有时候内容中的标号也被归为了换行标识，导致内容的断开，解决这一问题」；`src/app.mjs:184-400` 的 `splitAnswerBlocks`；`src/render.mjs` 的 `renderProse` 入口
+- 依赖: 无
+- 验收:
+  1. 行首（可含缩进）`①`/`（1）`/`（一）`/`1.` 等分点仍成块；句中出现的同形标号（如 `X_{(1)}`、`第一步①…`、公式/命令/URL 内）不再切块
+  2. 空行段落、结构标签（要点/陷阱/规则…）、长句细切的既有行为不变
+  3. 真实数据抽查（`data/stats.js`、`data/econ.js` 各若干卡）报告修复前后块数变化，逐张说明是否为目标修复
+  4. `node --test tests/render-bullets.test.mjs` 全绿
+
+### T157 专注链状态树默认折叠 + 折叠键布局优化
+- 状态: accepted（2026-10-28 收口；主对话复核 diff、「既有断言未减」与三类行对齐；未 build / 未提交，由主对话统一出闸）
+- 负责: 子对话（专注链 UI）
+- 文件集: `src/focus.mjs`、`style.css`、`tests/focus.test.mjs`
+- 依据: 用户指令（m00606 第 4 条）「行动界面专注链状态中，各层任务层级默认为折叠状态而非展开状态，优化专注链与折叠按钮布局」；`src/focus.mjs:2192` `focusTreeRows`（`collapsed` 过滤）、`:2812` `focusUiState.collapsed` 默认 `{}`、`:3700-3760` 折叠键与行渲染
+- 依赖: 无
+- 验收:
+  1. 首次进入状态页只显示根层任务，逐层点击展开；刷新后仍为默认收起（不因会话残留而全展开）
+  2. 既有「全部展开 / 全部折叠」入口（若有）行为与新默认一致
+  3. 折叠键与层级缩进、行高对齐（命中区不小于既有 28×28 / 40×40 触屏口径），折叠态有 `aria-expanded="false"`
+  4. `node --test tests/focus.test.mjs` 全绿
+
+### T154–T157 收口（2026-10-28 主对话）
+- 状态: accepted（代码、测试、文档、四处闸门全绿；**未提交 / 未推送**，等用户指令）
+- 范围: T154 统计大纲只读审计 · T155 新卡前置优先推送 · T156 分条标号断行修复 · T157 专注链状态树默认折叠 + 折叠键布局
+- 报告（文件）: `data/` 零改动（T154）；`src/browse.mjs`（T155 纯函数块 + `buildSession` 两处接线 + 主对话补的「引入批也走前置分层」）、`src/app.mjs`（T156 `ansPointBoundary` / `ANS_POINT_LEAD` / `ansTrimEdge` 裁 `\u3000` 与 `~~~` 保护 / TESTABLE 标记）、`src/focus.mjs` + `style.css`（T157 `expanded` 口径、`focusTreeFoldKeyEl`、`focus-tree-fold-slot` / `focus-tree-check-slot` 对齐占位、触屏 40×40）
+- 报告（测试）: 新增 `tests/queue-prereq.test.mjs`（16 条）、`tests/render-bullets.test.mjs`（14 条）；扩 `tests/queue-order.test.mjs`（10 条）、`tests/focus.test.mjs`（93 条，其中新增 4 条）；`package.json` 的 `test` 列表 20 → 22 个文件
+- 报告（文档）: `docs/ARCHITECTURE.md` 新增「卡面答案分段（splitAnswerBlocks）」小节 + 调度段「学习队列顺序」「新卡前置优先」两条 bullet + 专注链「行回收与折叠键」重写（行号逐个核对）+ 测试文件数 22；`docs/DATA_SCHEMA.md` 的 `REL` 行补 `前置` 的调度含义
+- 报告（闸门）: `npm run build` ✅（22 模块 + dist 同步）· `npm test` **439 / 439** ✅ · `npm run check` ✅（数据 2888 卡 / 版本七处 2.2.0 / CHANGELOG 一致 / app.js 同步）· `npm run check:render` ✅（10387 渲染字段 / 0 问题）；独立复核两个脚本：`backup/scratch/main-verify/prereq-check.mjs`（9 科环外违规 0、每卡恰一次）、`backup/scratch/main-verify/prefix-closure.mjs`（截断批前置封闭 0 违规）
+- 未做项: T154 的 17 张边界卡待用户裁决（派单举例的贝叶斯 / 非参数 / 方差分析 17 张，子对话按教材锚点判 in-scope）、13 张降 HELP、5 组重复卡合并、`xt15`/`xt15-2` 标题制表符与 `est22`↔`est03-2` 重合（均需改数据，未动手）；T155 环内顺序随机、`surfaceDue`/`reorderQueue` 未接前置；T157 展开态不持久化（设计如此）、`.focus-unit-type-tag` 未随主行右移 →
+- 遗留（历史债，非本切片）: `backup/scratch/docs-refresh/verify-refs.mjs` 报 14 条失败（§专注链行号漂移 10 条 + 题库计数 4 条），该脚本不在 `npm run check` 内
+
+### T158 重复卡合并 + 历史债清零 + 2.2.1 交付
+- 状态: accepted（2026-10-28 收口；执行者=主对话，数据/测试/文档/闸门全部亲跑）
+- 负责: 主对话
+- 文件集: `data/stats.js`（6 组合并）、`data/bank_stats.js`（生成块重生成 + 真题 tags 改指）、`docs/COVERAGE.md`、`docs/ARCHITECTURE.md`、`docs/ACT.md`、`docs/BOARD.md`、`tests/bank.test.mjs`、`package.json`、`src/app.mjs`（VERSION + CHANGELOG）、`sw.js`、`index.html`、`src-tauri/tauri.conf.json`、`app.js`/`dist/`（生成物）、`backup/scratch/docs-refresh/verify-refs.mjs`（计数口径修正）、`backup/scratch/t158-merge/`（量具）
+- 依据: 用户指令（m00927）「1、合并重复卡，其余均保留，修改卡面文本小瑕疵 2、顺手清掉 3、完成后提交并推送2.2.1」；T154 报告 §4 ④ / §5（重复卡 5 组 + `est22`↔`est03-2` 重合）；T154–T157 收口的「遗留（历史债）」一行
+- 依赖: T154（重复卡清单）
+- 验收:
+  1. 6 组重复卡合并完成，被并卡独有内容无丢失，`est26` 三卡与 17 张 borderline **全保留**
+  2. `node tools/check_data.mjs` / `node tools/check_render.mjs` / `npm test` / `npm run check` / `npm run check:render` 全绿；卡片正文净字数 ≤ 400 硬限
+  3. 「历史债」清零：`backup/scratch/docs-refresh/verify-refs.mjs` exit 0
+  4. 版本 2.2.1 七处一致，提交并推送 `origin/main`
+
+### 报告
+1. **合并表（保留 ← 被并）**：`pb16` ← `pb14-2`（补单调列极限 / 记法 / `varliminf⊂varlimsup`，PITFALL 改键到 `pb16`）；`ll07` ← `nc09`（补「分母 ε²、分子方差、关于 EX 对称、上界非近似」+ 切比雪夫大数定律与频率偏离界；`nc09` 例题并入 `ll07` 成数组）；`est13` ← `est03` + `est03-2` + `est22`（重写为「三标准 + 三层次 UMVUE/有效估计(C-R 下界、e≤1)/渐近有效 + MSE=D+b² 与以偏换方差 + 判别路线」；`est03` 的两条例题并入 `est13` 成 3 条数组）；`test16` ← `sm16`（补「斜率≈σ、截距≈μ」与「S 形⇒偏态、两端同时偏离⇒峰度异常」）；`reg06` ← `jj07`（易混①补调整 R² 三条性质 + 「整体显著性看 F、单变量看 t」）。
+2. **数量与附属表**：全库 2888 → **2881**（stats 272 → **265**），删除 7 卡；`META` 删 5 键 + 2 行摘除（`sm16` 从 `sm12..sm16` 同排、`jj07` 从 `jj06..jj09` 同排）、`REL` 8 条边从 `nc09` 改指 `ll07`、`est03/est03-2/est22/est13` 相关边收敛到 `est13`、`jj07` 4 条入边改指 `reg06`、`sm16` 源行删除；`EXAMPLE` 键 166 → **164**、条目 177 → **177**（条目总数不变）；`PITFALL` `jj07` 删除、`'pb14-2'` 改键 `pb16`。
+3. **体量（`docs/CARD-STANDARD.md` §1，净字数 ≤300 软限 / 400 硬限）**：`pb16` 248 · `ll07` 283 · `est13` 271 · `test16` 294 · `reg06` 226 —— 五张全在软限内（初稿 `ll07` 375、`est13` 317 已按标准收紧，量具 `backup/scratch/t158-merge/measure-size.mjs`）。
+4. **题库**：`node tools/bank-cv.mjs --subject stats --write --allow-workspace-write` 重生成（卡片 265 / EXAMPLE 164 键 → 条目 177 / 入库 167），派生题 `src.card` 与 `tags` 随 EXAMPLE 迁移自动改指；真题侧手改 11 处 tags（`jj07`→`reg06` ×2、`est03`→`est13` ×4、`nc09`→`ll07` ×4、`est22`→`est13` ×1）。题库 stats 仍 **257 题**（真题 90 + 派生 167）。
+5. **文本瑕疵复核**：T154 §5 报的「`xt15`/`xt15-2` 标题 `\times` 是制表符」**实测为误报**——`data/stats.js` 源码写作 `$r\\times c$`（字符串内双反斜杠），运行时即合法 `\times`；全量 2881 卡扫描 `title/front/back` 无控制字符、`data/stats.js` 全文无制表符（量具 `backup/scratch/t158-ctrl.mjs` / `t158-scan.mjs`），故不改。`est22`↔`est03-2` 重合已随 `est13` 合并消解。
+6. **历史债清零（14 → 0）**：① 10 条锚点 = `docs/ARCHITECTURE.md:189-198` 与 `docs/ACT.md:190/193/198/223/233` 的 `src/focus.mjs` 行号与 `tests/focus.test.mjs:1985-1993`，按 T157 后的真实定义逐个改（`focusIsExpanded` 3756 / `focusTreeExpandPanelEl` 3801 / `focusTreeLabelEl` 4094 / `focusUnitTypeTagEl` 3854 / `FOCUS_REMINDER_UI_KEY` 3291 / `focusReminderUiState` 3296 / `focusReminderSync` 3455 / `focusReminderClear` 3499 / `focusReminderStart` 3543 / delta 对拍用例 2000-2011）；② 4 条计数 = `tests/bank.test.mjs` 的 `MIN_QUESTIONS` 331→363、176→335（与 data 现算逐科相等），`verify-refs.mjs` 支持「`MIN_TOTAL` 派生式」（去掉「找不到 MIN_TOTAL」误报），测试文件数从写死 17 改为与 `tests/` 目录现算对拍（22）。复跑 `node backup/scratch/docs-refresh/verify-refs.mjs` → **全部通过（exit 0）**。
+7. **闸门证据（全部亲跑，2.2.1 上）**：`node tools/check_data.mjs` ✅（25 学科 / 卡片 **2881** / 真题 **955** / 派生 510 / subOf 压制 27）· `node tools/check_render.mjs` ✅（2881 卡 / 10365 渲染字段 / 0 问题）· `npm run build` ✅（22 模块 + dist 同步）· `node tools/changelog.mjs` ✅（122 条）· `npm test` ✅ **439 / 439** · `npm run check` ✅（版本七处 2.2.1 / CHANGELOG 一致 / app.js 同步）· `npm run check:render` ✅。
+8. **未做项**：`docs/refs/card-coverage-stats.json`（6467 行历史快照）未重算——无生成器、不参与闸门，COVERAGE 已以现算值与它并存；`est26` 三卡与 17 张 borderline 按用户「其余均保留」**未动**。
+9. **交付**：`CHANGELOG` 2.2.1 条目 + 七处版本标记；提交 `feat: Athena 2.2.1 —— 合并 6 组重复卡、清 verify-refs 历史债`（哈希见提交记录），推送 `origin/main`。
+
 <!-- 已归档：T122–T137 Athena 2.1.2 / 2.2.0 第一波（题库扩至 767 题、卡片补写 40 张、微观 49 页闭合与重取证、跨来源判重、生成器防护与闸门换代）→ backup/docs-archive/board/2026-10-11-V2.1.2-T122-T137.md -->
 
 <!-- 已归档：T77–T121 Athena 2.1.1 / 2.2.0 前置（题库渲染与筛选、自测星标、专注链 UI 与组合语义、错题入口、四族转录基线）→ backup/docs-archive/board/2026-10-10-V2.1.1-T77-T121.md -->

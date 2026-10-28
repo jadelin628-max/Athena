@@ -2189,9 +2189,13 @@
   }
 
   // 竖列树行
+  // T157：层级折叠口径由「缺省即展开」改为「缺省即收起」——opts.expanded 是**显式展开集合**
+  // （键 = 编制 id 或伪根 '__unassigned'，值为 true 才算展开），缺键一律视为收起。
+  // 旧 opts.collapsed（缺省即展开的折叠集合）已移除：调用方改传 focusUiState.foldOpen，
+  // 所以刷新/重进就是逐层收起，用户手动展开只在本次会话内有效（不写 localStorage）。
   function focusTreeRows(state, opts) {
     const o = opts || {};
-    const collapsed = o.collapsed || {};
+    const expanded = o.expanded || {};
     const chainFilter = o.chainFilter == null ? null : String(o.chainFilter);
     const assignFilter = o.assignFilter || 'all';
     const rows = [];
@@ -2218,6 +2222,11 @@
       });
     }
 
+    // T157：缺省收起 → 只有显式展开集合里的节点才放行下级；undefined / false / 缺键都算收起。
+    function focusLevelOpen(id) {
+      return expanded[String(id)] === true;
+    }
+
     function orgRow(org, depth) {
       const agg = focusOrgAggregates(state, org.id);
       rows.push({
@@ -2226,7 +2235,7 @@
         level: org.level,
         visual: focusLevelVisual(org.level),
         parent: focusParentAttribution(state, org.id),
-        collapsed: !!collapsed[org.id],
+        collapsed: !focusLevelOpen(org.id),
         aggregates: agg
       });
     }
@@ -2240,7 +2249,7 @@
     function walk(parentId, depth) {
       childrenOf(parentId).slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (org) {
         orgRow(org, depth);
-        if (!collapsed[org.id]) {
+        if (focusLevelOpen(org.id)) {
           walk(org.id, depth + 1);
           units.filter(function (u) { return u && u.orgId === org.id; })
             .sort(function (a, b) { return a.seq - b.seq; })
@@ -2249,17 +2258,22 @@
       });
     }
 
+    // 未编入 / 已编入筛选：伪根与正式编制一样缺省收起（T157），键复用 '__unassigned'。
     if (assignFilter === 'unassigned' || assignFilter === 'assigned') {
-      rows.push({ kind: 'root', depth: 0, id: '__unassigned', label: assignFilter === 'unassigned' ? '未编入' : '已编入', aggregates: null });
-      units.slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (u) { unitRow(u, 1); });
+      const rootOpen = focusLevelOpen('__unassigned');
+      rows.push({ kind: 'root', depth: 0, id: '__unassigned', label: assignFilter === 'unassigned' ? '未编入' : '已编入', collapsed: !rootOpen, aggregates: null });
+      if (rootOpen) {
+        units.slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (u) { unitRow(u, 1); });
+      }
       return rows;
     }
 
     walk(null, 0);
     const unassigned = units.filter(function (u) { return u && !u.orgId; });
     if (unassigned.length || o.showUnassignedRoot !== false) {
-      rows.push({ kind: 'root', depth: 0, id: '__unassigned', label: '未编入', aggregates: null });
-      if (!collapsed['__unassigned']) {
+      const rootOpen = focusLevelOpen('__unassigned');
+      rows.push({ kind: 'root', depth: 0, id: '__unassigned', label: '未编入', collapsed: !rootOpen, aggregates: null });
+      if (rootOpen) {
         unassigned.slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (u) { unitRow(u, 1); });
       }
     }
@@ -2809,7 +2823,9 @@
   let focusTickTimer = null;
   const focusUiState = {
     tab: 'seat',
-    collapsed: {},
+    foldOpen: {},          // T157 层级折叠：**显式展开集合**（键 = 编制 id / '__unassigned'）。
+                           //   缺省空对象 ⇒ 状态树逐层收起（只露根层），刷新即回落。
+                           //   旧 collapsed 集合（缺省即展开）已移除，见 focusTreeRows 头部注释。
     expanded: {},          // 2.0 两段式：第二段（字段面板）展开态，键 = kind:id
     assignFilter: 'all',       // all | assigned | unassigned（是否编入）
     selected: {},          // 树内多选
@@ -3541,6 +3557,45 @@
     else document.addEventListener('DOMContentLoaded', function () { focusReminderStart(); });
   }
 
+  // ---------------- UI：层级折叠键（T157） ----------------
+  // 折叠键内联兜底（t27）：桌面 ≥28×28、≤420px 或触屏 ≥40×40（视觉细节交给 style.css / t28）。
+  // 判定选择器必须指向「新」折叠键类名 .focus-tree-fold-level：旧的 .focus-tree-expand 已随
+  // 每行详情展开键删除，若继续拿它判定，会把已由 CSS 覆盖的场景又写上内联尺寸。
+  function focusTreeFoldDefaults(btn) {
+    if (focusCssDeclared('.focus-tree-row .focus-tree-fold-level')) return;
+    const narrow = !!((window.matchMedia && window.matchMedia('(max-width: 420px)').matches) || ('ontouchstart' in window));
+    const px = narrow ? 40 : 28;
+    btn.style.minWidth = px + 'px';
+    btn.style.minHeight = px + 'px';
+    btn.style.padding = narrow ? '0 10px' : '0 8px';
+  }
+
+  // T157：层级折叠键的唯一构造点 —— 编制行（org）与伪根行（未编入 / 已编入）共用同一份口径，
+  // 避免两处各写一套 aria / 热区导致状态漂移：
+  //   · 状态：r.collapsed 为真 → 收起（▸ + aria-expanded="false" + data-collapsed="1"），
+  //     为假 → 展开（▾ + aria-expanded="true" + data-collapsed="0"）；
+  //   · 交互：原生 button，Enter / Space 与点击等效；点击写 focusUiState.foldOpen[r.id]
+  //     （显式展开集合：true=展开、false=收起）后整树重渲染；
+  //   · 热区：交给 focusTreeFoldDefaults + style.css（桌面 28×28、≤420px 与触屏 40×40）。
+  function focusTreeFoldKeyEl(r) {
+    const collapsed = !!(r && r.collapsed);
+    const fold = el('button', 'focus-tree-fold focus-tree-fold-level', collapsed ? '▸' : '▾');
+    fold.type = 'button';
+    fold.title = collapsed ? '展开下级' : '收起下级';
+    fold.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    fold.setAttribute('aria-label', (collapsed ? '展开下级 ' : '收起下级 ') + String((r && r.label) || ''));
+    fold.setAttribute('data-collapsed', collapsed ? '1' : '0');
+    fold.setAttribute('data-fold-id', String((r && r.id) || ''));
+    focusTreeFoldDefaults(fold);
+    fold.addEventListener('click', function (e) {
+      e.stopPropagation();
+      // 按「本次渲染快照」取反：连点/重入都不会把状态翻回去（true=展开，false=收起）
+      focusUiState.foldOpen[r.id] = collapsed;
+      renderApp();
+    });
+    return fold;
+  }
+
   // ---------------- UI：状态树（编制 + 计划合并） ----------------
   function focusRenderTree(wrap, st, now) {
     // 计划模式开关
@@ -3680,7 +3735,7 @@
     }
 
     const rows = focusTreeRows(st, {
-      collapsed: focusUiState.collapsed,
+      expanded: focusUiState.foldOpen,
       assignFilter: focusUiState.assignFilter,
       chainFilter: focusUiState.chainFilter
     });
@@ -3696,18 +3751,6 @@
     }
 
     const guides = focusTreeGuides(rows);
-
-    // 层级折叠键内联兜底（t27）：桌面 ≥28×28、≤420px 或触屏 ≥40×40（视觉细节交给 style.css / t28）。
-    // 判定选择器必须指向「新」折叠键类名 .focus-tree-fold-level：旧的 .focus-tree-expand 已随
-    // 每行详情展开键删除，若继续拿它判定，会把已由 CSS 覆盖的场景又写上内联尺寸。
-    function focusTreeFoldDefaults(btn) {
-      if (focusCssDeclared('.focus-tree-row .focus-tree-fold-level')) return;
-      const narrow = !!((window.matchMedia && window.matchMedia('(max-width: 420px)').matches) || ('ontouchstart' in window));
-      const px = narrow ? 40 : 28;
-      btn.style.minWidth = px + 'px';
-      btn.style.minHeight = px + 'px';
-      btn.style.padding = narrow ? '0 10px' : '0 8px';
-    }
 
     // 展开行主键复用纯函数 focusTreeExpandKey(node)（见上文「两段式第二段」段）
     function focusIsExpanded(r) {
@@ -3887,20 +3930,9 @@
 
       if (r.kind === 'org') {
         // 层级折叠键（t27 更显眼）：独立类名 focus-tree-fold-level + data-collapsed + aria-expanded；
-        // 保留 focus-tree-fold 基类（既有选择器/样式继续命中）。热区：桌面 ≥28×28、≤420px 或触屏 ≥40×40。
-        const fold = el('button', 'focus-tree-fold focus-tree-fold-level', r.collapsed ? '▸' : '▾');
-        fold.type = 'button';
-        fold.title = r.collapsed ? '展开下级' : '收起下级';
-        fold.setAttribute('aria-expanded', r.collapsed ? 'false' : 'true');
-        fold.setAttribute('aria-label', (r.collapsed ? '展开下级 ' : '收起下级 ') + String(r.label || ''));
-        fold.setAttribute('data-collapsed', r.collapsed ? '1' : '0');
-        focusTreeFoldDefaults(fold);
-        fold.addEventListener('click', function (e) {
-          e.stopPropagation();
-          focusUiState.collapsed[r.id] = !focusUiState.collapsed[r.id];
-          renderApp();
-        });
-        row.appendChild(fold);
+        // 保留 focus-tree-fold 基类（既有选择器/样式继续命中）。T157 起构造收敛到模块级
+        // focusTreeFoldKeyEl（与伪根共用同一份 aria/热区口径），此处只负责挂到行上。
+        row.appendChild(focusTreeFoldKeyEl(r));
         // t27：每行独立的详情展开键已删除 → 点行/模块即展开（见 focusBindRowExpand）
 
         const main = el('div', 'focus-tree-main');
@@ -3970,6 +4002,10 @@
 
         // t27：每行独立的详情展开键已删除 → 点行/模块即展开（见 focusBindRowExpand）
 
+        // T157 布局：单元行是叶，没有折叠键；补一个与折叠键同宽的占位格（style.css
+        // .focus-tree-fold-slot），使同一 depth 的编制行与单元行主行左缘对齐（此前相差 28+6px）。
+        row.appendChild(el('span', 'focus-tree-fold-slot'));
+
         const main = el('div', 'focus-tree-main');
         const u = r.unit;
         // 主行两段式第一段（label 是单一真源）：风味关 = 番号 `#N` + 名称；风味开 = `第82任务单元 · 名称`
@@ -3986,6 +4022,10 @@
         act.appendChild(editName);
         row.appendChild(act);
       } else {
+        // T157：伪根（未编入 / 已编入）也要能展开下级 —— 先补多选框占位格，再挂与编制行
+        // 同口径的折叠键，最后才是标题；两格宽度与编制行的 checkbox + 折叠键一致，列对齐。
+        row.appendChild(el('span', 'focus-tree-check-slot'));
+        row.appendChild(focusTreeFoldKeyEl(r));
         row.appendChild(el('span', 'focus-tree-root', r.label));
       }
       // t41：单元类型标签渲染在该单元行**上方**（同一 tree 容器内的独立元素，左缘与所属行对齐）
@@ -4662,7 +4702,8 @@
         }, Date.now());
       }, '已创建计划任务');
       if (r && r.ok && r.org) {
-        focusUiState.collapsed[r.org.id] = false;
+        // T157：新建的计划节点默认展开一级，让用户马上看到刚建的那一层（其余节点仍保持收起）
+        focusUiState.foldOpen[r.org.id] = true;
       }
     });
     const cancel = el('button', 'btn', '取消');
@@ -5090,6 +5131,8 @@ export {
   focusIsAncestorOrg,
   focusTemplateTriad,
   focusTreeRows,
+  // T157：层级折叠键（默认收起）的唯一构造点 —— 单测用轻量 DOM 直测两态 aria-expanded / 热区
+  focusTreeFoldKeyEl,
   focusPlanCreate,
   focusPlanFilledCount,
   focusPlanDueSoon,

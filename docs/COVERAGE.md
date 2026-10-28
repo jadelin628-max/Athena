@@ -46,6 +46,8 @@
 
 **T149 卡片终值**（2026-10-12，2.1.6 交付面；量具 `backup/scratch/cardfix/probe-wave1.mjs` / `probe-wave1b.mjs`）：全库 **2888 张**（学科 25）＝ `stats` **272** / `econ` **333** / `math3` **398**；三科合计 **1003 张**（cat 数不变：stats 9 / econ 18 / math3 14）。相对上一行 **−9 张**，全部来自 `econ`：删除第一波（T51）新增的 9 张**信息经济学**卡（`fl15-2`、`xr02-2`、`ad10-2`、`ad12-2`、`ad12-3`、`ad13-2`、`ad13-3`、`ad14-2`、`ad14-3`；用户裁定「质量不够、内容基本根据题目来、无意义」），`econ` 的 `information` cat 计数 20 → **11**，其余 cat 与三科张数不变；META 342→333、REL 340→331、PITFALL 102→93；`EXAMPLE` T144 返修后为 **键 490 / 条目 545**（T142+T149 时为 489/544；`int33-2` 补挂 1 条例题、同属小问子集故不增派生题）。卡面正文无照抄例题的守卫见 `tests/card-content.test.mjs`。
 
+**T158 重复卡合并终值**（2026-10-28，2.2.1 交付面；量具 `node tools/check_data.mjs` 与 `backup/scratch/t158-merge/measure-size.mjs`）：全库 **2881 张**（学科 25）＝ `stats` **265** / `econ` **333** / `math3` **398**；三科合计 **996 张**（cat 数不变：stats 9 / econ 18 / math3 14）。相对上一行 **−7 张**，全部在 `stats`：合并 6 组重复卡（`pb16` ← `pb14-2`、`ll07` ← `nc09`、`est13` ← `est03` + `est03-2` + `est22`、`test16` ← `sm16`、`reg06` ← `jj07`），被并卡的独有内容折进保留卡（合并后五张卡正文净字数 248 / 283 / 271 / 294 / 226，均在 `docs/CARD-STANDARD.md` §1 的 300 软限内）；`EXAMPLE` 键 166 → **164**、条目 177 → **177**（`nc09` 例题并入 `ll07`、`est03` 两条并入 `est13`，条目总数不变），题库 stats 仍 **257 题**（卡片派生 **167**）。
+
 ### 1.3 题库（BANK）快照：POC 时点 → 第二波终值
 
 来源：`data/bank_econ.js` / `data/bank_stats.js` / `data/bank_math3.js` 经 `dump_data.mjs` 求值；**第二波终值**另经第二波 S8 的 `backup/scratch/docs-wave-a/measure-bank.mjs`（只读 vm 载入，可重跑）实测，与 `node tools/check_data.mjs` 的汇总行一致（第一波终值由 t64 用同一量具实测，留痕见下表与沿革链）。

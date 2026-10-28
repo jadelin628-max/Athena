@@ -184,10 +184,6 @@ window.SUBJECTS.stats = (function () {
     F('nc08', 'numchar', '原点矩与中心矩',
       R`原点矩与中心矩`,
       R`原点矩 $\alpha_{k}=E(X^{k})$；中心矩 $\mu_{k}=E[(X-E(X))^{k}]$。`),
-    F('nc09', 'numchar', '切比雪夫不等式',
-      R`写出切比雪夫不等式`,
-      R`$$P\{|X-E(X)|\ge\varepsilon\}\le\frac{D(X)}{\varepsilon^{2}}$$
-\underline{适用}：对\textbf{任意}随机变量 $X$（不需知道分布），只要 $E(X)$、$D(X)$ 存在取有限值。\underline{说明}：\textbf{对任何分布都成立}的\textbf{粗}上界，通常给出很松的界，用于\textbf{理论证明}（如证相合性、大数定律），而非精确数值。\underline{等价}：$P\{|X-\mu|<\varepsilon\}\ge1-\frac{\sigma^2}{\varepsilon^2}$。\underline{易混}：这是\textbf{上界}，不是精确概率；分母是 $\varepsilon^2$，分子是方差 $\sigma^2$（不是标准差）；$\varepsilon$ 应以“距离 $E(X)$ 的范围”为准。\underline{应用}：证明样本均值 $\bar X$ 依概率收敛于 $\mu$（切比雪夫大数定律），或估“投币频率偏离概率”的概率界。`),
     F('nc10', 'numchar', '独立与不相关',
       R`独立与不相关的关系`,
       R`独立 $\Rightarrow$ 不相关（$\rho=0$）；不相关不一定独立（二维正态除外）。`),
@@ -244,9 +240,11 @@ $$\frac{\sum_{i=1}^{n}X_i-n\mu}{\sqrt n\,\sigma}\xrightarrow{d}N(0,1),$$
     F('ll07', 'limit', '切比雪夫不等式的形式与条件',
       R`切比雪夫不等式的形式、使用条件与等号成立情形分别是什么？`,
       R`**形式**（$\varepsilon>0$）：$$P\big(|X-E(X)|\ge\varepsilon\big)\ \le\ \frac{D(X)}{\varepsilon^{2}},\qquad\text{等价}\quad P\big(|X-E(X)|<\varepsilon\big)\ \ge\ 1-\frac{D(X)}{\varepsilon^{2}}.$$
-**来源**：马尔可夫不等式 $P(|Y|\ge a)\le E|Y|/a$ 取 $Y=(X-EX)^{2}$、$a=\varepsilon^{2}$ 的直接推论。
-**使用条件**：只需**方差存在**——不要求知道分布、不要求独立、不要求连续性，这就是它的价值（分布未知时的万能上界）；区间须关于 $EX$ **对称**。
-**等号成立情形**：二点分布 $P(X=\pm\varepsilon)=\frac12$ 时 $D(X)=\varepsilon^{2}$ 且 $P(|X-EX|\ge\varepsilon)=1$，等号成立；一般分布为严格小于，故它给的是**上界而非近似**。`),
+**来源**：马尔可夫不等式 $P(|Y|\ge a)\le E|Y|/a$ 取 $Y=(X-EX)^{2}$、$a=\varepsilon^{2}$。
+**使用条件**：只需**方差存在**——不要求分布、不要求独立、不要求连续；区间须关于 $EX$ **对称**。
+**等号成立**：二点分布 $P(X=\pm\varepsilon)=\frac12$ 时等号成立，故它给的是**上界而非近似**。
+**易混**：分母是 $\varepsilon^{2}$、分子是方差 $D(X)$（不是标准差）；$\varepsilon$ 是离 $E(X)$ 的绝对距离。
+**应用**：证 $\bar X$ 依概率收敛于 $\mu$（切比雪夫大数定律）；估频率偏离界 $P\big(\big|\tfrac{X}{n}-p\big|\ge\varepsilon\big)\le\frac{p(1-p)}{n\varepsilon^{2}}$。`),
     F('ll07-2', 'limit', '切比雪夫不等式的高频用法',
       R`切比雪夫不等式有哪些高频用法？为什么说它给出的界很松？`,
       R`**① 上界估计**：$P(|X-\mu|\ge k\sigma)\le 1/k^{2}$；正态实际值 $k=3$ 时为 0.0027，远小于界 0.111——界很松，只适合粗估。
@@ -296,21 +294,6 @@ $$\frac{\sum_{i=1}^{n}X_i-n\mu}{\sqrt n\,\sigma}\xrightarrow{d}N(0,1),$$
     F('est02', 'estimation', '无偏性',
       R`无偏性`,
       R`$$E(\hat{\theta})=\theta$$`),
-    F('est03', 'estimation', '有效性',
-      R`无偏估计的「有效性」如何定义？有效估计与 UMVUE 有什么区别？`,
-      R`**定义（同无偏比方差）**：设 $\hat\theta_1,\hat\theta_2$ 都是 $\theta$ 的无偏估计，若
-$$D(\hat\theta_1)\ \le\ D(\hat\theta_2)\quad(\text{对一切 }\theta\in\Theta)$$
-则称 $\hat\theta_1$ 比 $\hat\theta_2$ **有效**；相对有效性 $e=D(\hat\theta_2)/D(\hat\theta_1)$。
-**三个层次**：① **一致最小方差无偏估计（UMVUE）**＝所有无偏估计中方差一致最小者，存在则唯一；② **有效估计**＝方差达到 C-R 下界 $\frac{1}{nI(\theta)}$ 的无偏估计，此时必是 UMVUE，有效率 $e(\hat\theta)=\frac{1/(nI(\theta))}{D(\hat\theta)}\le1$；③ **渐近有效**＝大样本下渐近方差达界（MLE 的典型性质）。
-**易混**：有效性比较必须**同为无偏**；单参数指数族下「有效」与「UMVUE」一致，其他场合未必。`),
-    F('est03-2', 'estimation', '有偏估计的比较与有效性判别',
-      R`有偏估计之间怎么比优劣？有效性判别要注意什么？`,
-      R`**有偏时不能只比方差**，要用均方误差综合比较：
-$$MSE(\hat\theta)=D(\hat\theta)+b^{2}(\theta),\qquad b(\theta)=E\hat\theta-\theta$$
-MSE 小者优（同 MSE 时方差小者优）；偏差换方差是常见取舍。
-**例（正态，$\mu$ 已知）**：$\hat\sigma_1^{2}=\frac1n\sum(X_i-\mu)^{2}$ 是无偏估计且方差达 C-R 下界（有效）；而 $\frac1n\sqrt{\frac{\pi}{2}}\sum|X_i-\mu|$ 是 $\sigma$ 的无偏估计但效率小于 1（不有效）。
-**判别要点**：先确认同为无偏，再比方差；跨类（一有一无、都无偏但一个达界）要用 MSE 或相对有效性说明。
-**易混**：有效率 $e\le1$ 只在无偏且信息正则时成立；「渐近有效」与「小样本有效」是两个层次；UMVUE 的唯一性由充分完全统计量保证。`),
     F('est04', 'estimation', '一致性',
       R`一致性（相合性）`,
       R`$$\hat{\theta}_{n}\ \overset{P}{\longrightarrow}\ \theta$$`),
@@ -342,8 +325,9 @@ MSE 小者优（同 MSE 时方差小者优）；偏差换方差是常见取舍�
     F('est13', 'estimation', '估计量评选标准',
       R`评价估计量的三个标准`,
       R`无偏性、有效性、一致性。
-- 无偏：$E(\hat\theta)=\theta$（靶心不偏）；有效：同为无偏则方差小者好（落点集中）；一致（相合）：$n\to\infty$ 时 $\hat\theta\overset{P}{\to}\theta$（大样本必然准）。
-- 更精细的取舍用\textbf{均方误差}：MSE = 方差 + 偏差平方，允许「略偏但更集中」。`),
+- **无偏**：$E(\hat\theta)=\theta$；**相合**：$n\to\infty$ 时 $\hat\theta\overset{P}{\to}\theta$。
+- **有效**：须同为无偏再比方差，$D(\hat\theta_1)\le D(\hat\theta_2)$ 者更有效，相对有效性 $e=D(\hat\theta_2)/D(\hat\theta_1)$。三层次：**UMVUE**＝无偏中方差一致最小；**有效估计**＝方差达 C-R 下界 $\frac{1}{nI(\theta)}$ 的无偏估计（必为 UMVUE，有效率 $\le1$）；**渐近有效**＝大样本达界（MLE 典型性质）。
+- **均方误差**：$\mathrm{MSE}=D(\hat\theta)+b^{2}$（$b=E\hat\theta-\theta$），允许「略偏但更集中」——估正态 $\sigma^{2}$ 时 $\frac1n\sum(X_i-\bar X)^2$ 有偏但 MSE 小于 $S^{2}$；以偏换方差＝岭回归/正则化。判别路线：无偏 → 比方差 → 跨类比 MSE。`),
 
     // ============ 假设检验 ============
     F('test01', 'testing', '假设检验思想',
@@ -404,7 +388,7 @@ MSE 小者优（同 MSE 时方差小者优）；偏差换方差是常见取舍�
     F('reg06', 'regress', '判定系数',
       R`判定系数 $R^{2}$`,
       R`$$R^{2}=\frac{SSR}{SST}=1-\frac{SSE}{SST}$$（回归可解释的变异占总变异的比例）
-\underline{取值}：$0\le R^{2}\le1$，越接近 1 拟合越好。\underline{适用}：一元回归/多元回归皆可，但只度量\textbf{线性}拟合，\textbf{不}能说明因果关系。\underline{易混}：① 增加自变量 $R^2$ \textbf{单调不减}（至少不降），需用\textbf{调整} $\bar R^2=1-(1-R^2)\frac{n-1}{n-p-1}$（$p$ 为自变量个数）比较变量数不同的模型；② $R^2$ 与相关系数 $r$ 的关系（一元）：$R^2=r^2$；③ 无截距或检验整体显著性应配合 $F$ 检验。\underline{应用}：判断模型解释力，配合 $F$ 检验判断“回归整体是否显著”。`),
+\underline{取值}：$0\le R^{2}\le1$，越接近 1 拟合越好。\underline{适用}：一元/多元回归皆可，但只度量\textbf{线性}拟合，\textbf{不}能说明因果关系。\underline{易混}：① 增加自变量 $R^2$ \textbf{单调不减}，跨模型比较须用\textbf{调整} $\bar R^2=1-(1-R^2)\frac{n-1}{n-p-1}$（$p$ 为自变量个数）——它\textbf{可能为负}、比 $R^2$ 更严格、\textbf{未必}随变量增多而增大；② 一元回归 $R^2=r^2$；③ 无截距回归的 $R^2$ 口径不同。\underline{应用}：判断线性解释力；整体显著性看 $F$ 检验、单个变量看 $t$ 检验，勿单凭 $R^2$ 判优劣。`),
 
     // ============ 补充：分布（茆诗松） ============
     F('rv17', 'dist', '超几何分布',
@@ -488,6 +472,7 @@ MSE 小者优（同 MSE 时方差小者优）；偏差换方差是常见取舍�
       R`**记法**：数据排序 $x_{(1)}\le\dots\le x_{(n)}$，经验分位点用**修正频率** $\frac{i-0.375}{n+0.25}$。
 **正态概率纸**：纵轴取修正频率、横轴取 $x_{(i)}$ 描点；点近似落在一条**直线**上则支持正态，明显变曲表示偏态或厚尾。
 **Q-Q 图**：样本分位数 $x_{(i)}$ 对理论分位数 $\Phi^{-1}\big(\frac{i-0.375}{n+0.25}\big)$ 描点，直线性即正态；上凸提示右偏、下凹提示左偏，尾部离群提示厚尾，可对其他分布照做（更通用）。
+**原理与判读**：正态时点列近似直线，斜率 $\approx\sigma$、截距 $\approx\mu$；S 形弯曲提示偏态，两端同时偏离提示峰度异常（尖峰或平峰）。
 **适用**：两图都是**图示法**，只作佐证、不给精确 $p$ 值，需精确结论时用正式检验。`),
     F('test16-2', 'testing', '正态性检验：正式检验法',
       R`正态性检验的正式检验法（Shapiro-Wilk、偏度-峰度）统计量怎么写、怎么判？`,
@@ -871,12 +856,6 @@ $$\bar D\pm t_{\alpha/2}(n-1)\frac{S_D}{\sqrt n}$$
       R`高斯-马尔可夫（Gauss-Markov）定理的内容与条件`,
       R`对 $Y_i=\beta_0+\beta_1x_i+\varepsilon_i$，\textbf{条件}：① $E(\varepsilon_i\mid X)=0$（外生/无内生性）；② $\mathrm{Var}(\varepsilon_i)=\sigma^2$（\textbf{同方差}）；③ $\mathrm{Cov}(\varepsilon_i,\varepsilon_j)=0$（$i\ne j$，\textbf{无自相关}）；④ $x$ 非随机或与 $\varepsilon$ 不相关。则 OLS 估计 $\hat\beta$ 是 $\beta$ 的\textbf{BLUE}（最优线性无偏估计）：在所有\textbf{线性、无偏}估计中\textbf{方差最小}。
 \underline{注意}：① 定理\textbf{不要求正态性}（正态只用于区间/假设检验）；② 只要求“不相关（外生）”而非独立；③ “最优”仅在\textbf{线性无偏类}内，非线性无偏可能方差更小；④ 条件②③失效（异方差/自相关）时 OLS 仍\textbf{无偏}但\textbf{不再有效}，需用 GLS/稳健标准误；⑤ 内生性（$E(\varepsilon\mid X)\ne0$）则 OLS \textbf{有偏且不一致}。`),
-    F('jj07', 'regress', '多元回归：调整 R² 与拟合优度',
-      R`什么是调整判定系数 $\bar R^2$？与 $R^2$ 有何区别？`,
-      R`$$R^{2}=\frac{\mathrm{SSR}}{\mathrm{SST}}=1-\frac{\mathrm{SSE}}{\mathrm{SST}}=1-\frac{\sum(y_i-\hat y_i)^{2}}{\sum(y_i-\bar y)^{2}}$$
-$R^2$ 度量拟合优度，但\textbf{自变量越多 $R^2$ 单调不减}（至少不降），无法跨模型比较。\textbf{调整} $R^2$ 惩罚参数个数：
-$$\bar R^{2}=1-\frac{\mathrm{SSE}/(n-p-1)}{\mathrm{SST}/(n-1)}=1-(1-R^{2})\frac{n-1}{n-p-1}$$
-其中 $p$ 为自变量个数。\underline{性质}：$\bar R^2$ \textbf{可能为负}、比 $R^2$ 更严格、\textbf{未必}随变量增多而增大，用于比较变量数不同的模型。\underline{注意}：二者都只度量\textbf{线性}拟合，不能仅凭它判优劣；模型整体显著性应看 $F$ 检验，单个变量看 $t$ 检验。`),
     F('jj08', 'regress', '异方差的诊断与后果',
       R`如何诊断异方差？存在异方差时 OLS 会受到什么影响？`,
       R`\underline{诊断}：
@@ -994,12 +973,6 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
 画法：箱体从 $Q_1$ 到 $Q_3$（中位数线在箱内）；\textbf{箱界}（内栏）为 $Q_1-1.5\,\mathrm{IQR}$ 与 $Q_3+1.5\,\mathrm{IQR}$，其中 $\mathrm{IQR}=Q_3-Q_1$（四分位差）；须线自箱体延伸至\textbf{箱界内的最远观测值}；超出箱界的观测逐一描点——视为\textbf{疑似异常值}。
 - 解读：中位线在箱中的位置反映对称性（居中≈对称，偏一侧≈偏态）；箱长≈中间 50% 数据的散布。
 - 优点：稳健（分位数不受极端值影响）、适合多组并列比较。`),
-    F('sm16', 'sampling', '正态概率图',
-      R`正态概率图（Q-Q 图）的原理与判读`,
-      R`\textbf{原理}：把样本分位数与正态分布的理论分位数配对描点——若数据来自 $N(\mu,\sigma^2)$，则各点近似落在一条\textbf{直线}上（斜率 $\approx\sigma$，截距 $\approx\mu$）。
-作法：将次序统计量 $x_{(i)}$ 对正态分数 $\Phi^{-1}\!\left(\dfrac{i-0.375}{n+0.25}\right)$（$i=1,\dots,n$）描点。
-- 判读：点近似直线 $\Rightarrow$ 不拒绝正态；两端点偏离直线且右尾上翘 $\Rightarrow$ 右偏；S 形弯曲 $\Rightarrow$ 偏态；两端同时离开直线 $\Rightarrow$ 峰度异常（尖峰或平峰）。
-- 是检验正态性的\textbf{直观图形}方法（看具体形态）；正式的假设检验用正态性检验统计量（如 Shapiro-Wilk）。`),
     F('nc17', 'numchar', '变异系数',
       R`变异系数的定义与用途`,
       R`$$CV=\frac{\sigma(X)}{E(X)}\qquad(E(X)>0)$$
@@ -1029,13 +1002,6 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
 - 证明思路：把 $\mathrm{Var}(X)=E(X^2)-[E(X)]^2$ 按条件分布分层展开。
 - 应用：分层/聚类数据的方差分解（总波动有多少来自组间差异）；刻画「对 $Y$ 的了解程度如何削减 $X$ 的不确定性」。
 - 独立时 $\mathrm{Var}(X\mid Y)=\mathrm{Var}(X)$、$E(X\mid Y)$ 为常数——两项退化为 $\mathrm{Var}(X)+0$，自洽。`),
-    F('est22', 'estimation', '均方误差准则',
-      R`均方误差准则；有偏估计可能更优吗？`,
-      R`$$\mathrm{MSE}(\hat\theta)=E\big[(\hat\theta-\theta)^2\big]=\mathrm{Var}(\hat\theta)+b^2(\theta)\qquad(b(\theta)=E(\hat\theta)-\theta \text{ 为偏差})$$
-\textbf{MSE = 方差 + 偏差平方}——落点围绕靶心的散布分解为「散得开不开」与「偏不偏」两部分。
-- 无偏估计未必 MSE 最小：方差很小的有偏估计整体可以更准。经典例子：估计 $N(\mu,\sigma^2)$ 的 $\sigma^2$ 时，$\frac{1}{n}\sum(X_i-\bar X)^2$ 有偏（偏差 $-\sigma^2/n$）但 MSE 小于无偏估计 $\frac{1}{n-1}\sum(X_i-\bar X)^2$。
-- 「以偏换方差」的思想在现代统计中处处可见（岭回归、正则化）——牺牲少量无偏性换取大幅方差缩减。
-- 评选路线：先看无偏性 → 同为无偏比方差（有效性）→ 跨无偏界限比 MSE（本卡）。`),
     F('est23', 'estimation', '极大似然估计的不变性原则',
       R`极大似然估计的不变性原则`,
       R`若 $\hat\theta$ 是 $\theta$ 的 MLE，则 $g(\theta)$ 的 MLE 就是 $g(\hat\theta)$（$g$ 为任意函数；多对一对应时取使 $L$ 达到最大的那个像点）。
@@ -1082,14 +1048,6 @@ $$t_{\alpha/2}(n-k)\,\sqrt{S_w^2\left(\frac1{n_i}+\frac1{n_j}\right)}$$
 **推论**：对可列交、有限并/交、差封闭，且 $\varnothing\in\mathcal{F}$。
 **概率空间**：$(\Omega,\mathcal{F},P)$ 三者配套——只有 $A\in\mathcal{F}$ 才谈 $P(A)$；概率的**连续性**（由①②③可证）：$A_n\uparrow A\Rightarrow P(A_n)\uparrow P(A)$。
 **易混**：第③条是可列并而非任意并——「可列」不能放宽（否则与概率的可列可加性不匹配）。`),
-    // ---- pb14-2 事件列的上、下极限 ----
-    F('pb14-2', 'prob_basic', '事件列的上、下极限',
-      R`事件列的上、下极限怎么定义？单调事件列的极限是什么？`,
-      R`$$\varlimsup_{n}A_n=\bigcap_{n=1}^{\infty}\bigcup_{k=n}^{\infty}A_k=\{\omega:\omega\ \text{属于无穷多个}\ A_n\},\qquad \varliminf_{n}A_n=\bigcup_{n=1}^{\infty}\bigcap_{k=n}^{\infty}A_k=\{\omega:\omega\ \text{至多不属于有限个}\ A_n\}.$$
-恒有 $\varliminf A_n\subset\varlimsup A_n$；二者相等时称事件列**有极限**，记 $\lim_n A_n$。
-**单调列**：$A_n\uparrow\Rightarrow\lim A_n=\bigcup_n A_n$；$A_n\downarrow\Rightarrow\lim A_n=\bigcap_n A_n$。
-**记法**：上极限＝交外并内（$\bigcap\bigcup$），下极限＝并外交内（$\bigcup\bigcap$）。
-**易混**：$\varliminf A_n\subset\varlimsup A_n$ 的方向别写反；单调列的极限升用并、降用交。`),
     // ---- pb15 可测空间与 Borel σ-域 ----
             F('pb15', 'prob_basic', '可测空间与 Borel σ-域',
       R`什么是可测空间？$\sigma(\mathcal{A})$ 与 Borel $\sigma$-域 $\mathcal{B}(\mathbb{R})$ 如何构造？`,
@@ -1100,12 +1058,13 @@ $$t_{\alpha/2}(n-k)\,\sqrt{S_w^2\left(\frac1{n_i}+\frac1{n_j}\right)}$$
 **易混**：Borel $\sigma$-域是「包含全部开集的**最小** $\sigma$-域」，不是幂集 $\mathcal{P}(\Omega)$；幂集过大以致存在不可测集，故概率论取 Borel。`),
     
     // ---- pb16 事件列上下极限与概率连续性 ----
-        F('pb16', 'prob_basic', '事件列上下极限',
+    F('pb16', 'prob_basic', '事件列上下极限',
       R`事件列的上/下极限怎么定义？有哪些等价的集合写法？`,
       R`**上极限**：$\varlimsup A_n=\{\omega:\omega\ \text{属于无穷多个}\ A_n\}$，记作 $A_n\ \mathrm{i.o.}$。
 **下极限**：$\varliminf A_n=\{\omega:\omega\ \text{至多不属于有限个}\ A_n\}$，记作 $A_n\ \mathrm{a.a.}$。
-**集合写法**：$\varlimsup_n A_n=\bigcap_n\bigcup_{k\ge n}A_k$（交外并内），$\varliminf_n A_n=\bigcup_n\bigcap_{k\ge n}A_k$。
-**顺序别记反**：交换交与并就把「无穷多次」写成「最终恒发生」。
+**集合写法**：$\varlimsup_n A_n=\bigcap_n\bigcup_{k\ge n}A_k$（交外并内），$\varliminf_n A_n=\bigcup_n\bigcap_{k\ge n}A_k$（并外交内）。
+**顺序别记反**：上极限含「无穷多个」、下极限含「至多有限个」；恒有 $\varliminf A_n\subset\varlimsup A_n$，交换交与并就把「无穷多次」写成「最终恒发生」。
+**单调列**：$A_n\uparrow\Rightarrow\lim A_n=\bigcup_n A_n$；$A_n\downarrow\Rightarrow\lim A_n=\bigcap_n A_n$（升用并、降用交）。
 **一般不等式**：$P(\varliminf A_n)\ \le\ \varliminf P(A_n)\ \le\ \varlimsup P(A_n)\ \le\ P(\varlimsup A_n)$。`),
     // ---- pb16-2 概率连续性与 Borel-Cantelli ----------------
     F('pb16-2', 'prob_basic', '概率连续性与 Borel-Cantelli',
@@ -1518,7 +1477,6 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     nc06: [5, '协方差计算'],
     nc07: [5, '相关系数计算'],
     nc08: [4, '矩的计算'],
-    nc09: [4, '概率不等式估计'],
     nc10: [4, '独立与不相关'],
     nc11: [3, '条件期望'],
     nc12: [3, '协方差性质'],
@@ -1543,7 +1501,6 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     sm10: [4, '抽样分布关系'],
     est01: [4, '点估计概念'],
     est02: [5, '无偏性'],
-    est03: [4, '有效性'],
     est04: [4, '一致性'],
     est05: [5, '矩估计'],
     est06: [5, '最大似然估计'],
@@ -1597,9 +1554,9 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     test17: [4, '假设检验与样本量'],
     pb12: [3, '概率的统计定义'], pb13: [4, '相互独立与两两独立'],
     ll08: [4, '依概率收敛'], ll09: [3, '李雅普诺夫CLT'],
-    sm12: [5, '两正态总体抽样分布'], sm13: [3, '中位数与极差'], sm14: [3, '直方图'], sm15: [3, '箱线图'], sm16: [2, '正态概率图'],
+    sm12: [5, '两正态总体抽样分布'], sm13: [3, '中位数与极差'], sm14: [3, '直方图'], sm15: [3, '箱线图'],
     nc17: [3, '变异系数'], nc18: [3, '偏度与峰度'], nc19: [4, '协方差矩阵'], nc20: [4, '全方差公式'],
-    est22: [4, '均方误差准则'], est23: [3, 'MLE不变性'], est24: [3, '单侧置信限'],
+    est23: [3, 'MLE不变性'], est24: [3, '单侧置信限'],
     reg13: [3, '多重比较'], reg14: [3, '非线性回归'],
     reg07: [4, '回归系数显著性检验'],
     reg08: [4, '回归方程显著性检验'],
@@ -1647,10 +1604,9 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     xt15: [4, '列联表独立性检验'],
     ys01: [5, '解题方法论'], ys02: [5, '解题方法论'], ys03: [5, '解题方法论'], ys04: [5, '解题方法论'], ys05: [5, '解题方法论'],
     jj01: [4, '几何概型计算'], jj02: [4, '二维变换'], jj03: [4, '成对样本区间估计'], jj04: [3, '非参数检验（符号）'], jj05: [3, '非参数检验（游程）'],
-    jj06: [4, '高斯-马尔可夫定理'], jj07: [4, '多元回归拟合优度'], jj08: [4, '异方差与 GLS'], jj09: [4, '自相关与 DW'],
+    jj06: [4, '高斯-马尔可夫定理'], jj08: [4, '异方差与 GLS'], jj09: [4, '自相关与 DW'],
     jj10: [4, '工具变量/2SLS'], jj11: [4, '虚拟变量与交互'], jj12: [4, '模型设定与变量选择'],
     pb14: [4, '事件域与事件列极限'],
-    'pb14-2': [4, '事件列上下极限'],
     pb15: [2, '可测空间与 Borel σ-域'],
     pb16: [4, '事件列上下极限'],
     'pb16-2': [4, 'Borel-Cantelli 定理'],
@@ -1700,7 +1656,6 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     'xt04-2': [4, '最小充分与完全性'],
     'est28-2': [4, '位置-尺度族与枢轴量'],
     'll07-2': [3, '切比雪夫不等式用法'],
-    'est03-2': [4, 'MSE 比较与有效性判别'],
     'est25-2': [4, 'EM 单调性与收敛'],
     'est26-2': [4, '混合模型 M 步闭式'],
     'est26-3': [4, '混合模型似然无界性'],
@@ -1775,7 +1730,6 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "nc06": {"q":"设 $X\\sim U(0,1)$，$Z\\sim U(0,\\frac1{10})$，且 $X$ 与 $Z$ 相互独立，令 $Y=X+Z$。求 $\\mathrm{Cov}(X,Y)$ 与 $\\mathrm{Corr}(X,Y)$","a":"$D(X)=\\frac1{12}$，$D(Z)=\\frac{(1/10)^2}{12}=\\frac1{1200}$，且 $X,Z$ 独立。\n$$\\mathrm{Cov}(X,Y)=\\mathrm{Cov}(X,X+Z)=D(X)+\\mathrm{Cov}(X,Z)=\\frac1{12}$$\n$D(Y)=D(X)+D(Z)=\\frac1{12}+\\frac1{1200}=\\frac{101}{1200}$，故\n$$\\mathrm{Corr}(X,Y)=\\frac{\\mathrm{Cov}(X,Y)}{\\sqrt{D(X)D(Y)}}=\\frac{1/12}{\\sqrt{\\frac1{12}\\cdot\\frac{101}{1200}}}=\\frac{10}{\\sqrt{101}}\\approx0.995$$","src":"2026 北大光华 431 统计真题","a2":"巧解（协方差定义直接算）：$\\mathrm{Cov}(X,Y)=E(XY)-E(X)E(Y)$。由 $Y=X+Z$ 与 $X,Z$ 独立：\n$$E(XY)=E(X^2+XZ)=E(X^2)+E(X)E(Z)=\\frac13+\\frac12\\cdot\\frac1{20}=\\frac{43}{120}$$\n$E(X)=\\frac12$，$E(Y)=\\frac12+\\frac1{20}=\\frac{11}{20}$，故 $\\mathrm{Cov}=\\frac{43}{120}-\\frac12\\cdot\\frac{11}{20}=\\frac{10}{120}=\\frac1{12}$，与协方差线性性结果一致。"},
     "nc07": {"q":"设随机变量 $X$ 与 $Y$ 的相关系数为 $0.5$，且 $E(X)=E(Y)=0$，$E(X^{2})=E(Y^{2})=2$。求 $E[(X+Y)^{2}]$","a":"由 $E(X)=E(Y)=0$，$D(X)=E(X^{2})=2$，$D(Y)=2$。$\\mathrm{Cov}(X,Y)=\\rho\\sqrt{D(X)D(Y)}=0.5\\times2=1$，且 $E(XY)=\\mathrm{Cov}(X,Y)+E(X)E(Y)=1$。\n$$E[(X+Y)^{2}]=E(X^{2})+E(Y^{2})+2E(XY)=2+2+2=6$$","src":"考研数学真题（相关系数）"},
     "nc08": {"q":"设随机变量 $X$ 的概率密度为 $f(x)=6x(1-x),\\ 0<x<1$，则 $X$ 的三阶中心矩 $E(X-EX)^{3}=$（  ）\\\\\nA. $-\\frac1{32}$　B. 0　C. $\\frac1{10}$　D. $\\frac12$","a":"$E(X)=\\int_0^1 6x^{2}(1-x)\\,dx=6\\left(\\frac13-\\frac14\\right)=\\frac12$，且密度 $f(x)$ 关于 $x=\\frac12$ 对称。\n三阶中心矩 $\\mu_3=E[(X-\\frac12)^{3}]$，而 $(x-\\frac12)^{3}$ 为关于 $x=\\frac12$ 的奇函数，故\n$$E(X-EX)^{3}=0$$\n选 B。","src":"2024 考研数学三真题"},
-    "nc09": {"q":"设随机变量 $X$ 服从参数为 $2$ 的泊松分布，用切比雪夫不等式估计 $P\\{|X-2|\\ge2\\}$ 的上界","a":"泊松分布 $E(X)=D(X)=\\lambda=2$。\n$$P\\{|X-2|\\ge2\\}\\le\\frac{D(X)}{2^{2}}=\\frac{2}{4}=\\frac12$$","src":"考研数学真题（切比雪夫不等式）","a2":"巧解（精确计算对比）：泊松分布可直接精确算出\n$$P\\{|X-2|\\ge2\\}=1-P(X=1)-P(X=2)-P(X=3)=1-\\frac{16}{3}e^{-2}\\approx0.278$$\n可见切比雪夫上界 $\\tfrac12$ 较为宽松。"},
     "nc10": [{"q":"设 $(X_1,\\dots,X_n)$ 服从 $n$ 维正态分布。证明：各分量相互独立的充要条件是它们两两互不相关","a":"独立 $\\Rightarrow$ 不相关显然。反之，若两两不相关，则协方差矩阵 $\\Sigma$ 为对角阵，其逆 $\\Sigma^{-1}$ 亦为对角阵，联合密度 $f(\\mathbf{x})$ 的二次型中不含交叉项，可分解为各边缘正态密度之积，故各分量相互独立。","src":"2013 年人大 805 统计学真题"},{"q":"对于两个都只取两个值的随机变量 $X,Y$，证明：$X$ 与 $Y$ 相互独立当且仅当它们不相关","a":"独立 $\\Rightarrow$ 不相关显然。反之，设 $X\\in\\{x_1,x_2\\}$、$Y\\in\\{y_1,y_2\\}$，记示性函数 $I_X=\\dfrac{X-x_1}{x_2-x_1}$、$I_Y=\\dfrac{Y-y_1}{y_2-y_1}$。$X,Y$ 都是其示性变量的线性函数，故 $\\mathrm{Cov}(X,Y)=0\\Rightarrow\\mathrm{Cov}(I_X,I_Y)=0\\Rightarrow P(X=x_2,Y=y_2)=P(X=x_2)P(Y=y_2)$；其余三种组合同理成立，故 $X,Y$ 独立。","src":"2016 复旦大学 432 统计学真题"}],
     "nc11": {"q":"设 $X,Y$ 为两个相关的随机变量且二阶矩存在。验证条件方差分解公式 $\\mathrm{Var}(Y)=E[\\mathrm{Var}(Y\\,|\\,X)]+\\mathrm{Var}[E(Y\\,|\\,X)]$，并说明其含义","a":"由全期望公式 $E(Y)=E[E(Y|X)]$、$E(Y^{2})=E[E(Y^{2}|X)]$：\n$$E[\\mathrm{Var}(Y|X)]=E\\{E(Y^{2}|X)-[E(Y|X)]^{2}\\}=E(Y^{2})-E\\{[E(Y|X)]^{2}\\}$$\n$$\\mathrm{Var}[E(Y|X)]=E\\{[E(Y|X)]^{2}\\}-[E(Y)]^{2}$$\n两式相加得 $\\mathrm{Var}(Y)=E(Y^{2})-[E(Y)]^{2}$。含义：总方差 = 组内（条件）方差的期望 + 组间（条件期望的）方差。","src":"2013 年人大 805 统计学真题"},
     "nc12": {"q":"设 $X\\sim N(-1,1)$，$Y\\sim N(1,2)$，若 $X$ 与 $X+2Y$ 不相关，则 $X$ 与 $X-Y$ 的相关系数为（  ）\\\\\nA. $\\frac13$　B. $\\frac12$　C. $\\frac23$　D. $\\frac34$","a":"由协方差的线性性（双线性）：\n$$\\mathrm{Cov}(X,X+2Y)=D(X)+2\\mathrm{Cov}(X,Y)=0\\ \\Rightarrow\\ \\mathrm{Cov}(X,Y)=-\\frac12$$\n$$\\mathrm{Cov}(X,X-Y)=D(X)-\\mathrm{Cov}(X,Y)=1+\\frac12=\\frac32$$\n$$D(X-Y)=D(X)+D(Y)-2\\mathrm{Cov}(X,Y)=1+2+1=4$$\n$$\\rho(X,X-Y)=\\frac{3/2}{\\sqrt{1\\times4}}=\\frac34$$\n选 D。","src":"2025 考研数学三真题"},
@@ -1789,7 +1743,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "ll04": {"q":"某单位有 200 台电话分机，每台分机有 5% 的时间要使用外线，且各分机是否使用外线相互独立。问总机至少需装多少条外线，才能以 90% 的概率保证分机使用外线时不需等候（$z_{0.10}=1.28$）","a":"设使用外线的分机数 $X\\sim B(200,0.05)$，$E(X)=10$，$D(X)=9.5$。由中心极限定理，$\\dfrac{X-10}{\\sqrt{9.5}}$ 近似 $N(0,1)$。设需 $m$ 条外线，要求\n$$P(X\\le m)\\approx\\Phi\\left(\\frac{m-10}{\\sqrt{9.5}}\\right)\\ge0.90\\Rightarrow\\frac{m-10}{\\sqrt{9.5}}\\ge1.28\\Rightarrow m\\ge13.95$$\n故至少需装 $14$ 条外线。","src":"考研数学真题（中心极限定理）","a2":"巧解（泊松近似）：$n=200$ 大、$p=0.05$ 小、$np=10$，由泊松定理 $X\\ \\dot\\sim\\ P(10)$。查表 $P(X\\le13)=0.8645<0.90$，$P(X\\le14)=0.9165\\ge0.90$，故同样得至少 $14$ 条外线，与正态近似一致。"},
     "ll05": {"q":"某调查员调查该地区成年人中购买某商品的比率 $\\theta$，随机调查 $n$ 个顾客（$n$ 较大），购买记为 $x_i=1$，否则 $x_i=0$。求样本比例 $\\bar{x}$ 的近似分布","a":"设 $X=\\sum_{i=1}^n x_i\\sim B(n,\\theta)$，由棣莫弗-拉普拉斯中心极限定理，当 $n$ 充分大时\n$$\\frac{\\bar x-\\theta}{\\sqrt{\\theta(1-\\theta)/n}}=\\frac{X-n\\theta}{\\sqrt{n\\theta(1-\\theta)}}\\ \\overset{d}{\\longrightarrow}\\ N(0,1)$$\n即 $\\bar{x}\\ \\dot\\sim\\ N\\left(\\theta,\\ \\dfrac{\\theta(1-\\theta)}{n}\\right)$。","src":"2020 北大光华 431 统计真题"},
     "ll06": {"q":"举出一个期望趋于正无穷，却依概率收敛到 0 的随机变量序列 $\\{X_n\\}$","a":"取 $X_n=\\begin{cases}n^{2},& \\text{概率 }\\frac1n\\\\ 0,& \\text{概率 }1-\\frac1n\\end{cases}$。则\n$$E(X_n)=n^{2}\\cdot\\frac1n+0\\cdot\\left(1-\\frac1n\\right)=n\\to+\\infty$$\n而对任意 $\\varepsilon>0$，$P(|X_n-0|\\ge\\varepsilon)=P(X_n=n^{2})=\\frac1n\\to0$，故 $X_n\\overset{P}{\\longrightarrow}0$。\n这说明“期望趋于无穷”与“依概率收敛”刻画的是不同层面的性质（大数定律研究收敛性，与期望的大小无必然关系）。","src":"2020 复旦大学 432 统计学真题"},
-    "ll07": {"q":"设 $X\\sim P(\\lambda)$，以下判断正确的是（  ）\\\\\nA. $P(X>2\\lambda)\\le1-\\frac1\\lambda$　B. $P(X>2\\lambda)\\le\\frac1\\lambda$\\\\\nC. $P(X>2\\lambda)\\ge\\frac1\\lambda$　D. $P(X>2\\lambda)\\ge1-\\frac1\\lambda$","a":"选 B。泊松分布 $E(X)=D(X)=\\lambda$，由切比雪夫不等式（只需方差存在即可估计概率上界）：\n$$P(X>2\\lambda)=P(X-\\lambda>\\lambda)\\le P(|X-\\lambda|>\\lambda)\\le\\frac{D(X)}{\\lambda^{2}}=\\frac1\\lambda$$","src":"2023 上海财经大学 432 统计学真题"},
+    "ll07": [{"q":"设 $X\\sim P(\\lambda)$，以下判断正确的是（  ）\\\\\nA. $P(X>2\\lambda)\\le1-\\frac1\\lambda$　B. $P(X>2\\lambda)\\le\\frac1\\lambda$\\\\\nC. $P(X>2\\lambda)\\ge\\frac1\\lambda$　D. $P(X>2\\lambda)\\ge1-\\frac1\\lambda$","a":"选 B。泊松分布 $E(X)=D(X)=\\lambda$，由切比雪夫不等式（只需方差存在即可估计概率上界）：\n$$P(X>2\\lambda)=P(X-\\lambda>\\lambda)\\le P(|X-\\lambda|>\\lambda)\\le\\frac{D(X)}{\\lambda^{2}}=\\frac1\\lambda$$","src":"2023 上海财经大学 432 统计学真题"}, {"q":"设随机变量 $X$ 服从参数为 $2$ 的泊松分布，用切比雪夫不等式估计 $P\\{|X-2|\\ge2\\}$ 的上界","a":"泊松分布 $E(X)=D(X)=\\lambda=2$。\n$$P\\{|X-2|\\ge2\\}\\le\\frac{D(X)}{2^{2}}=\\frac{2}{4}=\\frac12$$","src":"考研数学真题（切比雪夫不等式）","a2":"巧解（精确计算对比）：泊松分布可直接精确算出\n$$P\\{|X-2|\\ge2\\}=1-P(X=1)-P(X=2)-P(X=3)=1-\\frac{16}{3}e^{-2}\\approx0.278$$\n可见切比雪夫上界 $\\tfrac12$ 较为宽松。"}],
     "sm01": {"q":"调查镜片的曲率，据调查 500 个镜片的平均曲率为 0.5。则调查的总体是（  ）\\\\\nA. 抽查的 500 个镜片　B. 最近 500 个镜片\\\\\nC. 今天销售的所有镜片　D. 该厂生产的所有镜片","a":"选 D。总体是研究对象的全体（该厂生产的所有镜片的曲率），样本是其中被抽取观测的 500 个镜片；样本是总体的一个子集，二者不可混淆。","src":"2023 上海财经大学 432 统计学真题"},
     "sm02": {"q":"根据沪深 300 指数 2020 年和 2023 年的年化日指数收益率：2020 年 $n_1=244$，均值 $26.5\\%$，标准差 $22.3\\%$；2023 年 $n_2=242$，均值 $-11.2\\%$，标准差 $10.1\\%$。将这两年的样本合并，求合并后的均值、标准差","a":"合并均值（按样本量加权）：\n$$\\bar{x}=\\frac{n_1\\bar{x}_1+n_2\\bar{x}_2}{n_1+n_2}=\\frac{244\\times0.265+242\\times(-0.112)}{486}\\approx0.077=7.7\\%$$\n合并标准差：$s^{2}=\\dfrac{(n_1-1)s_1^{2}+(n_2-1)s_2^{2}+n_1(\\bar{x}_1-\\bar{x})^{2}+n_2(\\bar{x}_2-\\bar{x})^{2}}{n_1+n_2-1}\\approx0.0656$，故 $s\\approx0.256=25.6\\%$。","src":"2025 北大光华 431 统计真题"},
     "sm03": {"q":"名词解释：样本均值、样本方差","a":"样本均值 $\\bar{X}=\\dfrac1n\\sum_{i=1}^{n}X_i$——样本观测值的算术平均，是总体均值 $\\mu$ 的估计；\n样本方差 $S^{2}=\\dfrac{1}{n-1}\\sum_{i=1}^{n}(X_i-\\bar{X})^{2}$——用 $n-1$ 作分母（自由度修正）使其成为总体方差 $\\sigma^{2}$ 的无偏估计：$E(S^{2})=\\sigma^{2}$。","src":"2017 复旦大学 432 统计学真题"},
@@ -1803,7 +1757,6 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "sm11": {"q":"设有来自方差为 $\\sigma^{2}$ 的总体的随机样本 $X_1,\\dots,X_n$，定义样本均值 $\\bar X$，则 $Var(X_1-\\bar X)=$（  ）","a":"$Var(\\bar X)=\\dfrac{\\sigma^{2}}{n}$，且 $Cov(X_1,\\bar X)=\\dfrac{1}{n}Cov(X_1,X_1)=\\dfrac{\\sigma^{2}}{n}$，故\n$$Var(X_1-\\bar X)=Var(X_1)+Var(\\bar X)-2Cov(X_1,\\bar X)=\\sigma^{2}+\\frac{\\sigma^{2}}{n}-2\\frac{\\sigma^{2}}{n}=\\frac{n-1}{n}\\sigma^{2}$$\n选 D。核心：样本均值是各 $X_i$ 的线性组合，$Cov(X_i,\\bar X)=\\sigma^{2}/n$、$Var(\\bar X)=\\sigma^{2}/n$。","src":"2017 北京师范大学 432 统计学真题"},
     "est01": {"q":"下列说法正确的是（  ）\\\\\nA. 样本量的增加可以提高检验的显著水平\\\\\nB. 经验分布函数是单调增函数\\\\\nC. 样本容量越大，样本方差越小\\\\\nD. 统计量是样本的函数","a":"选 D（官方答案 D 或 BD）。统计量是根据样本数据计算得到的量，是样本的函数，这是点估计的基础（用统计量 $\\hat\\theta(X_1,\\dots,X_n)$ 估计总体参数）。\nA 错：样本量增大提高的是检验功效，显著性水平由研究者设定；C 错：方差反映数据的离散程度，不随样本量必然减小；B 有歧义：经验分布函数为非减右连续函数。","src":"2025 北大光华 431 统计真题"},
     "est02": {"q":"$X_1,\\dots,X_n$ 为总体分布的简单随机样本，下列是总体均值 $\\mu$ 的无偏估计的有（  ）（不定项）\\\\\nA. $X_1$　B. $\\bar{X}$　C. $X_1-X_2+X_n$　D. $10X_1-9X_n$","a":"无偏性要求 $E(\\hat\\theta)=\\mu$：\nA：$E(X_1)=\\mu$ ✓；B：$E(\\bar X)=\\mu$ ✓；C：$E(X_1-X_2+X_n)=\\mu-\\mu+\\mu=\\mu$ ✓；D：$E(10X_1-9X_n)=10\\mu-9\\mu=\\mu$ ✓。\n故 A、B、C、D 均为 $\\mu$ 的无偏估计（线性无偏估计中系数之和为 1 即可）。","subOf":{"id":"st-2025-1","item":"2"},"src":"2025 北大光华 431 统计真题"},
-    "est03": [{"q":"设 $X_1,\\dots,X_n$ i.i.d. $\\sim N(\\mu,\\sigma^{2})$，$\\mu$ 已知。证明：(1) $\\dfrac1n\\sum_{i=1}^{n}(X_i-\\mu)^{2}$ 是 $\\sigma^{2}$ 的有效估计；(2) $\\dfrac1n\\sqrt{\\dfrac{\\pi}{2}}\\sum_{i=1}^{n}|X_i-\\mu|$ 是 $\\sigma$ 的无偏估计但不有效","a":"(1) 令 $Z_i=(X_i-\\mu)/\\sigma\\sim N(0,1)$，$\\hat\\sigma_1^{2}=\\frac{\\sigma^{2}}{n}\\sum Z_i^{2}$。$E(\\hat\\sigma_1^{2})=\\sigma^{2}$，$Var(\\hat\\sigma_1^{2})=\\frac{\\sigma^{4}}{n^{2}}\\cdot 2n=\\frac{2\\sigma^{4}}{n}$，达到 C-R 下界 $\\frac{2\\sigma^{4}}{n}$，故有效。\n(2) $E|Z_i|=\\sqrt{\\frac2\\pi}$，故 $E\\left[\\frac1n\\sqrt{\\frac\\pi2}\\sum|X_i-\\mu|\\right]=\\sqrt{\\frac\\pi2}\\cdot\\sigma\\sqrt{\\frac2\\pi}=\\sigma$ 无偏；但其方差大于 C-R 下界，故不有效。","src":"2019 复旦大学 432 统计学真题"},{"q":"对于下述两个命题：命题 A：$\\hat\\theta$ 是 $\\theta$ 的有效估计；命题 B：$\\hat\\theta$ 是 $\\theta$ 的 UMVUE。下列结论正确的是（  ）","a":"有效估计 = 无偏且\\textbf{方差达到 C-R 下界}的估计量，故其方差在所有无偏估计中最小 $\\Rightarrow$ 必为 UMVUE，即 $A\\Rightarrow B$。\n反之，UMVUE 方差最小但不一定达到 C-R 下界（可因信息量未充分利用或非正则情形），故 $B\\not\\Rightarrow A$。选 (b) $A\\Rightarrow B,\\ B\\not\\Rightarrow A$。","src":"2021 南开大学 432 统计学真题"}],
     "est04": {"q":"有来自二阶矩存在总体 $X$ 的随机样本 $X_1,\\dots,X_n$，设 $S^{2}=\\frac{1}{n-1}\\sum(X_i-\\bar{X})^{2}$，则 $S$ 一定是总体标准差 $\\sigma$ 的（  ）\\\\\nA. UMVUE　B. 相合估计　C. 无偏估计　D. MLE","a":"选 B。$S^{2}$ 是 $\\sigma^{2}$ 的相合估计（$S^{2}\\overset{P}{\\to}\\sigma^{2}$），由相合性的连续性（$g$ 连续时 $g(\\hat\\theta_n)\\overset{P}{\\to}g(\\theta)$），$S=\\sqrt{S^{2}}$ 是 $\\sigma$ 的相合估计。但一般 $E(S)\\ne\\sigma$（不是无偏的），也不一定是 UMVUE 或 MLE。","src":"2016 南开大学 432 统计学真题"},
     "est05": [{"q":"设 $Y_1,\\dots,Y_n$ 独立同分布，密度 $f(y;\\theta)=\\dfrac1\\theta\\ (0\\le y\\le\\theta)$，$\\theta>0$ 未知。求 $\\theta$ 的矩估计量，并计算其均方误差（MSE）","a":"$E(Y)=\\dfrac\\theta2$，令 $\\bar Y=\\dfrac\\theta2$，得矩估计 $\\hat\\theta_1=2\\bar Y$。\n$E(\\hat\\theta_1)=2E(\\bar Y)=\\theta$（无偏），$D(\\hat\\theta_1)=4D(\\bar Y)=\\dfrac4n\\cdot\\dfrac{\\theta^{2}}{12}=\\dfrac{\\theta^{2}}{3n}$。\n$$\\mathrm{MSE}(\\hat\\theta_1)=D(\\hat\\theta_1)=\\dfrac{\\theta^{2}}{3n}$$","src":"2021 复旦大学 861 概率论与数理统计真题","a2":"巧解（二阶矩法）：$E(Y^2)=\\dfrac{\\theta^2}{3}$，令样本二阶矩 $\\dfrac1n\\sum Y_i^2=\\dfrac{\\theta^2}{3}$，得另一矩估计 $\\hat\\theta=\\sqrt{\\dfrac3n\\sum Y_i^2}$，说明矩估计随所取矩的阶数不同而不同、不唯一。"},{"q":"设 $X_1,\\dots,X_n$ 来自总体 $X\\sim f(x)=\\theta x^{\\theta-1}\\,I\\{0<x<1\\}$，求 $\\theta$ 的矩估计","a":"$E(X)=\\int_0^1 x\\cdot\\theta x^{\\theta-1}\\,dx=\\frac{\\theta}{\\theta+1}$。令样本一阶矩等于总体一阶矩：\n$$\\bar X=\\frac{\\theta}{\\theta+1}\\ \\Rightarrow\\ \\hat\\theta_{M}=\\frac{\\bar X}{1-\\bar X}$$","src":"2020 复旦大学 432 统计学真题"}],
     "est06": [{"q":"设 $Y_1,\\dots,Y_n$ 独立同分布，密度 $f(y;\\theta)=\\dfrac1\\theta\\ (0\\le y\\le\\theta)$，$\\theta>0$ 未知。求 $\\theta$ 的最大似然估计量，并计算其 MSE","a":"似然 $L(\\theta)=\\prod_{i=1}^{n}\\dfrac1\\theta=\\dfrac1{\\theta^{n}}$（需 $0\\le y_i\\le\\theta$，即 $\\theta\\ge y_{(n)}$）。$L$ 关于 $\\theta$ 递减，故 $\\hat\\theta_2=Y_{(n)}=\\max_{1\\le i\\le n}Y_i$。\n$Y_{(n)}$ 的密度 $f(z)=\\dfrac{n z^{n-1}}{\\theta^{n}}\\ (0\\le z\\le\\theta)$，故 $E(Y_{(n)})=\\dfrac{n}{n+1}\\theta$，$E(Y_{(n)}^{2})=\\dfrac{n}{n+2}\\theta^{2}$。\n$$\\mathrm{MSE}(\\hat\\theta_2)=D+\\mathrm{Bias}^{2}=\\dfrac{n}{(n+2)(n+1)^{2}}\\theta^{2}+\\left(\\dfrac{\\theta}{n+1}\\right)^{2}=\\dfrac{2\\theta^{2}}{(n+1)(n+2)}$$","src":"2021 复旦大学 861 概率论与数理统计真题"},{"q":"设 $X_1,\\dots,X_n$ 来自总体 $X\\sim f(x)=\\theta x^{\\theta-1}\\,I\\{0<x<1\\}$。求 $\\theta$ 的 MLE 并验证无偏性","a":"似然 $L(\\theta)=\\prod_{i=1}^{n}\\theta x_i^{\\theta-1}=\\theta^{n}\\left(\\prod x_i\\right)^{\\theta-1}$，对数似然\n$$\\ln L=n\\ln\\theta+(\\theta-1)\\sum_{i=1}^{n}\\ln x_i\\ \\Rightarrow\\ \\frac{\\partial\\ln L}{\\partial\\theta}=\\frac{n}{\\theta}+\\sum\\ln x_i=0$$\n得 $\\hat\\theta_{MLE}=-\\dfrac{n}{\\sum_{i=1}^{n}\\ln X_i}$。\n无偏性：$-\\ln X\\sim Exp(\\theta)$，故 $-\\sum_{i=1}^{n}\\ln X_i\\sim\\Gamma(n,\\theta)$，$E\\!\\left(\\dfrac{n}{-\\sum\\ln X_i}\\right)=\\dfrac{n\\theta}{n-1}\\ne\\theta$，即 $\\hat\\theta_{MLE}$ 有偏（偏差随 $n$ 增大趋于 0）。","src":"2020 复旦大学 432 统计学真题"}],
@@ -1813,7 +1766,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "est10": {"q":"设 $X_1,\\dots,X_n$ 是 i.i.d. 的 $N(\\mu,\\sigma^{2})$，其中 $\\mu$ 已知、$\\sigma^{2}$ 未知。(1) 试用两种方法给出 $\\sigma^{2}$ 的置信区间；(2) 给出 $\\sigma^{4}$ 的置信区间","a":"(1) 方法一（用样本方差）：$\\dfrac{(n-1)S^{2}}{\\sigma^{2}}\\sim\\chi^{2}(n-1)$，得\n$$\\left(\\frac{(n-1)S^{2}}{\\chi^{2}_{\\alpha/2}(n-1)},\\ \\frac{(n-1)S^{2}}{\\chi^{2}_{1-\\alpha/2}(n-1)}\\right)$$\n方法二（$\\mu$ 已知）：$\\dfrac{\\sum_{i=1}^{n}(X_i-\\mu)^{2}}{\\sigma^{2}}\\sim\\chi^{2}(n)$，得\n$$\\left(\\frac{\\sum(X_i-\\mu)^{2}}{\\chi^{2}_{\\alpha/2}(n)},\\ \\frac{\\sum(X_i-\\mu)^{2}}{\\chi^{2}_{1-\\alpha/2}(n)}\\right)$$\n(2) 由 $a<\\sigma^{2}<b\\iff a^{2}<\\sigma^{4}<b^{2}$，将 (1) 中区间端点平方即可。","src":"2021 北京师范大学 432 统计学真题"},
     "est11": {"q":"设 $X_1,\\dots,X_n$ 是从正态总体 $N(\\mu,\\sigma^{2})$ 中抽出的随机样本，证明样本方差 $S^{2}$ 与样本均值 $\\bar X$ 相互独立","a":"令 $\\bar X=\\frac1n\\sum X_i$，$S^{2}=\\frac{1}{n-1}\\sum(X_i-\\bar X)^{2}$。取正交阵 $A$（第一行 $A_{1\\cdot}=\\frac{1}{\\sqrt n}(1,\\dots,1)$），作变换 $Z=AX$，则 $Z_1=\\sqrt n\\,\\bar X$，且 $\\sum_{i=1}^{n}Z_i^{2}=\\sum_{i=1}^{n}X_i^{2}=\\sum_{i=1}^{n}(X_i-\\bar X)^{2}+n\\bar X^{2}=(n-1)S^{2}+Z_1^{2}$。\n由 $X_i$ 独立正态 $\\Rightarrow$ 正交变换下 $Z_1,\\dots,Z_n$ 相互独立。而 $\\sum_{i=2}^{n}Z_i^{2}=(n-1)S^{2}$，故 $Z_1=\\sqrt n\\bar X$ 与 $S^{2}$ 独立。这是后续 $t$、$F$ 分布等抽样分布推导的根基。","src":"2017 中国科学技术大学 432 统计学真题"},
     "est12": {"q":"$X_1,\\dots,X_n$ 为 $F(X,\\theta)$ 的简单随机样本，下列说法正确的是（  ）（不定项）\\\\\nA. 似然函数是 $\\theta$ 的函数\\\\\nB. 似然函数是 $X_1,\\dots,X_n$ 的函数\\\\\nC. $g(\\theta)$ 的极大似然估计是 $g(\\hat\\theta)$，其中 $\\hat\\theta$ 为 $\\theta$ 的 MLE\\\\\nD. 最大似然估计是似然函数的最大值","a":"选 A、C。A：给定样本后 $L(\\theta)=\\prod f(x_i;\\theta)$ 是参数 $\\theta$ 的函数，正确；B 错（是 $\\theta$ 的函数而非样本的函数）；C：MLE 的不变性（$g$ 连续时 $\\widehat{g(\\theta)}=g(\\hat\\theta)$），正确；D 错：最大似然估计是使似然函数取最大值的参数 $\\theta$ 的值，而非似然函数的最大值本身。","subOf":{"id":"st-2025-1","item":"3"},"src":"2025 北大光华 431 统计真题"},
-    "est13": {"q":"有来自总体 $U(\\theta,2\\theta)$ 的随机样本 $X_1,\\dots,X_n$，求 $\\theta$ 的矩估计和 MLE，并验证无偏性和相合性","a":"矩估计：$E(X)=\\frac{3\\theta}{2}$，令 $\\bar X=\\frac{3\\theta}{2}$，得 $\\hat\\theta_M=\\frac{2}{3}\\bar X$。$E(\\hat\\theta_M)=\\theta$ 无偏；由辛钦大数定律 $\\bar X\\overset{P}{\\to}\\frac{3\\theta}{2}$，故 $\\hat\\theta_M\\overset{P}{\\to}\\theta$ 相合。\nMLE：$L(\\theta)=\\frac{1}{\\theta^{n}}$，约束 $\\theta\\le X_{(1)}\\le X_{(n)}\\le 2\\theta$，即 $\\frac{X_{(n)}}{2}\\le\\theta\\le X_{(1)}$。$L(\\theta)=\\theta^{-n}$ 关于 $\\theta$ 单调递减，故 $\\theta$ 取**最小值**时为 MLE，即 $\\hat\\theta_{MLE}=\\frac{X_{(n)}}{2}$。令 $Y_i=\\frac{X_i-\\theta}{\\theta}\\sim U(0,1)$，则 $Y_{(n)}\\sim\\mathrm{Beta}(n,1)$、$E(Y_{(n)})=\\frac{n}{n+1}$，故 $E(\\hat\\theta_{MLE})=\\frac{2n+1}{2n+2}\\theta\\ne\\theta$ 有偏（渐近无偏）；又 $Y_{(n)}\\overset{P}{\\to}1$ 即 $X_{(n)}\\overset{P}{\\to}2\\theta$，故 $\\hat\\theta_{MLE}\\overset{P}{\\to}\\theta$ 相合。","src":"2019 复旦大学 432 统计学真题"},
+    "est13": [{"q":"有来自总体 $U(\\theta,2\\theta)$ 的随机样本 $X_1,\\dots,X_n$，求 $\\theta$ 的矩估计和 MLE，并验证无偏性和相合性","a":"矩估计：$E(X)=\\frac{3\\theta}{2}$，令 $\\bar X=\\frac{3\\theta}{2}$，得 $\\hat\\theta_M=\\frac{2}{3}\\bar X$。$E(\\hat\\theta_M)=\\theta$ 无偏；由辛钦大数定律 $\\bar X\\overset{P}{\\to}\\frac{3\\theta}{2}$，故 $\\hat\\theta_M\\overset{P}{\\to}\\theta$ 相合。\nMLE：$L(\\theta)=\\frac{1}{\\theta^{n}}$，约束 $\\theta\\le X_{(1)}\\le X_{(n)}\\le 2\\theta$，即 $\\frac{X_{(n)}}{2}\\le\\theta\\le X_{(1)}$。$L(\\theta)=\\theta^{-n}$ 关于 $\\theta$ 单调递减，故 $\\theta$ 取**最小值**时为 MLE，即 $\\hat\\theta_{MLE}=\\frac{X_{(n)}}{2}$。令 $Y_i=\\frac{X_i-\\theta}{\\theta}\\sim U(0,1)$，则 $Y_{(n)}\\sim\\mathrm{Beta}(n,1)$、$E(Y_{(n)})=\\frac{n}{n+1}$，故 $E(\\hat\\theta_{MLE})=\\frac{2n+1}{2n+2}\\theta\\ne\\theta$ 有偏（渐近无偏）；又 $Y_{(n)}\\overset{P}{\\to}1$ 即 $X_{(n)}\\overset{P}{\\to}2\\theta$，故 $\\hat\\theta_{MLE}\\overset{P}{\\to}\\theta$ 相合。","src":"2019 复旦大学 432 统计学真题"}, {"q":"设 $X_1,\\dots,X_n$ i.i.d. $\\sim N(\\mu,\\sigma^{2})$，$\\mu$ 已知。证明：(1) $\\dfrac1n\\sum_{i=1}^{n}(X_i-\\mu)^{2}$ 是 $\\sigma^{2}$ 的有效估计；(2) $\\dfrac1n\\sqrt{\\dfrac{\\pi}{2}}\\sum_{i=1}^{n}|X_i-\\mu|$ 是 $\\sigma$ 的无偏估计但不有效","a":"(1) 令 $Z_i=(X_i-\\mu)/\\sigma\\sim N(0,1)$，$\\hat\\sigma_1^{2}=\\frac{\\sigma^{2}}{n}\\sum Z_i^{2}$。$E(\\hat\\sigma_1^{2})=\\sigma^{2}$，$Var(\\hat\\sigma_1^{2})=\\frac{\\sigma^{4}}{n^{2}}\\cdot 2n=\\frac{2\\sigma^{4}}{n}$，达到 C-R 下界 $\\frac{2\\sigma^{4}}{n}$，故有效。\n(2) $E|Z_i|=\\sqrt{\\frac2\\pi}$，故 $E\\left[\\frac1n\\sqrt{\\frac\\pi2}\\sum|X_i-\\mu|\\right]=\\sqrt{\\frac\\pi2}\\cdot\\sigma\\sqrt{\\frac2\\pi}=\\sigma$ 无偏；但其方差大于 C-R 下界，故不有效。","src":"2019 复旦大学 432 统计学真题"},{"q":"对于下述两个命题：命题 A：$\\hat\\theta$ 是 $\\theta$ 的有效估计；命题 B：$\\hat\\theta$ 是 $\\theta$ 的 UMVUE。下列结论正确的是（  ）","a":"有效估计 = 无偏且\\textbf{方差达到 C-R 下界}的估计量，故其方差在所有无偏估计中最小 $\\Rightarrow$ 必为 UMVUE，即 $A\\Rightarrow B$。\n反之，UMVUE 方差最小但不一定达到 C-R 下界（可因信息量未充分利用或非正则情形），故 $B\\not\\Rightarrow A$。选 (b) $A\\Rightarrow B,\\ B\\not\\Rightarrow A$。","src":"2021 南开大学 432 统计学真题"}],
     "est14": {"q":"有来自总体 $N(\\mu,1)$ 的 $n$ 个随机样本 $X_1,\\dots,X_n$，证明：$\\bar{X}$ 是充分统计量","a":"样本联合密度\n$$f(x_1,\\dots,x_n;\\mu)=\\frac{1}{(2\\pi)^{n/2}}\\exp\\left\\{-\\frac{1}{2}\\sum_{i=1}^{n}(x_i-\\mu)^{2}\\right\\}$$\n分解为\n$$=\\underbrace{\\frac{1}{(2\\pi)^{n/2}}e^{-\\frac12\\sum(x_i-\\bar x)^{2}}}_{h(x)}\\cdot\\underbrace{e^{-\\frac{n}{2}(\\bar x-\\mu)^{2}}}_{g(\\bar x,\\,\\mu)}$$\n由因子分解定理，$\\bar{X}$ 是 $\\mu$ 的充分统计量（给定 $\\bar X$ 后样本的条件分布与 $\\mu$ 无关）。","src":"2021 复旦大学 432 统计学真题"},
     "est15": {"q":"设有来自 $U(-\\theta,\\theta)$ 的简单随机样本 $X_1,\\dots,X_n$（$\\theta>0$）。(1) 证明 $T=\\max\\{|X_1|,\\dots,|X_n|\\}$ 是 $\\theta$ 的充分统计量；(2) 求 $\\theta$ 的 MLE","a":"(1) 联合密度\n$$f(x_1,\\dots,x_n;\\theta)=\\frac{1}{(2\\theta)^{n}}\\prod_{i=1}^{n}I\\{|x_i|\\le\\theta\\}=\\underbrace{\\frac{1}{(2\\theta)^{n}}I\\{\\max|x_i|\\le\\theta\\}}_{g(T,\\theta)}\\cdot 1$$\n由因子分解定理，$T=\\max\\{|X_i|\\}$ 是 $\\theta$ 的充分统计量。\n(2) 似然 $\\frac{1}{(2\\theta)^n}$ 关于 $\\theta$ 递减且约束 $\\theta\\ge T$，故 $\\hat\\theta_{MLE}=T=\\max\\{|X_1|,\\dots,|X_n|\\}$。","src":"2024 复旦大学 432 统计学真题"},
     "est16": {"q":"$X_1,\\dots,X_n$ 是来自参数为 $\\lambda$ 的指数分布总体的随机样本（密度 $f(x)=\\lambda e^{-\\lambda x},\\ x>0$）。(1) 求 $G=2\\lambda\\sum_{i=1}^{n}X_i$ 的分布；(2) 基于枢轴量 $G$ 给出 $\\lambda$ 的 $1-\\alpha$ 置信水平的置信区间","a":"(1) $\\lambda X_i\\sim Exp(1)$，且 $2\\lambda X_i\\sim\\chi^{2}(2)$，故 $G=2\\lambda\\sum X_i\\sim\\chi^{2}(2n)$。\n(2) $G$ 为枢轴量（分布与 $\\lambda$ 无关）。由 $\\chi^{2}_{1-\\alpha/2}(2n)\\le G\\le\\chi^{2}_{\\alpha/2}(2n)$ 反解 $\\lambda$：\n$$\\frac{\\chi^{2}_{1-\\alpha/2}(2n)}{2\\sum X_i}\\le\\lambda\\le\\frac{\\chi^{2}_{\\alpha/2}(2n)}{2\\sum X_i}$$\n即 $\\lambda$ 的 $1-\\alpha$ 置信区间为 $\\left(\\dfrac{\\chi^{2}_{1-\\alpha/2}(2n)}{2\\sum X_i},\\ \\dfrac{\\chi^{2}_{\\alpha/2}(2n)}{2\\sum X_i}\\right)$。","src":"2020 复旦大学 861 概率论与数理统计真题"},
@@ -1897,18 +1850,16 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   const REL = {
   pb13: [ { to: 'pb08', tag: '前置' }, { to: 'pb10', tag: '相关' } ],
   pb12: [ { to: 'll03', tag: '应用' }, { to: 'pb02', tag: '相关' } ],
-  ll08: [ { to: 'nc09', tag: '前置' }, { to: 'll01', tag: '应用' }, { to: 'll04', tag: '相关' } ],
+  ll08: [ { to: 'll07', tag: '前置' }, { to: 'll01', tag: '应用' }, { to: 'll04', tag: '相关' } ],
   ll09: [ { to: 'll04', tag: '同类' }, { to: 'll05', tag: '同类' } ],
   sm12: [ { to: 'sm07', tag: '前置' }, { to: 'sm08', tag: '前置' }, { to: 'test11', tag: '应用' }, { to: 'test12', tag: '应用' }, { to: 'test13', tag: '应用' } ],
   sm13: [ { to: 'xt01', tag: '前置' }, { to: 'sm02', tag: '相关' } ],
   sm14: [ { to: 'rv04', tag: '相关' }, { to: 'sm01', tag: '前置' } ],
   sm15: [ { to: 'sm13', tag: '前置' }, { to: 'sm14', tag: '同类' } ],
-  sm16: [ { to: 'test16', tag: '相关' }, { to: 'rv11', tag: '相关' } ],
   nc17: [ { to: 'nc03', tag: '前置' }, { to: 'nc13', tag: '应用' } ],
   nc18: [ { to: 'nc08', tag: '前置' }, { to: 'test16', tag: '相关' } ],
   nc19: [ { to: 'nc06', tag: '前置' }, { to: 'mv05', tag: '应用' } ],
   nc20: [ { to: 'nc11', tag: '前置' }, { to: 'nc03', tag: '前置' } ],
-  est22: [ { to: 'est02', tag: '相关' }, { to: 'est03', tag: '相关' } ],
   est23: [ { to: 'est06', tag: '前置' }, { to: 'est02', tag: '相关' } ],
   est24: [ { to: 'est16', tag: '前置' }, { to: 'est08', tag: '相关' }, { to: 'test05', tag: '相关' } ],
   reg13: [ { to: 'reg03', tag: '前置' }, { to: 'reg01', tag: '前置' } ],
@@ -1930,7 +1881,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   rv04: [ { to: 'rv01', tag: '相关' }, { to: 'nc01', tag: '相关' } ],
   rv05: [ { to: 'rv06', tag: '特例' }, { to: 'nc13', tag: '相关' }, { to: 'rv06', tag: '同类' } ],
   rv06: [ { to: 'rv05', tag: '推广' }, { to: 'rv20', tag: '相关' }, { to: 'll05', tag: '相关' }, { to: 'rv07', tag: '同类' } ],
-  rv07: [ { to: 'rv20', tag: '相关' }, { to: 'rv06', tag: '相关' }, { to: 'nc09', tag: '应用' }, { to: 'rv08', tag: '同类' } ],
+  rv07: [ { to: 'rv20', tag: '相关' }, { to: 'rv06', tag: '相关' }, { to: 'll07', tag: '应用' }, { to: 'rv08', tag: '同类' } ],
   rv08: [ { to: 'rv18', tag: '特例' }, { to: 'nc13', tag: '相关' } ],
   rv09: [ { to: 'nc13', tag: '相关' }, { to: 'rv10', tag: '相关' }, { to: 'rv15', tag: '应用' }, { to: 'rv10', tag: '同类' } ],
   rv10: [ { to: 'rv19', tag: '特例' }, { to: 'nc13', tag: '相关' }, { to: 'rv11', tag: '同类' } ],
@@ -1957,18 +1908,17 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   mv11: [ { to: 'mv06', tag: '相关' }, { to: 'mv01', tag: '前置' } ],
   nc01: [ { to: 'nc02', tag: '前置' }, { to: 'nc03', tag: '前置' }, { to: 'nc03', tag: '同类' } ],
   nc02: [ { to: 'nc01', tag: '前置' }, { to: 'nc05', tag: '相关' }, { to: 'nc12', tag: '相关' }, { to: 'nc05', tag: '同类' } ],
-  nc03: [ { to: 'nc04', tag: '相关' }, { to: 'nc01', tag: '前置' }, { to: 'nc09', tag: '应用' } ],
+  nc03: [ { to: 'nc04', tag: '相关' }, { to: 'nc01', tag: '前置' }, { to: 'll07', tag: '应用' } ],
   nc04: [ { to: 'nc03', tag: '相关' }, { to: 'nc05', tag: '相关' }, { to: 'nc01', tag: '前置' } ],
   nc05: [ { to: 'nc03', tag: '前置' }, { to: 'nc06', tag: '相关' }, { to: 'nc07', tag: '相关' }, { to: 'nc12', tag: '同类' } ],
   nc06: [ { to: 'nc07', tag: '前置' }, { to: 'nc12', tag: '相关' }, { to: 'nc07', tag: '同类' } ],
   nc07: [ { to: 'nc06', tag: '前置' }, { to: 'nc10', tag: '相关' }, { to: 'reg10', tag: '应用' }, { to: 'nc10', tag: '同类' } ],
   nc08: [ { to: 'nc01', tag: '相关' }, { to: 'nc03', tag: '相关' }, { to: 'nc13', tag: '同类' } ],
-  nc09: [ { to: 'nc03', tag: '前置' }, { to: 'll07', tag: '相关' }, { to: 'nc14', tag: '同类' } ],
   nc10: [ { to: 'nc07', tag: '相关' }, { to: 'mv04', tag: '相关' }, { to: 'mv05', tag: '相关' } ],
   nc11: [ { to: 'mv03', tag: '相关' }, { to: 'nc01', tag: '相关' }, { to: 'nc15', tag: '同类' } ],
   nc12: [ { to: 'nc06', tag: '相关' }, { to: 'nc05', tag: '相关' } ],
   nc13: [ { to: 'nc01', tag: '前置' }, { to: 'nc03', tag: '前置' } ],
-  nc14: [ { to: 'nc09', tag: '相关' }, { to: 'nc01', tag: '前置' } ],
+  nc14: [ { to: 'll07', tag: '相关' }, { to: 'nc01', tag: '前置' } ],
   nc15: [ { to: 'nc16', tag: '同类' }, { to: 'nc08', tag: '相关' } ],
   nc16: [ { to: 'nc15', tag: '同类' }, { to: 'nc08', tag: '相关' } ],
   ll01: [ { to: 'll02', tag: '同类' }, { to: 'll03', tag: '同类' } ],
@@ -1977,7 +1927,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   ll04: [ { to: 'll05', tag: '相关' }, { to: 'rv11', tag: '相关' }, { to: 'sm04', tag: '相关' }, { to: 'll05', tag: '同类' } ],
   ll05: [ { to: 'll04', tag: '相关' }, { to: 'rv06', tag: '前置' }, { to: 'rv20', tag: '相关' } ],
   ll06: [ { to: 'll02', tag: '相关' }, { to: 'll04', tag: '相关' }, { to: 'll07', tag: '同类' } ],
-  ll07: [ { to: 'nc09', tag: '相关' }, { to: 'll01', tag: '相关' } ],
+  ll07: [ { to: 'll01', tag: '相关' } ],
   sm01: [ { to: 'sm02', tag: '前置' }, { to: 'sm03', tag: '前置' }, { to: 'sm02', tag: '同类' } ],
   sm02: [ { to: 'sm01', tag: '前置' }, { to: 'sm11', tag: '相关' }, { to: 'sm03', tag: '同类' } ],
   sm03: [ { to: 'sm01', tag: '前置' }, { to: 'sm06', tag: '相关' } ],
@@ -1990,8 +1940,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   sm10: [ { to: 'sm05', tag: '前置' }, { to: 'sm07', tag: '前置' } ],
   sm11: [ { to: 'sm02', tag: '相关' }, { to: 'nc01', tag: '前置' } ],
   est01: [ { to: 'est02', tag: '前置' }, { to: 'est05', tag: '相关' }, { to: 'est13', tag: '同类' } ],
-  est02: [ { to: 'est01', tag: '前置' }, { to: 'est13', tag: '相关' }, { to: 'est03', tag: '同类' } ],
-  est03: [ { to: 'est02', tag: '相关' }, { to: 'est13', tag: '相关' }, { to: 'est04', tag: '同类' } ],
+  est02: [ { to: 'est01', tag: '前置' }, { to: 'est13', tag: '相关' } ],
   est04: [ { to: 'est02', tag: '相关' }, { to: 'est13', tag: '相关' } ],
   est05: [ { to: 'est01', tag: '相关' }, { to: 'est06', tag: '同类' } ],
   est06: [ { to: 'est05', tag: '同类' }, { to: 'est12', tag: '前置' }, { to: 'ys02', tag: '同类' } ],
@@ -2001,7 +1950,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   est10: [ { to: 'est08', tag: '相关' }, { to: 'sm06', tag: '前置' }, { to: 'test08', tag: '相关' } ],
   est11: [ { to: 'sm04', tag: '相关' }, { to: 'sm06', tag: '相关' } ],
   est12: [ { to: 'est06', tag: '前置' }, { to: 'est14', tag: '相关' } ],
-  est13: [ { to: 'est02', tag: '前置' }, { to: 'est03', tag: '前置' } ],
+  est13: [ { to: 'est02', tag: '前置' } ],
   est14: [ { to: 'est15', tag: '相关' }, { to: 'est01', tag: '相关' }, { to: 'est15', tag: '同类' } ],
   est15: [ { to: 'est14', tag: '相关' }, { to: 'est12', tag: '相关' }, { to: 'xt04', tag: '同类' } ],
   est16: [ { to: 'est07', tag: '方法' }, { to: 'est08', tag: '应用' }, { to: 'ts05', tag: '同类' } ],
@@ -2009,7 +1958,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   est18: [ { to: 'est17', tag: '相关' }, { to: 'sm07', tag: '前置' }, { to: 'est19', tag: '同类' } ],
   est19: [ { to: 'est10', tag: '相关' }, { to: 'sm08', tag: '前置' } ],
   est20: [ { to: 'est21', tag: '前置' }, { to: 'est12', tag: '相关' }, { to: 'est21', tag: '同类' } ],
-  est21: [ { to: 'est20', tag: '前置' }, { to: 'est03', tag: '相关' }, { to: 'est02', tag: '相关' } ],
+  est21: [ { to: 'est20', tag: '前置' }, { to: 'est02', tag: '相关' } ],
   test01: [ { to: 'test02', tag: '前置' }, { to: 'test03', tag: '相关' }, { to: 'test02', tag: '同类' } ],
   test02: [ { to: 'test01', tag: '前置' }, { to: 'test05', tag: '相关' } ],
   test03: [ { to: 'test04', tag: '相关' }, { to: 'test15', tag: '相关' }, { to: 'test04', tag: '同类' } ],
@@ -2047,7 +1996,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   sy05: [ { to: 'rv07', tag: '前置' }, { to: 'nc08', tag: '相关' } ],
   sy06: [ { to: 'rv07', tag: '前置' }, { to: 'mv11', tag: '相关' } ],
   sy07: [ { to: 'est08', tag: '前置' }, { to: 'est09', tag: '相关' } ],
-  sy08: [ { to: 'nc09', tag: '相关' }, { to: 'nc14', tag: '前置' } ],
+  sy08: [ { to: 'll07', tag: '相关' }, { to: 'nc14', tag: '前置' } ],
   sy09: [ { to: 'sm07', tag: '相关' }, { to: 'rv11', tag: '前置' } ],
   ts01: [ { to: 'pb02', tag: '方法' }, { to: 'pb06', tag: '方法' }, { to: 'rv01', tag: '方法' } ],
   ts02: [ { to: 'nc01', tag: '方法' }, { to: 'nc04', tag: '方法' }, { to: 'nc06', tag: '方法' } ],
@@ -2057,7 +2006,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   ts06: [ { to: 'reg01', tag: '方法' }, { to: 'reg03', tag: '方法' }, { to: 'reg05', tag: '方法' } ],
   ts07: [ { to: 'rv06', tag: '方法' }, { to: 'rv07', tag: '方法' }, { to: 'rv10', tag: '方法' }, { to: 'rv12', tag: '方法' } ],
   ts08: [ { to: 'mv02', tag: '方法' }, { to: 'mv03', tag: '方法' }, { to: 'mv04', tag: '方法' }, { to: 'mv01', tag: '前置' } ],
-  ts09: [ { to: 'll01', tag: '方法' }, { to: 'll04', tag: '方法' }, { to: 'll05', tag: '方法' }, { to: 'nc09', tag: '前置' } ],
+  ts09: [ { to: 'll01', tag: '方法' }, { to: 'll04', tag: '方法' }, { to: 'll05', tag: '方法' }, { to: 'll07', tag: '前置' } ],
   xr01: [ { to: 'rv10', tag: '前置' }, { to: 'nc13', tag: '相关' }, { to: 'rv19', tag: '相关' } ],
   xr02: [ { to: 'est12', tag: '前置' }, { to: 'est06', tag: '相关' }, { to: 'test15', tag: '相关' } ],
   xr03: [ { to: 'est08', tag: '方法' }, { to: 'est09', tag: '方法' }, { to: 'est10', tag: '方法' }, { to: 'test06', tag: '方法' }, { to: 'test07', tag: '方法' }, { to: 'test13', tag: '方法' } ],
@@ -2069,7 +2018,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   xt06: [ { to: 'xt05', tag: '前置' }, { to: 'est21', tag: '相关' }, { to: 'sx03', tag: '相关' } ],
   xt07: [ { to: 'nc15', tag: '同类' }, { to: 'nc16', tag: '同类' }, { to: 'll04', tag: '应用' } ],
   xt08: [ { to: 'rv07', tag: '前置' }, { to: 'rv19', tag: '相关' }, { to: 'mv11', tag: '相关' } ],
-  xt09: [ { to: 'll01', tag: '相关' }, { to: 'll02', tag: '同类' }, { to: 'll03', tag: '同类' }, { to: 'nc09', tag: '应用' } ],
+  xt09: [ { to: 'll01', tag: '相关' }, { to: 'll02', tag: '同类' }, { to: 'll03', tag: '同类' }, { to: 'll07', tag: '应用' } ],
   xt10: [ { to: 'reg05', tag: '推广' }, { to: 'reg06', tag: '相关' }, { to: 'reg08', tag: '相关' }, { to: 'jj06', tag: '同类' } ],
   xt11: [ { to: 'reg04', tag: '相关' }, { to: 'xt12', tag: '相关' }, { to: 'sy03', tag: '相关' }, { to: 'xt12', tag: '同类' } ],
   xt12: [ { to: 'reg04', tag: '相关' }, { to: 'xt11', tag: '相关' }, { to: 'reg07', tag: '应用' }, { to: 'jj08', tag: '同类' } ],
@@ -2086,13 +2035,12 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   jj03: [ { to: 'test12', tag: '相关' }, { to: 'est18', tag: '相关' }, { to: 'xt13', tag: '相关' } ],
   jj04: [ { to: 'xt13', tag: '同类' }, { to: 'test12', tag: '相关' }, { to: 'jj05', tag: '相关' }, { to: 'jj05', tag: '同类' } ],
   jj05: [ { to: 'jj04', tag: '同类' }, { to: 'xt13', tag: '同类' }, { to: 'test16', tag: '相关' } ],
-  jj06: [ { to: 'reg05', tag: '前置' }, { to: 'reg04', tag: '前置' }, { to: 'reg07', tag: '相关' }, { to: 'xt10', tag: '相关' }, { to: 'jj07', tag: '同类' } ],
-  jj07: [ { to: 'reg06', tag: '相关' }, { to: 'reg04', tag: '前置' }, { to: 'reg08', tag: '相关' } ],
+  jj06: [ { to: 'reg05', tag: '前置' }, { to: 'reg04', tag: '前置' }, { to: 'reg07', tag: '相关' }, { to: 'xt10', tag: '相关' } ],
   jj08: [ { to: 'xt12', tag: '同类' }, { to: 'reg05', tag: '前置' }, { to: 'jj09', tag: '相关' }, { to: 'jj09', tag: '同类' } ],
   jj09: [ { to: 'xt11', tag: '相关' }, { to: 'reg04', tag: '前置' }, { to: 'jj08', tag: '相关' } ],
   jj10: [ { to: 'jj06', tag: '相关' }, { to: 'reg04', tag: '前置' }, { to: 'reg05', tag: '相关' }, { to: 'jj11', tag: '同类' } ],
-  jj11: [ { to: 'reg05', tag: '前置' }, { to: 'reg04', tag: '相关' }, { to: 'jj07', tag: '相关' }, { to: 'jj12', tag: '同类' } ],
-  jj12: [ { to: 'jj07', tag: '相关' }, { to: 'reg08', tag: '相关' }, { to: 'reg04', tag: '相关' } ],
+  jj11: [ { to: 'reg05', tag: '前置' }, { to: 'reg04', tag: '相关' }, { to: 'jj12', tag: '同类' } ],
+  jj12: [ { to: 'reg08', tag: '相关' }, { to: 'reg04', tag: '相关' } ],
     'test16-2': [ { to: 'test16', tag: '同类' }, { to: 'test14', tag: '延伸' } ],
     'est32-2': [ { to: 'est32', tag: '同类' }, { to: 'sx03', tag: '相关' } ],
     'sx03-2': [ { to: 'sx03', tag: '同类' }, { to: 'xt04', tag: '相关' } ],
@@ -2103,7 +2051,6 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     'xt04-2': [ { to: 'xt04', tag: '同类' }, { to: 'xt05', tag: '延伸' } ],
     'est28-2': [ { to: 'est28', tag: '同类' }, { to: 'est32-2', tag: '相关' } ],
     'll07-2': [ { to: 'll07', tag: '同类' }, { to: 'll01', tag: '应用' } ],
-    'est03-2': [ { to: 'est03', tag: '同类' }, { to: 'sx03-2', tag: '相关' } ],
     'est25-2': [ { to: 'est25', tag: '同类' }, { to: 'est26', tag: '延伸' } ],
     'est26-2': [ { to: 'est26', tag: '同类' }, { to: 'est25', tag: '前置' } ],
     'est26-3': [ { to: 'est26', tag: '同类' }, { to: 'est25-2', tag: '前置' } ],
@@ -2119,7 +2066,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     'reg13-2': [ { to: 'reg13', tag: '同类' }, { to: 'reg16', tag: '对比' }, { to: 'reg17-2', tag: '对比' } ],
     'xt15-2': [ { to: 'xt15', tag: '同类' }, { to: 'test14', tag: '同类' }, { to: 'mv04', tag: '相关' } ],
     'jj02-2': [ { to: 'jj02', tag: '同类' }, { to: 'ys01-2', tag: '同类' }, { to: 'mv06', tag: '方法' } ],
-    'jj12-2': [ { to: 'jj12', tag: '同类' }, { to: 'jj07', tag: '相关' }, { to: 'reg08', tag: '相关' } ],
+    'jj12-2': [ { to: 'jj12', tag: '同类' }, { to: 'reg08', tag: '相关' } ],
     'jj08-2': [ { to: 'jj08', tag: '同类' }, { to: 'reg05', tag: '相关' }, { to: 'jj05', tag: '前置' } ],
     'ys02-2': [ { to: 'ys02', tag: '同类' }, { to: 'est05', tag: '方法' }, { to: 'est21', tag: '相关' } ],
     'jj10-2': [ { to: 'jj10', tag: '同类' }, { to: 'jj06', tag: '相关' }, { to: 'reg04', tag: '前置' } ],
@@ -2162,7 +2109,6 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     jj01: R`几何概型要求样本点在 $\Omega$ 上\textbf{均匀/等可能}；若取点密度 $f$ 非常数（非均匀），不能直接用面积比，须按 $P(A)=\int_A f\,d\mu$。且“线段分成三段”、“圆周取点”等须先化为均匀等价模型。`,
     jj02: R`雅可比法必须取 $|J|$（绝对值）；$J=\frac{\partial(x,y)}{\partial(u,v)}$ 是“$x,y$ 对 $u,v$”的偏导（与 $\frac{\partial(u,v)}{\partial(x,y)}$ 互为倒数，勿写反）；逆变换不唯一时需对多个分支求和，且新变量支撑集须重新映射分段写。`,
     jj06: R`Gauss-Markov 定理\textbf{不要求正态性}；“最优”仅在\textbf{线性无偏}类内（BLUE）。若内生（$E(\varepsilon|X)\ne0$）则 OLS $\Rightarrow$ 有偏不一致；若异方差/自相关则仍无偏但\textbf{不有效}。`,
-    jj07: R`$\bar R^2=1-(1-R^2)\frac{n-1}{n-p-1}$，\textbf{可能为负}，且\textbf{未必}随变量增多而增大；它只度量线性拟合，模型优劣应配合 $F$ 检验，勿单凭 $\bar R^2$ 判定。`,
     jj09: R`DW 近似 $\approx2(1-\hat\rho)$，只检验\textbf{一阶}自相关；模型含\textbf{滞后因变量}时 DW 失效。$d$ 靠近 0（正相关）或 4（负相关）才说明显著自相关，$d\approx2$ 无自相关。`,
     jj10: R`工具变量须\textbf{同时}满足“相关性 $\mathrm{Cov}(Z,x)\ne0$”与“外生性 $\mathrm{Cov}(Z,\varepsilon)=0$”；**弱工具变量**会造成严重偏差；工具变量个数须 $\ge$ 内生变量个数才可识别。`,
     pb13: R`两两独立（三式）不蕴含相互独立（四式）——差 $P(ABC)=P(A)P(B)P(C)$ 一式；三事件只验证两两独立是不够的。`,
@@ -2173,7 +2119,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     reg13: R`比较次数多时 LSD 的整体 Ⅰ 类错误累积膨胀（10 次成对比较远超 5%）——多次比较需 Tukey/Bonferroni 校正。`,
     reg14: R`线性化后的 $R^2$ 是替换后变量的判定系数，与原尺度 $R^2$ 不可直接比较——选型要配合残差图与业务含义。`,
     pb14: R`$\sigma$-域只对**可列**并封闭，不能当成「对任意并封闭」（后者是「$\sigma$-代数」之外的强条件，与可列可加性不匹配）。`,
-    'pb14-2': R`上极限含「无穷多个」、下极限含「至多有限个」，两者不要写反。`,
+    pb16: R`上极限含「无穷多个」、下极限含「至多有限个」，两者不要写反。`,
     'pb16-2': R`Borel-Cantelli 的**第二**结论（$P(\varlimsup A_n)=1$）必须要求 $A_n$ **独立**且 $\sum P(A_n)=\infty$，缺一不可；只用 $\sum P(A_n)=\infty$ 而无独立性时结论不成立。`,
     pb17: R`反射原理把「曾到达 $a$」换成「终点 $2a-b$」只在 $b<a$ 时是**等式**；$b\ge a$ 时终点已在水平之上，概率就是 $P(S_n=b)$，不要把两个情形混用。`,
     est25: R`EM 只保证观测似然**不下降**，收敛到的是**局部**极大（初值敏感、可能很慢）；不要声称「收敛到全局最优」。`,

@@ -145,6 +145,148 @@
     });
   }
   // ===== END TESTABLE queue order helpers =====
+  // ===== BEGIN TESTABLE prereq helpers =====
+  // 新卡推送顺序：优先推「前置卡」——REL[A] 里的 { to: B, tag: '前置' } 表示 B 是 A 的前置。
+  // 纯函数、自包含（不读 REL / 不读 DB）：关系表与「已学」判定都由调用方注入，
+  // 所以队列编排不进 src/sched.mjs，也不碰 FSRS 公式。
+  //
+  // 排序口径（稳定拓扑分层）：
+  //   · 层号 = 1 + 本批内未学前置的最大层号；无约束（无前置 / 前置已学 / 前置不在本批）落第 0 层；
+  //   · 输出按（层, 输入序）排 ⇒ 前置恒在依赖之前，同层严格保持调用方传入的顺序（shuffle / 交错的结果）；
+  //   · 环（互指前置，如 生产函数 ↔ 边际产量）先收成强连通分量 = 同一层：环内的边无法同时满足，
+  //     是唯一允许被违反的边；分量之间严格按拓扑层（Tarjan 出栈序里前置分量必先出），绝不跨分量误伤；
+  //   · 每张卡恰属一个分量、每个分量都有层号 ⇒ 输出长度恒等于去重后的输入长度，绝不死锁；
+  //   · 零前置边时原样返回（无该 tag 的学科逐字不变）。
+
+  // REL 取值：relOf 可以是 { id: edges[] } 表，也可以是 id => edges[] 函数；缺失或非法一律当空
+  function prereqRelOf(id, relOf) {
+    let edges = null;
+    if (typeof relOf === 'function') {
+      edges = relOf(id);
+    } else if (relOf && typeof relOf === 'object') {
+      edges = relOf[id];
+    }
+    return Array.isArray(edges) ? edges : [];
+  }
+
+  // A 的显式前置：tag === '前置' 的 to 列表（去重保序；跳过自引用/非字符串；缺失或非法返 []）
+  function prereqOf(id, relOf) {
+    const edges = prereqRelOf(id, relOf);
+    const out = [];
+    const seen = {};
+    for (let i = 0; i < edges.length; i++) {
+      const e = edges[i];
+      if (!e || typeof e !== 'object' || e.tag !== '前置') continue;
+      const to = e.to;
+      if (typeof to !== 'string' || !to || to === id || seen[to]) continue;
+      seen[to] = true;
+      out.push(to);
+    }
+    return out;
+  }
+
+  // 把一批 id 排成「前置先于依赖」的顺序：不改入参、确定性、绝不死锁
+  function prereqOrder(ids, relOf, learnedOf) {
+    const list = [];
+    const at = {};
+    (Array.isArray(ids) ? ids : []).forEach(function (id) {
+      if (typeof id !== 'string' || !id || at[id] !== undefined) return;
+      at[id] = list.length;
+      list.push(id);
+    });
+    const n = list.length;
+    if (n < 2) return list;
+    const isLearned = function (id) { return typeof learnedOf === 'function' && !!learnedOf(id); };
+    // 邻接：只保留「本批内 + 尚未学」的前置边；其余前置已越过，不再拖住卡
+    const deps = [];
+    for (let i = 0; i < n; i++) deps.push([]);
+    let edges = 0;
+    for (let i = 0; i < n; i++) {
+      const ps = prereqOf(list[i], relOf);
+      for (let j = 0; j < ps.length; j++) {
+        const pi = at[ps[j]];
+        if (pi === undefined || pi === i || isLearned(ps[j])) continue;
+        deps[i].push(pi);
+        edges++;
+      }
+    }
+    if (!edges) return list;
+    // 迭代 Tarjan 求强连通分量（显式栈，避免深链爆调用栈）：
+    // 遍历方向是「卡 → 它的前置」，所以出栈顺序里前置分量一定先出 —— 正着扫就是从源头算层号。
+    const index = [];
+    const low = [];
+    const onStack = [];
+    const sccOf = [];
+    for (let i = 0; i < n; i++) { index[i] = -1; low[i] = -1; onStack[i] = false; sccOf[i] = -1; }
+    const sccStack = [];
+    const comps = [];
+    let tick = 0;
+    const frame = []; // [node, 下一个要扫的 dep 下标]
+    for (let root = 0; root < n; root++) {
+      if (index[root] !== -1) continue;
+      index[root] = low[root] = tick++;
+      sccStack.push(root);
+      onStack[root] = true;
+      frame.push([root, 0]);
+      while (frame.length) {
+        const top = frame[frame.length - 1];
+        const v = top[0];
+        if (top[1] < deps[v].length) {
+          const w = deps[v][top[1]++];
+          if (index[w] === -1) {
+            index[w] = low[w] = tick++;
+            sccStack.push(w);
+            onStack[w] = true;
+            frame.push([w, 0]);
+          } else if (onStack[w] && index[w] < low[v]) {
+            low[v] = index[w];
+          }
+        } else {
+          frame.pop();
+          if (low[v] === index[v]) {
+            const comp = [];
+            let w;
+            do {
+              w = sccStack.pop();
+              onStack[w] = false;
+              sccOf[w] = comps.length;
+              comp.push(w);
+            } while (w !== v);
+            comps.push(comp);
+          }
+          if (frame.length) {
+            const p = frame[frame.length - 1][0];
+            if (low[v] < low[p]) low[p] = low[v];
+          }
+        }
+      }
+    }
+    // 凝聚图分层：层号 = 1 + max(跨分量前置的层号)；分量内部互指，同层处理
+    const compLayer = [];
+    for (let c = 0; c < comps.length; c++) compLayer.push(0);
+    for (let c = 0; c < comps.length; c++) {
+      const comp = comps[c];
+      let L = 0;
+      for (let m = 0; m < comp.length; m++) {
+        const ds = deps[comp[m]];
+        for (let j = 0; j < ds.length; j++) {
+          const cd = sccOf[ds[j]];
+          if (cd !== c && compLayer[cd] + 1 > L) L = compLayer[cd] + 1;
+        }
+      }
+      compLayer[c] = L;
+    }
+    const idx = [];
+    for (let i = 0; i < n; i++) idx.push(i);
+    idx.sort(function (a, b) {
+      const la = compLayer[sccOf[a]], lb = compLayer[sccOf[b]];
+      return (la - lb) || (a - b);
+    });
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(list[idx[i]]);
+    return out;
+  }
+  // ===== END TESTABLE prereq helpers =====
 
   function buildSession(pendingBoost, skipPending) {
     const now = Date.now();
@@ -169,8 +311,13 @@
     const begOn = !!(beg.on && Array.isArray(beg.cats) && beg.cats.length);
     const begSet = {};
     if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
+    // 前置关系（REL 里 tag === '前置'）：新卡「先推前置」的排序依据，引入与排队共用
+    const prereqRel = function (id) { return REL[id] || []; };
+    const prereqLearned = function (id) { const c = card(id); return !!(c && c.state !== 'new'); };
     // 引入「未引入的新卡」（数量受 room 限制；skipPending=true 供「再来一批」直通——自行带量，不再自动引入）
-    const pending = skipPending ? [] : shuffle(all.filter(function (id) {
+    // 引入前先按前置分层取「层前缀」：每日上限截断出的这一批天然前置封闭，
+    // 不会出现「前置还没引入、后继先被推上来」的情况（无 前置 tag 的学科原样返回，行为不变）。
+    const pending = skipPending ? [] : prereqOrder(shuffle(all.filter(function (id) {
       const c = card(id);
       if (!c || c.state !== 'new' || st.ids.indexOf(id) !== -1) return false;
       if (begOn) {
@@ -178,7 +325,7 @@
         if (!f || !begSet[f.cat]) return false;
       }
       return true;
-    })).slice(0, room);
+    })), prereqRel, prereqLearned).slice(0, room);
     if (pending.length) {
       st.ids = st.ids.concat(pending);
       DB.log.counts[t].intro = introducedToday + pending.length;
@@ -201,7 +348,11 @@
     const learningDue = interleaveByIds(all.filter(function (id) { return card(id).state === 'learning' && card(id).due <= now; }));
     const relearningDue = interleaveByIds(all.filter(function (id) { return card(id).state === 'relearning' && card(id).due <= now; }));
     // 已引入但仍未学的新卡：受每日上限约束（再来一批的 pendingBoost 额外放量），先乱序再辨析交错；判空防御同上
-    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; })).slice(0, room + (skipPending ? (pendingBoost || 0) : 0)));
+    // 推送顺序：REL 里的「前置」卡先推出。候选池先分层取前 room + boost 张（前缀天然「前置封闭」），
+    // 但交错内部会二次洗牌，所以交错后再排一次恢复保证；无 前置 tag 的学科两次都原样返回。
+    const newPool = shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; }));
+    const newOrdered = prereqOrder(newPool, prereqRel, prereqLearned).slice(0, room + (skipPending ? (pendingBoost || 0) : 0));
+    const newToStudy = prereqOrder(interleaveByIds(newOrdered), prereqRel, prereqLearned);
     // 两个会话：新学 = 学习步进 + 未学新卡；复习 = 到期复习 + 重学步进
     const segNew = learningDue.concat(newToStudy);
     const segReview = dueOrdered.concat(relearningDue);

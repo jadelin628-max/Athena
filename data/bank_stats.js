@@ -85,7 +85,7 @@
     },
     {
       id: 'st-2017-2', year: 2017, no: '二、(15分)', type: 'regress', star: 4,school: '北京大学光华-431 金融学统计 2017 年', 
-      tags: ['jj07', 'jj06', 'sy03', 'jj05'],
+      tags: ['reg06', 'jj06', 'sy03', 'jj05'],
       stem: '给定模型 $\\ln(y)=\\alpha+\\beta\\ln(x)+\\varepsilon$ 与一组观测值 $(x_i,y_i)$。请回答：\n（1）参数 $\\beta$ 的经济学含义是什么？\n（2）如何估计 $\\alpha$ 与 $\\beta$？\n（3）验证你上面给出的估计的无偏性（要给出相应的假设条件）。',
       answer: '（1）$\\ln y=\\alpha+\\beta\\ln x$ 是**双对数模型**，$\\beta=\\dfrac{\\mathrm{d}\\ln y}{\\mathrm{d}\\ln x}$ 即弹性：$x$ 增加 1% 时 $y$ 平均增加 $\\beta$%。\n（2）对 $\\ln y_i$ 与 $\\ln x_i$ 作 OLS（等价于对原模型的极大似然估计，误差正态时）：$\\hat\\beta=\\dfrac{\\sum(\\ln x_i-\\overline{\\ln x})(\\ln y_i-\\overline{\\ln y})}{\\sum(\\ln x_i-\\overline{\\ln x})^2}$，$\\hat\\alpha=\\overline{\\ln y}-\\hat\\beta\\,\\overline{\\ln x}$。\n（3）无偏性验证：设 $\\ln y_i=\\alpha+\\beta\\ln x_i+\\varepsilon_i$，需要假设 $E(\\varepsilon_i\\mid X)=0$（$X$ 为以 $1,\\ln x_i$ 为行的设计矩阵，即误差项条件均值为零）。把 $\\ln y_i$ 代入 $\\hat\\beta=\\dfrac{\\sum(\\ln x_i-\\overline{\\ln x})(\\ln y_i-\\overline{\\ln y})}{\\sum(\\ln x_i-\\overline{\\ln x})^2}$，注意 $\\sum(\\ln x_i-\\overline{\\ln x})=0$，取期望得 $E(\\hat\\beta)=\\dfrac{\\beta\\sum(\\ln x_i-\\overline{\\ln x})^2}{\\sum(\\ln x_i-\\overline{\\ln x})^2}=\\beta$，故 $\\hat\\beta$ 为 $\\beta$ 的无偏估计（同理 $E(\\hat\\alpha)=\\alpha$）。',
       traps: '把 $\\beta$ 解释成「边际效应」而不是「弹性」；第（3）问只提「误差正态」而漏掉 $E(\\varepsilon\\mid X)=0$（无偏性最核心的假设），或把验证写成「根据高斯-马尔可夫定理显然」而不做代入推导；把 $E(\\hat\\beta)=\\beta$ 的推导写成「因为 OLS 是最优线性无偏估计」而跳过假设条件。',
@@ -103,7 +103,7 @@
     },
     {
       id: 'st-2017-4', year: 2017, no: '四、(20分)', type: 'regress', star: 5,school: '北京大学光华-431 金融学统计 2017 年', 
-      tags: ['jj07', 'jj11', 'jj01', 'jj09', 'jj10'],
+      tags: ['reg06', 'jj11', 'jj01', 'jj09', 'jj10'],
       stem: '变量 $y$ 为 CEO 年薪，变量 $x_1$ 为公司上一年年报收益，变量 $x_2$ 为公司上一年市场价格，变量 $x_3$ 为公司杠杆率，变量 $x_4$ 为公司大股东持股比例，变量 $x_5$ 为公司规模。使用的回归模型为\n$$y=\\beta_0+\\beta_1x_1+\\beta_2x_2+\\beta_3x_3+\\beta_4x_4+\\beta_5x_5+\\varepsilon$$\n假定通过上述 50 家公司的数据计算得到的 $\\beta_1$ 的估计值为 0.3，相应的 $t$ 统计量为 1.5。请回答：\n（1）请给出 CEO 年薪只与公司的报表收益和市场表现线性相关的零假设和备择假设，给出假设检验需要的限制模型的形式和检验统计量。\n（2）如果研究者又进一步随机地收集到了更多的数据，共计收集了 200 家上市公司的数据，使用 200 家公司数据重新估计模型，请判断系数的估计值是否会改变，$t$ 统计量大概会是多少，模型的调整 $R^2$ 是否会改变，如果会改变，给出变化的关系。\n（3）请讨论在上面的模型中，如果公司的收益存在盈余管理，可能会对估计的结果产生什么影响，请说明理由，并指出在什么假设条件下，即使存在自变量的量度误差也不影响估计的无偏性？',
       answer: '（1）「CEO 年薪只与公司的报表收益和市场表现线性相关」，即 $x_3,x_4,x_5$ 的系数全为零：$H_0:\\beta_3=\\beta_4=\\beta_5=0\\leftrightarrow H_1:\\beta_3\\ne0$ 或 $\\beta_4\\ne0$ 或 $\\beta_5\\ne0$；限制模型为 $y=\\beta_0+\\beta_1x_1+\\beta_2x_2+\\varepsilon$；检验统计量 $F=\\dfrac{(\\mathrm{SSE}_R-\\mathrm{SSE}_U)/(\\mathrm{df}_R-\\mathrm{df}_U)}{\\mathrm{SSE}_U/\\mathrm{df}_U}\\sim F(\\mathrm{df}_R-\\mathrm{df}_U,\\ \\mathrm{df}_U)$，本题 $\\mathrm{df}_R=n-3$、$\\mathrm{df}_U=n-6$，故 $F\\sim F(3,\\,n-6)$。\n（2）系数估计值可能会改变（用了新的样本重新估计）；$t=\\hat\\beta_1/\\mathrm{se}(\\hat\\beta_1)$ 的绝对值一般会变化：样本量由 50 增至 200，$\\mathrm{se}(\\hat\\beta_1)$ 约缩小一半，若 $\\hat\\beta_1$ 不变则 $t$ 约由 1.5 增至 $1.5\\times\\sqrt{4}=3$；调整 $R^2=1-\\dfrac{n-1}{n-k-1}(1-R^2)$ 会改变，但其增减取决于新增数据与模型的拟合关系（若新增数据同样符合该模型，调整 $R^2$ 一般提高），不能只凭样本量给出确定结论。\n（3）盈余管理（管理层为自身利益操纵报表收益）的影响：若盈余管理对每个公司是随机的、与 CEO 年薪无关，则它只增大误差方差（降低估计精度），不破坏无偏性与一致性；若盈余管理是系统性的且与年薪相关，则 $x_1$ 与 $\\varepsilon$ 相关（内生性），OLS 估计有偏且不一致（$\\beta_1$ 一般被高估）。即使存在自变量的量度误差也不影响无偏性的假设条件：$E(x_i^*-x_i)=0$、$E(x_i^*-x_i\\mid x_i)=0$、$E((x_i^*-x_i)\\varepsilon_i)=0$（量度误差为纯随机误差，均值零、与真实值和误差项都不相关）。',
       traps: '把「只与报表收益和市场表现线性相关」的 $H_0$ 写成整体显著性 $\\beta_1=\\cdots=\\beta_5=0$（正确是限制 $\\beta_3=\\beta_4=\\beta_5=0$）；限制模型漏掉 $x_1,x_2$（写成 $y=\\beta_0+\\varepsilon$）；F 统计量的分子自由度写成 5 而不是约束个数 3；第（2）问断言「$t$ 一定变大、调整 $R^2$ 一定提高」（$t$ 要在 $\\hat\\beta_1$ 不变的前提下估计，调整 $R^2$ 无确定方向）；第（3）问把「两种盈余管理情形」混为一谈，或漏掉量度误差的三个条件。',
@@ -610,7 +610,7 @@
       tags: ["ll07"],
       stem: "设 $X\\sim P(\\lambda)$，以下判断正确的是（  ）\\\\\nA. $P(X>2\\lambda)\\le1-\\frac1\\lambda$　B. $P(X>2\\lambda)\\le\\frac1\\lambda$\\\\\nC. $P(X>2\\lambda)\\ge\\frac1\\lambda$　D. $P(X>2\\lambda)\\ge1-\\frac1\\lambda$",
       answer: "选 B。泊松分布 $E(X)=D(X)=\\lambda$，由切比雪夫不等式（只需方差存在即可估计概率上界）：\n$$P(X>2\\lambda)=P(X-\\lambda>\\lambda)\\le P(|X-\\lambda|>\\lambda)\\le\\frac{D(X)}{\\lambda^{2}}=\\frac1\\lambda$$",
-      src: { card: "ll07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ll07\"]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[ll07] 无条目 → 省略 traps 字段。MNEM[ll07] 无条目 → 省略 hint 字段。" }
+      src: { card: "ll07", note: "卡片例题（data/stats.js 的 EXAMPLE[\"ll07\"][0]）来源原文：2023 上海财经大学 432 统计学真题。PITFALL[ll07] 无条目 → 省略 traps 字段。MNEM[ll07] 无条目 → 省略 hint 字段。" }
     },
     {
       id: "cv-st-sm01", origin: 'card', year: 2023, school: "上海财经大学 432 统计学真题 2023 年", no: "未编号", type: "sampdist", star: 4,
@@ -698,20 +698,6 @@
       stem: "下列说法正确的是（  ）\\\\\nA. 样本量的增加可以提高检验的显著水平\\\\\nB. 经验分布函数是单调增函数\\\\\nC. 样本容量越大，样本方差越小\\\\\nD. 统计量是样本的函数",
       answer: "选 D（官方答案 D 或 BD）。统计量是根据样本数据计算得到的量，是样本的函数，这是点估计的基础（用统计量 $\\hat\\theta(X_1,\\dots,X_n)$ 估计总体参数）。\nA 错：样本量增大提高的是检验功效，显著性水平由研究者设定；C 错：方差反映数据的离散程度，不随样本量必然减小；B 有歧义：经验分布函数为非减右连续函数。",
       src: { card: "est01", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est01\"]）来源原文：2025 北大光华 431 统计真题。PITFALL[est01] 无条目 → 省略 traps 字段。MNEM[est01] 无条目 → 省略 hint 字段。" }
-    },
-    {
-      id: "cv-st-est03", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "未编号", type: "estimate", star: 4,
-      tags: ["est03"],
-      stem: "设 $X_1,\\dots,X_n$ i.i.d. $\\sim N(\\mu,\\sigma^{2})$，$\\mu$ 已知。证明：(1) $\\dfrac1n\\sum_{i=1}^{n}(X_i-\\mu)^{2}$ 是 $\\sigma^{2}$ 的有效估计；(2) $\\dfrac1n\\sqrt{\\dfrac{\\pi}{2}}\\sum_{i=1}^{n}|X_i-\\mu|$ 是 $\\sigma$ 的无偏估计但不有效",
-      answer: "(1) 令 $Z_i=(X_i-\\mu)/\\sigma\\sim N(0,1)$，$\\hat\\sigma_1^{2}=\\frac{\\sigma^{2}}{n}\\sum Z_i^{2}$。$E(\\hat\\sigma_1^{2})=\\sigma^{2}$，$Var(\\hat\\sigma_1^{2})=\\frac{\\sigma^{4}}{n^{2}}\\cdot 2n=\\frac{2\\sigma^{4}}{n}$，达到 C-R 下界 $\\frac{2\\sigma^{4}}{n}$，故有效。\n(2) $E|Z_i|=\\sqrt{\\frac2\\pi}$，故 $E\\left[\\frac1n\\sqrt{\\frac\\pi2}\\sum|X_i-\\mu|\\right]=\\sqrt{\\frac\\pi2}\\cdot\\sigma\\sqrt{\\frac2\\pi}=\\sigma$ 无偏；但其方差大于 C-R 下界，故不有效。",
-      src: { card: "est03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est03\"][0]）来源原文：2019 复旦大学 432 统计学真题。PITFALL[est03] 无条目 → 省略 traps 字段。MNEM[est03] 无条目 → 省略 hint 字段。" }
-    },
-    {
-      id: "cv-st-est03-2", origin: 'card', year: 2021, school: "南开大学 432 统计学真题 2021 年", no: "未编号", type: "estimate", star: 4,
-      tags: ["est03"],
-      stem: "对于下述两个命题：命题 A：$\\hat\\theta$ 是 $\\theta$ 的有效估计；命题 B：$\\hat\\theta$ 是 $\\theta$ 的 UMVUE。下列结论正确的是（  ）",
-      answer: "有效估计 = 无偏且\\textbf{方差达到 C-R 下界}的估计量，故其方差在所有无偏估计中最小 $\\Rightarrow$ 必为 UMVUE，即 $A\\Rightarrow B$。\n反之，UMVUE 方差最小但不一定达到 C-R 下界（可因信息量未充分利用或非正则情形），故 $B\\not\\Rightarrow A$。选 (b) $A\\Rightarrow B,\\ B\\not\\Rightarrow A$。",
-      src: { card: "est03", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est03\"][1]）来源原文：2021 南开大学 432 统计学真题。PITFALL[est03] 无条目 → 省略 traps 字段。MNEM[est03] 无条目 → 省略 hint 字段。" }
     },
     {
       id: "cv-st-est04", origin: 'card', year: 2016, school: "南开大学 432 统计学真题 2016 年", no: "未编号", type: "estimate", star: 4,
@@ -804,7 +790,21 @@
       tags: ["est13"],
       stem: "有来自总体 $U(\\theta,2\\theta)$ 的随机样本 $X_1,\\dots,X_n$，求 $\\theta$ 的矩估计和 MLE，并验证无偏性和相合性",
       answer: "矩估计：$E(X)=\\frac{3\\theta}{2}$，令 $\\bar X=\\frac{3\\theta}{2}$，得 $\\hat\\theta_M=\\frac{2}{3}\\bar X$。$E(\\hat\\theta_M)=\\theta$ 无偏；由辛钦大数定律 $\\bar X\\overset{P}{\\to}\\frac{3\\theta}{2}$，故 $\\hat\\theta_M\\overset{P}{\\to}\\theta$ 相合。\nMLE：$L(\\theta)=\\frac{1}{\\theta^{n}}$，约束 $\\theta\\le X_{(1)}\\le X_{(n)}\\le 2\\theta$，即 $\\frac{X_{(n)}}{2}\\le\\theta\\le X_{(1)}$。$L(\\theta)=\\theta^{-n}$ 关于 $\\theta$ 单调递减，故 $\\theta$ 取**最小值**时为 MLE，即 $\\hat\\theta_{MLE}=\\frac{X_{(n)}}{2}$。令 $Y_i=\\frac{X_i-\\theta}{\\theta}\\sim U(0,1)$，则 $Y_{(n)}\\sim\\mathrm{Beta}(n,1)$、$E(Y_{(n)})=\\frac{n}{n+1}$，故 $E(\\hat\\theta_{MLE})=\\frac{2n+1}{2n+2}\\theta\\ne\\theta$ 有偏（渐近无偏）；又 $Y_{(n)}\\overset{P}{\\to}1$ 即 $X_{(n)}\\overset{P}{\\to}2\\theta$，故 $\\hat\\theta_{MLE}\\overset{P}{\\to}\\theta$ 相合。",
-      src: { card: "est13", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est13\"]）来源原文：2019 复旦大学 432 统计学真题。PITFALL[est13] 无条目 → 省略 traps 字段。MNEM[est13] 无条目 → 省略 hint 字段。" }
+      src: { card: "est13", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est13\"][0]）来源原文：2019 复旦大学 432 统计学真题。PITFALL[est13] 无条目 → 省略 traps 字段。MNEM[est13] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est13-2", origin: 'card', year: 2019, school: "复旦大学 432 统计学真题 2019 年", no: "未编号", type: "estimate", star: 4,
+      tags: ["est13"],
+      stem: "设 $X_1,\\dots,X_n$ i.i.d. $\\sim N(\\mu,\\sigma^{2})$，$\\mu$ 已知。证明：(1) $\\dfrac1n\\sum_{i=1}^{n}(X_i-\\mu)^{2}$ 是 $\\sigma^{2}$ 的有效估计；(2) $\\dfrac1n\\sqrt{\\dfrac{\\pi}{2}}\\sum_{i=1}^{n}|X_i-\\mu|$ 是 $\\sigma$ 的无偏估计但不有效",
+      answer: "(1) 令 $Z_i=(X_i-\\mu)/\\sigma\\sim N(0,1)$，$\\hat\\sigma_1^{2}=\\frac{\\sigma^{2}}{n}\\sum Z_i^{2}$。$E(\\hat\\sigma_1^{2})=\\sigma^{2}$，$Var(\\hat\\sigma_1^{2})=\\frac{\\sigma^{4}}{n^{2}}\\cdot 2n=\\frac{2\\sigma^{4}}{n}$，达到 C-R 下界 $\\frac{2\\sigma^{4}}{n}$，故有效。\n(2) $E|Z_i|=\\sqrt{\\frac2\\pi}$，故 $E\\left[\\frac1n\\sqrt{\\frac\\pi2}\\sum|X_i-\\mu|\\right]=\\sqrt{\\frac\\pi2}\\cdot\\sigma\\sqrt{\\frac2\\pi}=\\sigma$ 无偏；但其方差大于 C-R 下界，故不有效。",
+      src: { card: "est13", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est13\"][1]）来源原文：2019 复旦大学 432 统计学真题。PITFALL[est13] 无条目 → 省略 traps 字段。MNEM[est13] 无条目 → 省略 hint 字段。" }
+    },
+    {
+      id: "cv-st-est13-3", origin: 'card', year: 2021, school: "南开大学 432 统计学真题 2021 年", no: "未编号", type: "estimate", star: 4,
+      tags: ["est13"],
+      stem: "对于下述两个命题：命题 A：$\\hat\\theta$ 是 $\\theta$ 的有效估计；命题 B：$\\hat\\theta$ 是 $\\theta$ 的 UMVUE。下列结论正确的是（  ）",
+      answer: "有效估计 = 无偏且\\textbf{方差达到 C-R 下界}的估计量，故其方差在所有无偏估计中最小 $\\Rightarrow$ 必为 UMVUE，即 $A\\Rightarrow B$。\n反之，UMVUE 方差最小但不一定达到 C-R 下界（可因信息量未充分利用或非正则情形），故 $B\\not\\Rightarrow A$。选 (b) $A\\Rightarrow B,\\ B\\not\\Rightarrow A$。",
+      src: { card: "est13", note: "卡片例题（data/stats.js 的 EXAMPLE[\"est13\"][2]）来源原文：2021 南开大学 432 统计学真题。PITFALL[est13] 无条目 → 省略 traps 字段。MNEM[est13] 无条目 → 省略 hint 字段。" }
     },
     {
       id: "cv-st-est14", origin: 'card', year: 2021, school: "复旦大学 432 统计学真题 2021 年", no: "未编号", type: "estimate", star: 4,
@@ -1578,7 +1578,7 @@
     {
       id: "st-2022-9", origin: 'year', year: 2022, no: "九", type: "estimate", star: 4,
       school: "复旦大学-432 应用统计 2022 年",
-      tags: ["est02", "est03", "est04", "xt01"],
+      tags: ["est02", "est13", "est04", "xt01"],
       stem: "$X_1,X_2,X_3$ 是 i.i.d. 的 $U(0,\\theta)$ 随机样本，设 $aX_{(1)}$、$bX_{(3)}$ 是 $\\theta$ 的无偏估计，求 $a,b$ 并比较何者更有效．",
       answer: "$U(0,\\theta)$ 的次序统计量服从 $X_{(k)}/\\theta\\sim\\mathrm{Beta}(k,n+1-k)$，$n=3$：\n$$E[X_{(1)}]=\\theta\\cdot\\frac{1}{4},\\qquad E[X_{(3)}]=\\theta\\cdot\\frac{3}{4}\n\\ \\Longrightarrow\\ a=4,\\qquad b=\\frac43 .$$\n方差：对 $U(0,1)$，$\\mathrm{Var}(X_{(k)})=k(n+1-k)/[(n+1)^2(n+2)]$，$n=3$ 时\n$$\\mathrm{Var}(X_{(1)})=\\mathrm{Var}(X_{(3)})=\\frac{3}{80},\\qquad\n\\mathrm{Var}(aX_{(1)})=16\\cdot\\frac{3}{80}=\\frac35,\\qquad\n\\mathrm{Var}(bX_{(3)})=\\frac{16}{9}\\cdot\\frac{3}{80}=\\frac{1}{15}.$$\n因 $\\frac1{15}<\\frac35$，故 **$bX_{(3)}=\\frac43X_{(3)}$ 更有效**（方差仅为其 $1/9$，即 $\\frac{1/15}{3/5}=\\frac19$）．",
       traps: "$E[X_{(1)}]=\\theta/4$、$E[X_{(3)}]=3\\theta/4$ ⇒ $a=4,\\ b=4/3$（两者都无偏，但方差差别很大）；$\\mathrm{Var}(aX_{(1)})$ 要乘 $a^2=16$，漏平方会得出错误比较；结论：最大值型估计更有效（端点 $\\theta$ 的信息集中在 $X_{(n)}$）",
@@ -1648,7 +1648,7 @@
     {
       id: "st-2022-16", origin: 'year', year: 2022, no: "选17", type: "estimate", star: 3,
       school: "上海交通大学-432 统计学 2022 年",
-      tags: ["est02", "est03", "rv09", "xt02"],
+      tags: ["est02", "est13", "rv09", "xt02"],
       stem: "设 $X_1,\\dots,X_n$ 是来自总体 $X\\sim U(0,\\theta)$ 的样本，$\\hat\\theta_1=2\\bar X$、$\\hat\\theta_2=\\frac{n+1}{n}X_{(n)}$，则（　）\\nA. $\\hat\\theta_1$ 比 $\\hat\\theta_2$ 更有效\\nB. $\\hat\\theta_2$ 比 $\\hat\\theta_1$ 更有效\\nC. $\\hat\\theta_1$ 与 $\\hat\\theta_2$ 一样有效\\nD. 因为两者均值不同，所以无法比较",
       answer: "B。$E\\bar X=\\theta/2$、$\\mathrm{Var}(\\bar X)=\\frac{\\theta^2}{12n}$，故 $\\mathrm{Var}(\\hat\\theta_1)=\\frac{4\\theta^2}{12n}=\\frac{\\theta^2}{3n}$；由 $X_{(n)}/\\theta$ 的密度 $nt^{n-1}$ 得 $EX_{(n)}=\\frac{n}{n+1}\\theta$、$\\mathrm{Var}(X_{(n)})=\\frac{n\\theta^2}{(n+1)^2(n+2)}$，故 $\\mathrm{Var}(\\hat\\theta_2)=\\left(\\frac{n+1}{n}\\right)^2\\frac{n\\theta^2}{(n+1)^2(n+2)}=\\frac{\\theta^2}{n(n+2)}$。两者都无偏，而 $\\frac{1}{n(n+2)}<\\frac{1}{3n}\\ (n>1)$，故 $\\hat\\theta_2$ 更有效。",
       traps: "只看出「都无偏」就判一样有效（有效性要比方差）；把 $\\hat\\theta_1$ 的方差写成 $\\theta^2/(12n)$（漏掉系数 2 带来的因子 4）；凭直觉认为次序统计量估计量方差更大",
@@ -1738,7 +1738,7 @@
     {
       id: "st-2022-25", origin: 'year', year: 2022, no: "证1", type: "numchar", star: 4,
       school: "上海交通大学-432 统计学 2022 年",
-      tags: ["nc01", "rv11", "nc09"],
+      tags: ["nc01", "rv11", "ll07"],
       stem: "设连续型随机变量 $X,Y$ 的密度函数分别为 $p(x)>0$、$q(x)>0$，定义域 $D$ 相同，定义 Kullback-Leibler 散度 $D(p\\|q)=\\int_{x\\in D}p(x)\\log\\frac{p(x)}{q(x)}dx$。(1) 证明 $D(p\\|q)\\ge0$；(2) 若 $X\\sim N(0,1)$、$Y\\sim N(\\mu,\\sigma^2)$，求 $D(X\\|Y)$，并说明 $\\sigma$ 变化时它的变化趋势。",
       answer: "(1) 由 $\\ln t\\le t-1\\ (t>0)$，取 $t=\\frac{q}{p}$ 得 $-\\log\\frac qp=\\log\\frac pq\\ge1-\\frac qp$，于是 $D(p\\|q)=\\int_Dp\\log\\frac pq\\ dx\\ge\\int_Dp\\left(1-\\frac qp\\right)dx=\\int_Dp-\\int_Dq=1-1=0$，等号成立当且仅当 $p=q$（几乎处处）。(2) 把 $q$ 取为 $N(\\mu,\\sigma^2)$ 的密度代入：$D=\\int p\\log\\frac pq=E_p\\left[-\\frac{x^2}{2}+\\ln\\sigma+\\frac{(x-\\mu)^2}{2\\sigma^2}\\right]=\\frac12\\left[\\mu^2+\\sigma^2-1-2\\ln\\sigma\\right]$。对 $\\sigma$ 求导 $\\frac{\\partial D}{\\partial\\sigma}=\\sigma-\\frac1\\sigma$：当 $0<\\sigma<1$ 时 $D$ 随 $\\sigma$ 增大而减小，当 $\\sigma>1$ 时 $D$ 随 $\\sigma$ 增大而增大，$\\sigma=1$ 处取到最小值 $D=\\frac{\\mu^2}{2}$（即方差失配比均值失配更敏感，$\\sigma$ 偏离 1 越多散度越大）。",
       traps: "用 $\\ln t\\le t-1$ 时把 $t$ 取成 $p/q$，导致不等式方向相反；漏掉 $\\ln\\sigma$ 项（$-\\frac12\\log\\sigma^2=-\\log\\sigma$）；断言 $D$ 关于 $\\sigma$ 单调（实际在 $\\sigma=1$ 取最小值）",
@@ -1798,7 +1798,7 @@
     {
       id: "st-2023-6", origin: 'year', year: 2023, no: "七", type: "dist", star: 5,
       school: "复旦大学-432 应用统计 2023 年",
-      tags: ["rv13", "rv15", "nc09"],
+      tags: ["rv13", "rv15", "ll07"],
       stem: "$X\\sim N(0,1)$，$f$ 是有界连续函数且其导函数也有界连续，求证：\n(1)（Stein 引理）$E[f(X)X]=E[f'(X)]$；\n(2)（Poincaré 不等式）$E\\bigl[(f(X)-Ef(X))^2\\bigr]\\le E\\bigl[f'(X)^2\\bigr]$．",
       answer: "(1) 分部积分（$\\varphi'(x)=-x\\varphi(x)$，且 $f\\varphi$ 在 $x\\to\\pm\\infty$ 时趋于 0）：\n$$E[f'(X)]=\\int_{\\mathbb R}f'(x)\\varphi(x)dx=\\bigl[f(x)\\varphi(x)\\bigr]_{-\\infty}^{+\\infty}-\\int_{\\mathbb R}f(x)\\varphi'(x)dx\n=\\int_{\\mathbb R}xf(x)\\varphi(x)dx=E[f(X)X].$$\n(2) 记 $g=f-Ef(X)$（$Eg(X)=0$，$g'=f'$）．把 $g$ 按 Hermite 正交基展开\n$$g(x)=\\sum_{k\\ge1}a_k\\,\\frac{\\mathrm{He}_k(x)}{\\sqrt{k!}},\\qquad \\mathrm{He}_k'=k\\,\\mathrm{He}_{k-1},$$\n（$\\{\\mathrm{He}_k/\\sqrt{k!}\\}$ 是标准正态下的正交基，$E\\mathrm{He}_k(X)\\mathrm{He}_j(X)=k!\\,\\delta_{kj}$）．由 $E g(X)=0$ 常数项为 0，于是\n$$E[g(X)^2]=\\sum_{k\\ge1}a_k^2,\\qquad\nE[g'(X)^2]=\\sum_{k\\ge1}k\\,a_k^2\\ \\ge\\ \\sum_{k\\ge1}a_k^2=E[(f(X)-Ef(X))^2],$$\n即得 (2)．（等号当且仅当 $f$ 仿射，此时 $f'$ 为常数。）",
       traps: "Stein 引理的分部积分要用 $\\varphi'(x)=-x\\varphi(x)$ 且边界项为零（$f$ 有界）；Poincaré 不等式的右边是“方差”与 $E[f'^2]$ 的比较，常数项必须剔除（$E g(X)=0$）；Hermite 展开中 $\\mathrm{He}_k'=k\\mathrm{He}_{k-1}$ 是 $E[f'^2]$ 出现因子 $k$ 的来源",
@@ -1888,7 +1888,7 @@
     {
       id: "st-2024-8", origin: 'year', year: 2024, no: "五", type: "numchar", star: 3,
       school: "复旦大学-432 应用统计 2024 年",
-      tags: ["nc09", "rv05"],
+      tags: ["ll07", "rv05"],
       stem: "证明：$E|X|$ 存在与 $\\sum_{k=0}^{\\infty}P(|X|>k)$ 收敛等价．",
       answer: "核心恒等式（层表示）：\n$$E|X|=\\int_0^{\\infty}P(|X|>t)\\,dt .$$\n对 $t\\in[k,k+1)$ 有 $P(|X|>t)\\le P(|X|>k)$，故\n$$\\int_0^{\\infty}P(|X|>t)dt\\le\\sum_{k=0}^{\\infty}P(|X|>k);$$\n对 $t\\in(k,k+1]$ 有 $P(|X|>t)\\ge P(|X|>k+1)$，故\n$$\\int_0^{\\infty}P(|X|>t)dt\\ge\\sum_{k=1}^{\\infty}P(|X|>k)=\\sum_{k=0}^{\\infty}P(|X|>k)-P(|X|>0).$$\n两个不等式把 $E|X|$ 与级数夹在一起（并约定 $E|X|<\\infty\\Rightarrow P(|X|>t)\\to0$ 保证尾部无贡献），故两者同敛散，即 $E|X|$ 存在 $\\iff\\sum_{k\\ge0}P(|X|>k)<\\infty$．\n（若 $X$ 取整数值，这就是 $E|X|=\\sum_k P(|X|\\ge k)$ 的推广形式。）",
       traps: "必须用夹逼（上、下两个不等式），只证一个方向不足以说明“等价”；“$E|X|$ 存在”＝$E|X|<\\infty$，即积分／级数收敛；要说明两边同时有限或同时无限；层表示 $E|X|=\\int_0^\\infty P(|X|>t)dt$ 是本题的枢纽（$|X|\\ge0$ 才能这样写）",
@@ -2008,7 +2008,7 @@
     {
       id: "st-2025-8", origin: 'year', year: 2025, no: "五", type: "numchar", star: 4,
       school: "复旦大学-432 应用统计 2025 年",
-      tags: ["nc09", "nc01", "nc05"],
+      tags: ["ll07", "nc01", "nc05"],
       stem: "$X,Y$ 独立同分布于 $F$，二阶矩存在，证明：(1) $E|X-Y|^2=2\\mathrm{Var}(X)$；(2) $\\mathrm{Var}(\\sin X)\\le\\mathrm{Var}(X)$．",
       answer: "(1) 由独立性，\n$$E(X-Y)^2=EX^2-2\\,EX\\,EY+EY^2=2\\bigl(EX^2-(EX)^2\\bigr)=2\\,\\mathrm{Var}(X).$$\n(2) 由 $|\\sin x-\\sin y|\\le|x-y|$（$|\\cos|\\le1$ 的中值定理）得\n$$E(\\sin X-\\sin Y)^2\\le E(X-Y)^2 .$$\n左端用独立性＝$2\\mathrm{Var}(\\sin X)$，右端由 (1)＝$2\\mathrm{Var}(X)$，故\n$$\\mathrm{Var}(\\sin X)\\le\\mathrm{Var}(X).$$",
       traps: "(1) 中 $EX\\,EY=(EX)^2$ 是同分布带来的（不要漏掉这一（关键）代入）；(2) 用 $|\\sin x-\\sin y|\\le|x-y|$ 的 Lipschitz 性质，把“$\\sin$ 变换后方差变小”转成两变量的期望比较；左端 $E(\\sin X-\\sin Y)^2=2\\mathrm{Var}(\\sin X)$ 同样依赖同分布",
@@ -2068,7 +2068,7 @@
     {
       id: "st-2026-2", origin: 'year', year: 2026, no: "四", type: "estimate", star: 5,
       school: "北京大学光华-431 金融学统计 2026 年",
-      tags: ["rv07", "est22", "sy05", "test06", "est02"],
+      tags: ["rv07", "est13", "sy05", "test06", "est02"],
       stem: "设随机变量 $X$ 服从参数为 $\\lambda\\ (\\lambda>0)$ 的泊松分布．\n(1) 设 $g(X)$ 使期望存在，证明 $E[Xg(X)]=\\lambda E[g(X+1)]$；\n(2) 求 $X$ 的三阶原点矩 $E[X^3]$ 与四阶原点矩 $E[X^4]$；\n(3) 设 $X_1,X_2$ 为来自该总体的简单随机样本，考虑 $\\hat\\lambda_1=\\dfrac{X_1+X_2}{2}$ 与 $\\hat\\lambda_2=\\dfrac{(X_1-X_2)^2}{2}$，计算它们的均方误差并比较优劣；\n(4) 设 $X_1,\\dots,X_n$ 为简单随机样本，$\\bar X$ 为样本均值，利用 $\\bar X$ 构造统计量，在置信水平 $\\alpha$ 下对 $H_0:\\lambda=1\\leftrightarrow H_1:\\lambda\\ne1$ 进行检验（写出统计量、大样本近似分布与拒绝域）．",
       answer: "(1) 用泊松分布求和：\n$$E[Xg(X)]=\\sum_{k\\ge0}k\\,g(k)\\frac{\\lambda^ke^{-\\lambda}}{k!}=\\lambda\\sum_{k\\ge1}g(k)\\frac{\\lambda^{k-1}e^{-\\lambda}}{(k-1)!}=\\lambda\\sum_{j\\ge0}g(j+1)\\frac{\\lambda^je^{-\\lambda}}{j!}=\\lambda E[g(X+1)] .$$\n(2) 反复用 (1)：$E[X^2]=\\lambda E[X+1]=\\lambda^2+\\lambda$；\n$$E[X^3]=\\lambda E[(X+1)^2]=\\lambda\\bigl[(\\lambda^2+\\lambda)+2\\lambda+1\\bigr]=\\lambda^3+3\\lambda^2+\\lambda ;$$\n$$E[X^4]=\\lambda E[(X+1)^3]=\\lambda\\bigl[(\\lambda^3+3\\lambda^2+\\lambda)+3(\\lambda^2+\\lambda)+3\\lambda+1\\bigr]=\\lambda^4+6\\lambda^3+7\\lambda^2+\\lambda .$$\n(3) $\\hat\\lambda_1=\\frac{X_1+X_2}2$：$E=\\lambda$，$\\mathrm{Var}=\\frac{2\\lambda}4=\\frac\\lambda2$ ⇒ $\\mathrm{MSE}(\\hat\\lambda_1)=\\frac\\lambda2$．\n记 $D=X_1-X_2$：$E(D)=0$，$\\mathrm{Var}(D)=2\\lambda$；泊松分布的累积量 $\\kappa_j=\\lambda$，故 $D$ 的偶数阶累积量为 $2\\lambda$、奇数阶为 0，\n$$\\kappa_4(D)=2\\lambda,\\quad E[D^4]=\\kappa_4+3\\kappa_2^2=2\\lambda+12\\lambda^2 .$$\n于是 $E(\\hat\\lambda_2)=\\frac{E[D^2]}2=\\lambda$（无偏），\n$$\\mathrm{MSE}(\\hat\\lambda_2)=\\mathrm{Var}(\\hat\\lambda_2)=\\frac{E[D^4]}4-\\lambda^2=\\frac{2\\lambda+12\\lambda^2}4-\\lambda^2=\\frac\\lambda2+2\\lambda^2 .$$\n比较：$\\mathrm{MSE}(\\hat\\lambda_2)-\\mathrm{MSE}(\\hat\\lambda_1)=2\\lambda^2>0$，故对任意 $\\lambda>0$，$\\hat\\lambda_1$ 更优（无偏且方差更小；$\\hat\\lambda_2$ 虽无偏但方差含 $2\\lambda^2$ 项）．\n(4) 由中心极限定理 $\\sqrt n\\,\\dfrac{\\bar X-\\lambda}{\\sqrt\\lambda}\\xrightarrow{d}N(0,1)$．在 $H_0:\\lambda=1$ 下取\n$$Z=\\sqrt n\\,(\\bar X-1)\\ \\approx\\ N(0,1),\\qquad\\text{拒绝域：}\\ |Z|\\ \\ge\\ z_{1-\\alpha/2}$$\n（即 $|\\bar X-1|\\ge z_{1-\\alpha/2}/\\sqrt n$；若要更稳健可把方差用 $\\bar X$ 估计：$Z^*=\\frac{\\sqrt n(\\bar X-1)}{\\sqrt{\\bar X}}$，$H_0$ 下渐近 $N(0,1)$）．",
       traps: "(1) 的关键是 $k/k!\\to1/(k-1)!$ 的指标平移，证明要写出指标替换；(2) 必须借 (1) 递推，直接求 $E[X^3]$ 的四项求和容易出错；(3) $\\hat\\lambda_2$ 无偏但方差含 $2\\lambda^2$，只比较“是否无偏”会得出错误的“同优”结论；MSE＝方差＋偏差²；(4) $H_0$ 下方差为 $\\lambda=1$，检验统计量用 $\\sqrt n(\\bar X-1)$，不能漏 $\\sqrt n$",

@@ -2592,3 +2592,43 @@ body.immersive #immersiveExit { display: block; }
    保留：`.focus-tree-state` 半条与 `.focus-tree-state { border-radius: 999px; … }` 逐字未动。
    原则：不留无生产者的选择器；徽标若回归，先恢复生产者再补规则。
    ------------------------------------------------------------------------- */
+
+/* ============================================================================
+   T157 · 专注链状态树：默认逐层收起后的折叠键列对齐 + 触屏热区补齐
+   ----------------------------------------------------------------------------
+   语义侧在 src/focus.mjs：focusTreeRows 的 opts.expanded 是**显式展开集合**（缺键 = 收起），
+   折叠键由 focusTreeFoldKeyEl 统一产出（▸/▾ + aria-expanded + data-collapsed + title）。
+   本段只补两处视觉：
+   1) 列对齐：编制行 = [多选 18] [折叠键 28] [主行]；单元行是叶（只有多选 + 主行）、
+      伪根行（未编入 / 已编入）没有多选框。若不给这两类行补同宽占位，同一 depth 的
+      主行左缘会相差 28px + 行 gap 6px = 34px。故新增两个纯占位格（span，不绑监听、
+      不进入 tab 序）：.focus-tree-fold-slot 与折叠键同宽同高，.focus-tree-check-slot
+      与多选框同宽。
+   2) 触屏热区：t27 注释口径为「桌面 ≥28×28、≤420px 或触屏 ≥40×40」，但 t29 的
+      .focus-tree-row .focus-tree-fold-level 固定 28、内联兜底又被 focusCssDeclared 守卫
+      早退 ⇒ >420px 的触屏设备此前实际只有 28×28。这里按主指针类型补到 40×40（与
+      ≤420px 段同尺寸），占位格同步放大以保持列对齐；桌面与手机窄屏口径不变。
+   零新增 token、零颜色字面量、无 !important（延续 t29 / t34 / t42 口径）。
+   ========================================================================== */
+.focus-tree-fold-slot {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+}
+.focus-tree-check-slot {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+@media (max-width: 420px) {
+  .focus-tree-fold-slot { width: 40px; height: 40px; }
+}
+@media (pointer: coarse) {
+  .focus-tree-row .focus-tree-fold-level {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .focus-tree-fold-slot { width: 40px; height: 40px; }
+}

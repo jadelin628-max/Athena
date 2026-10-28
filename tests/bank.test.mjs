@@ -82,7 +82,7 @@ const BANKS = ['math3', 'econ', 'stats'];
 // stats 260 − 3 = 257、全库 767 − 3 = 764；判据与逐对裁定见 docs/refs/2.2.0-PLAN.md §1.2 Q7 与 backup/scratch/bank-split/。
 // 只保留「不得低于已入库量」的护栏，避免题量悄悄失守（下限是护栏，不是对现实的固定描述）。
 // t74 起合计下限由各科下限**派生**（不再单独写死魔数）：改某一科下限时合计自动跟随。
-const MIN_QUESTIONS = {math3: 331, econ: 176, stats: 257};
+const MIN_QUESTIONS = {math3: 363, econ: 335, stats: 257};
 const MIN_TOTAL = MIN_QUESTIONS.math3 + MIN_QUESTIONS.econ + MIN_QUESTIONS.stats;
 // 题型定义来自 t4 的题型体系表（数学三 10 / 微观 6 / 统计 6）；t27 为「积分与变限积分」新增 math3 的
 // integral 键（11 类）、t30 为「级数敛散性判别」新增 series 键（12 类）、t32 为统计卡片例题新增

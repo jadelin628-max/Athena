@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '2.2.0';
+  const VERSION = '2.2.1';
 
   // ---------------- 更新日志（设置页「更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '2.2.1', date: '2026-10', items: ['新卡推送优先前置（按反馈新增）：新学队列按卡片关系里的「前置」做稳定拓扑分层——某张卡的前置还没学完时，它不会先于前置被推上来；互标成环的卡收成同一层（环内顺序随机，不再互相卡住），没有前置关系的科目行为逐字不变；当天首次引入的新卡也按「层」从前往后取，不会先引入后继再补前置。只改推送顺序，不动 FSRS 调度与每日上限', '分条标号不再把内容切断（按反馈修复）：卡面分段只在「行首」或「句末标点之后」把 ①②③ 与 （1）（2） 当作新分点——`由①②③可证`、`第③条`、`X_{(1)}`、公式与代码围栏里的同形标号都保持原样，不再被切成多块', '专注链默认折叠（按反馈新增）：状态树初始只显示根层，点行标题逐层展开；折叠键固定在行首、桌面 28×28、窄屏与触屏 40×40，「多选框 + 折叠键」两列在计划 / 单元 / 未编入三类行上对齐。收起状态只在本次会话记住，刷新回到全收起；新建计划节点后自动展开该节点一级', '卡片合并（按统计科审计的重复清单，只并重复、其余全保留）：`pb16` ← `pb14-2`（补单调列极限、交外并内 / 并外交内的记法、上下极限的包含方向）、`ll07` ← `nc09`（补「分母是 ε² 不是标准差、区间须关于 E(X) 对称、给的是上界」与切比雪夫大数定律 / 频率偏离界两条应用）、`est13` ← `est03` + `est03-2` + `est22`（重写成「无偏 / 有效 / 相合 + 三层次 UMVUE·有效估计·渐近有效 + 均方误差与以偏换方差 + 判别路线」）、`test16` ← `sm16`（补「斜率≈σ、截距≈μ」与「S 形弯曲提示偏态、两端同时偏离提示峰度异常」）、`reg06` ← `jj07`（调整 R² 三条性质并入易混项）。统计科 272 → 265 张、全库 2888 → 2881；被并卡的例题与原「关联」边全部改指保留卡，没有一条内容或引用丢失', '卡面文本顺手修正：合并后的五张卡按《卡片粒度与体量标准》收紧到正文净字数 300 以内（248 / 283 / 271 / 294 / 226），标题与正文口径统一（「判定系数」「调整 R²」「正态概率图」各归一张）；此前审计报的 `xt15`/`xt15-2` 标题「制表符」经全量扫描确认是误报（数据里是合法的 `\\times`），未改动', '清历史债（`backup/scratch/docs-refresh/verify-refs.mjs` 从 14 条失败到全部通过）：`docs/ARCHITECTURE.md` 与 `docs/ACT.md` 里专注链的 10 处 `src/focus.mjs` 行号按真实定义重指（`focusIsExpanded` / `focusTreeExpandPanelEl` / `focusTreeLabelEl` / `focusUnitTypeTagEl` / 提醒箱四项 / delta 对拍用例）；题库护栏 `MIN_QUESTIONS` 与真实题量对齐（math3 363 / econ 335 / stats 257），校验脚本支持「合计下限由各科派生」的写法，测试文件数改为与 `tests/` 目录现算对拍（不再写死 17）', '工程：新增 `tests/queue-prereq.test.mjs`（16 条）、`tests/render-bullets.test.mjs`（14 条），全量测试 439 条全绿；`npm run check`、`npm run check:render` 全绿；`docs/COVERAGE.md` 补「T158 重复卡合并终值」一行（2881 / stats 265 / EXAMPLE 键 164、条目 177），`docs/ARCHITECTURE.md` 同步前置分层、标号边界与专注链折叠口径'] },
     { v: '2.2.0', date: '2026-10', items: ['学习顺序（新设置，设置 →「学习偏好」→「学习顺序」）：可选「先复习」（默认，与之前行为一致）或「先新学」——先新学时先把当天的新卡与今日新学的学习步进做完，再进入复习队列。本课与全局两段可分别设置；切换后只重排还没学到的部分，已学进度与当前卡片原地保留（不重建队列、不重置今日进度）', '三种队列的兼容语义：新学会话 = 未学新卡 + 学习中步进，复习会话 = 到期复习 + 重学步进。**分钟级步进卡（学习中 / 重学）在两种顺序下都尽早回到队首**（短时记忆窗口只有 2/10 分钟，不值得排到复习积压后面），只有「尚未开始的那个会话里的到期复习卡」会按设置延后——先新学时它们留在待学区等复习会话开始，做完新学队列就自动接管。默认「先复习」下判据恒成立，与 2.1.9 的队列逐字一致', '修复（用户反馈）：进入复习队列后，学习中队列的卡到期也不回到队首。根因是队首区只按到期时间升序——步进卡只逾期几分钟，而复习积压逾期好几天，于是刚评过「再来一次」的学习卡被排到整条积压之后，用户在复习会话里再也轮不到它。现在队首区先按「步进卡整组优先、组内按到期升序」排，其后才是到期复习卡；并在当前卡片上挂一个到点自动刷新的定时器（最长等 15 分钟，每次渲染重设），到点把步进卡接回队首，不必等下一次评分', '工程：队列编排抽成纯函数（`queueSortFront` / `queueGroupBySession` / `queueActiveSession` / `queueSurfacesNow` / `queueMergeDeferred`），新增 `tests/queue-order.test.mjs` 10 条（含「默认顺序下所有到期卡都会被吸回」的回归锁与源码接线守卫），全量测试 405 条全绿；另用一次性 vm 冒烟脚本驱动真实 `buildSession` / `surfaceDue` / `reorderQueue` 验证 38 项运行时行为；偏好键 `queueOrder` 进本课/全局共用键表并在加载时净化（非法值回退默认），`docs/ARCHITECTURE.md` 与 `docs/DATA_SCHEMA.md` 同步口径'] },
     { v: '2.1.9', date: '2026-10', items: ['归档换了位置（按反馈调整）：归档不再占行动模块的二级导航，而是**专注链自己的页签**，与「专注 / 状态」同级——专注链页签顺序为 `专注 | 状态 | 归档 | 统计`，行动二级导航回到四项「专注链 → 计划 → 习惯树 → 帮助」；命令面板的「行动 · 归档」直接跳到该页签', '补归档（用户报的残留）：2.1.7 只给逾期未转正的计划打了「已逾期」标记、编制仍留在状态栏里。现在这类历史标记会在下一次结算时**补做归档**——编制整体移出并归档、归属链按只清归属链的规则清空，归档里的清空时间沿用当初的逾期时刻（不会被盖章成"今天清空"）；幂等，不会重复入档', '状态页警告提示的显示/关闭：**已逾期**与**已归档**提示可以点「关闭提醒」收起（关闭态随专注链状态持久化，刷新后仍然关闭），**临近截止**提示保持自动——计划完成（转正）或违规（逾期结算）后它自己消失，不需要手动关'] },
   { v: '2.1.8', date: '2026-10', items: ['专注链（按反馈修正到期结算的范围）：计划任务过了截止日期仍未转正时，不再「清空所有任务链」——现在**只清这份计划编制所归属的链**（按被移出的任务单元反推链，链上还编着别的单元就只扣掉移出条数、链继续可用，减到 0 才标记「已清空」），**预约链永不参与**（一个字节都不动）；清空的同时把这份编制整体移出编制树——计划节点、它的下级节点与已编入单元一起进归档，现场不留痕迹', '归档栏目（新，专注链的下级功能）：二级导航「专注链 → 归档 → 计划 → 习惯树 → 帮助」，逐条查看被清空的历史编制——计划名（含层级与番号）、截止日期、清空时间、涉及哪些链（各自移出条数、已清空还是剩余）、编制规模；可展开还原完整层级（父节点 → 子节点 → 已编入单元，含达成与结束状态）。归档记录只增不改（上限 200 条），专注链视图同时给出最近 3 条摘要与「查看归档」入口', '工程：结算次序固定为「快照 → 移出 → 清链 → 入档」并补源码级守卫（含反证：清所有链、先移出后快照都判红）与浏览器端检查（headless Chrome 17 项：导航接线、SVG 图标、归档卡片与统计、展开画树、空态、无未捕获异常）；顺带修掉归档树引用 `focusTreeLabelEl` 抛 ReferenceError 的问题（该函数原定义在渲染函数内部，已提升到模块作用域）'] },
@@ -198,6 +199,7 @@
   // 结构标签块、大段散文句末多句细切）；渲染入口在 render.mjs 的 renderProse。
 
   // ===== 卡面答案分段增强（只影响展示，不改数据） =====
+  // ===== BEGIN TESTABLE answer split =====
   // 块类型：point=①/（n）分点 · label=结构标签起块 · para=空行段落/句段 · text=其余散文
   // 优先级：①分点 ≻ 结构标签 ≻ 空行分段 ≻ 大段散文句末多句细切；~~~ 代码块在 renderTex 层已整块 <pre>。
 
@@ -206,7 +208,8 @@
   const ANS_LABEL_RE = new RegExp('^(?:\\*\\*|\\\\textbf\\{)?(' + ANS_LABELS.join('|') + ')(?:\\*\\*|\\})?[ \\t]*[：:]');
 
   function ansTrimEdge(s) {
-    return String(s).replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, '');
+    // \u3000 全角空格也裁：分点边界允许「换行 + 全角缩进」，不裁会在上一块尾部留下悬空缩进
+    return String(s).replace(/^[ \t\r\n\u3000]+|[ \t\r\n\u3000]+$/g, '');
   }
 
   // 保护区间：$..$、$$..$$、\cmd{...}、**…**——分段不得切在中间（防拆坏公式/加粗）
@@ -216,6 +219,13 @@
     let i = 0;
     function push(a, b) { ranges.push([a, b]); i = b; }
     while (i < n) {
+      // ~~~ 围栏代码块整块保护：正常管线里 renderTex 已按 ~~~ 剥离，此处只做直接调用时的兜底
+      if (str[i] === '~' && str[i + 1] === '~' && str[i + 2] === '~') {
+        const fenceEnd = str.indexOf('~~~', i + 3);
+        if (fenceEnd === -1) { push(i, n); break; }
+        push(i, fenceEnd + 3);
+        continue;
+      }
       if (str[i] === '$' && str[i + 1] === '$') {
         const end = str.indexOf('$$', i + 2);
         if (end === -1) { push(i, n); break; }
@@ -268,6 +278,19 @@
     const p = str[j];
     if (p === '\n' || p === '\r') return true;
     return p === '。' || p === '！' || p === '？' || p === '!' || p === '?' || p === '；' || p === ';';
+  }
+
+  // 分点标号（①/（n））的合法边界：行首（可有缩进）、句末标点（。！？；!?;）、列举引导符（：:—→）之后。
+  // 句中同形标号（「由①②③可证」「第③条」「条件②③失效」「X_{(1)}」类）不算新分点，
+  // 否则一句完整的话会被拦腰切成两块（本函数即 T156 修的那个断点）。
+  const ANS_POINT_LEAD = '。！？；!?;：:—→';
+  function ansPointBoundary(str, start) {
+    let j = start - 1;
+    while (j >= 0 && (str[j] === ' ' || str[j] === '\t' || str[j] === '\u3000')) j--;
+    if (j < 0) return true;
+    const p = str[j];
+    if (p === '\n' || p === '\r') return true;
+    return ANS_POINT_LEAD.indexOf(p) >= 0;
   }
 
   // 在 pos 处尝试匹配结构标签（含 ** / \textbf{} 包装）；命中返回 { length, name }
@@ -383,6 +406,7 @@
       const prev = idx > 0 ? str[idx - 1] : '';
       if (prev === '{' || prev === '\\' || prev === '（' || prev === '(' || prev === '_' || prev === '^' || prev === '*' || prev === '`') continue;
       if (ansIsProtected(ranges, idx)) continue;
+      if (!ansPointBoundary(str, idx)) continue;
       pointCuts.push(idx);
     }
     const out = [];
@@ -400,6 +424,7 @@
     }
     return out;
   }
+  // ===== END TESTABLE answer split =====
 
   // ---------------- 数学渲染（KaTeX 可用则渲染，否则降级为纯文本） ----------------
 
@@ -2440,6 +2465,148 @@
     });
   }
   // ===== END TESTABLE queue order helpers =====
+  // ===== BEGIN TESTABLE prereq helpers =====
+  // 新卡推送顺序：优先推「前置卡」——REL[A] 里的 { to: B, tag: '前置' } 表示 B 是 A 的前置。
+  // 纯函数、自包含（不读 REL / 不读 DB）：关系表与「已学」判定都由调用方注入，
+  // 所以队列编排不进 src/sched.mjs，也不碰 FSRS 公式。
+  //
+  // 排序口径（稳定拓扑分层）：
+  //   · 层号 = 1 + 本批内未学前置的最大层号；无约束（无前置 / 前置已学 / 前置不在本批）落第 0 层；
+  //   · 输出按（层, 输入序）排 ⇒ 前置恒在依赖之前，同层严格保持调用方传入的顺序（shuffle / 交错的结果）；
+  //   · 环（互指前置，如 生产函数 ↔ 边际产量）先收成强连通分量 = 同一层：环内的边无法同时满足，
+  //     是唯一允许被违反的边；分量之间严格按拓扑层（Tarjan 出栈序里前置分量必先出），绝不跨分量误伤；
+  //   · 每张卡恰属一个分量、每个分量都有层号 ⇒ 输出长度恒等于去重后的输入长度，绝不死锁；
+  //   · 零前置边时原样返回（无该 tag 的学科逐字不变）。
+
+  // REL 取值：relOf 可以是 { id: edges[] } 表，也可以是 id => edges[] 函数；缺失或非法一律当空
+  function prereqRelOf(id, relOf) {
+    let edges = null;
+    if (typeof relOf === 'function') {
+      edges = relOf(id);
+    } else if (relOf && typeof relOf === 'object') {
+      edges = relOf[id];
+    }
+    return Array.isArray(edges) ? edges : [];
+  }
+
+  // A 的显式前置：tag === '前置' 的 to 列表（去重保序；跳过自引用/非字符串；缺失或非法返 []）
+  function prereqOf(id, relOf) {
+    const edges = prereqRelOf(id, relOf);
+    const out = [];
+    const seen = {};
+    for (let i = 0; i < edges.length; i++) {
+      const e = edges[i];
+      if (!e || typeof e !== 'object' || e.tag !== '前置') continue;
+      const to = e.to;
+      if (typeof to !== 'string' || !to || to === id || seen[to]) continue;
+      seen[to] = true;
+      out.push(to);
+    }
+    return out;
+  }
+
+  // 把一批 id 排成「前置先于依赖」的顺序：不改入参、确定性、绝不死锁
+  function prereqOrder(ids, relOf, learnedOf) {
+    const list = [];
+    const at = {};
+    (Array.isArray(ids) ? ids : []).forEach(function (id) {
+      if (typeof id !== 'string' || !id || at[id] !== undefined) return;
+      at[id] = list.length;
+      list.push(id);
+    });
+    const n = list.length;
+    if (n < 2) return list;
+    const isLearned = function (id) { return typeof learnedOf === 'function' && !!learnedOf(id); };
+    // 邻接：只保留「本批内 + 尚未学」的前置边；其余前置已越过，不再拖住卡
+    const deps = [];
+    for (let i = 0; i < n; i++) deps.push([]);
+    let edges = 0;
+    for (let i = 0; i < n; i++) {
+      const ps = prereqOf(list[i], relOf);
+      for (let j = 0; j < ps.length; j++) {
+        const pi = at[ps[j]];
+        if (pi === undefined || pi === i || isLearned(ps[j])) continue;
+        deps[i].push(pi);
+        edges++;
+      }
+    }
+    if (!edges) return list;
+    // 迭代 Tarjan 求强连通分量（显式栈，避免深链爆调用栈）：
+    // 遍历方向是「卡 → 它的前置」，所以出栈顺序里前置分量一定先出 —— 正着扫就是从源头算层号。
+    const index = [];
+    const low = [];
+    const onStack = [];
+    const sccOf = [];
+    for (let i = 0; i < n; i++) { index[i] = -1; low[i] = -1; onStack[i] = false; sccOf[i] = -1; }
+    const sccStack = [];
+    const comps = [];
+    let tick = 0;
+    const frame = []; // [node, 下一个要扫的 dep 下标]
+    for (let root = 0; root < n; root++) {
+      if (index[root] !== -1) continue;
+      index[root] = low[root] = tick++;
+      sccStack.push(root);
+      onStack[root] = true;
+      frame.push([root, 0]);
+      while (frame.length) {
+        const top = frame[frame.length - 1];
+        const v = top[0];
+        if (top[1] < deps[v].length) {
+          const w = deps[v][top[1]++];
+          if (index[w] === -1) {
+            index[w] = low[w] = tick++;
+            sccStack.push(w);
+            onStack[w] = true;
+            frame.push([w, 0]);
+          } else if (onStack[w] && index[w] < low[v]) {
+            low[v] = index[w];
+          }
+        } else {
+          frame.pop();
+          if (low[v] === index[v]) {
+            const comp = [];
+            let w;
+            do {
+              w = sccStack.pop();
+              onStack[w] = false;
+              sccOf[w] = comps.length;
+              comp.push(w);
+            } while (w !== v);
+            comps.push(comp);
+          }
+          if (frame.length) {
+            const p = frame[frame.length - 1][0];
+            if (low[v] < low[p]) low[p] = low[v];
+          }
+        }
+      }
+    }
+    // 凝聚图分层：层号 = 1 + max(跨分量前置的层号)；分量内部互指，同层处理
+    const compLayer = [];
+    for (let c = 0; c < comps.length; c++) compLayer.push(0);
+    for (let c = 0; c < comps.length; c++) {
+      const comp = comps[c];
+      let L = 0;
+      for (let m = 0; m < comp.length; m++) {
+        const ds = deps[comp[m]];
+        for (let j = 0; j < ds.length; j++) {
+          const cd = sccOf[ds[j]];
+          if (cd !== c && compLayer[cd] + 1 > L) L = compLayer[cd] + 1;
+        }
+      }
+      compLayer[c] = L;
+    }
+    const idx = [];
+    for (let i = 0; i < n; i++) idx.push(i);
+    idx.sort(function (a, b) {
+      const la = compLayer[sccOf[a]], lb = compLayer[sccOf[b]];
+      return (la - lb) || (a - b);
+    });
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(list[idx[i]]);
+    return out;
+  }
+  // ===== END TESTABLE prereq helpers =====
 
   function buildSession(pendingBoost, skipPending) {
     const now = Date.now();
@@ -2464,8 +2631,13 @@
     const begOn = !!(beg.on && Array.isArray(beg.cats) && beg.cats.length);
     const begSet = {};
     if (begOn) beg.cats.forEach(function (k) { begSet[k] = true; });
+    // 前置关系（REL 里 tag === '前置'）：新卡「先推前置」的排序依据，引入与排队共用
+    const prereqRel = function (id) { return REL[id] || []; };
+    const prereqLearned = function (id) { const c = card(id); return !!(c && c.state !== 'new'); };
     // 引入「未引入的新卡」（数量受 room 限制；skipPending=true 供「再来一批」直通——自行带量，不再自动引入）
-    const pending = skipPending ? [] : shuffle(all.filter(function (id) {
+    // 引入前先按前置分层取「层前缀」：每日上限截断出的这一批天然前置封闭，
+    // 不会出现「前置还没引入、后继先被推上来」的情况（无 前置 tag 的学科原样返回，行为不变）。
+    const pending = skipPending ? [] : prereqOrder(shuffle(all.filter(function (id) {
       const c = card(id);
       if (!c || c.state !== 'new' || st.ids.indexOf(id) !== -1) return false;
       if (begOn) {
@@ -2473,7 +2645,7 @@
         if (!f || !begSet[f.cat]) return false;
       }
       return true;
-    })).slice(0, room);
+    })), prereqRel, prereqLearned).slice(0, room);
     if (pending.length) {
       st.ids = st.ids.concat(pending);
       DB.log.counts[t].intro = introducedToday + pending.length;
@@ -2496,7 +2668,11 @@
     const learningDue = interleaveByIds(all.filter(function (id) { return card(id).state === 'learning' && card(id).due <= now; }));
     const relearningDue = interleaveByIds(all.filter(function (id) { return card(id).state === 'relearning' && card(id).due <= now; }));
     // 已引入但仍未学的新卡：受每日上限约束（再来一批的 pendingBoost 额外放量），先乱序再辨析交错；判空防御同上
-    const newToStudy = interleaveByIds(shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; })).slice(0, room + (skipPending ? (pendingBoost || 0) : 0)));
+    // 推送顺序：REL 里的「前置」卡先推出。候选池先分层取前 room + boost 张（前缀天然「前置封闭」），
+    // 但交错内部会二次洗牌，所以交错后再排一次恢复保证；无 前置 tag 的学科两次都原样返回。
+    const newPool = shuffle(st.ids.filter(function (id) { const c = card(id); return c && c.state === 'new'; }));
+    const newOrdered = prereqOrder(newPool, prereqRel, prereqLearned).slice(0, room + (skipPending ? (pendingBoost || 0) : 0));
+    const newToStudy = prereqOrder(interleaveByIds(newOrdered), prereqRel, prereqLearned);
     // 两个会话：新学 = 学习步进 + 未学新卡；复习 = 到期复习 + 重学步进
     const segNew = learningDue.concat(newToStudy);
     const segReview = dueOrdered.concat(relearningDue);
@@ -14909,9 +15085,13 @@ function bankDetailNode(q) {
   }
 
   // 竖列树行
+  // T157：层级折叠口径由「缺省即展开」改为「缺省即收起」——opts.expanded 是**显式展开集合**
+  // （键 = 编制 id 或伪根 '__unassigned'，值为 true 才算展开），缺键一律视为收起。
+  // 旧 opts.collapsed（缺省即展开的折叠集合）已移除：调用方改传 focusUiState.foldOpen，
+  // 所以刷新/重进就是逐层收起，用户手动展开只在本次会话内有效（不写 localStorage）。
   function focusTreeRows(state, opts) {
     const o = opts || {};
-    const collapsed = o.collapsed || {};
+    const expanded = o.expanded || {};
     const chainFilter = o.chainFilter == null ? null : String(o.chainFilter);
     const assignFilter = o.assignFilter || 'all';
     const rows = [];
@@ -14938,6 +15118,11 @@ function bankDetailNode(q) {
       });
     }
 
+    // T157：缺省收起 → 只有显式展开集合里的节点才放行下级；undefined / false / 缺键都算收起。
+    function focusLevelOpen(id) {
+      return expanded[String(id)] === true;
+    }
+
     function orgRow(org, depth) {
       const agg = focusOrgAggregates(state, org.id);
       rows.push({
@@ -14946,7 +15131,7 @@ function bankDetailNode(q) {
         level: org.level,
         visual: focusLevelVisual(org.level),
         parent: focusParentAttribution(state, org.id),
-        collapsed: !!collapsed[org.id],
+        collapsed: !focusLevelOpen(org.id),
         aggregates: agg
       });
     }
@@ -14960,7 +15145,7 @@ function bankDetailNode(q) {
     function walk(parentId, depth) {
       childrenOf(parentId).slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (org) {
         orgRow(org, depth);
-        if (!collapsed[org.id]) {
+        if (focusLevelOpen(org.id)) {
           walk(org.id, depth + 1);
           units.filter(function (u) { return u && u.orgId === org.id; })
             .sort(function (a, b) { return a.seq - b.seq; })
@@ -14969,17 +15154,22 @@ function bankDetailNode(q) {
       });
     }
 
+    // 未编入 / 已编入筛选：伪根与正式编制一样缺省收起（T157），键复用 '__unassigned'。
     if (assignFilter === 'unassigned' || assignFilter === 'assigned') {
-      rows.push({ kind: 'root', depth: 0, id: '__unassigned', label: assignFilter === 'unassigned' ? '未编入' : '已编入', aggregates: null });
-      units.slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (u) { unitRow(u, 1); });
+      const rootOpen = focusLevelOpen('__unassigned');
+      rows.push({ kind: 'root', depth: 0, id: '__unassigned', label: assignFilter === 'unassigned' ? '未编入' : '已编入', collapsed: !rootOpen, aggregates: null });
+      if (rootOpen) {
+        units.slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (u) { unitRow(u, 1); });
+      }
       return rows;
     }
 
     walk(null, 0);
     const unassigned = units.filter(function (u) { return u && !u.orgId; });
     if (unassigned.length || o.showUnassignedRoot !== false) {
-      rows.push({ kind: 'root', depth: 0, id: '__unassigned', label: '未编入', aggregates: null });
-      if (!collapsed['__unassigned']) {
+      const rootOpen = focusLevelOpen('__unassigned');
+      rows.push({ kind: 'root', depth: 0, id: '__unassigned', label: '未编入', collapsed: !rootOpen, aggregates: null });
+      if (rootOpen) {
         unassigned.slice().sort(function (a, b) { return a.seq - b.seq; }).forEach(function (u) { unitRow(u, 1); });
       }
     }
@@ -15529,7 +15719,9 @@ function bankDetailNode(q) {
   let focusTickTimer = null;
   const focusUiState = {
     tab: 'seat',
-    collapsed: {},
+    foldOpen: {},          // T157 层级折叠：**显式展开集合**（键 = 编制 id / '__unassigned'）。
+                           //   缺省空对象 ⇒ 状态树逐层收起（只露根层），刷新即回落。
+                           //   旧 collapsed 集合（缺省即展开）已移除，见 focusTreeRows 头部注释。
     expanded: {},          // 2.0 两段式：第二段（字段面板）展开态，键 = kind:id
     assignFilter: 'all',       // all | assigned | unassigned（是否编入）
     selected: {},          // 树内多选
@@ -16261,6 +16453,45 @@ function bankDetailNode(q) {
     else document.addEventListener('DOMContentLoaded', function () { focusReminderStart(); });
   }
 
+  // ---------------- UI：层级折叠键（T157） ----------------
+  // 折叠键内联兜底（t27）：桌面 ≥28×28、≤420px 或触屏 ≥40×40（视觉细节交给 style.css / t28）。
+  // 判定选择器必须指向「新」折叠键类名 .focus-tree-fold-level：旧的 .focus-tree-expand 已随
+  // 每行详情展开键删除，若继续拿它判定，会把已由 CSS 覆盖的场景又写上内联尺寸。
+  function focusTreeFoldDefaults(btn) {
+    if (focusCssDeclared('.focus-tree-row .focus-tree-fold-level')) return;
+    const narrow = !!((window.matchMedia && window.matchMedia('(max-width: 420px)').matches) || ('ontouchstart' in window));
+    const px = narrow ? 40 : 28;
+    btn.style.minWidth = px + 'px';
+    btn.style.minHeight = px + 'px';
+    btn.style.padding = narrow ? '0 10px' : '0 8px';
+  }
+
+  // T157：层级折叠键的唯一构造点 —— 编制行（org）与伪根行（未编入 / 已编入）共用同一份口径，
+  // 避免两处各写一套 aria / 热区导致状态漂移：
+  //   · 状态：r.collapsed 为真 → 收起（▸ + aria-expanded="false" + data-collapsed="1"），
+  //     为假 → 展开（▾ + aria-expanded="true" + data-collapsed="0"）；
+  //   · 交互：原生 button，Enter / Space 与点击等效；点击写 focusUiState.foldOpen[r.id]
+  //     （显式展开集合：true=展开、false=收起）后整树重渲染；
+  //   · 热区：交给 focusTreeFoldDefaults + style.css（桌面 28×28、≤420px 与触屏 40×40）。
+  function focusTreeFoldKeyEl(r) {
+    const collapsed = !!(r && r.collapsed);
+    const fold = el('button', 'focus-tree-fold focus-tree-fold-level', collapsed ? '▸' : '▾');
+    fold.type = 'button';
+    fold.title = collapsed ? '展开下级' : '收起下级';
+    fold.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    fold.setAttribute('aria-label', (collapsed ? '展开下级 ' : '收起下级 ') + String((r && r.label) || ''));
+    fold.setAttribute('data-collapsed', collapsed ? '1' : '0');
+    fold.setAttribute('data-fold-id', String((r && r.id) || ''));
+    focusTreeFoldDefaults(fold);
+    fold.addEventListener('click', function (e) {
+      e.stopPropagation();
+      // 按「本次渲染快照」取反：连点/重入都不会把状态翻回去（true=展开，false=收起）
+      focusUiState.foldOpen[r.id] = collapsed;
+      renderApp();
+    });
+    return fold;
+  }
+
   // ---------------- UI：状态树（编制 + 计划合并） ----------------
   function focusRenderTree(wrap, st, now) {
     // 计划模式开关
@@ -16400,7 +16631,7 @@ function bankDetailNode(q) {
     }
 
     const rows = focusTreeRows(st, {
-      collapsed: focusUiState.collapsed,
+      expanded: focusUiState.foldOpen,
       assignFilter: focusUiState.assignFilter,
       chainFilter: focusUiState.chainFilter
     });
@@ -16416,18 +16647,6 @@ function bankDetailNode(q) {
     }
 
     const guides = focusTreeGuides(rows);
-
-    // 层级折叠键内联兜底（t27）：桌面 ≥28×28、≤420px 或触屏 ≥40×40（视觉细节交给 style.css / t28）。
-    // 判定选择器必须指向「新」折叠键类名 .focus-tree-fold-level：旧的 .focus-tree-expand 已随
-    // 每行详情展开键删除，若继续拿它判定，会把已由 CSS 覆盖的场景又写上内联尺寸。
-    function focusTreeFoldDefaults(btn) {
-      if (focusCssDeclared('.focus-tree-row .focus-tree-fold-level')) return;
-      const narrow = !!((window.matchMedia && window.matchMedia('(max-width: 420px)').matches) || ('ontouchstart' in window));
-      const px = narrow ? 40 : 28;
-      btn.style.minWidth = px + 'px';
-      btn.style.minHeight = px + 'px';
-      btn.style.padding = narrow ? '0 10px' : '0 8px';
-    }
 
     // 展开行主键复用纯函数 focusTreeExpandKey(node)（见上文「两段式第二段」段）
     function focusIsExpanded(r) {
@@ -16607,20 +16826,9 @@ function bankDetailNode(q) {
 
       if (r.kind === 'org') {
         // 层级折叠键（t27 更显眼）：独立类名 focus-tree-fold-level + data-collapsed + aria-expanded；
-        // 保留 focus-tree-fold 基类（既有选择器/样式继续命中）。热区：桌面 ≥28×28、≤420px 或触屏 ≥40×40。
-        const fold = el('button', 'focus-tree-fold focus-tree-fold-level', r.collapsed ? '▸' : '▾');
-        fold.type = 'button';
-        fold.title = r.collapsed ? '展开下级' : '收起下级';
-        fold.setAttribute('aria-expanded', r.collapsed ? 'false' : 'true');
-        fold.setAttribute('aria-label', (r.collapsed ? '展开下级 ' : '收起下级 ') + String(r.label || ''));
-        fold.setAttribute('data-collapsed', r.collapsed ? '1' : '0');
-        focusTreeFoldDefaults(fold);
-        fold.addEventListener('click', function (e) {
-          e.stopPropagation();
-          focusUiState.collapsed[r.id] = !focusUiState.collapsed[r.id];
-          renderApp();
-        });
-        row.appendChild(fold);
+        // 保留 focus-tree-fold 基类（既有选择器/样式继续命中）。T157 起构造收敛到模块级
+        // focusTreeFoldKeyEl（与伪根共用同一份 aria/热区口径），此处只负责挂到行上。
+        row.appendChild(focusTreeFoldKeyEl(r));
         // t27：每行独立的详情展开键已删除 → 点行/模块即展开（见 focusBindRowExpand）
 
         const main = el('div', 'focus-tree-main');
@@ -16690,6 +16898,10 @@ function bankDetailNode(q) {
 
         // t27：每行独立的详情展开键已删除 → 点行/模块即展开（见 focusBindRowExpand）
 
+        // T157 布局：单元行是叶，没有折叠键；补一个与折叠键同宽的占位格（style.css
+        // .focus-tree-fold-slot），使同一 depth 的编制行与单元行主行左缘对齐（此前相差 28+6px）。
+        row.appendChild(el('span', 'focus-tree-fold-slot'));
+
         const main = el('div', 'focus-tree-main');
         const u = r.unit;
         // 主行两段式第一段（label 是单一真源）：风味关 = 番号 `#N` + 名称；风味开 = `第82任务单元 · 名称`
@@ -16706,6 +16918,10 @@ function bankDetailNode(q) {
         act.appendChild(editName);
         row.appendChild(act);
       } else {
+        // T157：伪根（未编入 / 已编入）也要能展开下级 —— 先补多选框占位格，再挂与编制行
+        // 同口径的折叠键，最后才是标题；两格宽度与编制行的 checkbox + 折叠键一致，列对齐。
+        row.appendChild(el('span', 'focus-tree-check-slot'));
+        row.appendChild(focusTreeFoldKeyEl(r));
         row.appendChild(el('span', 'focus-tree-root', r.label));
       }
       // t41：单元类型标签渲染在该单元行**上方**（同一 tree 容器内的独立元素，左缘与所属行对齐）
@@ -17382,7 +17598,8 @@ function bankDetailNode(q) {
         }, Date.now());
       }, '已创建计划任务');
       if (r && r.ok && r.org) {
-        focusUiState.collapsed[r.org.id] = false;
+        // T157：新建的计划节点默认展开一级，让用户马上看到刚建的那一层（其余节点仍保持收起）
+        focusUiState.foldOpen[r.org.id] = true;
       }
     });
     const cancel = el('button', 'btn', '取消');

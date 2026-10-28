@@ -90,6 +90,8 @@ import {
   FOCUS_REASON_TEXT,
   focusTemplateTriad,
   focusTreeRows,
+  // T157：层级折叠键（默认收起）的唯一构造点 —— 轻量 DOM 直测 aria-expanded / 热区兜底
+  focusTreeFoldKeyEl,
   focusPlanCreate,
   focusPlanFilledCount,
   focusPlanDueSoon,
@@ -196,6 +198,21 @@ function startAndFinish(st, chainId, startAt, endAt, opts) {
   });
   assert.equal(r2.ok, true, 'complete should ok');
   return r2;
+}
+
+// T157：层级折叠改成「缺省即收起」后，focusTreeRows 的层开放集合语义是
+// **显式展开集合** expanded（键 = 编制 id / '__unassigned'，缺键 = 收起）。
+// 既有用例凡要断言「全展开下的行序 / 树杈 / 聚合」的，一律用 focusRowsAllOpen 显式展开，
+// 原断言一条不减（改动机见 backup/scratch/t157-focus-fold/report.md）。
+function focusExpanded(ids) {
+  const out = {};
+  (ids || []).forEach(function (id) { out[id] = true; });
+  return out;
+}
+
+function focusRowsAllOpen(st, opts) {
+  const ids = ['__unassigned'].concat(((st && st.orgs) || []).map(function (o) { return o.id; }));
+  return focusTreeRows(st, Object.assign({}, opts || {}, { expanded: focusExpanded(ids) }));
 }
 
 // ---------- 常量 / 设置 ----------
@@ -540,13 +557,14 @@ test('竖列树行含聚合与折叠', () => {
   st = startAndFinish(st, 'n1', NOW, NOW + 25 * MIN).state;
   st = focusAssignUnit(st, st.units[0].id, g.id, NOW).state;
 
-  let rows = focusTreeRows(st, {});
+  let rows = focusRowsAllOpen(st, {});
   const orgRow = rows.filter(function (x) { return x.kind === 'org' && x.id === g.id; })[0];
   assert.ok(orgRow);
   assert.equal(orgRow.aggregates.unitCount, 1);
   assert.ok(orgRow.aggregates.avgCompletion != null);
 
-  rows = focusTreeRows(st, { collapsed: (function () { const c = {}; c[g.id] = true; return c; })() });
+  // T157：缺省即收起 ⇒ 不传展开集合时该编制下不出现单元行（原用 collapsed: {g.id:true} 表达同一断言）
+  rows = focusTreeRows(st, {});
   assert.equal(rows.filter(function (x) { return x.kind === 'unit' && x.unit.orgId === g.id; }).length, 0);
 });
 
@@ -1295,14 +1313,15 @@ test('状态树按链筛选记录', () => {
   assert.ok(Object.keys(chainIds).length >= 2);
 
   const filterId = st.units[0].chainId;
-  const rows = focusTreeRows(st, { chainFilter: filterId, showUnassignedRoot: true });
+  // T157：缺省收起 ⇒ 显式展开「未编入」伪根才能看到单元行（断言口径不变）
+  const rows = focusRowsAllOpen(st, { chainFilter: filterId, showUnassignedRoot: true });
   const unitRows = rows.filter(function (x) { return x.kind === 'unit'; });
   assert.ok(unitRows.length >= 1);
   unitRows.forEach(function (x) {
     assert.equal(x.unit.chainId, filterId);
   });
 
-  const rowsAll = focusTreeRows(st, {});
+  const rowsAll = focusRowsAllOpen(st, {});
   assert.ok(rowsAll.filter(function (x) { return x.kind === 'unit'; }).length >= 2);
 });
 
@@ -2065,7 +2084,8 @@ test('树行带显式层级 + 树杈引导链（单元行 level=unit）', () => 
   const unitId = st.units[0].id;
   st = focusAssignUnit(st, unitId, gr.org.id, NOW).state;
 
-  const rows = focusTreeRows(st, {});
+  // T157：缺省收起 ⇒ 显式展开全部节点后才出单元行（本用例断言的是行/树杈结构，口径不变）
+  const rows = focusRowsAllOpen(st, {});
   const uRow = rows.filter(function (r) { return r.kind === 'unit' && r.id === unitId; })[0];
   assert.equal(uRow.level, 'unit');
   assert.equal(uRow.visual, focusLevelVisual('unit'));
@@ -2118,7 +2138,8 @@ test('树杈引导：父级竖线可见，同级最后一项用 └、其余用 
   assert.equal(attG.ok, true, '组应能编入群');
   st = attG.state;
 
-  const rows = focusTreeRows(st, {});
+  // T157：缺省收起 ⇒ 显式展开全部节点后再验树杈（原用例隐含「默认全展开」）
+  const rows = focusRowsAllOpen(st, {});
   const guides = focusTreeGuides(rows);
   const byId = {};
   rows.forEach(function (r, i) { byId[r.id] = guides[i]; });
@@ -2145,9 +2166,8 @@ test('树杈引导：父级竖线可见，同级最后一项用 └、其余用 
   });
 
   // 折叠群：群的下级不渲染，但群行引导位仍是实线（父级竖线不因折叠消失）
-  const collapsed = {};
-  collapsed[c.org.id] = true;
-  const rows2 = focusTreeRows(st, { collapsed: collapsed });
+  // T157：显式展开集合里只放集团 ⇒ 群保持缺省收起（等价于原 collapsed:{群:true}），断言不变
+  const rows2 = focusTreeRows(st, { expanded: focusExpanded([a.org.id]) });
   const guides2 = focusTreeGuides(rows2);
   const cIdx = rows2.map(function (r) { return r.id; }).indexOf(c.org.id);
   assert.ok(cIdx >= 0);
@@ -2163,7 +2183,8 @@ test('两段式第二段：展开字段取自既有纯函数（起止/总时/均
   const u1 = st.units[0];
   st = focusAssignUnit(st, u1.id, g.org.id, NOW).state;
 
-  const rows = focusTreeRows(st, {});
+  // T157：缺省收起 ⇒ 显式展开后单元行才在行视图里（本用例要取 org 行与 unit 行各一份）
+  const rows = focusRowsAllOpen(st, {});
   const gRow = rows.filter(function (r) { return r.id === g.org.id; })[0];
   const info = focusTreeExpandFields(st, gRow);
   const f = {};
@@ -2297,7 +2318,8 @@ test('展开面板归属行：纯函数给实体、唯一前缀在渲染点，�
   st = startAndFinish(st, 'n1', NOW, NOW + 25 * MIN).state;
   const unitId = st.units[0].id;
   st = focusAssignUnit(st, unitId, gr.org.id, NOW).state;
-  const row = focusTreeRows(st, {}).filter(function (r) { return r.id === unitId; })[0];
+  // T157：缺省收起 ⇒ 展开所属编制后单元行才在行视图里（断言口径不变）
+  const row = focusRowsAllOpen(st, {}).filter(function (r) { return r.id === unitId; })[0];
   const info = focusTreeExpandFields(st, row);
   assert.equal(info.parent.attached, true);
   assert.equal(info.parent.text, '●1 写作'); // 契约：text 不含「归属 」前缀
@@ -2317,7 +2339,8 @@ test('展开面板归属行：纯函数给实体、唯一前缀在渲染点，�
   let st2 = makeState();
   st2 = startAndFinish(st2, 'n1', NOW, NOW + 25 * MIN).state;
   const freeId = st2.units[0].id;
-  const row2 = focusTreeRows(st2, {}).filter(function (r) { return r.id === freeId; })[0];
+  // T157：未编入单元挂在「未编入」伪根下，缺省收起 ⇒ 显式展开伪根才出行（断言口径不变）
+  const row2 = focusRowsAllOpen(st2, {}).filter(function (r) { return r.id === freeId; })[0];
   const info2 = focusTreeExpandFields(st2, row2);
   assert.equal(info2.parent.attached, false);
   assert.equal(info2.parent.text, '未编入');
@@ -2779,7 +2802,8 @@ test('t27 渲染端结构（源码级守卫 + 反证）：点行展开 / 折叠�
   // 反证二：「应在场」判据对「挖掉该结构」的活文件必须判红（证明判据不是恒真）
   const strip = (re) => src.replace(re, '/* t27 counter-proof removed */');
   assert.equal(good(strip(/function focusBindRowExpand\(row, r\) \{[\s\S]*?\n    \}/)).rowToggle, false, '反证：删掉行点击绑定应判红');
-  assert.equal(good(strip(/const fold = el\('button', 'focus-tree-fold focus-tree-fold-level'[\s\S]*?\n        row\.appendChild\(fold\);/)).foldKey, false, '反证：删掉层级折叠键应判红');
+  // T157：折叠键构造已收敛到模块级 focusTreeFoldKeyEl，反证改为剥掉该函数（断言与消息不变）
+  assert.equal(good(strip(/function focusTreeFoldKeyEl\(r\) \{[\s\S]*?\n  \}/)).foldKey, false, '反证：删掉层级折叠键应判红');
   assert.equal(good(strip(/const tag = el\('span', 'focus-tree-expand-tag'\);/)).tags, false, '反证：删掉状态标签区应判红');
   assert.equal(good(strip(/focus-tree-expand-mod focus-tree-expand-field/)).modules, false, '反证：删掉模块卡渲染应判红');
   assert.equal(good(src.replace(/FOCUS_TREE_INDENT_PX/g, 'FOCUS_TREE_STEP_X')).indent, false, '反证：换成未导出步长常量应判红');
@@ -2891,3 +2915,260 @@ test('t36 归属单一渲染点：字段行只在未编入出现、attr 行只�
   assert.notEqual(attrGuard(unconditionalAttr), 'info.parent && info.parent.attached', '反证：attr 行退回无条件应判红');
   assert.equal(prefixedPoints("el('div', 'focus-tree-expand-attr', '归属 ' + a);\nel('div', 'x', '归属 ' + b);"), 2, '反证：出现第二个前缀拼接应判红（计数须 ≠ 1）');
 });
+
+// ---------- T157：状态树默认逐层收起 + 折叠键（两态 / 热区 / 列对齐占位） ----------
+
+test('T157 状态树默认逐层收起：缺省只出根层，逐层显式展开才逐级出现', () => {
+  // 三层编制满链：集团 ← 群 ← 组，单元挂在组下（focusCanAttach 只允许「恰为上一级」）
+  let st = makeState();
+  const a = focusCreateOrg(st, { level: 'army', name: 'A' }, NOW);
+  st = a.state;
+  const c = focusCreateOrg(st, { level: 'corps', name: 'C' }, NOW);
+  st = c.state;
+  const g = focusCreateOrg(st, { level: 'group', name: 'G' }, NOW);
+  st = g.state;
+  const attC = focusAttachNodes(st, [c.org.id], a.org.id, NOW);
+  assert.equal(attC.ok, true, '群应能编入集团');
+  st = attC.state;
+  const attG = focusAttachNodes(st, [g.org.id], c.org.id, NOW);
+  assert.equal(attG.ok, true, '组应能编入群');
+  st = attG.state;
+  st = startAndFinish(st, 'n1', NOW, NOW + 25 * MIN).state;
+  const unitId = st.units[0].id;
+  st = focusAssignUnit(st, unitId, g.org.id, NOW).state;
+
+  // ① 缺省（不传 expanded）：只露根层 —— 集团 + 未编入伪根，且两者都标 collapsed
+  const rows0 = focusTreeRows(st, {});
+  assert.deepEqual(rows0.map(function (r) { return r.id; }), [a.org.id, '__unassigned'], 'T157：缺省只应出根层');
+  assert.equal(rows0[0].kind, 'org');
+  assert.equal(rows0[0].collapsed, true, 'T157：缺省必须收起');
+  assert.equal(rows0[1].kind, 'root');
+  assert.equal(rows0[1].collapsed, true, 'T157：未编入伪根缺省也收起');
+  assert.equal(rows0.filter(function (r) { return r.kind === 'unit'; }).length, 0, 'T157：缺省不得出现单元行');
+  assert.equal(rows0.filter(function (r) { return r.depth > 0; }).length, 0, 'T157：缺省不得出现子层行');
+
+  // ② 只展开集团：群出现（depth 1），组（孙层）仍收起、单元行仍不出现
+  const rows1 = focusTreeRows(st, { expanded: focusExpanded([a.org.id]) });
+  assert.deepEqual(rows1.map(function (r) { return r.id; }), [a.org.id, c.org.id, '__unassigned'], 'T157：展开一层的可见行');
+  assert.equal(rows1.filter(function (r) { return r.id === a.org.id; })[0].collapsed, false);
+  assert.equal(rows1.filter(function (r) { return r.id === c.org.id; })[0].collapsed, true, 'T157：孙层仍应收起');
+  assert.equal(rows1.filter(function (r) { return r.kind === 'unit'; }).length, 0);
+
+  // 再展开群：组出现但自身仍收起 ⇒ 单元行仍被挡在组下
+  const rows2 = focusTreeRows(st, { expanded: focusExpanded([a.org.id, c.org.id]) });
+  assert.deepEqual(rows2.map(function (r) { return r.id; }), [a.org.id, c.org.id, g.org.id, '__unassigned']);
+  assert.equal(rows2.filter(function (r) { return r.id === g.org.id; })[0].collapsed, true);
+  assert.equal(rows2.filter(function (r) { return r.kind === 'unit'; }).length, 0);
+
+  // 再展开组：单元行出现，depth = 3（集团 0 / 群 1 / 组 2 / 单元 3）
+  const rows3 = focusTreeRows(st, { expanded: focusExpanded([a.org.id, c.org.id, g.org.id]) });
+  const unitRows = rows3.filter(function (r) { return r.kind === 'unit'; });
+  assert.equal(unitRows.length, 1);
+  assert.equal(unitRows[0].id, unitId);
+  assert.equal(unitRows[0].depth, 3);
+
+  // 展开集合的写法也守规则：值为 false 或键名不存在都不得当「展开」
+  const bad = focusExpanded([a.org.id]);
+  bad[a.org.id] = false;
+  bad.no_such_org = true;
+  assert.deepEqual(focusTreeRows(st, { expanded: bad }).map(function (r) { return r.id; }), [a.org.id, '__unassigned'], 'T157：false / 未知名不得展开');
+});
+
+test('T157 筛选分支同样缺省收起：未编入 / 已编入伪根可展开，链筛选不回归', () => {
+  let st = makeState();
+  st = focusCreateChain(st, { id: 'n2', tier: FOCUS_TIER_NORMAL }, NOW).state;
+  const g = focusCreateOrg(st, { level: 'group', name: '写作', fromPlan: true }, NOW);
+  st = g.state;
+  st = startAndFinish(st, 'n1', NOW, NOW + 25 * MIN).state;
+  const assignedId = st.units[0].id;
+  st = focusAssignUnit(st, assignedId, g.org.id, NOW).state;
+  st = startAndFinish(st, 'n2', NOW + 30 * MIN, NOW + 55 * MIN).state;
+  const freeId = st.units[1].id;
+  assert.notEqual(assignedId, freeId);
+
+  // ③ 未编入筛选：缺省只有伪根一行（可折叠），展开伪根后才有单元行
+  const un1 = focusTreeRows(st, { assignFilter: 'unassigned' });
+  assert.equal(un1.length, 1);
+  assert.equal(un1[0].kind, 'root');
+  assert.equal(un1[0].id, '__unassigned');
+  assert.equal(un1[0].label, '未编入');
+  assert.equal(un1[0].collapsed, true, 'T157：未编入伪根缺省收起');
+  const un2 = focusTreeRows(st, { assignFilter: 'unassigned', expanded: focusExpanded(['__unassigned']) });
+  assert.deepEqual(un2.filter(function (r) { return r.kind === 'unit'; }).map(function (r) { return r.id; }), [freeId]);
+
+  // ③ 伪根折叠值显式 false / 未知名：不炸，仍只有一行且判收起
+  const bad = focusExpanded(['__unassigned']);
+  bad['__unassigned'] = false;
+  bad.no_such_id = true;
+  const un3 = focusTreeRows(st, { assignFilter: 'unassigned', expanded: bad });
+  assert.equal(un3.length, 1, 'T157：伪根收起时不得渲染下级');
+  assert.equal(un3[0].collapsed, true);
+
+  // ④ 已编入筛选：同口径（伪根可展开，缺省收起）
+  const as1 = focusTreeRows(st, { assignFilter: 'assigned' });
+  assert.equal(as1.length, 1);
+  assert.equal(as1[0].label, '已编入');
+  assert.equal(as1[0].collapsed, true, 'T157：已编入伪根缺省收起');
+  const as2 = focusTreeRows(st, { assignFilter: 'assigned', expanded: focusExpanded(['__unassigned']) });
+  assert.deepEqual(as2.filter(function (r) { return r.kind === 'unit'; }).map(function (r) { return r.id; }), [assignedId]);
+
+  // ④ 链筛选 + 缺省：顶层编制行仍出、单元行不出；展开编制后只出该链的单元
+  const chainId = st.units[0].chainId;
+  const ch1 = focusTreeRows(st, { chainFilter: chainId, showUnassignedRoot: true });
+  assert.deepEqual(ch1.map(function (r) { return r.id; }), [g.org.id, '__unassigned'], 'T157：链筛选下缺省只出根层');
+  assert.equal(ch1.filter(function (r) { return r.kind === 'unit'; }).length, 0, 'T157：链筛选下默认收起');
+  const ch2 = focusTreeRows(st, { chainFilter: chainId, showUnassignedRoot: true, expanded: focusExpanded([g.org.id]) });
+  assert.deepEqual(ch2.filter(function (r) { return r.kind === 'unit'; }).map(function (r) { return r.id; }), [assignedId], 'T157：链筛选只出该链单元');
+});
+
+test('T157 折叠键两态：▸/▾、aria-expanded、data-collapsed、热区兜底（轻量 DOM）', () => {
+  // 轻量 DOM（口径同 tests/bank.test.mjs 的 mkNode）：只实现折叠键用到的面
+  const mkNode = function (tag) {
+    return {
+      tag: tag, className: '', text: '', style: {}, attrs: {}, _handlers: {},
+      setAttribute: function (k, v) { this.attrs[k] = String(v); },
+      getAttribute: function (k) { return Object.prototype.hasOwnProperty.call(this.attrs, k) ? this.attrs[k] : null; },
+      addEventListener: function (t, h) { (this._handlers[t] = this._handlers[t] || []).push(h); },
+      fire: function (t, ev) { (this._handlers[t] || []).forEach(function (h) { h(ev); }); },
+      get textContent() { return this.text; },
+      set textContent(v) { this.text = String(v); }
+    };
+  };
+  const saved = {
+    el: globalThis.el, document: globalThis.document, window: globalThis.window, renderApp: globalThis.renderApp
+  };
+  const restore = function (k, v) {
+    if (v === undefined) { try { delete globalThis[k]; } catch (e) { /* noop */ } } else { globalThis[k] = v; }
+  };
+  let renders = 0;
+  globalThis.el = function (tag, cls, text) {
+    const n = mkNode(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  globalThis.document = { styleSheets: [] }; // 空样式表 ⇒ focusCssDeclared=false ⇒ 走内联兜底
+  globalThis.window = { matchMedia: function () { return { matches: false }; } };
+  globalThis.renderApp = function () { renders += 1; };
+  try {
+    // 收起态：▸ + aria-expanded="false" + data-collapsed="1" + 「展开下级」
+    const closed = focusTreeFoldKeyEl({ kind: 'org', id: 'g1', label: '写作', collapsed: true });
+    assert.equal(closed.tag, 'button', 'T157：折叠键必须是原生 button（Enter / Space 免额外监听）');
+    assert.equal(closed.type, 'button');
+    assert.equal(closed.className, 'focus-tree-fold focus-tree-fold-level');
+    assert.equal(closed.textContent, '▸');
+    assert.equal(closed.getAttribute('aria-expanded'), 'false');
+    assert.equal(closed.getAttribute('data-collapsed'), '1');
+    assert.equal(closed.getAttribute('data-fold-id'), 'g1');
+    assert.equal(closed.getAttribute('aria-label'), '展开下级 写作');
+    assert.equal(closed.title, '展开下级');
+    // 热区不低于既有口径：桌面 28×28（CSS 未接管时的内联兜底）
+    assert.equal(closed.style.minWidth, '28px');
+    assert.equal(closed.style.minHeight, '28px');
+
+    // 展开态：▾ + aria-expanded="true" + data-collapsed="0" + 「收起下级」
+    const open = focusTreeFoldKeyEl({ kind: 'org', id: 'g1', label: '写作', collapsed: false });
+    assert.equal(open.textContent, '▾');
+    assert.equal(open.getAttribute('aria-expanded'), 'true');
+    assert.equal(open.getAttribute('data-collapsed'), '0');
+    assert.equal(open.getAttribute('aria-label'), '收起下级 写作');
+    assert.equal(open.title, '收起下级');
+
+    // 点击收起键 → 写显式展开集合 + 整树重渲染一次（不冒泡到行详情开关）
+    let stopped = 0;
+    closed.fire('click', { stopPropagation: function () { stopped += 1; } });
+    assert.equal(stopped, 1, 'T157：折叠键点击必须阻止冒泡（否则同时切换行详情）');
+    assert.equal(renders, 1, 'T157：点击折叠键应触发整树重渲染');
+
+    // 窄屏 / 触屏兜底：matchMedia 命中 → 40×40
+    globalThis.window = { matchMedia: function () { return { matches: true }; } };
+    const narrow = focusTreeFoldKeyEl({ kind: 'org', id: 'g2', label: 'x', collapsed: true });
+    assert.equal(narrow.style.minWidth, '40px');
+    assert.equal(narrow.style.minHeight, '40px');
+    // CSS 已接管折叠键类名时不再写内联尺寸（focusCssDeclared 守卫）
+    globalThis.document = { styleSheets: [{ cssRules: [{ selectorText: '.focus-tree-row .focus-tree-fold-level' }] }] };
+    const cssOwned = focusTreeFoldKeyEl({ kind: 'org', id: 'g3', label: 'y', collapsed: true });
+    assert.equal(cssOwned.style.minWidth, undefined, 'T157：CSS 已声明时不应再写内联热区');
+  } finally {
+    restore('el', saved.el);
+    restore('document', saved.document);
+    restore('window', saved.window);
+    restore('renderApp', saved.renderApp);
+  }
+});
+
+test('T157 布局守卫：叶/伪根补同列占位格、折叠键唯一构造点、热区落在 CSS（源码 + 产物 + 反证）', () => {
+  const src = fs.readFileSync(new URL('../src/focus.mjs', import.meta.url), 'utf8');
+  const css = fs.readFileSync(new URL('../style.css', import.meta.url), 'utf8');
+  const bundle = buildProduct();
+
+  const foldSlot = function (t) { return String(t).indexOf("row.appendChild(el('span', 'focus-tree-fold-slot'))") >= 0; };
+  const checkSlot = function (t) { return String(t).indexOf("row.appendChild(el('span', 'focus-tree-check-slot'))") >= 0; };
+  const sharedKey = function (t) { return (String(t).match(/focusTreeFoldKeyEl\(r\)/g) || []).length >= 3; };
+  const defaultsCollapsed = function (t) { return String(t).indexOf('expanded: focusUiState.foldOpen') >= 0; };
+  const noLegacyCollapsed = function (t) { return String(t).indexOf('focusUiState.collapsed') < 0; };
+
+  [src, bundle].forEach(function (t, i) {
+    const tag = i === 0 ? '源码' : '产物';
+    assert.equal(foldSlot(t), true, 'T157(' + tag + ')：单元行缺折叠键占位格，主行左缘会与编制行错开');
+    assert.equal(checkSlot(t), true, 'T157(' + tag + ')：伪根行缺多选框占位格，折叠键列会错位');
+    assert.equal(sharedKey(t), true, 'T157(' + tag + ')：编制行与伪根必须共用 focusTreeFoldKeyEl（唯一构造点）');
+    assert.equal(defaultsCollapsed(t), true, 'T157(' + tag + ')：状态树必须传显式展开集合（缺省即收起）');
+    assert.equal(noLegacyCollapsed(t), true, 'T157(' + tag + ')：旧「缺省即展开」的 focusUiState.collapsed 必须移除');
+  });
+
+  // 反证：删掉占位 / 共用构造 / 传参，判据必须判红
+  assert.equal(foldSlot(src.replace("row.appendChild(el('span', 'focus-tree-fold-slot'))", '')), false, '反证：删折叠键占位应判红');
+  assert.equal(checkSlot(src.replace("row.appendChild(el('span', 'focus-tree-check-slot'))", '')), false, '反证：删伪根占位应判红');
+  assert.equal(sharedKey(src.replace(/focusTreeFoldKeyEl\(r\)/g, 'legacyFold(r)')), false, '反证：退回各写一套应判红');
+  assert.equal(defaultsCollapsed(src.replace('expanded: focusUiState.foldOpen', 'collapsed: focusUiState.foldOpen')), false, '反证：传回旧语义应判红');
+
+  // CSS：占位格尺寸必须与相邻控件一致（折叠键 28 / 多选框 18），窄屏与触屏同步放大到 40×40
+  const ruleOf = function (text, sel) {
+    const i = text.indexOf(sel + ' {');
+    assert.ok(i >= 0, 'style.css 缺规则：' + sel);
+    return text.slice(i, text.indexOf('}', i));
+  };
+  const foldSlotRule = ruleOf(css, '.focus-tree-fold-slot');
+  assert.ok(/width:\s*28px/.test(foldSlotRule), 'T157：桌面折叠键占位宽应 = 折叠键 28px');
+  assert.ok(/height:\s*28px/.test(foldSlotRule), 'T157：桌面折叠键占位高应 = 折叠键 28px');
+  const checkSlotRule = ruleOf(css, '.focus-tree-check-slot');
+  assert.ok(/width:\s*18px/.test(checkSlotRule), 'T157：多选框占位宽应 = 18px');
+  assert.ok(/height:\s*18px/.test(checkSlotRule), 'T157：多选框占位高应 = 18px');
+
+  const blocksOf = function (query) {
+    const out = [];
+    let from = 0;
+    for (;;) {
+      const start = css.indexOf(query + ' {', from);
+      if (start < 0) break;
+      let depth = 0;
+      let end = -1;
+      for (let k = css.indexOf('{', start); k < css.length; k += 1) {
+        if (css[k] === '{') depth += 1;
+        else if (css[k] === '}') { depth -= 1; if (depth === 0) { end = k + 1; break; } }
+      }
+      if (end < 0) break;
+      out.push(css.slice(start, end));
+      from = end;
+    }
+    return out;
+  };
+  const narrow = blocksOf('@media (max-width: 420px)').filter(function (b) { return b.indexOf('.focus-tree-fold-slot') >= 0; })[0] || '';
+  assert.ok(/\.focus-tree-fold-slot \{[^}]*width:\s*40px;/.test(narrow), 'T157：≤420px 折叠键占位应同步放大到 40px');
+  assert.ok(/\.focus-tree-fold-slot \{[^}]*height:\s*40px;/.test(narrow), 'T157：≤420px 折叠键占位高应同步放大到 40px');
+  const coarse = blocksOf('@media (pointer: coarse)').filter(function (b) { return b.indexOf('fold-level') >= 0; })[0] || '';
+  assert.ok(coarse.length > 0, 'style.css 缺触屏媒体段（t27 注释口径：触屏 ≥40×40）');
+  assert.ok(/\.focus-tree-row \.focus-tree-fold-level \{[^}]*width:\s*40px;[^}]*min-height:\s*40px;/.test(coarse), 'T157：触屏折叠键热区应 ≥40×40');
+  assert.ok(/\.focus-tree-fold-slot \{[^}]*width:\s*40px;/.test(coarse), 'T157：触屏折叠键占位应同步放大');
+
+  // 反证：占位规则整体缺失时取规则必须失败（判据不得恒真）
+  let missing = false;
+  try {
+    ruleOf(css.split('.focus-tree-fold-slot').join('.focus-tree-fold-slot-x'), '.focus-tree-fold-slot');
+  } catch (e) {
+    missing = true;
+  }
+  assert.equal(missing, true, '反证：删掉占位规则应判红');
+});
+

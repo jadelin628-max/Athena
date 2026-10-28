@@ -635,7 +635,7 @@
 6. **历史债清零（14 → 0）**：① 10 条锚点 = `docs/ARCHITECTURE.md:189-198` 与 `docs/ACT.md:190/193/198/223/233` 的 `src/focus.mjs` 行号与 `tests/focus.test.mjs:1985-1993`，按 T157 后的真实定义逐个改（`focusIsExpanded` 3756 / `focusTreeExpandPanelEl` 3801 / `focusTreeLabelEl` 4094 / `focusUnitTypeTagEl` 3854 / `FOCUS_REMINDER_UI_KEY` 3291 / `focusReminderUiState` 3296 / `focusReminderSync` 3455 / `focusReminderClear` 3499 / `focusReminderStart` 3543 / delta 对拍用例 2000-2011）；② 4 条计数 = `tests/bank.test.mjs` 的 `MIN_QUESTIONS` 331→363、176→335（与 data 现算逐科相等），`verify-refs.mjs` 支持「`MIN_TOTAL` 派生式」（去掉「找不到 MIN_TOTAL」误报），测试文件数从写死 17 改为与 `tests/` 目录现算对拍（22）。复跑 `node backup/scratch/docs-refresh/verify-refs.mjs` → **全部通过（exit 0）**。
 7. **闸门证据（全部亲跑，2.2.1 上）**：`node tools/check_data.mjs` ✅（25 学科 / 卡片 **2881** / 真题 **955** / 派生 510 / subOf 压制 27）· `node tools/check_render.mjs` ✅（2881 卡 / 10365 渲染字段 / 0 问题）· `npm run build` ✅（22 模块 + dist 同步）· `node tools/changelog.mjs` ✅（122 条）· `npm test` ✅ **439 / 439** · `npm run check` ✅（版本七处 2.2.1 / CHANGELOG 一致 / app.js 同步）· `npm run check:render` ✅。
 8. **未做项**：`docs/refs/card-coverage-stats.json`（6467 行历史快照）未重算——无生成器、不参与闸门，COVERAGE 已以现算值与它并存；`est26` 三卡与 17 张 borderline 按用户「其余均保留」**未动**。
-9. **交付**：`CHANGELOG` 2.2.1 条目 + 七处版本标记；提交 `feat: Athena 2.2.1 —— 合并 6 组重复卡、清 verify-refs 历史债`（哈希见提交记录），推送 `origin/main`。
+9. **交付**：`CHANGELOG` 2.2.1 条目 + 七处版本标记；提交 `9316d03` `feat: Athena 2.2.1 —— 新学前置优先推送、分条标号断行修复、专注链默认折叠、合并 6 组重复卡` + `c18259b` `docs(board): T158 报告`，推送 `f1c5bc3..c18259b main -> main`。
 
 <!-- 已归档：T122–T137 Athena 2.1.2 / 2.2.0 第一波（题库扩至 767 题、卡片补写 40 张、微观 49 页闭合与重取证、跨来源判重、生成器防护与闸门换代）→ backup/docs-archive/board/2026-10-11-V2.1.2-T122-T137.md -->
 

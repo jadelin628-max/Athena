@@ -637,6 +637,81 @@
 8. **未做项**：`docs/refs/card-coverage-stats.json`（6467 行历史快照）未重算——无生成器、不参与闸门，COVERAGE 已以现算值与它并存；`est26` 三卡与 17 张 borderline 按用户「其余均保留」**未动**。
 9. **交付**：`CHANGELOG` 2.2.1 条目 + 七处版本标记；提交 `9316d03` `feat: Athena 2.2.1 —— 新学前置优先推送、分条标号断行修复、专注链默认折叠、合并 6 组重复卡` + `c18259b` `docs(board): T158 报告`，推送 `f1c5bc3..c18259b main -> main`。
 
+### T159 以北大光华 431 真题范围为尺复检统计科卡片（只读审计 · 复用 T154 成果）
+- 状态: dispatched（2026-10-29；执行者=**原 T154 子对话** `40a213e2`，复用其 272/272 判定表做增量改判）
+- 负责: 子对话（统计真题边界复检）
+- 文件集: 只读 `data/stats.js`、`data/bank_stats.js`、`docs/`；产出 `backup/scratch/t159-431-scope/{brief.md, cards.json, report.md, verdicts.json, verify.mjs}`（gitignored）。**不改任何源文件、不 build、不 commit、不升版本**
+- 依据: 用户指令（m01288）「派发一个任务，以北大金融考研专业课真题范围为标准，检测目前统计科目的卡片有无超纲内容……要做好此前成果的利用。不推送不更新」；T154 报告（`backup/scratch/t154-stats-scope/report.md`）与 T158 合并后的卡集（265 张）
+- 依赖: T154（逐卡判定与生成器）、T158（卡集变化：删 7 张 / 合并重写 5 张）
+- 验收:
+  1. 265 张逐卡判定（`in` / `borderline` / `out`），每张给主依据：431 真题「年-题号」/ 直接前置关系 / 教材锚点
+  2. 与 T154 的差异矩阵（in→borderline、in→out、borderline→out 逐张列出），并说明改判理由
+  3. `verdicts.json` 可机读、`verify.mjs` 自检通过（漏判 / 未知 id / 重复 / 非法 verdict 均非零退出）
+  4. 报告含 Top 10 风险、建议动作清单（只建议不执行）、存疑待裁定项
+
+### 报告
+- 派单说明（判据、29 道 431 真题清单、卡集增删、交付物、硬约束）：`backup/scratch/t159-431-scope/brief.md`
+- 当前卡集快照：`backup/scratch/t159-431-scope/cards.json`（265 张；由 `backup/scratch/t154-stats-scope/dump-stats.mjs --json` 现跑）
+- **v1（29 题尺，已完成）**：265 张 = `in` 131 / `borderline` 64 / `out` 70；改判 129 张（in→borderline 57、in→out 32、borderline→out 35、borderline→in 5）；产物 `report.md`（458 行）+ `verdicts.json` + `verdicts-tags-strict.json`（in 144/59/62）+ `tagged-audit.json`；自检 `verify.mjs` 265/265 通过。
+- **v1 暴露的两件事**：① 66 张被 431 真题 `tags` 命中的卡里有 13 张标签与题干不符（`jj01` `jj02` `jj04` `jj05` `jj09` `jj10` `jj11` `nc16` `nc17` `sx02` `test15` `xt01` `xt02`）——主对话裁定 **A：维持内容尺**，13 处 `tags` 记为数据侧待修；② 只拿题库 29 道统计题当尺太窄——`data/bank_stats.js` 只是 431 统计部分摘录。
+- **v2 口径（用户 m01409 追加）**：「真题以参考文件中的内容为标准，完全覆盖可查阅的北大金融考研所有年份的所有题目」→ 尺子改为参考文件抽出的 **20 份卷子**：`backup/scratch/t159-431-scope/corpus/`（`光华-2016…2026`、`数院-2016…2024`，共 40,435 字符；抽法 = `extract-431.mjs` 按 `docs/refs/statq.md` §3.1 页域 7–31 / 119–131 从 `参考文件/_extract/真题__统计__JYSG真题册…txt` 切出）。v2 交付：`report-all-years.md` + `verdicts-all-years.json`（带 `corpus_ref`）+ `coverage-gaps.md`（逐题考点 → 有卡/无卡覆盖）。
+- **主对话预检（v2 待对拍）**：语料里已能确认 29 题尺漏掉的大量考点——`北大数院 431` 是完整数理统计卷：2016「叙述并证明中心极限定理」「求 p 的充分统计量与 p(1−p) 的 UMVUE」「叙述并证明 Neyman-Pearson 基本引理」、2018「特征函数」「几乎必然收敛」「p^m 的一致最小方差无偏估计」、2022「µ3/µ4 的 UMVUE」「一致最优检验」、2024「先验/后验最大概率估计（MAP）」「Fisher 信息量」「C-R 下界比较」「似然比检验」、2020「异方差线性回归的似然」→ 特征函数、a.s. 收敛、充分/完备、UMVUE、C-R、NP/UMP、似然比、贝叶斯、异方差回归在 v2 都应上移。
+- **v2 结果（子对话已完成，主对话已复核）**：265 张 = `in` **193** / `borderline` **35** / `out` **37**；相对 29 题尺迁移 63 张（borderline→in 13、in→out 19、in→borderline 16、borderline→out 15）。产物 `report-all-years.md`（444 行）+ `verdicts-all-years.json` + `coverage-gaps.md`（20 卷 139 题：有卡 122 / 部分 7 / **无卡 1 = 数院-2017-5 马尔可夫链**）+ `tag-vs-text.json`（66 命中 = 53 一致 + 13 冲突），自检 `verify-all-years.mjs` 265/265 通过。
+- **处置报告（用户要求：只保留 / 删除 / 修改三选一，不设 HELP）**：`backup/scratch/t159-431-scope/report-disposition.md`（409 行，生成器 `build-disposition.mjs`）→ 全库 265 张 = **保留 166 / 修改 56 / 删除 43**，另**新增 9 张**；删除按 29 组列明（EM 族 3、多重比较延伸 4、测度论/事件列极限 3、非参数具体方法 3…），修改按动作分「并卡后削深度 24 / 补真题例题 30 / 拆大卡 4」；数据侧三条单列（13 处 tags、数院九年卷未入库、510 条 `src.note` 生成日志）。**未改动任何卡片、未 build、未提交**。
+- **用户裁决（m01622）**：1/2/3（多重比较、正态性检验、计量 jj09/jj10）由主对话按「考察可能性」判定 → 多重比较整族删延伸留 `reg13`；正态性检验留 `test16`（简述）删 `test16-2`；计量 `jj09`/`jj10` **保留**（AGENTS.md 明确 431 含计量），只删 `jj10-2`。4 精算不另立科目。5 数院九年卷入库 → 切片 T161。
+
+### T160 统计卡片删除 / 修改 / 新增（执行 T159 处置报告）
+- 状态: accepted（2026-10-29 落地；执行者=子对话 `13d6cdc1`，主对话验收并补正 4 处口径）
+- 负责: 子对话（数据侧）
+- 文件集: `data/stats.js`、`data/bank_stats.js`、`backup/scratch/t160/`。**不改** `src/`、`tests/`、`docs/`、`app.js`、`CHANGELOG.md`、`dist/`、`package.json`、`sw.js`、`index.html`、`src-tauri/`
+- 依据: 用户指令（m01622）「开始进行卡片的新增修改删除工作」；`backup/scratch/t159-431-scope/report-disposition.md`；`backup/scratch/t160/SPEC-cards.md`（执行单：43 删除 / 54 修改 / 9 新增 + 引用重写 + 13 处 tags 修正）；`docs/CARD-STANDARD.md`（体量红线）
+- 依赖: T159（处置表）、T158（265 卡基线）
+- 验收:
+  1. 删 43 / 改 54 / 增 9 全部落地；被删卡独有内容有明确去向；改后每卡正文净字数 ≤ 300（硬限 400）
+  2. 删卡后全库无悬空引用（`REL.to`、`META`/`EXAMPLE`/`PITFALL`/`MNEM` 键、题库 `tags`、派生题 `src.card`）
+  3. `node tools/bank-cv.mjs --subject stats --write --allow-workspace-write` 重生成通过；`check_data` / `check_render` / `tests/card-content.test.mjs` / `tests/bank.test.mjs` 全绿
+  4. 报告含删除/修改/新增逐条、引用改指表、闸门输出、未决项
+
+### T161 北京大学数院-431 九年卷题库入库（题面 + 答案）
+- 状态: accepted（2026-10-29 落地；四个子对话各出 JSON 片段 → 主对话 `merge-parts.mjs` 合并入库）
+- 负责: 子对话（题库撰写）+ 主对话（合并与 id 编配）
+- 文件集: 只写 `backup/scratch/t161/`（`part-{a,b,c,d}.json`、`notes-*.md`、`check-*.mjs`）；**不改** `data/`、`src/`、`docs/`、`tests/`；不 build / 不 commit / 不 push
+- 依据: 用户指令（m01622）「5、入库」；`backup/scratch/t159-431-scope/coverage-gaps.md`（数院 431 九年卷 130 题从未入库）；`backup/scratch/t161/SPEC.md`（记录 schema、答案红线、自检、出处行域）
+- 依赖: T159（题面语料 `corpus/数院-YYYY.txt` 与解析册行域）、T158（265 卡 id 快照 `cards-265.json`）
+- 验收:
+  1. 统计部分大题逐题成条（2016 8 / 2017 9 / 2018 9 / 2019 10 / 2020 8 / 2021 10 / 2022 8 / 2023 9 / 2024 9 ≈ **80 条**；2022 卷前 4 题、2023 卷后 4 题、2024 卷「金融数学引论部分」4 题为精算题，明确排除并列清单）
+  2. 每条：`origin:'year'`、`school:'北京大学数院-431 金融学综合 <年> 年'`、`tags` 全命中 265 卡、`type` 在 `TYPES` 内、`src` 指回真题册页码 + 解析册行域
+  3. 题干不编造、答案与解析册核对（有矛盾须重推并注明）；`stem`/`answer` 非空、`$` 成对、无控制字符
+  4. 各分片自检脚本输出 PASS；主对话合并后 `check_data` / `check_render` 全绿
+
+### 报告（T160）
+- **改了什么**：`data/stats.js` 统计科 265 → **235** 卡（删 43 → 222，拆 4 张 → 226，增 9 张 → 235）。删除 43 张：`test16-2` `sy08` `sy09` `xr01-2` `xt01-2` `xt03` `xt09` `xt13-2` `xt14-2` `jj04` `jj05` `jj10-2` `pb12` `sm15` `nc17` `reg13-2` `pb15` `pb16-2` `pb16-3` `nc21-2` `est25-2` `est26` `est26-2` `est26-3` `reg15-2` `pb17` `pb18` `est27-2` `est28` `est28-2` `est29-2` `jj13` `jj15` `est30-2` `est30-3` `est31-2` `xr05-2` `reg16` `reg17` `reg17-2` `ll11-2` `ll12-2` `est32-2`，独有内容按处置表折进保留卡（`est25/est27/est29/est30/est31/est32/jj08-2/jj09/jj10/jj12-2/ll11/ll12/nc16/nc21/pb14/pb16/reg13/reg15/test16/xr05/xt01/xt11/xt13/xt14` 各削深度）。拆 4：`est06-b`（MLE 方法与例题）`reg05-b`（LSE 性质与证明）`xt10-b`（Var(β̂) 与 GLS）`jj06-b`（无偏性证明）。增 9：`mv12` 马尔可夫链、`nc22` 报童与最优订货量、`est33` 固定效应混合模型 LSE/MLE、`est34` Logistic 回归似然与凹性、`nc23` 蒙特卡洛积分、`nc24` 重要性抽样、`est35` 正态分位数反解求 MLE、`est36` Rao–Blackwell 定理、`test18` 检验概念速查（MVUE/两类错误/非参数/复相关）。
+- **例题与引用**：补 30 条近年真题例题（源＝T159 的 20 卷语料），`EXAMPLE` 177 键 / **211 条**；`REL` 211 / `META` 235 / `PITFALL` 55 / `MNEM` 12，无悬空引用；题库 `tags` 修正 14 处（13 处 29 题尺错挂 + `est22` 并入后的改指）。
+- **体量**：全部卡正文净字数 ≤ 300（最大 `reg13` = 300，硬限 400）。
+- **闸门 PASS**：`node tools/bank-cv.mjs --subject stats --write --allow-workspace-write`（卡 235 / EXAMPLE 177 键 → 条目 211（入库 201，排除 10））→ `check_data`（2851 卡 / 1069 题）→ `check_render`（0 问题）→ `tests/card-content.test.mjs`、`tests/bank.test.mjs` 全绿。
+- **主对话补正 4 处**：① `tests/bank.test.mjs` `cardRows` 510 → 544（派生题同批增长，属闸门随数据走）；② `yearRows` 445 → 525 与 stats year 90 → 170 留给 T161 一并改；③ 复核「净字 ≤ 300」按 `docs/CARD-STANDARD.md` 口径现算（最大 `reg13` = 300）；④ 确认 `est26` 族删除后 `cv-st-*` 派生题与题库 tags 全部改指到位。
+- **未做项**：`est35` 暂不配例题（卷面分位数反解仅有光华 2024-2 一处，已作 `est06` 例题）；多重比较整族按裁决只留 `reg13`（延伸卡全删）；`test16` 按裁决保留简述版（删 `test16-2` 的正式检验。
+
+### 报告（T161）
+- **改了什么**：`data/bank_stats.js` 入库北大数院 431 九年卷 **80 条**（2016 8 / 2017 9 / 2018 9 / 2019 10 / 2020 8 / 2021 10 / 2022 8 / 2023 9 / 2024 9），id `st-2016-5` … `st-2024-22`（按年接续现有编号）；`school` 统一「北京大学数院-431 金融学综合 YYYY 年」；`origin:'year'`、`type` ∈ TYPES、`tags` 全部命中现卡。统计题库 **291 → 371**（year 90 → 170），全库真题 **989 → 1069**（真题侧 445 → 525 + 卡片派生 544）。
+- **合并过程（主对话）**：四个子对话各出 `part-{a,b,c,d}.json`（a 2016–2018 24 条、b 2019–2021 28 条、c 2022–2023 17 条、d 2024 9 条），`merge-parts.mjs` 统一校验后插入 `// ==== END 真题册入库 (t54) ====` 之前。修了合并器三处：`TYPES` 切片截在 `BEGIN GENERATED` 注释处（漏 5 个 key）→ 改为切到 `];`；`stem` 下限 30 → 12（保留真题原话）；`REMAP` 的 `pb17` 误映射 `pb16` → 置 `null`。另从 `part-a` 2016 四（CLT）题干剥掉子对话加的编者按（移入 `hint`），保持题面原样。
+- **答案红线**：每题独立重推 + 与解析册逐问核对，**修正 12 处**并全部写进 `src.note`（如 2020 六 拒绝域方向、2021 十 组间平方和系数应为 s、2023 八 H₁ 方向 `λ > λ₀`、2022 十二 三张回归表内部不自洽已注明、2024 五 的 n=38416 与解析册「1962」上标丢失）；`Λ` 检验统一按 `xr05` 卡「小值拒绝」口径写。
+- **排除清单**：2022 卷 一–四、2023 卷 十–十三、2024 卷「金融数学引论」一–四（精算/金融数学，逐题登记在 `part-*.json` 的 `excluded`）。
+- **闸门 PASS**：`node --check data/bank_stats.js` → `check_data`（25 学科 / 2851 卡 / 1069 题 / 派生 544 / subOf 27 / 题源一致性 171 组 0 冲突）→ `check_render`（2851 卡 / 10335 字段 / 0 问题）→ `tests/bank.test.mjs`（MIN_QUESTIONS.stats 371 / 合计 1069）。
+- **未做项 / 遗留**：`backup/scratch/t159-431-scope/corpus/数院-2022.txt` 含 NUL 字节（只影响本地读取工具，不影响题库）；精算题按口径未入库，是否另立科目待定。
+
+### T162 Athena 2.2.2 交付（T160 + T161 + 闸门与版本）
+- 状态: accepted（2026-10-29）
+- 负责: 主对话
+- 文件集: `data/stats.js`、`data/bank_stats.js`、`tests/bank.test.mjs`、`src/app.mjs`、`app.js`、`CHANGELOG.md`、`sw.js`、`index.html`、`package.json`、`src-tauri/tauri.conf.json`、`docs/{COVERAGE,DATA_SCHEMA,ARCHITECTURE,BOARD}.md`
+- 报告:
+  1. **版本 2.2.2（patch）七处**：`src/app.mjs:8` `const VERSION = '2.2.2';`、`CHANGELOG` 首条（4 项：统计科 431 范围整治 / 数院九年卷入库 / 基线同批更新 / 工程与闸门）、`sw.js:5` `ms3-v125`、`index.html:11-13` `?v=86`、`package.json:3`、`src-tauri/tauri.conf.json:4`、`dist/` 由 build 同步。
+  2. **闸门全绿**：`npm run build` → `node --check app.js` → `node tools/changelog.mjs`（123 条）→ `npm test` **439 / 439** → `npm run check`（2851 卡 / 1069 题 / 版本七处一致 / CHANGELOG 一致 / app.js 同步）→ `npm run check:render`（10335 字段 / 0 问题）→ `node backup/scratch/docs-refresh/verify-refs.mjs` **exit 0**。
+  3. **测试基线同批上调**（verify-refs 要求护栏与现算逐科相等）：`tests/bank.test.mjs:85` `MIN_QUESTIONS.stats 330 → 371`（合计派生 1069）、`:1123` `yearRows 445 → 525`、`:356` stats year `90 → 170`、`:1124` `cardRows 510 → 544`。
+  4. **文档**：`docs/COVERAGE.md` 补 T160/T161 终值快照（2851 卡 / stats 235 / 三科 966 / EXAMPLE 177-211 / 题库 371）；`docs/DATA_SCHEMA.md` 题量下限行改 `stats < 330 → 330`… 实为 `stats 371 / 合计 1069` 并补 T160 增量口径；`docs/ARCHITECTURE.md` 版本段 2.2.2 / `ms3-v125` / `?v=86` / CHANGELOG 123 条，题库答案护栏段补 T160/T161 基线句。
+  5. **遗留**：`docs/refs/card-coverage-stats.json` 是历史快照（无生成器、不参与闸门），未刷新；`est35` 未配例题；精算题未立项待裁决。
+- 交付: `4b150f8` feat 2.2.2（13 files / +1482 −662）。
+
 <!-- 已归档：T122–T137 Athena 2.1.2 / 2.2.0 第一波（题库扩至 767 题、卡片补写 40 张、微观 49 页闭合与重取证、跨来源判重、生成器防护与闸门换代）→ backup/docs-archive/board/2026-10-11-V2.1.2-T122-T137.md -->
 
 <!-- 已归档：T77–T121 Athena 2.1.1 / 2.2.0 前置（题库渲染与筛选、自测星标、专注链 UI 与组合语义、错题入口、四族转录基线）→ backup/docs-archive/board/2026-10-10-V2.1.1-T77-T121.md -->

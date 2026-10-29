@@ -212,15 +212,15 @@ IndexedDB `kv` 作为同 key 备份；加载时 `localStorage` 优先，缺失�
 | `node --test tests/…` | FSRS 对拍、交错、调度状态机、错题、同步、预测、习惯/专注/里程碑、题库、自测、构建产物（`package.json` 的 `test` 脚本列全 22 个文件，含 `tests/map.test.mjs`、`tests/card-content.test.mjs`、`tests/queue-order.test.mjs`、`tests/queue-prereq.test.mjs`、`tests/render-bullets.test.mjs`） | 改调度/同步/题库/自测/构建 |
 | `node --test tests/bank.test.mjs`（题库答案护栏） | 数学三非卡片派生题（**181 条** = 选择题 118 + 填空/解答 63）的答案被悄悄改写（选择题字母不一致 / 填空与解答题结论锚点丢失）、新增 math3 题没同步补进期望表、选择题选项数不为 4 | 改 `data/bank_math3.js` 或增删 math3 题 |
 
-**版本七处（现行 2.2.1）**：
-- 应用源：`VERSION` 在 `src/app.mjs:8`（`const VERSION = '2.2.1';`）；`CHANGELOG` 数组开在 `src/app.mjs:11`、`v` 首条在 `src/app.mjs:12`。
-- 缓存戳：`index.html:11-13` 的 `manifest.webmanifest` / `icons/favicon.png` / `icons/apple-touch-icon.png` 三处 `?v=85`（须一致；`style.css` 无戳）。
-- 离线缓存：`VERSION` 在 `sw.js:5`（`ms3-v124`）——与应用版本是两套体系，不作强相等判定，但每次发版须手动 +1（`tools/check_version.mjs` 只发提示、不判失败）。
-- 元数据：`version` 在 `package.json:3` 与 `src-tauri/tauri.conf.json:4`（均 `2.2.1`）。
-- 日志与规则：`CHANGELOG.md` 首条 `## v2.2.1（2026-10）`（全 122 条，由 `tools/changelog.mjs` 生成）；枚举七处见 `tools/check_version.mjs:6-12`、内部一致性规则见 `tools/check_version.mjs:16-18`。
+**版本七处（现行 2.2.2）**：
+- 应用源：`VERSION` 在 `src/app.mjs:8`（`const VERSION = '2.2.2';`）；`CHANGELOG` 数组开在 `src/app.mjs:11`、`v` 首条在 `src/app.mjs:12`。
+- 缓存戳：`index.html:11-13` 的 `manifest.webmanifest` / `icons/favicon.png` / `icons/apple-touch-icon.png` 三处 `?v=86`（须一致；`style.css` 无戳）。
+- 离线缓存：`VERSION` 在 `sw.js:5`（`ms3-v125`）——与应用版本是两套体系，不作强相等判定，但每次发版须手动 +1（`tools/check_version.mjs` 只发提示、不判失败）。
+- 元数据：`version` 在 `package.json:3` 与 `src-tauri/tauri.conf.json:4`（均 `2.2.2`）。
+- 日志与规则：`CHANGELOG.md` 首条 `## v2.2.2（2026-10）`（全 123 条，由 `tools/changelog.mjs` 生成）；枚举七处见 `tools/check_version.mjs:6-12`、内部一致性规则见 `tools/check_version.mjs:16-18`。
 - 产物：`app.js` 与 `dist/` 由唯一权威构建（T116 / t43）同步——文档任务不跑 `npm run build`、不改版本七处。
 
-**题库答案护栏（t30 起 · 第一波终值）**：`tests/fixtures/bank-answer-manifest.json` 是一份**人工逐题转录**的数学三期望答案表（`_meta.provenance` 明确「手工转录、不得由脚本从数据生成」；`_meta.sources` **18 份来源册**、`evidence` **10 条**含 `backup/scratch/bank-fix2/text/*.txt:行`），**181 条期望 = `kind: 'choice'` 118 条记字母 + `kind: 'fill'` 63 条记源解析末式/关键结论锚点**（与 `BANK.math3` 的全部非卡片派生题一一对应）。守卫在 `tests/bank.test.mjs:685-725`（口径注释 `:680-684`），三条断言：① 期望表 id 集合与 `BANK.math3.questions`（`origin !== 'card'`）的 id 集合 `deepEqual`（新增/删除题必须显式补表，否则转红）；② `choice` → `assert.equal(options.length, 4)` 且正文答案字母（`letterOf()`，`:671` 三条正则，与界面侧 `bankChoiceLetter`（`src/bank.mjs:494`）同口径）与期望表一致；③ `fill` → `assert.equal(options.length, 0)` 且 `answer` 含期望锚点（`indexOf(want.anchor) >= 0`）。负向对照（改 1 题字母 / 改锚点必红；仅内容类改动放行）见 `backup/scratch/bank-fix2/`，独立复核见 `backup/scratch/verify-vision2/t31-report.md`。**边界**：期望表只覆盖 math3 线（181 条）；`econ` 174 条 / `stats` 90 条手写真题的答案尚无人工转录表，卡片派生题（math3 182 / econ 161 / stats 167）改由「卡片例题逐题同源」对拍块把关（`tests/bank.test.mjs:341`（stats，期望由 `cardEntryIds` 现算）/`:548-579`（math3 + econ，期望值表 `T49_CARDS` `:540`）），扩表属 2.2.0 后续批次（见 `docs/refs/2.2.0-PLAN.md` §1.2 Q4c/Q6）。
+**题库答案护栏（t30 起 · 第一波终值）**：`tests/fixtures/bank-answer-manifest.json` 是一份**人工逐题转录**的数学三期望答案表（`_meta.provenance` 明确「手工转录、不得由脚本从数据生成」；`_meta.sources` **18 份来源册**、`evidence` **10 条**含 `backup/scratch/bank-fix2/text/*.txt:行`），**181 条期望 = `kind: 'choice'` 118 条记字母 + `kind: 'fill'` 63 条记源解析末式/关键结论锚点**（与 `BANK.math3` 的全部非卡片派生题一一对应）。守卫在 `tests/bank.test.mjs:685-725`（口径注释 `:680-684`），三条断言：① 期望表 id 集合与 `BANK.math3.questions`（`origin !== 'card'`）的 id 集合 `deepEqual`（新增/删除题必须显式补表，否则转红）；② `choice` → `assert.equal(options.length, 4)` 且正文答案字母（`letterOf()`，`:671` 三条正则，与界面侧 `bankChoiceLetter`（`src/bank.mjs:494`）同口径）与期望表一致；③ `fill` → `assert.equal(options.length, 0)` 且 `answer` 含期望锚点（`indexOf(want.anchor) >= 0`）。负向对照（改 1 题字母 / 改锚点必红；仅内容类改动放行）见 `backup/scratch/bank-fix2/`，独立复核见 `backup/scratch/verify-vision2/t31-report.md`。**边界**：期望表只覆盖 math3 线（181 条）；`econ` 174 条 / `stats` 170 条手写真题的答案尚无人工转录表，卡片派生题（math3 182 / econ 161 / stats 201）改由「卡片例题逐题同源」对拍块把关（`tests/bank.test.mjs:341`（stats，期望由 `cardEntryIds` 现算）/`:548-579`（math3 + econ，期望值表 `T49_CARDS` `:540`）），扩表属 2.2.0 后续批次（见 `docs/refs/2.2.0-PLAN.md` §1.2 Q4c/Q6）。 **T160/T161（2.2.2）**：统计科做题面整治后卡片派生题 167 → **201**、真题侧 90 → **170**，三科派生合计 **544**、真题侧合计 **525**；`tests/bank.test.mjs` 的 `cardRows` / `yearRows` 与 `MIN_QUESTIONS.stats` 已同批上调（510→544 / 445→525 / 257→330），题库总量 **1069 题**。
 
 CI（`.github/workflows/ci.yml`）= 上述闸门的无渲染子集。
 

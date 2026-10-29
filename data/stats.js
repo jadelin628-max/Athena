@@ -231,7 +231,7 @@ $$\frac1n\sum_{i=1}^{n}X_i-\frac1n\sum_{i=1}^{n}E(X_i)\ \xrightarrow{\ P\ }\ 0;$
 $$\frac{\sum_{i=1}^{n}X_i-n\mu}{\sqrt n\,\sigma}\xrightarrow{d}N(0,1),$$
 刻画**分布形状与波动尺度**（$\bar X$ 的波动量级 $\sigma/\sqrt n$，而 LLN 只说它趋于 0）。
 **对照要点**：① LLN 看 $\bar X-\mu$，CLT 看 $\sqrt n(\bar X-\mu)$（不趋于 0 而趋于分布）；② 依概率收敛 vs 依分布收敛；③ CLT 需**有限方差**，LLN 的辛钦形式不需要；④ CLT 成立时 LLN 自动成立。`),
-    // ---- ll06-2 LLN/CLT 的用法与误读 ----
+    // ---- ll06-2 LLN 与 CLT 的用法与误读 ----
     F('ll06-2', 'limit', 'LLN 与 CLT 的用法与误读',
       R`大数定律与中心极限定理各用在什么场合？常见误读有哪些？`,
       R`**用法**：LLN 用于说明估计量**相合**、频率稳定等定性结论；CLT 用于**近似计算**大样本概率（离散情形加连续性校正 $\pm\frac12$）与构造近似区间。
@@ -241,10 +241,9 @@ $$\frac{\sum_{i=1}^{n}X_i-n\mu}{\sqrt n\,\sigma}\xrightarrow{d}N(0,1),$$
       R`切比雪夫不等式的形式、使用条件与等号成立情形分别是什么？`,
       R`**形式**（$\varepsilon>0$）：$$P\big(|X-E(X)|\ge\varepsilon\big)\ \le\ \frac{D(X)}{\varepsilon^{2}},\qquad\text{等价}\quad P\big(|X-E(X)|<\varepsilon\big)\ \ge\ 1-\frac{D(X)}{\varepsilon^{2}}.$$
 **来源**：马尔可夫不等式 $P(|Y|\ge a)\le E|Y|/a$ 取 $Y=(X-EX)^{2}$、$a=\varepsilon^{2}$。
-**使用条件**：只需**方差存在**——不要求分布、不要求独立、不要求连续；区间须关于 $EX$ **对称**。
-**等号成立**：二点分布 $P(X=\pm\varepsilon)=\frac12$ 时等号成立，故它给的是**上界而非近似**。
-**易混**：分母是 $\varepsilon^{2}$、分子是方差 $D(X)$（不是标准差）；$\varepsilon$ 是离 $E(X)$ 的绝对距离。
-**应用**：证 $\bar X$ 依概率收敛于 $\mu$（切比雪夫大数定律）；估频率偏离界 $P\big(\big|\tfrac{X}{n}-p\big|\ge\varepsilon\big)\le\frac{p(1-p)}{n\varepsilon^{2}}$。`),
+**使用条件**：只需**方差存在**——不要求分布/独立/连续；区间须关于 $EX$ **对称**。
+**等号成立**：二点分布 $P(X=\pm\varepsilon)=\frac12$ 时取等，故它给的是**上界**。
+**应用**：证 $\bar X$ 依概率收敛于 $\mu$；估频率偏离界 $P\big(\big|\tfrac{X}{n}-p\big|\ge\varepsilon\big)\le\frac{p(1-p)}{n\varepsilon^{2}}$。`),
     F('ll07-2', 'limit', '切比雪夫不等式的高频用法',
       R`切比雪夫不等式有哪些高频用法？为什么说它给出的界很松？`,
       R`**① 上界估计**：$P(|X-\mu|\ge k\sigma)\le 1/k^{2}$；正态实际值 $k=3$ 时为 0.0027，远小于界 0.111——界很松，只适合粗估。
@@ -302,8 +301,10 @@ $$\frac{\sum_{i=1}^{n}X_i-n\mu}{\sqrt n\,\sigma}\xrightarrow{d}N(0,1),$$
       R`令样本矩等于总体矩，建立方程解得参数的估计量。\underline{步骤}：设有 $k$ 个未知参数，取总体 $E(X)$、$E(X^2)$、…、$E(X^k)$，令其分别等于样本原点矩 $A_1=\bar X$、$A_2=\frac1n\sum X_i^2$、…，解出 $\hat\theta$。\underline{特点}：计算简单、通常\textbf{相合}；但可能\textbf{无解/多解/不唯一}，且不一定有效。\underline{易混}：矩估计与最大似然结果\textbf{常不相同}（如二阶矩估计用 $A_2$ 时样本方差用 $\frac1n\sum(X_i-\bar X)^2$ 而非 $S^2=\frac{1}{n-1}\sum$）；低阶矩信息少，高阶矩含更多分布信息但噪声大。\underline{应用}：先求 $E(X)$、$E(X^2)$（或利用方差等式）建立若干方程，再联立解参。`),
     F('est06', 'estimation', '最大似然估计',
       R`叙述最大似然估计的基本思想与求解步骤`,
-      R`思想：选择使已观测样本出现概率最大的 $\hat{\theta}$——使似然函数 $L(\theta)=\prod_{i=1}^{n}f(x_{i};\theta)$ 达到最大的参数值。
-求解步骤：① 写出 $L(\theta)$；② 取对数 $\ln L$（连乘化连加）；③ 对 $\theta$ 求导并令其为 0（似然方程）；④ 解出驻点并确认最大。离散/含区间参数等场合求导失效时，直接分析 $L$ 的最大值位置。`),
+      R`**思想**：把样本联合密度（或分布律）看成参数 $\theta$ 的函数——似然函数 $L(\theta)=\prod f(x_i;\theta)$，取使已观测样本出现概率最大的 $\theta$。
+**步骤**：① 写 $L(\theta)$；② 取对数 $\ell=\ln L$；③ 解得分方程 $\partial\ell/\partial\theta=0$（多参数联立）；④ 验证是最大值并检查边界。
+**不变性**：若 $\eta=g(\theta)$，则 $\hat\eta=g(\hat\theta)$。
+**易错**：支撑含 $\theta$（如 $U(0,\theta)$）时不能求导，须直接最大化；多峰时需比较各驻点。`),
     F('est07', 'estimation', '置信区间',
       R`置信区间与置信水平`,
       R`$$P(\theta_{1}<\theta<\theta_{2})=1-\alpha$$（$1-\alpha$ 为置信水平）`),
@@ -382,9 +383,12 @@ $$\frac{\sum_{i=1}^{n}X_i-n\mu}{\sqrt n\,\sigma}\xrightarrow{d}N(0,1),$$
     F('reg04', 'regress', '一元线性回归模型',
       R`一元线性回归模型`,
       R`$$y=\alpha+\beta x+\varepsilon,\qquad \varepsilon\sim N(0,\sigma^{2})$$`),
-    F('reg05', 'regress', '最小二乘估计',
-      R`最小二乘估计的斜率`,
-      R`$$\hat{\beta}=\frac{\sum(x_{i}-\bar{x})(y_{i}-\bar{y})}{\sum(x_{i}-\bar{x})^{2}}$$`),
+    F('reg05', 'regress', '最小二乘估计的求解与性质',
+      R`最小二乘估计（LSE）怎么求？有哪些基本性质？`,
+      R`**求解**：最小化 $RSS(\beta)=\|Y-X\beta\|^{2}$，正规方程 $X'X\beta=X'Y$，故 $\hat\beta=(X'X)^{-1}X'Y$（$X$ 列满秩）。
+**一元**：$\hat\beta_1=\frac{\sum(x_i-\bar x)(y_i-\bar y)}{\sum(x_i-\bar x)^{2}}$，$\hat\beta_0=\bar y-\hat\beta_1\bar x$。
+**性质**：残差和为零、残差与 $X$ 各列正交、$\hat Y$ 是 $Y$ 在 $X$ 列空间的投影。
+**无偏**：$E(\hat\beta\mid X)=\beta$（需 $E(\varepsilon\mid X)=0$）；$\operatorname{Var}(\hat\beta\mid X)=\sigma^{2}(X'X)^{-1}$。`),
     F('reg06', 'regress', '判定系数',
       R`判定系数 $R^{2}$`,
       R`$$R^{2}=\frac{SSR}{SST}=1-\frac{SSE}{SST}$$（回归可解释的变异占总变异的比例）
@@ -420,8 +424,11 @@ $$\frac{\sum_{i=1}^{n}X_i-n\mu}{\sqrt n\,\sigma}\xrightarrow{d}N(0,1),$$
       R`特征函数的定义`,
       R`$$\varphi(t)=E(e^{itX})$$`),
     F('nc16', 'numchar', '矩母函数',
-      R`矩母函数的定义`,
-      R`$$M(t)=E(e^{tX})$$`),
+      R`矩母函数的定义、性质与它和特征函数的关系是什么？`,
+      R`**定义**：$M_X(t)=E(e^{tX})$，在 $0$ 的某邻域内有限时称矩母函数存在。
+**性质**：$M^{(k)}(0)=E(X^{k})$（求矩）；独立和 $M_{X+Y}=M_XM_Y$；$M_{aX+b}(t)=e^{bt}M_X(at)$。
+**与特征函数**：$\varphi_X(t)=E(e^{itX})=M_X(it)$，故 $M$ 存在则 $\varphi$ 必存在，反之不然。
+**易混**：$M$ 存在需指数阶矩条件，重尾分布（如柯西）没有矩母函数；$M$ 存在时唯一确定分布。`),
 
     // ============ 补充：抽样分布 ============
     F('sm11', 'sampling', '样本均值的数字特征',
@@ -469,17 +476,11 @@ $$\frac{\sum_{i=1}^{n}X_i-n\mu}{\sqrt n\,\sigma}\xrightarrow{d}N(0,1),$$
       R`$$\text{功效}=1-\beta=P(\text{拒绝 }H_{0}\,|\,H_{1}\text{ 为真})$$`),
     F('test16', 'testing', '正态性检验：作图法',
       R`正态性检验的作图法（正态概率纸、Q-Q 图）怎么画、怎么判？`,
-      R`**记法**：数据排序 $x_{(1)}\le\dots\le x_{(n)}$，经验分位点用**修正频率** $\frac{i-0.375}{n+0.25}$。
-**正态概率纸**：纵轴取修正频率、横轴取 $x_{(i)}$ 描点；点近似落在一条**直线**上则支持正态，明显变曲表示偏态或厚尾。
-**Q-Q 图**：样本分位数 $x_{(i)}$ 对理论分位数 $\Phi^{-1}\big(\frac{i-0.375}{n+0.25}\big)$ 描点，直线性即正态；上凸提示右偏、下凹提示左偏，尾部离群提示厚尾，可对其他分布照做（更通用）。
-**原理与判读**：正态时点列近似直线，斜率 $\approx\sigma$、截距 $\approx\mu$；S 形弯曲提示偏态，两端同时偏离提示峰度异常（尖峰或平峰）。
-**适用**：两图都是**图示法**，只作佐证、不给精确 $p$ 值，需精确结论时用正式检验。`),
-    F('test16-2', 'testing', '正态性检验：正式检验法',
-      R`正态性检验的正式检验法（Shapiro-Wilk、偏度-峰度）统计量怎么写、怎么判？`,
-      R`**Shapiro-Wilk**：$$W=\frac{\big(\sum_i a_i x_{(i)}\big)^{2}}{\sum_i (x_i-\bar x)^{2}},$$ $a_i$ 由正态顺序统计量的协方差定出，$W\in(0,1]$，**越小越拒绝正态**；$n\lesssim50$ 时首选。
-**偏度-峰度**：$g_1=\frac{1}{n}\sum(x_i-\bar x)^{3}/s^{3}$、$g_2=\frac{1}{n}\sum(x_i-\bar x)^{4}/s^{4}-3$，正态时二者期望均为 0；标准化后与大样本 $N(0,1)$ 临界值比（$H_0$：正态）。
-**选择口径**：小样本用 $S$-$W$，大样本可用偏度-峰度或 $\chi^2$ 分箱拟合优度。
-**易混**：正态性检验属**拟合优度**型检验，与 $t/F$ 检验的假设对象不同。`),
+      R`**记法**：排序 $x_{(1)}\le\cdots\le x_{(n)}$，经验分位点用修正频率 $\frac{i-0.375}{n+0.25}$。
+**正态概率纸**：纵轴修正频率、横轴 $x_{(i)}$ 描点，近似直线则支持正态；明显弯曲提示偏态或厚尾。
+**Q-Q 图**：$x_{(i)}$ 对 $\Phi^{-1}\big(\frac{i-0.375}{n+0.25}\big)$ 描点；上凸右偏、下凹左偏，两端偏离提示厚尾；换其他分布可照做，更通用。
+**判读**：直线斜率约 $\sigma$、截距约 $\mu$；S 形弯曲提示偏态，两端同时偏离提示峰度异常。
+**定位**：图示法只作佐证、无精确 $p$ 值；需精确结论用 Shapiro–Wilk 或 $K$-$S$ 检验。`),
     // ============ 补充：回归分析 ============
     F('reg07', 'regress', '回归系数显著性检验',
       R`回归系数 $\beta$ 的显著性检验`,
@@ -543,12 +544,6 @@ $$\frac{\partial}{\partial\theta}\ln L(\theta;x)=a(\theta)\,\big[\hat\theta-\the
     F('sy07', 'estimation', '均值区间估计的样本量确定',
       R`正态总体均值区间估计的样本量公式`,
       R`给定置信水平 $1-\alpha$ 与误差 $d$，样本量$$n\ge\left(\frac{z_{\alpha/2}\,\sigma}{d}\right)^{2}$$（$\sigma$ 已知时向上取整）。`),
-    F('sy08', 'numchar', '单边切比雪夫不等式',
-      R`单边（坎特利）不等式 $P(\xi\ge a)\le\dfrac{\sigma^{2}}{\sigma^{2}+a^{2}}$ 怎么来的？`,
-      R`对任意 $t>0$，$P(\xi\ge a)=P(\xi+t\ge a+t)\le\dfrac{E(\xi+t)^2}{(a+t)^2}=\dfrac{\sigma^2+t^2}{(a+t)^2}$。令 $t=\dfrac{\sigma^2}{a}$ 得最小上界$$\frac{\sigma^2+\sigma^4/a^2}{(a+\sigma^2/a)^2}=\frac{\sigma^2}{\sigma^2+a^2}$$（坎特利不等式）。`),
-    F('sy09', 'dist', '两标准正态之比的分布',
-      R`$X,Y\overset{iid}{\sim}N(0,1)$，求 $\dfrac{X}{Y}$ 的分布`,
-      R`$X/Y$ 服从标准柯西分布，密度$$f(z)=\frac{1}{\pi(1+z^2)},\quad z\in\mathbb R$$（等价于 $t(1)$ 分布）。`),
 
     // ============ 补充：扩展知识点卡 ============
     F('xr01', 'dist', '指数分布的无记忆性',
@@ -558,11 +553,6 @@ $$P(X>s+t\,|\,X>s)=P(X>t)$$
 即「已知已使用了 $s$ 小时、还能再用 $t$ 小时的概率，与从零开始用 $t$ 小时相同」——过去的寿命\textbf{不影响}剩余寿命。
 \underline{证明}：$P(X>x)=e^{-\lambda x}$，故
 $$P(X>s+t\,|\,X>s)=\frac{P(X>s+t)}{P(X>s)}=\frac{e^{-\lambda(s+t)}}{e^{-\lambda s}}=e^{-\lambda t}=P(X>t)$$`),
-    F('xr01-2', 'dist', '无记忆性的用途与唯一性',
-      R`无记忆性有什么用途？为什么说指数分布是唯一无记忆的连续分布？`,
-      R`\underline{含义与用途}：指数分布是\textbf{唯一}具有无记忆性的连续型分布（几何分布是其离散版本）；常用于描述寿命、等待时间、排队服务时间，可靠性问题中可由无记忆性直接推出「剩余寿命分布不变」——用过一段时间后再算剩余寿命，仍服从同参数指数分布。
-\underline{唯一性思路}：设连续分布满足 $P(X>s+t)=P(X>s)P(X>t)$，令 $G(x)=P(X>x)$，则 $G(s+t)=G(s)G(t)$，连续解只能是 $G(x)=e^{-\lambda x}$。
-\underline{易混}：无记忆性是条件概率 $P(X>s+t\,|\,X>s)$，\textbf{不是} $P(X>s+t)=P(X>s)+P(X>t)$；「无记忆」指剩余寿命分布与已用时间无关。`),
     F('xr02', 'testing', '似然比检验',
       R`什么是似然比检验？统计量怎么写、拒绝域怎么定？`,
       R`设检验 $H_{0}:\theta\in\Theta_{0}$ 对 $H_{1}:\theta\in\Theta_{1}$（$\Theta=\Theta_{0}\cup\Theta_{1}$）。似然比统计量为
@@ -623,19 +613,11 @@ $r$ 是 $H_{0}$ 下被约束掉的自由参数个数；做近似分布时用 $-2
 
     // ============ 补充：真题补卡（xt 前缀·次序统计量/完备统计/UMVUE/特征函数/泊松过程/大数定律/多种现实计量/非参数/分布拟合） ============
     F('xt01', 'multidim', '次序统计量的分布与联合分布',
-      R`次序统计量 $X_{(k)}$ 的密度与全体次序统计量的联合密度怎么来的？`,
-      R`第 $k$ 个次序统计量 $X_{(k)}$ 的密度：
-$$f_{X_{(k)}}(x)=\frac{n!}{(k-1)!\,(n-k)!}\,f(x)\,[F(x)]^{k-1}\,[1-F(x)]^{n-k}$$
-全体次序统计量 $(X_{(1)},\dots,X_{(n)})$ 的\textbf{联合密度}为
-$$f(x_{(1)},\dots,x_{(n)})=n!\prod_{i=1}^{n}f(x_{(i)}),\qquad x_{(1)}<\cdots<x_{(n)}$$
-\textbf{来源}：$n!$ 来自 $n$ 个样本的全排列；$[F(x)]^{k-1}[1-F(x)]^{n-k}$ 表示「$k-1$ 个落在 $x$ 左侧、$n-k$ 个落在右侧」，故必须在\textbf{有序}区域上写。`),
-    F('xt01-2', 'multidim', '两个次序统计量的联合密度',
-      R`任意两个次序统计量 $(X_{(i)},X_{(j)})$ 的联合密度怎么写？`,
-      R`任意两个 $(X_{(i)},X_{(j)})$（$i<j$）的联合密度：
-$$f_{ij}(u,v)=\frac{n!}{(i-1)!(j-i-1)!(n-j)!}f(u)f(v)\,[F(u)]^{i-1}\,[F(v)-F(u)]^{j-i-1}\,[1-F(v)]^{n-j},$$
-其中 $u<v$；把 $n$ 个样本分成四段：$u$ 左侧 $i-1$ 个、$u$ 与 $v$ 之间 $j-i-1$ 个、$v$ 右侧 $n-j$ 个，加上 $u$、$v$ 各一个。
-**用途**：求极差 $X_{(n)}-X_{(1)}$、中位数、样本分位数的分布，或做区间覆盖概率计算时积分该联合密度。
-**易混**：$u<v$ 是定义域约束，写成全平面会漏项；$i=j$ 时退化为单点密度，不能套用。`),
+      R`次序统计量 $X_{(k)}$ 的密度、联合密度与 $X_{(1)},X_{(n)}$ 的期望怎么求？`,
+      R`**单个**：$f_{X_{(k)}}(x)=\frac{n!}{(k-1)!(n-k)!}f(x)[F(x)]^{k-1}[1-F(x)]^{n-k}$。
+**全体联合**：$f(x_{(1)},\dots,x_{(n)})=n!\prod_{i=1}^{n}f(x_{(i)})$，$x_{(1)}<\cdots<x_{(n)}$，$n!$ 来自全排列。
+**两端期望**：$E[X_{(1)}]=\int n f(x)[1-F(x)]^{n-1}x\,dx$，$E[X_{(n)}]=\int n f(x)[F(x)]^{n-1}x\,dx$；$U(0,1)$ 时 $E[X_{(k)}]=\frac{k}{n+1}$。
+**易混**：密度只在有序区域成立；$X_{(k)}$ 与 $X_{(j)}$ 不独立，联合密度带 $n!$ 与区域约束。`),
     F('xt02', 'multidim', '均匀分布次序统计量与贝塔分布',
       R`均匀总体 $U(0,1)$ 的第 $k$ 个次序统计量服从什么分布？`,
       R`$X_{(k)}\sim\mathrm{Beta}(k,\ n-k+1)$，即
@@ -643,11 +625,6 @@ $$f_{X_{(k)}}(x)=\frac{n!}{(k-1)!(n-k)!}x^{k-1}(1-x)^{n-k},\qquad 0<x<1$$
 $$E(X_{(k)})=\frac{k}{n+1},\qquad \mathrm{Var}(X_{(k)})=\frac{k(n-k+1)}{(n+1)^{2}(n+2)}$$
 关键事实：对\textbf{任意}连续总体 $X$，$F(X)\sim U(0,1)$，故 $F(X_{(k)})\sim\mathrm{Beta}(k,\ n-k+1)$——均匀分布次序统计量是研究一般连续总体次序统计量的“标尺”。
 **相关结论**：极差 $X_{(n)}-X_{(1)}$ 的分布为 $\mathrm{Beta}(n-1,\ 2)$；均匀分布次序统计量常与极值、截尾寿命问题相连。`),
-    F('xt03', 'multidim', '次序统计量之比与次序统计量的独立性',
-      R`次序统计量之比 $\dfrac{X_{(i)}}{X_{(j)}}$ 为什么与 $X_{(j)}$ 独立？`,
-      R`由 $(X_{(i)},X_{(j)})$ 联合密度，作变量变换 $Z=\dfrac{X_{(i)}}{X_{(j)}}$、$V=X_{(j)}$，雅可比 $|J|=\dfrac{\partial(X_{(i)},X_{(j)})}{\partial(Z,V)}=V$，可把联合密度分离为 $f_{Z}(z)\cdot f_{V}(v)$，故 $Z$ 与 $V=X_{(j)}$ 独立。
-\underline{常用结论}（$X\sim U(0,1)$）：对 $1\le i\le n$，$X_{(i)}\sim\mathrm{Beta}(i,n-i+1)$；比值 $\dfrac{X_{(i)}}{X_{(j)}}$ 与 $X_{(j)}$ 独立；$X_{(n)}-X_{(1)}\sim\mathrm{Beta}(n-1,2)$；对 $0<i_1<\cdots<i_r\le n$，$\dfrac{X_{(i_1)}}{X_{(i_2)}},\ \dfrac{X_{(i_2)}}{X_{(i_3)}},\dots$ 相互独立。
-该独立性是处理“乘积形式／比值形式次序统计量”与截尾样本推断的核心技巧。`),
     F('xt04', 'estimation', '充分统计量与因子分解定理',
       R`如何用因子分解定理判断一个统计量是否充分？判定步骤是什么？`,
       R`**定义**：$T=T(X)$ 是 $\theta$ 的充分统计量 $\iff$ 给定 $T$ 后样本的条件分布与 $\theta$ 无关（$T$ 含样本中关于 $\theta$ 的**全部**信息）。
@@ -696,28 +673,20 @@ $$N(t)\,|\,N(s)=n\ \sim\ B\!\left(n,\ \frac{t}{s}\right)$$
 \underline{到达间隔}：相邻到达间隔 $T_i$ 独立同分布 $\sim Exp(\lambda)$；第 $n$ 个到达时刻 $\tau_n=\sum_{i=1}^{n}T_i\sim\Gamma(n,\lambda)$。
 \underline{含义}：由无记忆性，当前时刻之后「重新开始计时」，这与指数间隔互为因果。
 \underline{易混}：独立增量是「不重叠区间」独立，不是「任意两区间」独立；泊松过程是计数过程，均值函数 $\Lambda(t)=\lambda t$ 线性增长。`),
-    F('xt09', 'limit', '大数定律不同形式与马尔可夫大数定律',
-      R`大数定律有哪些常见形式？叙述马尔可夫大数定律；怎样刻画“某一序列服从大数定律”`,
-      R`\underline{常见形式}：伯努利（频率 $\to$ 概率）、切比雪夫（独立且方差有界）、辛钦（i.i.d. 且期望存在）、马尔可夫（放宽独立性）、柯尔莫哥洛夫（强大数定律）。
-\underline{马尔可夫大数定律}：若 $\dfrac{1}{n^{2}}\mathrm{Var}\!\left(\sum_{i=1}^{n}X_i\right)\to0$（不要求独立），则
-$$\frac{1}{n}\sum_{i=1}^{n}X_i-\frac{1}{n}\sum_{i=1}^{n}E(X_i)\ \overset{P}{\longrightarrow}\ 0$$
-（切比雪夫大数定律是其特例：独立 + 方差一致有界时 $\mathrm{Var}\left(\frac{1}{n}\sum X_i\right)\le\frac{C}{n}\to0$。）
-\underline{充要刻画}：记 $Y_n=\frac1n\sum X_i$、$a_n=E(Y_n)$，则 $\{X_n\}$ 服从大数定律 $\iff$
-$$\lim_{n\to\infty}E\left[\frac{(Y_n-a_n)^{2}}{1+(Y_n-a_n)^{2}}\right]=0$$
-此式对方差无穷（只有一阶矩）的情形也适用。`),
-    F('xt10', 'regress', R`多元线性回归模型与 $\mathrm{Var}(\hat\beta)$`,
-      R`多元回归 $\hat\beta$ 的协方差阵与残差平方和的期望怎么推？`,
-      R`**系数**：$\hat\beta=(Y^{T}Y)^{-1}Y^{T}Z$，由 $\mathrm{Var}(Z)=\sigma^{2}I_n$ 得
-$$\mathrm{Var}(\hat\beta)=(Y^{T}Y)^{-1}Y^{T}\,\mathrm{Var}(Z)\,Y(Y^{T}Y)^{-1}=\sigma^{2}(Y^{T}Y)^{-1}$$
-**残差平方和**：$Q(\hat\beta)=\|Z-Y\hat\beta\|^{2}$，残差 $=Z-Y\hat\beta=(I_n-H)Z$，其中 $H=Y(Y^{T}Y)^{-1}Y^{T}$ 是幂等投影阵且 $\mathrm{rank}(H)=d$（$Y$ 列满秩），故
-$$E[Q(\hat\beta)]=E\big[Z^{T}(I_n-H)Z\big]=\sigma^{2}\,\mathrm{tr}(I_n-H)=\sigma^{2}(n-d)$$
-**要点**：幂等阵的迹等于它的秩，也等于解释变量个数 $d$——这正是 $\hat\sigma^{2}=Q(\hat\beta)/(n-d)$ 无偏与“残差自由度 $n-d$”的来源。`),
+    F('xt10', 'regress', '多元回归 OLS 的抽样分布',
+      R`多元回归 OLS 估计量的抽样分布是什么？`,
+      R`**模型**：$Y=X\beta+\varepsilon$，$\varepsilon\mid X\sim N(0,\sigma^{2}I)$，$X$ 列满秩，$p=\operatorname{rank}(X)$。
+**系数**：$\hat\beta=(X'X)^{-1}X'Y$，$E\hat\beta=\beta$，$\operatorname{Var}(\hat\beta)=\sigma^{2}(X'X)^{-1}$，$\hat\beta\sim N(\beta,\sigma^{2}(X'X)^{-1})$。
+**残差**：$e=(I-P)Y$，$RSS=e'e$，$RSS/\sigma^{2}\sim\chi^{2}(n-p)$。
+**独立**：$\hat\beta$ 与 $RSS$ 独立（正态下系数空间与残差空间正交）。
+**检验**：$t_j=\frac{\hat\beta_j-\beta_j}{\sqrt{\hat\sigma^{2}[(X'X)^{-1}]_{jj}}}$，$\hat\sigma^{2}=RSS/(n-p)$。`),
     F('xt11', 'regress', '多重共线性',
-      R`什么是多重共线性？如何判断与消除？`,
-      R`\underline{定义}：回归模型中某些自变量之间存在（近似）线性关系，使得 $X^{T}X$ 接近奇异（列向量高度相关）。
-\underline{后果}：OLS 估计仍\textbf{无偏}，但 $\hat\beta$ 方差被放大、估计不稳定、符号可能反常，$t$ 检验失效。
-\underline{判断}：① 自变量两两相关系数高；② \textbf{方差膨胀因子} $VIF_j=\dfrac{1}{1-R_j^{2}}$（$R_j^{2}$ 为 $x_j$ 对其余自变量回归的判定系数），一般 $VIF>10$ 视为严重；③ $X^{T}X$ 最小特征值接近 0；④ 模型整体 $F$ 显著但各系数 $t$ 均不显著。
-\underline{消除}：删除／合并高相关变量；逐步回归筛选；主成分回归；岭回归（Ridge）；增加样本量。`),
+      R`什么是多重共线性？后果与诊断各是什么？`,
+      R`**定义**：自变量间存在（近似）线性关系，使 $X^{T}X$ 接近奇异。
+**后果**：OLS 仍无偏，但 $\hat\beta$ 方差放大、估计不稳定、符号可能反常，$t$ 检验失效。
+**诊断**：两两相关系数高；$VIF_j=\frac{1}{1-R_j^{2}}>10$（$R_j^{2}$ 为 $x_j$ 对其余自变量回归的判定系数）；整体 $F$ 显著而各 $t$ 均不显著。
+**处理**：删/并高相关变量、主成分回归、岭回归、增加样本量。
+**易混**：共线性不破坏无偏性，只放大方差；$VIF$ 大不等于必须删变量，要看经济含义。`),
     F('xt12', 'regress', '异方差与 White 检验',
       R`线性回归中什么是异方差？简述 White（怀特）检验的步骤与用途`,
       R`异方差指扰动项方差非常数：$E(\varepsilon_i^{2})=\sigma_i^{2}\ne\cdots$，违背同方差假设（$E(\varepsilon^{2})=\sigma^{2}$）与无自相关（$\mathrm{Cov}(\varepsilon_i,\varepsilon_j)=0$）。
@@ -725,31 +694,21 @@ $$E[Q(\hat\beta)]=E\big[Z^{T}(I_n-H)Z\big]=\sigma^{2}\,\mathrm{tr}(I_n-H)=\sigma
 \underline{White 检验}（检验 $H_0$：同方差）：① OLS 回归得残差 $\hat e_i$；② 以 $\hat e_i^{2}$ 对一切解释变量及其平方、交叉项作辅助回归；③ 用辅助回归判定系数 $R^{2}$ 构造 $W=nR^{2}\sim\chi^{2}(p)$（$p$ 为辅助回归自变量个数），$W>\chi^{2}_{\alpha}(p)$ 则拒绝同方差。
 \underline{处理}：方差形式已知用加权最小二乘（WLS/GLS）；未知用 White 一致稳健标准误（或可行 GLS）。特例：线性概率模型 $y\in\{0,1\}$ 必有异方差。`),
     F('xt13', 'testing', '非参数检验与 Wilcoxon 秩和检验',
-      R`非参数检验是什么？Wilcoxon 秩和检验的步骤与统计量怎么写？`,
-      R`\underline{非参数检验}：不依赖总体分布具体形式（如正态）的推断，利用样本秩、符号等序信息，对分布形态稳健。
-\underline{Wilcoxon 秩和检验}（两总体同分布 $H_0:F_X=F_Y$）：
-① 合并两样本 $Z=\{X_1,\dots,X_{n_1},Y_1,\dots,Y_{n_2}\}$ 升序排列，赋秩 $R_i$（相等取平均秩）；② 计算第一组秩和 $W_X=\sum_{i=1}^{n_1}R(X_i)$；③ 原假设下
-$$E(W_X)=\frac{n_1(n_1+n_2+1)}{2},\qquad \mathrm{Var}(W_X)=\frac{n_1n_2(n_1+n_2+1)}{12}.$$`),
-    F('xt13-2', 'testing', 'Wilcoxon 秩和检验的拒绝域与对比',
-      R`秩和检验在大样本下怎么构造拒绝域？与 $t$ 检验相比优劣如何？`,
-      R`**大样本拒绝域**：由上面 ③ 的均值与方差标准化，
-$$Z=\frac{W_X-E(W_X)}{\sqrt{\mathrm{Var}(W_X)}}\ \sim\ N(0,1),$$
-$|Z|>z_{\alpha/2}$ 拒绝 $H_0$；小样本查 Wilcoxon 秩和分布表。
-\underline{对比}：秩和检验\textbf{不需要正态假设}，对偏峰、异常值稳健；但数据近似正态时配对 $t$ 检验更有效——秩和检验只利用相对次序，损失了数值大小信息。
-**注意**：两样本需独立且各自内部 i.i.d.；存在大量并列观测（同秩）时方差要作并列校正，或改用精确检验。`),
-    F('xt14', 'testing', '分布拟合检验：$K$-$S$ 与 $\chi^{2}$',
-      R`如何检验样本是否来自某已知分布？$K$-$S$ 统计量与 $\chi^{2}$ 统计量怎么写？`,
-      R`\underline{$K$-$S$（Kolmogorov-Smirnov）检验}：比较经验分布函数 $F_n(x)$ 与理论分布 $F_0(x)$ 的最大距离
-$$D_n=\sup_{x}\left|F_n(x)-F_0(x)\right|$$
-$H_0:F=F_0$（且 $F_0$ \textbf{参数已知}），$D_n$ 大则拒绝。优点：无需分组、对任意 $x$ 敏感、优于 $\chi^{2}$（尤其小样本）；缺点：$F_0$ 需完全已知，若参数需估计则用 \textbf{Lilliefors} 修正。
-\underline{$\chi^{2}$ 拟合优度检验}：把数据分成 $k$ 组，统计量
-$$\chi^{2}=\sum_{i=1}^{k}\frac{(n_i-np_i)^{2}}{np_i}\sim\chi^{2}(k-1-r)$$
-（$r$ 为\textbf{估计的}参数个数，不是 $k-1$），适合大样本、分类（离散）数据。`),
-    F('xt14-2', 'testing', '拟合检验的共用前提与选型',
-      R`经验分布函数起什么作用？$K$-$S$ 与 $\chi^{2}$ 该怎么选？`,
-      R`\underline{共用}：经验分布函数 $F_n(x)=\frac1n\sum_{i=1}^{n}I\{X_i\le x\}$；由 Glivenko-Cantelli 定理 $\sup_x|F_n(x)-F(x)|\to0$ a.s.，故 $F_n$ 是 $F$ 的强相合估计——$K$-$S$ 正是用它度量与 $F_0$ 的偏差。
-\underline{选型}：分布已知、小样本、连续型 $\Rightarrow$ $K$-$S$；大样本、分类或分组数据、参数需估计 $\Rightarrow$ $\chi^{2}$（自由度 $k-1-r$）。
-\underline{注意}：$\chi^{2}$ 要求各组期望频数 $\ge5$，否则合并组；$K$-$S$ 参数需估计时必须用 Lilliefors 型临界值，直接查表会偏保守。`),
+      R`什么是非参数检验？Wilcoxon 秩和检验的统计量怎么写？`,
+      R`**非参数检验**：不依赖总体分布具体形式的推断，用秩、符号等序信息，对分布形态稳健。
+**Wilcoxon 秩和**（$H_0:F_X=F_Y$）：合并两样本升序赋秩（相等取平均秩），第一组秩和 $W_X=\sum R(X_i)$；原假设下
+$$E(W_X)=\frac{n_1(n_1+n_2+1)}{2},\quad \mathrm{Var}(W_X)=\frac{n_1n_2(n_1+n_2+1)}{12},$$
+大样本用 $Z=\frac{W_X-E(W_X)}{\sqrt{\mathrm{Var}(W_X)}}$ 近似 $N(0,1)$。
+**拒绝域**：双侧 $|Z|>z_{1-\alpha/2}$，单侧按方向取分位数。
+**易混**：秩和检验比较分布位置而非均值；正态且方差齐时 $t$ 检验功效更高。`),
+    F('xt14', 'testing', '分布拟合检验：$K$-$S$ 与 $chi^{2}$',
+      R`分布拟合检验的 $\chi^{2}$ 统计量怎么写？与 $K$-$S$ 检验如何取舍？`,
+      R`**$\chi^{2}$ 拟合优度**：分 $k$ 组，$n_i$ 为观测频数、$np_i$ 为期望频数，
+$$\chi^{2}=\sum_{i=1}^{k}\frac{(n_i-np_i)^{2}}{np_i}\sim\chi^{2}(k-1-r),$$
+$r$ 为估计的参数个数（不是 $k-1$）；要求每格期望频数不小于 5，适合大样本与离散数据。
+**$K$-$S$**：$D_n=\sup_x|F_n(x)-F_0(x)|$，$F_0$ 参数已知时直接用；参数需估计时用 Lilliefors 修正。
+**取舍**：$K$-$S$ 不分组、对小样本更灵敏；$\chi^{2}$ 更通用但依赖分组。
+**易混**：自由度漏减 $r$；把 $K$-$S$ 直接用在参数估计后的 $F_0$ 上。`),
     F('xt15', 'testing', '列联表独立性检验（$r\times c$）',
       R`$r\times c$ 列联表独立性检验的原理与统计量怎么写？`,
       R`\underline{设定}：两个分类变量 $X,Y$ 分别取 $m,n$ 种值，观测频数 $N_{ij}$（$i=1..m,j=1..n$），行合计 $N_{i\cdot}$、列合计 $N_{\cdot j}$、总 $N$。$H_0$：$X$ 与 $Y$ 独立。
@@ -839,23 +798,12 @@ $$\bar D\pm t_{\alpha/2}(n-1)\frac{S_D}{\sqrt n}$$
 \underline{检验}：$H_0:\mu_D=0$，$t=\dfrac{\bar D}{S_D/\sqrt n}\sim t(n-1)$，$|t|>t_{\alpha/2}(n-1)$ 拒绝。
 \underline{适用}：两样本\textbf{不独立}、来自同一对象或匹配对象（前后对照、双胞胎、A/H 上市），配对可\textbf{消除个体差异}、提高功效。
 \underline{易混}：把\textbf{配对样本当两独立样本}合并方差是常见错误；配对 $t$ 要求差值 $D_i$ 近似正态（大样本放宽）。`),
-    F('jj04', 'testing', '符号检验（非参数）',
-      R`符号检验的原理与步骤`,
-      R`\textbf{适用}：成对样本比较（或检验分位数），\textbf{不要求分布正态}、只利用正负号。
-\underline{配对}：对 $(X_i,Y_i)$ 记 $D_i=X_i-Y_i$，$N_+=\#\{D_i>0\}$，$N_-=\#\{D_i<0\}$（$D_i=0$ 剔除），有效数 $n=N_++N_-$。$H_0$：中位数差 $=0$，则 $N_+\sim B(n,\tfrac12)$。统计量取 $S=\min(N_+,N_-)$（或较大者）。
-\underline{小样本}：查二项分布临界值（$S$ 过小则拒绝）；\underline{大样本}：$Z=\dfrac{N_+-n/2}{\sqrt{n/4}}=\dfrac{2N_+-n}{\sqrt n}\sim N(0,1)$（可用连续性校正）。
-\underline{优点}：稳健、对离群值不敏感、无需正态；\underline{缺点}：只用符号、信息量低，功效\textbf{低于}秩和/参数检验。`),
-    F('jj05', 'testing', '游程检验（非参数）',
-      R`游程检验的原理与步骤`,
-      R`\textbf{检验随机性}：判断一组样本是否随机排列（或两总体分布是否相同）。
-\underline{定义}：把样本按二分类（如“高于/低于中位数”）排成一列，\textbf{连续相同符号的一段为一个“游程”}。设游程总数 $R$，两类元素分别 $n_1,n_2$ 个。
-\underline{分布}：$H_0$（随机）下 $E(R)=1+\frac{2n_1n_2}{n_1+n_2}$，$\mathrm{Var}(R)=\frac{2n_1n_2(2n_1n_2-n_1-n_2)}{(n_1+n_2)^2(n_1+n_2-1)}$。
-\underline{判定}：$R$ \textbf{过小} $\Rightarrow$ 元素聚集（非随机）；$R$ \textbf{过大} $\Rightarrow$ 元素交替过频（也非随机）。大样本 $Z=\frac{R-E(R)}{\sqrt{\mathrm{Var}(R)}}\sim N(0,1)$，$|Z|>z_{\alpha/2}$ 拒绝。
-\underline{易混}：游程检验检验\textbf{随机性}；与秩和（比较位置）、符号（比较正负）不同。`),
     F('jj06', 'regress', '高斯-马尔可夫定理',
-      R`高斯-马尔可夫（Gauss-Markov）定理的内容与条件`,
-      R`对 $Y_i=\beta_0+\beta_1x_i+\varepsilon_i$，\textbf{条件}：① $E(\varepsilon_i\mid X)=0$（外生/无内生性）；② $\mathrm{Var}(\varepsilon_i)=\sigma^2$（\textbf{同方差}）；③ $\mathrm{Cov}(\varepsilon_i,\varepsilon_j)=0$（$i\ne j$，\textbf{无自相关}）；④ $x$ 非随机或与 $\varepsilon$ 不相关。则 OLS 估计 $\hat\beta$ 是 $\beta$ 的\textbf{BLUE}（最优线性无偏估计）：在所有\textbf{线性、无偏}估计中\textbf{方差最小}。
-\underline{注意}：① 定理\textbf{不要求正态性}（正态只用于区间/假设检验）；② 只要求“不相关（外生）”而非独立；③ “最优”仅在\textbf{线性无偏类}内，非线性无偏可能方差更小；④ 条件②③失效（异方差/自相关）时 OLS 仍\textbf{无偏}但\textbf{不再有效}，需用 GLS/稳健标准误；⑤ 内生性（$E(\varepsilon\mid X)\ne0$）则 OLS \textbf{有偏且不一致}。`),
+      R`高斯-马尔可夫定理（Gauss–Markov）的条件与结论是什么？`,
+      R`**条件**：$Y=X\beta+\varepsilon$，$E(\varepsilon\mid X)=0$，$\operatorname{Var}(\varepsilon\mid X)=\sigma^{2}I$（同方差、无自相关），$X$ 列满秩。
+**结论**：OLS 估计 $\hat\beta$ 在 $\beta$ 的一切线性无偏估计中方差最小——BLUE（最佳线性无偏估计）。
+**要点**：不需要正态假设；只要上述矩条件成立，OLS 就是最优线性无偏。
+**边界**：异方差或自相关时 OLS 仍无偏但不再有效，应改用 GLS/WLS 或稳健标准误。`),
     F('jj08', 'regress', '异方差的诊断与后果',
       R`如何诊断异方差？存在异方差时 OLS 会受到什么影响？`,
       R`\underline{诊断}：
@@ -865,33 +813,22 @@ $$\bar D\pm t_{\alpha/2}(n-1)\frac{S_D}{\sqrt n}$$
 \underline{后果}：OLS 仍\textbf{无偏且一致}，但标准误估计有偏、$t$/$F$ 检验失效，估计\textbf{不再有效}。
 \underline{易混}：异方差不破坏无偏性与一致性，只破坏\textbf{有效性}与标准误的正确性。`),
     F('jj08-2', 'regress', '异方差的修正：WLS/GLS 与稳健标准误',
-      R`存在异方差时怎么修正？WLS 的权重是什么？`,
-      R`\underline{WLS/GLS}：若 $\mathrm{Var}(\varepsilon_i)=\sigma^{2}w_i$ 已知，把方程两端除以 $\sqrt{w_i}$ 后做 OLS，等价于最小化
-$$\sum_i\frac{(y_i-\beta_0-\beta_1x_i)^{2}}{w_i},$$
-即方差大的观测权重小；加权最小二乘在 $w_i$ 正确时是 BLUE。
-\underline{方差形式未知}：用\textbf{稳健（White）标准误}修正 $t$/$F$ 统计量（不改点估计），或先估出 $w_i$ 再做 FGLS（可行广义最小二乘）。
-\underline{易混}：WLS 权重是 $\dfrac{1}{w_i}$（方差之倒数），勿写成 $w_i$；稳健标准误只修标准误、不改变 OLS 系数，也不是「把异方差消除」。`),
+      R`存在异方差时怎么修正？WLS 权重与稳健标准误各解决什么？`,
+      R`**WLS/GLS**：若 $\mathrm{Var}(\varepsilon_i)=\sigma^{2}w_i$ 已知，两端除以 $\sqrt{w_i}$ 再 OLS，等价于最小化 $\sum_i(y_i-\beta_0-\beta_1x_i)^{2}/w_i$；$w_i$ 正确时 WLS 是 BLUE。
+**方差未知**：用 White 稳健标准误修正 $t$/$F$（不改系数），或先估 $w_i$ 再做 FGLS。
+**易混**：权重是 $1/w_i$（方差倒数），不是 $w_i$；稳健标准误不消除异方差，也不改变点估计。`),
     F('jj09', 'regress', '自相关与 DW 检验',
-      R`什么是自相关（序列相关）？如何用 DW 检验诊断？`,
-      R`\underline{定义}：$\mathrm{Cov}(\varepsilon_i,\varepsilon_j)\ne0$（$i\ne j$），常见于时间序列；$\varepsilon_i$ 与 $\varepsilon_j$ 相关。后果：OLS 仍\textbf{无偏}但\textbf{不有效}，标准误估计失准，$t$/$F$ 检验失效。\underline{常见}：AR(1) $\varepsilon_i=\rho\varepsilon_{i-1}+u_i$。
-\underline{DW（Durbin-Watson）检验}（诊断一阶自相关）：
-$$d=\frac{\sum_{i=2}^{n}(e_i-e_{i-1})^{2}}{\sum_{i=1}^{n}e_i^{2}}\approx2(1-\hat\rho)$$
-$d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf{正}自相关；$d>2$（大于 $4-d_L$）\textbf{负}自相关。\underline{局限}：只查\textbf{一阶}，且模型含\textbf{滞后因变量}时失效。
-\underline{修正}：广义差分法、Cochrane-Orcutt、加入滞后变量、Newey-West 稳健标准误。`),
+      R`什么是自相关？DW 统计量怎么算、怎么判、有什么局限？`,
+      R`**定义**：$\mathrm{Cov}(\varepsilon_i,\varepsilon_j)\ne0$（$i\ne j$），多见于时间序列，常设 AR(1)：$\varepsilon_i=\rho\varepsilon_{i-1}+u_i$。后果是 OLS 仍无偏但不有效、标准误失准、$t$/$F$ 失效。
+**DW 检验**：$d=\frac{\sum_{i=2}^{n}(e_i-e_{i-1})^{2}}{\sum e_i^{2}}\approx2(1-\hat\rho)$，$d\in[0,4]$；$d\approx2$ 无自相关，$d<d_L$ 正自相关，$d>4-d_L$ 负自相关。
+**局限**：只查一阶；模型含滞后因变量时失效。
+**修正**：广义差分、Cochrane–Orcutt、Newey–West 稳健标准误。`),
     F('jj10', 'regress', '内生性与工具变量条件',
-      R`什么是内生性？合格的工具有变量要满足哪些条件？`,
-      R`\underline{内生性}：$x$ 与误差 $\varepsilon$ 相关（$\mathrm{Cov}(x,\varepsilon)\ne0$），破坏 Gauss-Markov 外生条件，OLS \textbf{有偏且不一致}。
-\underline{来源}：遗漏变量、联立方程（双向因果）、测量误差、反向因果。
-\underline{工具变量条件}：$Z$ 须满足 ① \textbf{相关性} $\mathrm{Cov}(Z,x)\ne0$；② \textbf{外生性} $\mathrm{Cov}(Z,\varepsilon)=0$；③ 不能直接作解释变量（只通过 $x$ 影响 $y$）。
-\underline{易混}：条件缺一不可——相关性弱会造成偏差，外生性不成立则工具无效；工具变量不是「随便找一个与 $x$ 相关的变量」。`),
-    F('jj10-2', 'regress', '2SLS 的两阶段与诊断检验',
-      R`2SLS 的两个阶段各做什么？结果要配哪些诊断检验？`,
-      R`\underline{2SLS（两阶段最小二乘）}：
-\textbf{第一阶段}：用 $Z$（及外生变量）对 $x$ 回归，取拟合值 $\hat x$——滤掉 $x$ 中与 $\varepsilon$ 相关的部分。
-\textbf{第二阶段}：用 $\hat x$ 对 $y$ 回归得一致估计 $\hat\beta_{2SLS}$（标准误须按两阶段修正）。
-单变量单工具时 $\hat\beta_{IV}=\dfrac{\mathrm{Cov}(Z,Y)}{\mathrm{Cov}(Z,X)}$。
-\underline{识别与检验}：工具变量数 $\ge$ 内生变量数方可识别（恰好识别/过度识别）；过度识别用 Sargan/Hansen 检验，内生性用 Hausman 检验，工具强度看第一阶段 $F$。
-\underline{易混}：\textbf{弱工具变量}会导致严重偏差且方差被放大（约 $1/$第一阶段的解释力）；不能只报 2SLS 结果而不报第一阶段与检验。`),
+      R`什么是内生性？工具变量要满足哪两个条件？2SLS 怎么用？`,
+      R`**内生性**：$\mathrm{Cov}(x,\varepsilon)\ne0$，破坏外生条件，OLS 有偏且不一致；来源有遗漏变量、联立方程、测量误差、反向因果。
+**IV 两条件**：① 相关性 $\mathrm{Cov}(Z,x)\ne0$；② 外生性 $\mathrm{Cov}(Z,\varepsilon)=0$，且 $Z$ 只通过 $x$ 影响 $y$。
+**2SLS**：第一阶段用 $Z$ 回归 $x$ 得 $\hat x$，第二阶段用 $\hat x$ 代回原方程做 OLS；工具多于内生变量时取最佳工具组合。
+**易混**：弱工具造成大偏差；外生性不成立则工具无效；工具变量不是随便找一个与 $x$ 相关的变量。`),
     F('jj11', 'regress', '虚拟变量与交互项',
       R`如何在回归中使用虚拟变量（定性变量）与交互项，并解释系数？`,
       R`\underline{虚拟变量}：把定性变量转成 0/1。若分 $k$ 类，只设 $k-1$ 个虚拟变量（\textbf{基准类取 0}），以免完全共线。系数 $\beta_D$ 表示“该类别相对基准类，均值差 $\beta_D$”。\underline{交互项}：$X\cdot D$体现不同组\textbf{斜率差异}；$X_1\cdot X_2$ 体现\textbf{交叉影响}。
@@ -908,11 +845,11 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
 \underline{易混}：$R^2$ 增大不等于模型更好——加了无关变量 $R^2$ 也会上升，故要做变量选择、看调整后的准则。`),
     F('jj12-2', 'regress', '变量选择方法：向前 / 向后 / 逐步',
       R`向前、向后、逐步选择各怎么做？判据与风险是什么？`,
-      R`\underline{前向选择 Forward}：从常数项起，逐次加入\textbf{最显著}变量，直到无可加显著变量。
-\underline{后向选择 Backward}：从全变量起，逐次剔除\textbf{最不显著}变量，直到留下的都显著。
-\underline{逐步选择 Stepwise}：前向+后向结合（可进可出），每加一个显著变量后再检验并剔除变得不显著的。
-\underline{判据}：调正 $\bar R^2$、AIC/BIC、$F$ 检验、$p$ 值、VIF（共线性）。
-\underline{易混}：逐步回归是\textbf{数据驱动}、可能过拟合，不同准则给出的模型不同；$p$ 值在反复选择后被低估，模型设定应以\textbf{理论}与经济学含义为先。`),
+      R`**向前**：从常数项起逐个加入最显著变量，直到无可加。
+**向后**：从全模型起逐个剔除最不显著变量，直到剩余都显著。
+**逐步**：前进与后退结合，每加入一个再检验并剔除变得不显著的。
+**判据**：调整 $R^{2}$、AIC/BIC（越小越好）、$F$ 检验/$p$ 值、VIF。
+**风险**：数据驱动易过拟合，反复选择使 $p$ 值被低估；应以理论与经济含义为先。`),
     F('test17', 'testing', '两类错误与样本量的确定',
       R`简述假设检验的两类错误及其概率关系；若要同时控制显著性水平 $\alpha$ 并把犯 Ⅱ 类错误的概率压到 $\beta$，应如何确定样本量？`,
       R`\textbf{两类错误}：Ⅰ 类错误——$H_0$ 为真却拒绝，$P(\text{Ⅰ 类})=\alpha$（显著性水平）；Ⅱ 类错误——$H_0$ 不真却不拒绝，$P(\text{Ⅱ 类})=\beta$（$1-\beta$ 称检验功效）。
@@ -920,12 +857,6 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
 \underline{样本量公式}（正态总体、单侧检验、可检测差异 $\delta$）：$$n=\left[\dfrac{(z_\alpha+z_\beta)\,\sigma}{\delta}\right]^{2}\quad(\text{双侧用 } z_{\alpha/2})$$ 例：$\alpha=0.05$、$\beta=0.10$、$\sigma=1$、$\delta=0.5$ 时 $n=\left[\dfrac{1.645+1.282}{0.5}\right]^2\approx34.3$，故 $n\ge35$。
 \textbf{易混}：$p$ 值是在给定数据下犯 Ⅰ 类错误的条件度量，与 $\beta$ 无关；功效分析要在收集数据前做。`),
     // ============ 补充：茆诗松教材补全（v1.35.0） ============
-    F('pb12', 'prob_basic', '概率的统计定义（频率与概率）',
-      R`什么是频率？概率的统计定义是什么？`,
-      R`频率：$f_n(A)=\dfrac{n_A}{n}$（$n_A$ 为 $n$ 次重复试验中 $A$ 发生的次数）。
-频率随试验批次波动，但当 $n$ 增大时呈现出\textbf{稳定性}——稳定于某个常数。概率的统计定义：该稳定值就是事件 $A$ 的概率 $P(A)$。
-- 频率满足非负性、规范性、有限可加性（与概率公理一致），故频率可作为概率的估计（蒙特卡洛方法的理论基础）。
-- 理论支撑：伯努利大数定律——频率\textbf{依概率}收敛于概率。`),
     F('pb13', 'prob_basic', '相互独立与两两独立',
       R`相互独立与两两独立的区别`,
       R`\textbf{两两独立}：$P(AB)=P(A)P(B)$、$P(AC)=P(A)P(C)$、$P(BC)=P(B)P(C)$ 三式成立。
@@ -967,19 +898,6 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
 - \textbf{纵轴必须是频率/组距}：这样各矩形面积 = 组内频率，全部矩形面积之和为 1——直方图整体近似\textbf{密度曲线} $f(x)$（面积法估计分布）。
 - 纵轴若用频率，图形形状相同但面积不归一，不能当作密度估计。
 - 茎叶图：把每个数据拆成「茎（高位）+ 叶（末位）」按行排列——等价于保留原始数字的直方图，样本量小时信息不丢失。`),
-    F('sm15', 'sampling', '箱线图',
-      R`箱线图如何构造？如何判别异常值？`,
-      R`\textbf{五数概括}：$x_{(1)}$（最小值）、$Q_1$（下四分位数）、$Me$（中位数）、$Q_3$（上四分位数）、$x_{(n)}$（最大值）。
-画法：箱体从 $Q_1$ 到 $Q_3$（中位数线在箱内）；\textbf{箱界}（内栏）为 $Q_1-1.5\,\mathrm{IQR}$ 与 $Q_3+1.5\,\mathrm{IQR}$，其中 $\mathrm{IQR}=Q_3-Q_1$（四分位差）；须线自箱体延伸至\textbf{箱界内的最远观测值}；超出箱界的观测逐一描点——视为\textbf{疑似异常值}。
-- 解读：中位线在箱中的位置反映对称性（居中≈对称，偏一侧≈偏态）；箱长≈中间 50% 数据的散布。
-- 优点：稳健（分位数不受极端值影响）、适合多组并列比较。`),
-    F('nc17', 'numchar', '变异系数',
-      R`变异系数的定义与用途`,
-      R`$$CV=\frac{\sigma(X)}{E(X)}\qquad(E(X)>0)$$
-无量纲的\textbf{相对}波动度量——标准差与均值之比（常写成百分数）。
-- 用途：比较\textbf{量纲不同或量级悬殊}的数据的离散程度——如身高（cm）与体重（kg）谁更「整齐」；同样的 5 kg 绝对差异，对婴儿体重比对成年人体重重要得多。
-- 与标准差的区别：标准差有量纲、受量级影响（把单位从米换成厘米，标准差数值×100）；CV 消除了量纲与量级的影响。
-- 正态分布的 $CV=\sigma/\mu$ 与 $\sigma^2/\mu^2$ 有对应关系——泊松分布 $CV=1/\sqrt\lambda$（$\lambda$ 越大相对越稳定）。`),
     F('nc18', 'numchar', '偏度与峰度',
       R`偏度系数与峰度系数的定义与解读`,
       R`\textbf{偏度}（三阶标准化矩）：$$\mathrm{Sk}=\frac{E[(X-\mu)^3]}{\sigma^3}$$ 衡量\textbf{不对称性}：右偏（右尾长、峰在左）为正；左偏为负；对称分布为 0（正态 $\mathrm{Sk}=0$）。
@@ -1015,20 +933,13 @@ $d\in[0,4]$：$d\approx2$ 无自相关；$d<2$（且小于下界 $d_L$）\textbf
 ② \textbf{单侧置信上限} $\bar\theta$：$P(\theta\le\bar\theta)=1-\alpha$——如废品率、有害物含量的上限。
 构造：与双侧区间用\textbf{同一个枢轴量}，区别只在把 $\alpha/2$ 换成 $\alpha$。正态 $\sigma^2$ 已知时，$\mu$ 的 $1-\alpha$ 单侧置信下限为 $\bar x-z_{\alpha}\dfrac{\sigma}{\sqrt n}$（双侧区间用 $z_{\alpha/2}$）。
 - 与检验的对偶：单侧置信限与同侧的单侧假设检验（水平 $\alpha$）一一对应——下限在 $\mu_0$ 之右 $\Leftrightarrow$ 拒绝 $H_0:\mu\le\mu_0$。`),
-    F('reg13', 'regress', '多重比较：LSD 法',
-      R`方差分析显著后为什么要做多重比较？LSD 法怎么做？`,
-      R`ANOVA 的 $F$ 显著只说明「均值\textbf{不全}相等」，不指明哪两个不同——需逐对比较，即\textbf{多重比较}。
-\textbf{LSD 法}（最小显著差）：用 $S_w^2$（ANOVA 的组内方差估计）替代各对样本方差，第 $i,j$ 两水平均值的比较临界值为
-$$t_{\alpha/2}(n-k)\,\sqrt{S_w^2\left(\frac1{n_i}+\frac1{n_j}\right)}$$
-两样本均值之差的绝对值超过该值即判定显著不同。
-\textbf{前提}：方差齐性假定由 ANOVA 继承，比较用的是共同的 $S_w^2$；\textbf{优点}是简单、沿用 ANOVA 的自由度。`),
-    F('reg13-2', 'regress', '多重比较的错误率膨胀与校正',
-      R`LSD 多次比较有什么问题？Tukey HSD 与 Bonferroni 怎么校正？`,
-      R`\textbf{问题}：比较次数 $m$ 多时，整体犯 Ⅰ 类错误的概率累积膨胀——即使每次都用 $\alpha$，$m$ 次独立比较的族错误率约为 $1-(1-\alpha)^{m}$，远超 $\alpha$。
-\textbf{Tukey HSD}：基于学生化极差分布，控制\textbf{所有成对比较}的整体错误率，适合全部两两比较。
-\textbf{Bonferroni}：每对（或每个对比）用 $\alpha/m$，简单通用但 $m$ 大时过保守。
-\textbf{Scheffé}：对任意线性对比给同时区间，最安全但区间最宽。
-\textbf{易混}：$m$ 是事前计划的比较个数还是事后挑出来的会影响校正方式；只看「最显著的那一对」而不校正，是最常见的错误用法。`),
+    F('reg13', 'regress', '多重比较：LSD 与家族错误率',
+      R`方差分析显著后为什么要做多重比较？家族错误率与 Bonferroni 校正是什么？`,
+      R`ANOVA 的 $F$ 显著只说明均值不全相等，不指明哪一对不同，需逐对比较，即多重比较。
+**家族错误率**：做 $m$ 次独立检验，至少一次误拒的概率为 $1-(1-\alpha)^{m}$，随 $m$ 膨胀；控制的是整族而非单次错误率。
+**Bonferroni**：每次用 $\alpha/m$ 作阈值，保证家族错误率不超过 $\alpha$，但保守。
+**其他**：LSD 用共同组内方差 $S_w^{2}$ 定临界差，不校正家族错误率；Tukey、Scheffé 分别控制所有两两比较与任意线性组合的错误率。
+**选型**：事先指定的少数比较可用 LSD；数据驱动的大量比较须用 Tukey/Scheffé/Bonferroni。`),
     F('reg14', 'regress', '一元非线性回归',
       R`常见可线性化的一元非线性回归曲线`,
       R`散点呈曲线形态时：选曲线类型 $\to$ \textbf{变量替换}化为线性 $\to$ 最小二乘 $\to$ 反解回原变量。常见曲线：
@@ -1041,131 +952,50 @@ $$t_{\alpha/2}(n-k)\,\sqrt{S_w^2\left(\frac1{n_i}+\frac1{n_j}\right)}$$
 - 与对数线性模型（弹性解释）衔接：幂函数取对数后系数 $b$ 即弹性。`),
 
     // ===== 2.2.0 C1+C2 统计补写（t50） =====
-    // ---- pb14 事件域（σ-域）与事件列极限 ----
-        F('pb14', 'prob_basic', '事件域（σ-域）与概率空间',
+    // ---- pb14 事件域（σ-域）与概率空间 ----
+    F('pb14', 'prob_basic', '事件域（σ-域）与概率空间',
       R`事件域（$\sigma$-域）的定义与推论是什么？概率空间由哪三部分组成？`,
-      R`**事件域（$\sigma$-域）**：样本空间 $\Omega$ 上的集族 $\mathcal{F}$ 满足三条件——① $\Omega\in\mathcal{F}$；② $A\in\mathcal{F}\Rightarrow\bar A=\Omega\setminus A\in\mathcal{F}$（余封闭）；③ $A_1,A_2,\dots\in\mathcal{F}\Rightarrow\bigcup_{n=1}^{\infty}A_n\in\mathcal{F}$（**可列并**封闭）。
-**推论**：对可列交、有限并/交、差封闭，且 $\varnothing\in\mathcal{F}$。
-**概率空间**：$(\Omega,\mathcal{F},P)$ 三者配套——只有 $A\in\mathcal{F}$ 才谈 $P(A)$；概率的**连续性**（由①②③可证）：$A_n\uparrow A\Rightarrow P(A_n)\uparrow P(A)$。
-**易混**：第③条是可列并而非任意并——「可列」不能放宽（否则与概率的可列可加性不匹配）。`),
-    // ---- pb15 可测空间与 Borel σ-域 ----
-            F('pb15', 'prob_basic', '可测空间与 Borel σ-域',
-      R`什么是可测空间？$\sigma(\mathcal{A})$ 与 Borel $\sigma$-域 $\mathcal{B}(\mathbb{R})$ 如何构造？`,
-      R`**可测空间**：$(\Omega,\mathcal{F})$ ＝样本空间 + $\sigma$-域；$\mathcal{F}$ 中的集合称为**可测集**。概率是可测空间上的测度：$P:\mathcal{F}\to[0,1]$，可列可加、$P(\Omega)=1$。
-**生成 $\sigma$-域**：对任意集族 $\mathcal{A}$，令 $\sigma(\mathcal{A})=\bigcap\{\mathcal{G}:\mathcal{G}\ \text{是}\ \sigma\text{-域},\ \mathcal{A}\subset\mathcal{G}\}$，即包含 $\mathcal{A}$ 的**最小** $\sigma$-域。
-**Borel $\sigma$-域**：$\mathbb{R}$ 上由全体开区间生成的 $\sigma$-域 $\mathcal{B}(\mathbb{R})$，其元素含一切开集、闭集、可列集及经可列并/交/余的结果。
-**意义**：区分「能算概率」与「不能算」的集合。
-**易混**：Borel $\sigma$-域是「包含全部开集的**最小** $\sigma$-域」，不是幂集 $\mathcal{P}(\Omega)$；幂集过大以致存在不可测集，故概率论取 Borel。`),
+      R`**事件域**：$\Omega$ 上的集族 $\mathcal{F}$ 满足 ① $\Omega\in\mathcal{F}$；② $A\in\mathcal{F}\Rightarrow\bar A\in\mathcal{F}$；③ 可列并封闭 $A_1,A_2,\dots\in\mathcal{F}\Rightarrow\bigcup A_n\in\mathcal{F}$。
+**推论**：对可列交、差、有限并/交封闭，$\varnothing\in\mathcal{F}$。
+**概率空间**：$(\Omega,\mathcal{F},P)$ 配套，只有 $A\in\mathcal{F}$ 才谈 $P(A)$；概率有连续性 $A_n\uparrow A\Rightarrow P(A_n)\uparrow P(A)$。
+**为什么**：公理化把事件限定为可测集，避免不可测集使概率无从定义；第③条必须是可列并，不能放宽为任意并。`),
     
-    // ---- pb16 事件列上下极限与概率连续性 ----
+    // ---- pb16 事件列上下极限 ----
     F('pb16', 'prob_basic', '事件列上下极限',
-      R`事件列的上/下极限怎么定义？有哪些等价的集合写法？`,
-      R`**上极限**：$\varlimsup A_n=\{\omega:\omega\ \text{属于无穷多个}\ A_n\}$，记作 $A_n\ \mathrm{i.o.}$。
-**下极限**：$\varliminf A_n=\{\omega:\omega\ \text{至多不属于有限个}\ A_n\}$，记作 $A_n\ \mathrm{a.a.}$。
-**集合写法**：$\varlimsup_n A_n=\bigcap_n\bigcup_{k\ge n}A_k$（交外并内），$\varliminf_n A_n=\bigcup_n\bigcap_{k\ge n}A_k$（并外交内）。
-**顺序别记反**：上极限含「无穷多个」、下极限含「至多有限个」；恒有 $\varliminf A_n\subset\varlimsup A_n$，交换交与并就把「无穷多次」写成「最终恒发生」。
-**单调列**：$A_n\uparrow\Rightarrow\lim A_n=\bigcup_n A_n$；$A_n\downarrow\Rightarrow\lim A_n=\bigcap_n A_n$（升用并、降用交）。
-**一般不等式**：$P(\varliminf A_n)\ \le\ \varliminf P(A_n)\ \le\ \varlimsup P(A_n)\ \le\ P(\varlimsup A_n)$。`),
+      R`事件列的上/下极限怎么定义？与概率连续性、Borel–Cantelli 有何联系？`,
+      R`**上极限**：$\varlimsup A_n=\{\omega:\omega$ 属于无穷多个 $A_n\}$，记 $A_n\ \mathrm{i.o.}$；**下极限**：$\varliminf A_n=\{\omega:\omega$ 至多不属于有限个 $A_n\}$。
+**集合写法**：$\varlimsup A_n=\bigcap_n\bigcup_{k\ge n}A_k$，$\varliminf A_n=\bigcup_n\bigcap_{k\ge n}A_k$；恒有 $\varliminf A_n\subset\varlimsup A_n$。
+**单调列**：$A_n\uparrow$ 时极限为 $\bigcup A_n$，$A_n\downarrow$ 时为 $\bigcap A_n$；概率连续即 $P(\lim A_n)=\lim P(A_n)$。
+**Borel–Cantelli**：$\sum P(A_n)<\infty$ 时 $P(A_n\ \mathrm{i.o.})=0$；独立且 $\sum P(A_n)=\infty$ 时该概率为 1。
+**易混**：上极限是「无穷多次」、下极限是「最终恒发生」，交并顺序别写反。`),
     // ---- pb16-2 概率连续性与 Borel-Cantelli ----------------
-    F('pb16-2', 'prob_basic', '概率连续性与 Borel-Cantelli',
-      R`单调事件列的概率连续性怎么写？Borel-Cantelli 两个结论的条件各是什么？`,
-      R`**连续性（单调列）**：$A_n\uparrow\Rightarrow P\big(\bigcup_n A_n\big)=\lim_{n}P(A_n)$；$A_n\downarrow\Rightarrow P\big(\bigcap_n A_n\big)=\lim_{n}P(A_n)$。这是「概率作为测度」的基本性质，也是可列可加性的等价表述。
-**Borel-Cantelli ①（无需独立）**：若 $\sum_{n}P(A_n)<\infty$，则 $P(\varlimsup A_n)=0$，即几乎必然只发生有限次。
-**Borel-Cantelli ②**：须 $A_n$ **独立**且 $\sum_n P(A_n)=\infty$，则 $P(\varlimsup A_n)=1$，即几乎必然发生无穷多次。
-**与单调性的区别**：概率连续性是 $A_n\uparrow A\Rightarrow P(A_n)\uparrow P(A)$，与事件的单调性不是同一件事。`),
     // ---- pb16-3 事件列结论的典型用法 ----------------
-    F('pb16-3', 'prob_basic', '事件列结论的典型用法',
-      R`「几乎必然」型结论怎么证？上下极限题目的一般步骤是什么？`,
-      R`**证「几乎必然」型结论**：先估 $P(\{|X_n-X|>\varepsilon\})$ 的级数收敛，由 Borel-Cantelli ① 得 $P(\{|X_n-X|>\varepsilon\}\ \mathrm{i.o.})=0$，再取 $\varepsilon=\frac1k$ 的可列并。
-**判定无穷次发生**：由 $\varlimsup$ 的定义把「事件序列无穷次出现」转成概率为 0/1 的判定。
-**过渡到可列情形**：与概率连续性联用，把有限情形的结论过渡到可列情形。
-**做题步骤**：遇到 $\limsup$ 型题目，先把集合表达式写清再取概率。`),
     // ---- nc21 特征函数唯一性定理与反演公式 ----
-        F('nc21', 'numchar', '特征函数唯一性定理与反演公式',
-      R`特征函数的唯一性定理与反演公式是什么？`,
-      R`**唯一性定理**：分布函数由特征函数唯一确定——若 $\varphi_X(t)\equiv\varphi_Y(t)$，则 $X\overset{d}{=}Y$。这是「用 $\varphi$ 辨识分布」的理论依据。
+    F('nc21', 'numchar', '特征函数唯一性定理与反演公式',
+      R`特征函数的唯一性定理与反演公式各是什么？`,
+      R`**唯一性定理**：分布函数由特征函数唯一确定；若 $\varphi_X(t)\equiv\varphi_Y(t)$，则 $X\overset{d}{=}Y$。
 **反演公式**：在 $F$ 的连续点 $a<b$，
-$$F(b)-F(a)=\frac{1}{2\pi}\lim_{T\to\infty}\int_{-T}^{T}\frac{e^{-ita}-e^{-itb}}{it}\,\varphi(t)\,\mathrm{d}t;$$
-当 $\varphi$ 绝对可积（$\int|\varphi|<\infty$）时分布有密度且
-$$f(x)=\frac{1}{2\pi}\int_{-\infty}^{\infty}e^{-itx}\varphi(t)\,\mathrm{d}t.$$
-**易混**：唯一性定理只说「同 $\varphi$ ⇒ 同分布」，不能反推别的信息；$\varphi_X(t)$ 与矩母函数 $M_X(t)=\varphi_X(-it)$ 的自变量替换方向别写反。`),
-    // ---- nc21-2 连续性定理与分布辨识 ----
-    F('nc21-2', 'numchar', '连续性定理与分布辨识',
-      R`连续性定理怎么用？怎样用特征函数辨识分布族？`,
-      R`**连续性定理**：若 $\varphi_n(t)\to\varphi(t)$ 对每个 $t$ 成立，且 $\varphi$ 在 $t=0$ 处**连续**，则 $F_n\Rightarrow F$（依分布收敛）——中心极限定理的证明正是先证特征函数收敛、再用此定理。
-**辨识分布的三步套路**：① 求出（或查表得）$\varphi$；② 与已知族比对——$N(0,1)$：$e^{-t^{2}/2}$、$N(\mu,\sigma^{2})$：$e^{i\mu t-\frac12\sigma^{2}t^{2}}$、$P(\lambda)$：$e^{\lambda(e^{it}-1)}$、$\Gamma(\alpha,\beta)$：$(1-\frac{it}{\beta})^{-\alpha}$、$B(1,p)$：$1-p+pe^{it}$；③ 由唯一性直接判定分布族，避免求密度的繁重积分。
-**易混**：连续性定理要求极限 $\varphi$ 在 $t=0$ **连续**（否则可能退化到无分布）；$\varphi$ 绝对可积时可直接反演求密度。`),
+$$F(b)-F(a)=\frac{1}{2\pi}\lim_{T\to\infty}\int_{-T}^{T}\frac{e^{-ita}-e^{-itb}}{it}\,\varphi(t)\,dt.$$
+若 $\int|\varphi|<\infty$，则分布有密度 $f(x)=\frac{1}{2\pi}\int e^{-itx}\varphi(t)\,dt$。
+**要点**：唯一性只说同 $\varphi$ 同分布；$\varphi$ 绝对可积是密度存在的充分条件，不是唯一性所需。`),
     // ---- est25 EM 算法的 E 步与 M 步 ----
     F('est25', 'estimation', 'EM 算法的 E 步与 M 步',
-      R`EM 算法解决什么问题？E 步与 M 步各做什么，$Q$ 函数如何定义？`,
-      R`**问题**：观测数据 $Y$ 之外还有**缺失数据/隐变量** $Z$，直接最大化观测似然 $L(\theta;Y)$ 的积分（或求和）难以处理；EM 用迭代绕过积分。
-记完全数据 $(Y,Z)$ 的对数似然 $\ell_c(\theta)=\ln f(Y,Z;\theta)$，当前参数 $\theta^{(t)}$。
-**E 步（期望）**：求完全数据对数似然在给定观测与当前参数下的条件期望
-$$Q(\theta\mid\theta^{(t)})=E_{\theta^{(t)}}\big[\ln f(Y,Z;\theta)\ \big|\ Y\big];$$
-**M 步（最大化）**：$\theta^{(t+1)}=\arg\max_{\theta}Q(\theta\mid\theta^{(t)})$；两步交替直到 $Q$ 或对数似然的变化小于阈值。
-**易混**：$Q$ 函数是完全数据对数似然在隐变量条件分布（用**当前** $\theta^{(t)}$）下的期望，不是观测似然。`),
-    F('est25-2', 'estimation', 'EM 算法的单调性与收敛特点',
-      R`为什么 EM 每次迭代都不降低似然？它的收敛有什么局限？`,
-      R`**单调性**：对任意 $\theta$ 有
-$$\ln L(\theta;Y)\ \ge\ Q(\theta\mid\theta^{(t)})-\underbrace{E\big[\ln f(Z\mid Y,\theta^{(t)})\big]}_{\text{与 }\theta\text{ 无关}},$$
-故 $Q$ 上升必带动 $L$ 上升，M 步保证 $L(\theta^{(t+1)};Y)\ge L(\theta^{(t)};Y)$——EM 是「保证上升」的算法。
-**收敛局限**：只保证收敛到**局部**极大或鞍点，初值敏感，实务上多初值重启；收敛速度**线性**，参数强相关时可能很慢。
-**特点**：只用到「$Q$ 可算」与「M 步可解」，不需要显式后验。
-**适用**：观测似然含难处理的积分/求和（缺失数据、隐变量、混合模型），而完全数据似然容易最大化时。
-**易混**：单调不减是「观测」似然而不是 $Q$；$\theta^{(t)}$ 在 E 步固定、在 M 步才更新。`),
-    // ---- est26 EM 示例：两分量正态混合的 M 步 ----
-    F('est26', 'estimation', 'EM 示例：两分量正态混合的 E 步',
-      R`两分量正态混合模型怎么设？E 步的责任度怎么写？`,
-      R`**模型**：$Y_i$ 以概率 $\pi$ 来自 $N(\mu_1,\sigma^{2})$、以 $1-\pi$ 来自 $N(\mu_2,\sigma^{2})$（方差同构），参数 $\theta=(\pi,\mu_1,\mu_2,\sigma^{2})$，隐变量 $Z_i\in\{1,2\}$。
-**E 步（责任度）**：记 $\phi$ 为标准正态密度，
-$$w_i=\frac{\pi\,\phi\big((y_i-\mu_1)/\sigma\big)}{\pi\,\phi\big((y_i-\mu_1)/\sigma\big)+(1-\pi)\,\phi\big((y_i-\mu_2)/\sigma\big)},$$
-$w_i=P(Z_i=1\mid y_i,\theta^{(t)})$ 是「该观测归属第一分量的后验概率」，充当**软标签**。
-**要点**：E 步只需各分量在 $y_i$ 处的密度值，不需要真正抽样隐变量；$w_i$ 的取值范围与两分量均值差的相对大小有关，$\mu_1=\mu_2$ 时 $w_i\equiv\pi$（不可识别）。`),
-    F('est26-2', 'estimation', 'EM 示例：混合模型的 M 步加权闭式',
-      R`两分量正态混合的 M 步各参数闭式解怎么写？`,
-      R`接过 E 步的责任度 $w_i$，令 $W=\sum_i w_i$、$n$ 为样本量，M 步有闭式解：
-$$\hat\pi=\frac{W}{n},\qquad \hat\mu_1=\frac{\sum_i w_iy_i}{W},\qquad \hat\mu_2=\frac{\sum_i (1-w_i)y_i}{n-W},$$
-$$\hat\sigma^{2}=\frac{1}{n}\Big[\sum_i w_i(y_i-\hat\mu_1)^{2}+\sum_i (1-w_i)(y_i-\hat\mu_2)^{2}\Big].$$
-即「软标签」加权的均值与方差；方差不同构则 $\sigma_1^{2},\sigma_2^{2}$ 分别按各自的权重归一。
-**易混**：$\mu_k$ 是**责任度加权**均值，不是按硬分组求均值；$\pi$ 等于平均责任度；两分量互换标签不改变似然（label switching），报告参数时须固定标签。`),
-    F('est26-3', 'estimation', '正态混合似然的无界性与初值处理',
-      R`为什么两分量正态混合的似然是无界的？实务上怎么处理？`,
-      R`**无界性**：把某一个观测点单独交给一个分量，令该分量均值 $\mu=y_1$、方差 $\sigma\to0$，则该项密度趋于无穷、$L\to\infty$——MLE 不存在。
-**同时多峰**：参数空间上似然有多处局部极大，EM 收敛结果由初值决定。
-**处理办法**：给 $\sigma$ 设正下界（不承认零方差分量）；多组初值重启、取似然最大者；改用有惩罚的目标或贝叶斯方法。
-**含义**：混合模型参数的可识别性只在真值为正方差、分量不重合时成立；报告结果前应检查是否退化为「单点分量」。
-**易混**：无界不等于「算法失败」——EM 仍单调上升，但上升到的是发散点或局部峰；$\sigma^{2}$ 初值过小会立刻退化。`),
-    // ---- reg15 方差齐性检验（Fmax/Bartlett） ----
-    F('reg15', 'regress', '方差齐性检验：Hartley $F_{\max}$ 法',
-      R`Hartley 的 $F_{\max}$ 方差齐性检验统计量怎么写、怎么判？`,
-      R`**设定**（平衡）：$s$ 个水平、每水平 $r$ 次重复，水平内样本方差 $s_i^{2}$、自由度 $f=r-1$。检验 $H_0:\sigma_1^{2}=\cdots=\sigma_s^{2}$。
-**统计量**：$$F_{\max}=\frac{\max_i s_i^{2}}{\min_i s_i^{2}}\ \ge\ F_{\max,1-\alpha}(s,f)$$ 则拒绝 $H_0$（分布只依赖组数 $s$ 与自由度 $f$，查表，**无解析式**）；它要求各水平重复数相同。
-**用途与局限**：是两样本 $t$ 检验与单因素 ANOVA 的前置假设检验；$F_{\max}$ 对**非正态极敏感**（尾部差异会伪装成方差不齐），$s\le5$ 且样本量相近时较稳妥，拒绝时改用 Welch / 秩检验。
-**易混**：它只比最大最小两个方差，**不用**两方差比的 $F$ 检验。`),
-    F('reg15-2', 'regress', '方差齐性检验：Bartlett 法',
-      R`Bartlett 方差齐性检验统计量怎么写？`,
-      R`**设定**：$s$ 个水平、水平内样本方差 $s_i^{2}$、各水平自由度 $f_i$，平衡时 $f_i=r-1$、$f=s(r-1)$。
-**统计量**：$$\chi^{2}=\frac{2.3026}{C}\Big[f\ln\Big(\frac{1}{s}\sum_i s_i^{2}\Big)-\sum_i f_i\ln s_i^{2}\Big],\qquad C=1+\frac{1}{3(s-1)}\Big[\sum_i\frac{1}{f_i}-\frac{1}{f}\Big].$$ $\chi^{2}\ge\chi^{2}_{1-\alpha}(s-1)$ 拒绝 $H_0$。
-**修正 Bartlett**：重复数不等（$r_i$ 不同）时按 $f_i$ 加权，$C$ 中逐水平代入 $f_i$。
-**用途与局限**：同为 $t$ 检验/ANOVA 的前置假设；正态时功效高，但**对非正态极敏感**；样本量不等或较大时比 $F_{\max}$ 适用；拒绝后改用 Welch / 秩检验。
-**易混**：$2.3026=\ln 10$，而 Bartlett 统计量由 $\ln$ 得出，易漏 $C$。`),
-    // ---- pb17 直线上的随机游动与反射原理 ----
-            F('pb17', 'prob_basic', '随机游动的位置分布与反射原理',
-      R`对称随机游动的位置分布怎么写？反射原理与最大值分布怎么用？`,
-      R`设 $S_n=\sum_{k=1}^{n}X_k$，$P(X_k=\pm1)=\frac12$（$S_0=0$，直线上的对称随机游动）。
-**位置分布**：$P(S_n=m)=\dbinom{n}{(n+m)/2}\Big(\dfrac12\Big)^{n}$（$|m|\le n$、$n+m$ 为偶数；奇数则概率为 0）。
-**反射原理**：若 $b<a$，则「$n$ 步后到达 $b$、且途中曾达到 $a$」的路径数等于「到达 $2a-b$」的路径数；等价地
-$$P\big(M_n\ge a,\ S_n=b\big)=P(S_n=2a-b)\quad(b<a).$$
-**边界情形**：$b\ge a$ 时 $\{S_n=b\}\subset\{M_n\ge a\}$，此时该概率就是 $P(S_n=b)$。
-**最大值分布**：对 $a>0$，$P(M_n\ge a)=P(S_n\ge a)+P(S_n>a)$（由反射原理对 $b$ 求和得到）。`),
+      R`EM 算法的 E 步与 M 步各做什么？$Q$ 函数怎样定义、为什么迭代能收敛？`,
+      R`**问题**：观测 $Y$ 之外含缺失/隐变量 $Z$ 时，观测似然 $L(\theta;Y)=\int f(Y,z;\theta)\,dz$ 难直接最大化。
+**E 步**：在给定 $Y$ 与当前 $\theta^{(t)}$ 下求完全数据对数似然 $\ell_c(\theta)=\ln f(Y,Z;\theta)$ 的条件期望
+$$Q(\theta\mid\theta^{(t)})=E_{\theta^{(t)}}[\ell_c(\theta)\mid Y];$$
+**M 步**：$\theta^{(t+1)}=\arg\max_\theta Q(\theta\mid\theta^{(t)})$，两步交替至 $Q$ 或观测似然的变化小于阈值。
+**收敛**：每轮观测似然不下降（$L(\theta^{(t+1)})\ge L(\theta^{(t)})$），故收敛；但只保证局部最优或鞍点，初值敏感，宜多组初值取最优。
+**易混**：$Q$ 用**当前**参数的条件分布求期望，不是观测似然，也不是对 $\theta$ 积分。`),
+    // ---- reg15 方差齐性检验：Hartley $F_{max}$ 法 ----
+    F('reg15', 'regress', '方差齐性检验：Hartley $F_{max}$ 法',
+      R`Hartley $F_{\max}$ 方差齐性检验怎么做？与 Bartlett 检验如何取舍？`,
+      R`**设定**：$s$ 个水平、每水平 $r$ 次重复，组内方差 $s_i^{2}$、自由度 $f=r-1$，检验 $H_0:\sigma_1^{2}=\cdots=\sigma_s^{2}$。
+**统计量**：$F_{\max}=\frac{\max_i s_i^{2}}{\min_i s_i^{2}}$，超过 $F_{\max,1-\alpha}(s,f)$ 拒绝；分布只依赖 $(s,f)$，需查表，要求各组样本量相同。
+**Bartlett 检验**：用各组方差的对数加权构造 $\chi^{2}$ 统计量，可用于不平衡数据，但对非正态同样敏感。
+**取舍**：$F_{\max}$ 简单，$s\le5$ 且样本量相近时稳妥；一般情形优先 Bartlett；两者都怕非正态，拒绝时改用 Welch 或秩检验。
+**易混**：它只比最大最小两个方差，不是两方差比的 $F$ 检验。`),
     
-    // ---- pb18 示性函数法与概率恒等式 ----
-            F('pb18', 'prob_basic', '示性函数与概率恒等式',
-      R`什么是示性函数？能导出哪些运算恒等式？`,
-      R`对事件 $A$ 定义**示性函数** $I_A(\omega)=\begin{cases}1,&\omega\in A\\0,&\omega\notin A\end{cases}$，则 $P(A)=E(I_A)$，且 $I_A^{2}=I_A$。
-**运算恒等式**：$I_{\bar A}=1-I_A$；$I_{A\cap B}=I_AI_B$；$I_{A\cup B}=I_A+I_B-I_AI_B$；两两不交时 $I_{\bigcup_n A_n}=\sum_n I_{A_n}$；独立时 $E(I_AI_B)=E I_A\cdot E I_B=P(A)P(B)$。
-**证明恒等式的套路**：把「至少一个发生 / 恰好 $k$ 个发生」用示性函数的**和或积**表示，再取期望——期望的线性性把概率问题化为计数与乘积问题，避免容斥。
-**易混**：$I_{A\cup B}=I_A+I_B-I_AI_B$（并集必须减交叉项），而 $I_{A\cap B}=I_AI_B$；对可列并/交取极限时注意 $\sum$ 与 $\lim$ 的交换条件。`),
     // ---- pb18-2 随机个数 N 的期望与方差 ----------------
     F('pb18-2', 'prob_basic', '随机个数 $N$ 的期望与方差',
       R`令 $N=\sum_i I_{A_i}$ 表示发生的事件个数，$E(N)$ 与 $D(N)$ 怎么算？`,
@@ -1174,55 +1004,22 @@ $$E(N)=\sum_{i}P(A_i),$$
 $$D(N)=\sum_{i}P(A_i)\big(1-P(A_i)\big)+2\sum_{i<j}\big[P(A_iA_j)-P(A_i)P(A_j)\big].$$
 **结构**：期望只用到各事件的**边缘**概率；方差多出的成对项 $P(A_iA_j)-P(A_i)P(A_j)$ 正是**协方差**，事件独立时全部为 0，方差退化为 $\sum_i P(A_i)(1-P(A_i))$（二项型）。
 **典型场景**：配对问题、生日问题、「至少出现一次」的概率、随机变量的线性组合方差——示性函数把依赖结构压缩为成对项。`),
-    // ---- est27 指数族（标准形式与归属） ----
+    // ---- est27 指数族的形式与充分统计量 ----
     F('est27', 'estimation', '指数族的形式与充分统计量',
-      R`指数族的标准形式是什么？其充分统计量是什么？`,
-      R`**标准形式**（单参）：$$f(x;\theta)=h(x)\,c(\theta)\,\exp\{\pi(\theta)\,t(x)\},$$ 多参：$f(x;\theta)=h(x)\,c(\theta)\exp\{\sum_{i=1}^{k}\pi_i(\theta)t_i(x)\}$，其中 $t(x)$ 称自然充分统计量、$\pi_i(\theta)$ 称**自然参数**（由 $c(\theta)$ 的归一化定出）。
-**充分性**：因子分解定理立得 $T=\sum_j t(x_j)$ 是 $\theta$ 的充分统计量，且在自然参数区域内部时它还是**完全**充分统计量——这正是 Lehmann-Scheffé 求 UMVUE 的入口。
-**两参注意**：未知 $\sigma^{2}$ 的正态族不是二参数指数族（$c$ 与 $\theta$ 不分离），写成已知 $\sigma^{2}$ 的二维正规族才对。`),
-    F('est27-2', 'estimation', '指数族：常见分布的归属与好处',
-      R`分布怎么归入指数族？指数族有哪些好处？`,
-      R`**归属套路**：把已知的密度/概率函数改写成 $h(x)c(\theta)\exp\{\pi(\theta)t(x)\}$，读出自然参数与充分统计量即属指数族。
-**离散**：$B(1,p)$：$p^{x}(1-p)^{1-x}=(1-p)\exp\{x\ln\frac{p}{1-p}\}$（自然参数 $\ln\frac{p}{1-p}$）；$P(\lambda)$：$e^{-\lambda}\frac{1}{x!}\exp\{x\ln\lambda\}$（自然参数 $\ln\lambda$）。
-**连续与族**：正态（$\sigma^{2}$ 已知）、$\Gamma(\alpha,\beta)$、$E(\lambda)$、多项分布同属；二维正态族 $T=(\sum X_i^{2},\sum X_i)$。
-**好处**：完全充分统计量 ⇒ 经 Lehmann-Scheffé 可求 UMVUE；对数似然对自然参数凹 ⇒ MLE 相合且渐近正态。
-**易混**：自然参数 $\eta=\pi(\theta)$ 与原始参数 $\theta$ 不是一套，求信息量要用雅可比换算；归一化常数 $c(\theta)$ 最易漏。`),
-    // ---- est28 位置族、尺度族与枢轴量 ----
-    F('est28', 'estimation', '位置族与尺度族',
-      R`位置族、尺度族如何定义？为什么它们的统计量能构造枢轴量？`,
-      R`设 $Z$ 为标准变量（分布已知），$X$ 与 $Z$ 差一个参数变换。
-**① 位置族**：$X=\mu+Z$（密度 $f(x-\mu)$，$\mu$ 为位置参数）——$Z=X-\mu$ 是**枢轴量**。
-**② 尺度族**：$X=\theta Z$（密度 $\frac{1}{\theta}f(x/\theta)$，$\theta>0$ 为尺度参数）——$Z=X/\theta$ 是枢轴量。
-**判别口诀**：看分布函数能否写成 $G(x-\mu)$（纯位置）、$G(x/\theta)$（纯尺度）；写成 $G\big(\frac{x-\mu}{\sigma}\big)$ 则是位置-尺度族。
-**同变性**：位置族平移不变，$T(X+c)=T(X)+c$；尺度族缩放同变，$T(cX)=c\,T(X)$（$\bar X$、$X_{(n)}$ 都是）。
-**用途**：由「分布不依赖参数」直接得到枢轴量，用于区间估计与检验。`),
-    F('est28-2', 'estimation', '位置-尺度族与枢轴量应用',
-      R`位置-尺度族怎么定义？能构造哪些经典枢轴量？半枢轴量又是什么？`,
-      R`**位置-尺度族**：$X=\mu+\sigma Z$（$\mu\in\mathbb{R},\sigma>0$），分布函数 $G\big(\frac{x-\mu}{\sigma}\big)$，枢轴量 $Z=\frac{X-\mu}{\sigma}$。
-**经典枢轴量**：正态的 $t=\frac{\bar X-\mu}{S/\sqrt n}$；任何刻度同变统计量标准化后分布与参数无关，如 $\frac{X_{(i)}-\mu}{\sigma}$、$\frac{X_{(n)}-X_{(1)}}{\sigma}$、$\frac{\bar X-\mu}{S}$；指数尺度族的 $X_{(n)}/X_{(1)}$ 与 $\frac{2\sum(X_i-X_{(1)})}{\theta}\sim\chi^{2}_{2n-2}$。
-**半枢轴量**：$X-\mu$ 的分布仍依赖 $\sigma$、$X/\sigma$ 仍依赖 $\mu$，单独一个都不是枢轴量——必须配对成 $\frac{X-\mu}{\sigma}$ 才与参数无关。
-**易混**：枢轴量要求分布**完全不依赖参数**；位置-尺度族兼具平移与缩放不变性。`),
+      R`指数族的标准形式是什么？充分统计量、常见分布归属与好处各是什么？`,
+      R`**标准形式**：$f(x;\theta)=h(x)c(\theta)\exp\{\sum_{i=1}^{k}\pi_i(\theta)t_i(x)\}$，$t_i(x)$ 为自然充分统计量，$\pi_i(\theta)$ 为自然参数。
+**充分完备**：因子分解定理给出 $T=\sum_j t(X_j)$ 充分；自然参数区域内部时 $T$ 完全充分，是 Lehmann–Scheffé 求 UMVUE 的入口。
+**常见归属**：正态（$\sigma^{2}$ 已知）、泊松、二项、负二项、指数、伽马、贝塔均属指数族；$\sigma^{2}$ 未知的正态族**不属**（$c$ 与 $\theta$ 不分离）。
+**好处**：充分统计量维数固定；期望、方差可由 $\psi(\theta)=\ln c(\theta)$ 的导数得到；共轭先验易找。
+**易混**：指数族不等于指数分布；自然参数空间须为开集。`),
     // ---- est29 辅助统计量与 Basu 定理 ----
     F('est29', 'estimation', '辅助统计量与 Basu 定理',
-      R`什么是辅助统计量？Basu 定理的条件与结论是什么？`,
-      R`**辅助统计量**：$A=A(X)$ 的分布**不依赖于** $\theta$，即对一切 $\theta$ 相同、完全不含 $\theta$ 的信息，与充分统计量恰好互补。
-**Basu 定理**：若 $T$ 是 $\theta$ 的**完全充分统计量**、$A$ 是**辅助统计量**，则 $T$ 与 $A$ **相互独立**（要求一般的正则/可测性条件）。
-**证独立的套路**：① 用因子分解或指数族确认 $T$ 充分且**完全**；② 证 $A$ 的分布与 $\theta$ 无关；③ 由 Basu 立得独立，不必算联合密度。
-**经典例**：正态中 $\bar X$ 完全充分、$S^{2}$ 辅助 ⇒ $\bar X$ 与 $S^{2}$ 独立；$U(0,\theta)$ 中 $X_{(n)}$ 完全充分、$\frac{X_{(1)}}{X_{(n)}}$ 辅助 ⇒ 两者独立。`),
-    F('est29-2', 'estimation', 'Basu 定理的边界与易混点',
-      R`用 Basu 定理时哪个条件最容易漏？辅助统计量等于无用吗？`,
-      R`**完全性不能省**：只充分而不完全时 Basu 不成立，如位置族 $U(\theta,\theta+1)$ 中 $(X_{(1)},X_{(n)})$ 充分但不完全。
-**「辅助」的识别套路**：把 $A$ 写成位置-尺度不变的形式（$\frac{X_{(1)}}{X_{(n)}}$、$\frac{S^{2}}{\sigma^{2}}$ 这类）最能看出分布与 $\theta$ 无关。
-**易混一**：辅助统计量「分布不含参数」**不**自动推出它与充分统计量独立，必须补上完全性。
-**易混二**：「辅助」不等于「无用」——它常常正是构造检验统计量的零件（如 $t$ 统计量里的 $S^{2}$）。`),
-    // ---- jj13 计量数据类型：截面/时序/面板 ----
-                F('jj13', 'regress', '计量数据类型：截面/时序/面板',
-      R`计量经济学三类数据（截面、时间序列、面板）各是什么？下标与样本独立性有何区别？`,
-      R`**① 截面数据**：$x_i,\ i=1,\dots,n$——同一**时点**、不同个体；样本一般假定**独立**。
-**② 时间序列数据**：$x_t,\ t=1,\dots,T$——同一**个体**、不同时点；样本通常**自相关**。
-**③ 面板数据**：$x_{it}$（$i=1,\dots,n,\ t=1,\dots,T$）——个体与时间的二维结构；$n$ 为个体维、$T$ 为时间维。
-**换算**：面板固定 $t_0$ 得**截面**，固定 $i_0$ 按时间排序得**时序**，方向不可互换。
-**判据**：识别结构看**下标个数**（1 维/2 维）与**样本是否独立**；样本量分别 $n$、$T$、$n\times T$。`),
+      R`什么是辅助统计量？Basu 定理的条件、结论与边界是什么？`,
+      R`**辅助统计量**：$A(X)$ 的分布不依赖 $\theta$，不含参数信息，与充分统计量恰好互补。
+**Basu 定理**：若 $T$ 是 $\theta$ 的完全充分统计量、$A$ 是辅助统计量，则 $T$ 与 $A$ 相互独立（需正则/可测条件）。
+**用法**：① 确认 $T$ 充分且完全；② 证 $A$ 的分布与 $\theta$ 无关；③ 直接得独立，不必算联合密度。
+**经典例**：正态中 $\bar X$ 与 $S^{2}$ 独立；$U(0,\theta)$ 中 $X_{(n)}$ 与 $X_{(1)}/X_{(n)}$ 独立。
+**边界**：缺完全性结论不成立（$U(0,\theta)$ 的 $X_{(1)}$ 与 $X_{(n)}$ 并不独立）；辅助统计量不必充分，充分统计量也不必辅助。`),
         
     
     // ---- jj14 无截距项的回归 ----
@@ -1233,25 +1030,16 @@ $$D(N)=\sum_{i}P(A_i)\big(1-P(A_i)\big)+2\sum_{i<j}\big[P(A_iA_j)-P(A_i)P(A_j)\b
 $$\hat\beta=\frac{\sum_{i=1}^{n}X_iY_i}{\sum_{i=1}^{n}X_i^{2}},\qquad D(\hat\beta)=\frac{\sigma^{2}}{\sum_i X_i^{2}}$$
 注意分母是**未中心化**的平方和，与含截距时的 $l_{xx}=\sum(X_i-\bar X)^{2}$ 不同。
 **残差平方和分布**：$\dfrac{SSE}{\sigma^{2}}\sim\chi^{2}(n-1)$——自由度是 $n-1$（含截距时为 $n-2$）：无截距时残差不再满足 $\sum e_i=0$，只满足 $\sum X_ie_i=0$ 这一个约束。`),
-    // ---- jj14-2 何时去掉截距 ----
+    // ---- jj14-2 何时可以去掉截距项 ----
     F('jj14-2', 'regress', '何时可以去掉截距项',
       R`什么条件下才该去掉回归的截距项？去掉后有什么后果？`,
       R`**何时可以去掉**：只有当理论上确信 $X,Y$ **完全正比例**（$X=0$ 必有 $E(Y|X=0)=0$）时才去掉。
 **后果**：否则截距处的系统性偏置会被强行塞进斜率，$\hat\beta$ 有偏且不一致（除非 $\bar Y=0$ 或真实截距为 0）。
 **拟合优度**：去截距后 $R^{2}$ 的定义 $1-SSE/\sum(Y_i-\bar Y)^{2}$ 与含截距情形**不可比**（可能为负），不能再解释为「解释掉均值的比例」。
 **易混**：不能因为 $R^2$ 更高就随手删截距；残差自由度是 $n-1$ 而非 $n-2$。`),
-    // ---- jj15 邹至庄稳定性检验 ----
-                        F('jj15', 'regress', '邹至庄稳定性检验',
-      R`邹至庄（Chow）稳定性检验的模型怎么设？$F$ 统计量与自由度怎么写？`,
-      R`**背景**：样本可分为两段，检验两段回归函数是否有**结构变点**。
-**段模型**：$Y=X\beta+\varepsilon_1$、$Y=X\alpha+\varepsilon_2$，$k$ 个解释变量。
-**无约束与受约束**：两段各自回归，残差平方和之和记 $SSE_U$；施加 $H_0:\beta=\alpha$ 后合并样本得 $SSE_R$。
-**统计量**：$$F=\frac{(SSE_R-SSE_U)/(k+1)}{SSE_U/[n_1+n_2-2(k+1)]}\ \sim\ F\big(k+1,\ n_1+n_2-2(k+1)\big).$$
-**判读**：$F\ge F_{1-\alpha}$ 拒绝 $H_0$；约束个数 $q=k+1$（**含截距**），只算 $k$ 是最常见错误。
-**断点**：位置宜先看图形或**递归残差**再定，别直接挑最显著的断点。`),
         
     
-    // ---- jj16 投影理论与遗漏变量偏误 ----
+    // ---- jj16 OLS 的投影解释与遗漏变量偏误 ----
             F('jj16', 'regress', 'OLS 的投影解释与遗漏变量偏误',
       R`OLS 的投影（几何）解释是什么？遗漏变量偏误的方向怎么判断？`,
       R`**投影解释**：$P_X=X(X'X)^{-1}X'$ 是向 $\mathrm{span}(X)$ 的**正交投影阵**（$P_X^{2}=P_X$、$P_X'=P_X$），则 $\hat Y=P_XY$、$e=(I-P_X)Y$、$X'e=0$——OLS 是把 $Y$ 垂直投影到 $X$ 张成的子空间。
@@ -1259,47 +1047,22 @@ $$\hat\beta=\frac{\sum_{i=1}^{n}X_iY_i}{\sum_{i=1}^{n}X_i^{2}},\qquad D(\hat\bet
 **遗漏变量偏误方向律**：真实模型含 $X_1,X_2$ 却只回归 $X_1$ 时，偏误符号＝（$X_2$ 对 $Y$ 的净效应符号）×（$X_1,X_2$ 的相关符号）；$X_2$ 与 $X_1$ **正交**时无偏误。`),
     
     
-    // ---- est30 共轭先验族 ----
+    // ---- est30 共轭先验：定义与 Beta–二项 ----
     F('est30', 'estimation', '共轭先验：定义与 Beta–二项',
-      R`什么是共轭先验？Beta–二项共轭的后验怎么写？`,
-      R`**定义**：若先验 $\pi(\theta)$ 与后验 $\pi(\theta\mid x)$ 属于同一分布族，则称该先验为该似然的**共轭先验**（后验核 = 先验核 × 似然核，只需求核的指数与系数）。
-**Beta–二项**：$\theta\sim Be(a,b)$，$X\mid\theta\sim B(n,\theta)$，观测成功 $x$ 次 $\Rightarrow$
-$$\theta\mid x\ \sim\ Be(a+x,\ b+n-x),\qquad E(\theta\mid x)=\frac{a+x}{a+b+n}.$$
-即后验参数 = 先验参数 + 数据的充分统计量（成功数 $x$ 与失败数 $n-x$）；先验可理解为「虚拟的成功 $a$ 次、失败 $b$ 次」。`),
-    F('est30-2', 'estimation', '共轭先验：Gamma–泊松与正态–正态',
-      R`Gamma–泊松与正态–正态共轭的后验怎么写？`,
-      R`**Gamma–泊松**：$\lambda\sim Ga(\alpha,\beta)$（密度 $\propto\lambda^{\alpha-1}e^{-\beta\lambda}$），$X_1,\dots,X_n\mid\lambda$ 独立同分布 $P(\lambda)$ $\Rightarrow$
-$$\lambda\mid x\ \sim\ Ga\Big(\alpha+\sum_i x_i,\ \beta+n\Big);$$
-指数分布（尺度参 $1/\lambda$）的共轭形式相同。
-**正态–正态**（$\sigma^{2}$ 已知）：$\mu\sim N(\mu_0,\tau^{2})$，$\bar X\mid\mu\sim N(\mu,\sigma^{2}/n)$ $\Rightarrow$
-$$\mu\mid x\ \sim\ N\Bigg(\frac{\dfrac{\mu_0}{\tau^{2}}+\dfrac{n\bar x}{\sigma^{2}}}{\dfrac{1}{\tau^{2}}+\dfrac{n}{\sigma^{2}}},\ \Big(\frac{1}{\tau^{2}}+\frac{n}{\sigma^{2}}\Big)^{-1}\Bigg),$$
-即**精度（方差倒数）相加、均值按精度加权**；$\tau^{2}\to\infty$（无信息先验）时后验均值趋于 $\bar x$。
-**其他常见对**：正态–逆 Gamma（方差未知）、Dirichlet–多项分布、Beta–几何。
-**易混**：正态的后验是方差倒数（精度）相加而不是方差相加；先验方差 $\tau^{2}$ 越小先验越强，后验越被拉向 $\mu_0$。`),
-    F('est30-3', 'estimation', '共轭先验的作用与边界',
-      R`共轭先验有什么用？它有什么局限？和 Jeffreys 先验什么关系？`,
-      R`**作用**：把后验化归为「先验参数 + 数据的充分统计量」的闭式更新，免去数值积分，矩与分位数可直接读出；超参数可解释为「虚拟样本」。
-**先验强弱**：先验样本量（$a+b$、$\tau^{-2}$ 相对 $n/\sigma^{2}$）越大，后验越被拉向先验、小样本时影响越显著。
-**边界**：共轭是「某先验族对**某个**似然」的性质，不是对一切似然成立；换似然（如支撑含参数的均匀分布）常常没有共轭族；选共轭主要为计算方便，不代表先验更「客观」。
-**易混**：Jeffreys 先验按 $I(\theta)^{1/2}$ 定义的**选择准则**，一般不是共轭先验。`),
-    // ---- est31 贝叶斯估计与后验区间 ----
+      R`什么是共轭先验？Beta–二项、Gamma–泊松、正态–正态的后验各怎么写？`,
+      R`**定义**：先验与后验同族，则先验为该似然的共轭先验；后验核＝先验核×似然核。
+**Beta–二项**：$\theta\sim Be(a,b)$、$X\mid\theta\sim B(n,\theta)$，成功 $x$ 次 $\Rightarrow\theta\mid x\sim Be(a+x,\,b+n-x)$，$E(\theta\mid x)=\frac{a+x}{a+b+n}$。
+**Gamma–泊松**：$\lambda\sim Ga(\alpha,\beta)$、$X_i\sim P(\lambda)$ $\Rightarrow\lambda\mid x\sim Ga(\alpha+\sum x_i,\,\beta+n)$。
+**正态–正态**：均值 $\mu\sim N(\mu_0,\tau^{2})$、方差已知时后验仍正态，精度（方差倒数）相加。
+**作用与边界**：共轭使后验有闭式、可递推更新；但只是计算便利，不是先验合理性的证明，强先验可压过数据。`),
+    // ---- est31 贝叶斯点估计与后验区间 ----
     F('est31', 'estimation', '贝叶斯点估计与后验区间',
       R`贝叶斯点估计怎么定义？后验均值、中位数、最大后验有何区别？`,
-      R`**框架**：把 $\theta$ 视为随机变量，先验 $\pi(\theta)$ + 样本 $x$ $\Rightarrow$ 后验 $\pi(\theta\mid x)\propto\pi(\theta)L(\theta;x)$。
-**点估计＝使后验期望损失最小**：
-- 平方损失 $(\hat\theta-\theta)^{2}$ $\Rightarrow$ 后验**均值** $E(\theta\mid x)$（最常用）；
-- 绝对损失 $|\hat\theta-\theta|$ $\Rightarrow$ 后验**中位数**；
-- 0-1 损失 $\Rightarrow$ 后验**众数**（最大后验估计 MAP，形式与 MLE 相近、多一个先验项）。
-**后验（可信）区间**：取后验分位数 $[\theta_{\alpha/2},\theta_{1-\alpha/2}]$，含义是「$\theta$ 落入该区间的后验概率为 $1-\alpha$」。
-**与频率派的区别**：$\theta$ 随机、结论用后验分布表述，小样本也可给概率语句。`),
-    F('est31-2', 'estimation', '可信区间与置信区间的区别',
-      R`可信区间与置信区间的解释有何不同？共轭模型下区间怎么写？`,
-      R`**可信区间**：由后验分位数给出，「$\theta$ 落入该区间的后验概率为 $1-\alpha$」——参数随机、区间随机。
-**置信区间**：$1-\alpha$ 说的是重复抽样下区间覆盖参数的频率——参数固定、区间随机；两者数值可能接近但解释根本不同。
-**闭式例**：Beta–二项后验 $Be(a+x,b+n-x)$，用 Beta 分位数给区间；正态–正态后验均值为精度加权，区间为
-$$\hat\mu_{\text{post}}\pm z_{1-\alpha/2}\,\sigma_{\text{post}}.$$
-**易混**：小样本下先验影响显著；求分位数要用**后验**分布而非似然；后验偏斜时用分位数比「均值 $\pm$ 倍数」更稳。`),
-    // ---- xr04 NP 引理与一致最优势检验 ----
+      R`**框架**：$\theta$ 视为随机变量，先验 $\pi(\theta)$ 加样本得后验 $\pi(\theta\mid x)\propto\pi(\theta)L(\theta;x)$。
+**点估计＝最小后验期望损失**：平方损失 $\Rightarrow$ 后验均值；绝对损失 $\Rightarrow$ 后验中位数；0-1 损失 $\Rightarrow$ 后验众数（MAP，比 MLE 多一个先验项）。
+**后验区间**：取后验分位数 $[\theta_{\alpha/2},\theta_{1-\alpha/2}]$，读作「$\theta$ 落入其中的后验概率为 $1-\alpha$」。
+**与频率派**：可信区间对参数说概率，置信区间说的是重复抽样覆盖率，二者含义不同；小样本下贝叶斯也能给出概率语句。`),
+    // ---- xr04 Neyman-Pearson 引理 ----
         F('xr04', 'testing', 'Neyman-Pearson 引理',
       R`Neyman-Pearson 引理怎么构造最优势检验？离散分布怎么处理水平？`,
       R`**设定**：简单假设 $H_0:\theta=\theta_0$ 对 $H_1:\theta=\theta_1$，似然比 $\Lambda(x)=\dfrac{f(x;\theta_1)}{f(x;\theta_0)}$。
@@ -1313,82 +1076,29 @@ $$\hat\mu_{\text{post}}\pm z_{1-\alpha/2}\,\sigma_{\text{post}}.$$
       R`**定义**：对复合假设，若同一检验在 $H_1$ 的**每个** $\theta$ 上功效都不小于任意同水平检验，则称**一致最优势检验（UMP）**。
 **存在性**：① 单参**指数族** + 单侧假设（$H_0:\theta\le\theta_0$ 对 $H_1:\theta>\theta_0$）在**单调似然比（MLR）**下存在 UMP，拒绝域形如 $\{T(x)\ge c\}$（$T=\sum t(x_i)$ 充分统计量）；② 双边假设一般**不存在** UMP（$H_1$ 两侧要求相反的拒绝方向），改用**无偏检验（UMPU）**或似然比检验；③ 非指数族/多参问题常无 UMP。
 **易混**：MLR 只是 UMP 存在的充分条件；UMP 要求对一切 $\theta_1\in\Theta_1$ 逐点最优，别与「局部最优」混同。`),
-    // ---- xr05 似然比检验与拒绝域 ----
-        F('xr05', 'testing', '广义似然比统计量与构造步骤',
-      R`广义似然比统计量怎么定义？构造拒绝域的四步是什么？`,
-      R`**广义似然比统计量**：
-$$\lambda(x)=\frac{\sup_{\theta\in\Theta_0}L(\theta;x)}{\sup_{\theta\in\Theta}L(\theta;x)}\in[0,1],$$
-$H_0$ 的拒绝域为 $\{\lambda(x)\le\lambda_0\}$（比值越小越倾向拒绝 $H_0$；等价取 $-2\ln\lambda$ 都一样）。
-**构造四步**：① 求全空间 MLE $\hat\theta$；② 求 $H_0$ 约束下的 MLE $\hat\theta_0$；③ 代入得 $\lambda$ 并化简为某统计量的单调函数（正态均值检验可化简到 $|\bar X-\mu_0|$，方差检验化简到 $\sum(X_i-\bar X)^{2}$）；④ 用原分布或**渐近**结果定临界值。
-**易混**：$\lambda$ 取的是上确界而非某个固定点的似然；它与分布拟合的 $\chi^2$ 统计量不是同一个量。`),
-    // ---- xr05-2 Wilks 定理与注意事项 ----
-        F('xr05-2', 'testing', 'Wilks 定理与似然比检验的注意事项',
-      R`Wilks 定理给出什么渐近分布？用它定临界值有什么限制？`,
-      R`**Wilks 定理**：正则条件下，当 $H_0$ 成立时
-$$-2\ln\lambda(x)\ \xrightarrow{\ d\ }\ \chi^{2}(r),$$
-$r=$ 约束个数＝全参数空间维数 − $H_0$ 下的自由参数个数；大样本下用 $\chi^{2}_{1-\alpha}(r)$ 定拒绝域。
-**限制**：要求「$H_0$ 在参数空间**内部**」——边界上的原假设（如 $\sigma^{2}=0$）极限分布变成 $\chi^{2}$ 的混合，不能直接用。
-**与 NP 的关系**：简单对简单时似然比检验即最优势检验；正态总体下似然比检验导出熟悉的 $t$、$\chi^{2}$、$F$ 检验；拟合优度检验（$K$-$S$、$\chi^{2}$ 独立性/同质性）也由 LR 思想构造。
-**易混**：Wilks 的 $\chi^2$ 自由度是**参数空间维数之差**（约束个数），不是样本量。`),
-    // ---- reg16 多重比较：T 法（Tukey） ----
-    F('reg16', 'regress', '多重比较：T 法（Tukey）',
-      R`多重比较的 T 法（Tukey）同时置信区间怎么写？为何不能拿 $t$ 检验两两硬比？`,
-      R`**设定**（平衡）：$s$ 个水平、每水平 $r$ 次重复，误差均方 $MS_e$。
-**同时置信区间**：$$\mu_i-\mu_j\ \in\ \Big[\bar y_{i\cdot}-\bar y_{j\cdot}\ \pm\ q_{1-\alpha}(s,\ f)\sqrt{\frac{MS_e}{r}}\Big],\qquad f=s(r-1),$$ $q_{1-\alpha}(s,f)$ 是**学生化极差**分布的上侧分位数，保证整套区间的**整体**水平为 $1-\alpha$。
-**不能多次 $t$ 检验**：$C=\binom{s}{2}$ 次比较的错误率膨胀到约 $1-(1-\alpha)^{C}$（$s=5$ 时约 40%）。
-**不平衡**：Tukey–Kramer，宽度改 $\frac{q_{1-\alpha}}{\sqrt2}\sqrt{MS_e\big(\frac{1}{r_i}+\frac{1}{r_j}\big)}$。
-**易混**：$q$ 是学生化极差分位数、不是 $t$ 分位数。`),
-    // ---- reg17 多重比较：S 法（Scheffé） ----
-    F('reg17', 'regress', '多重比较：S 法（Scheffé）区间',
-      R`S 法（Scheffé）的同时置信区间怎么写？为什么它比 T 法保守？`,
-      R`**设定**：$s$ 个水平、第 $i$ 水平重复 $r_i$ 次，$\hat c=\sum_i c_i\bar y_{i\cdot}$ 是任意**对比** $c=\sum_i c_i\mu_i$（要求 $\sum_i c_i=0$）的估计，误差均方 $MS_e$、残差自由度 $f=\sum_i(r_i-1)$。
-**同时置信区间**：
-$$c\ \in\ \Big[\hat c\ \pm\ \sqrt{(s-1)\,F_{1-\alpha}(s-1,\ f)\cdot MS_e\sum_{i=1}^{s}\frac{c_i^{2}}{r_i}}\ \Big],$$
-整套「所有可能的对比」同时置信水平为 $1-\alpha$（平衡时 $\sum_i c_i^{2}/r_i=\frac{1}{r}\sum_i c_i^{2}$）。
-**与 $F$ 检验一致**：区间不含 0 $\iff$ 该对比的 $F=\frac{MS_{\text{对比}}}{MS_e}\ge(s-1)F_{1-\alpha}(s-1,f)$——一次控制全部对比，代价是比只比两两的 T 法宽。`),
-    F('reg17-2', 'regress', '多重比较方法选型：S 法 / T 法 / Bonferroni',
-      R`多重比较该选 S 法、T 法还是 Bonferroni？各用在什么场合？`,
-      R`**选型判据**（$s$ 为水平数）：
-- 只关心少数几个对比、或对比是事后从数据里挑出来的 $\Rightarrow$ S 法（Scheffé）：对任意线性对比给同时区间，最安全。
-- 只关心所有两两比较 $\Rightarrow$ T 法（Tukey）：基于学生化极差，区间更窄、功效更高。
-- 只关心预先指定的 $m$ 个对比 $\Rightarrow$ Bonferroni（每个用 $\alpha/m$）通常更紧。
-- $s=2$ 时三者与 $t$ 检验数值一致。
-**报数规范**：同时置信区间必须写明「同时水平」，否则会被误读为单个区间。
-**易混**：S 法用 $F$ 分位数、自由度 $(s-1,f)$；对比系数必须满足 $\sum_i c_i=0$，否则不是「对比」。`),
+    // ---- xr05 广义似然比统计量与构造步骤 ----
+    F('xr05', 'testing', '广义似然比统计量与构造步骤',
+      R`广义似然比统计量怎么定义？构造拒绝域的三步是什么？`,
+      R`**定义**：$\lambda(x)=\frac{\sup_{\theta\in\Theta_0}L(\theta;x)}{\sup_{\theta\in\Theta}L(\theta;x)}\in[0,1]$，拒绝域取 $\{\lambda\le\lambda_0\}$，等价用 $-2\ln\lambda$。
+**三步**：① 求全空间 MLE $\hat\theta$ 与 $H_0$ 下的 MLE $\hat\theta_0$；② 代入化简为某统计量的单调函数；③ 用精确分布或渐近 $\chi^{2}$ 定临界值。
+**Wilks**：正则条件下 $-2\ln\lambda\xrightarrow{d}\chi^{2}(r)$，$r$ 为约束个数；小样本用精确分布。
+**易混**：$\lambda$ 取上确界而非某固定点的似然；含冗余参数时渐近式要修正自由度。`),
     // ---- ll11 Slutsky 定理与收敛的四则运算 ----
-        F('ll11', 'limit', 'Slutsky 定理与收敛的四则运算',
-      R`Slutsky 定理的内容是什么？成立条件有什么要求？`,
-      R`**Slutsky 定理**：设 $X_n\xrightarrow{d}X$，而 $Y_n\xrightarrow{P}c$（**常数**），则
-$$X_n+Y_n\xrightarrow{d}X+c,\qquad X_nY_n\xrightarrow{d}cX,\qquad \frac{X_n}{Y_n}\xrightarrow{d}\frac{X}{c}\ (c\ne0).$$
-**边界**：$c=0$ 时乘积极限为退化在 0 的分布；除法须 $c\ne0$ 且分母远离 0。
-**为什么重要**：它允许把「随机分母/随机尺度」换成常数，是 $t$ 统计量、Wald 统计量、$\chi^{2}$ 型统计量渐近分布的理论支撑。
-**条件要点**：必须是一个依分布收敛 + 一个依**概率**收敛到**常数**；两者都只有依分布收敛时不能直接套用（需 Cramér 定理或连续映射定理）。
-**易混**：Slutsky 处理四则运算，函数型变换归连续映射定理。`),
-    // ---- ll11-2 用 Slutsky 求 t 统计量的渐近分布 ----
-    F('ll11-2', 'limit', '用 Slutsky 定理求 $t$ 统计量的渐近分布',
-      R`怎么把统计量写成「主项 + 小项」，再用 Slutsky 得到渐近正态？`,
-      R`**标准用法（主项 + 小项）**：正态样本中
-$$\frac{\sqrt n(\bar X-\mu)}{S_n}=\frac{\sqrt n(\bar X-\mu)}{\sigma}\cdot\frac{\sigma}{S_n},\qquad \frac{\sigma}{S_n}\xrightarrow{P}1,$$
-由 CLT（前者 $\xrightarrow{d}N(0,1)$）与 Slutsky 立得 $\frac{\sqrt n(\bar X-\mu)}{S_n}\xrightarrow{d}N(0,1)$。
-**结论**：$t$ 统计量在大样本下近似标准正态；学生 $t$ 分布随自由度增大趋于 $N(0,1)$ 是其特例。`),
-    // ---- ll12 Δ 方法（渐近方差传播） ----
-        F('ll12', 'limit', 'Δ 方法（一阶）',
+    F('ll11', 'limit', 'Slutsky 定理与收敛的四则运算',
+      R`Slutsky 定理的内容与成立条件是什么？`,
+      R`设 $X_n\xrightarrow{d}X$、$Y_n\xrightarrow{P}c$（常数），则
+$$X_n+Y_n\xrightarrow{d}X+c,\quad X_nY_n\xrightarrow{d}cX,\quad \frac{X_n}{Y_n}\xrightarrow{d}\frac{X}{c}\ (c\ne0).$$
+**条件**：一个依分布收敛加一个依概率收敛到常数；两者都只有依分布收敛时不能直接套用。
+**用途**：把随机分母/尺度换成常数，是 $t$、Wald、$\chi^{2}$ 统计量渐近分布的依据。
+**易混**：四则运算归 Slutsky，连续函数变换归连续映射定理。`),
+    // ---- ll12 Δ 方法（一阶） ----
+    F('ll12', 'limit', 'Δ 方法（一阶）',
       R`一阶 Δ 方法给出什么结论？变换后的渐近方差怎么算？`,
-      R`**设定**：$\sqrt n\,(X_n-\theta)\xrightarrow{d}N(0,\sigma^{2})$，函数 $g$ 在 $\theta$ 处可导。
-**一阶 Δ 方法（$g'(\theta)\ne0$）**：
-$$\sqrt n\,\big(g(X_n)-g(\theta)\big)\ \xrightarrow{d}\ N\big(0,\ [g'(\theta)]^{2}\sigma^{2}\big)\quad\Longleftrightarrow\quad g(X_n)\ \text{近似}\ N\Big(g(\theta),\ \frac{[g'(\theta)]^{2}\sigma^{2}}{n}\Big).$$
-**渐近方差＝（导数平方）× 原渐近方差**，即 $\mathrm{Var}(g(X_n))\approx[g'(\theta)]^{2}\mathrm{Var}(X_n)$（与误差传播公式同形，但此处是概率意义下的严格结论）。
-**常见用途**：求变换后统计量的标准误，如 $D(\ln\hat\theta)\approx\frac{D(\hat\theta)}{\theta^{2}}$（$\ln$ 的导数为 $1/\theta$）。`),
-    // ---- ll12-2 二阶退化与方差稳定变换 ----
-    F('ll12-2', 'limit', 'Δ 方法的二阶退化与方差稳定变换',
-      R`$g'(\theta)=0$ 时一阶 Δ 方法退化怎么办？方差稳定变换怎么选？`,
-      R`**二阶 Δ 方法（$g'(\theta)=0$，一阶退化）**：需展开到二阶，
-$$n\,\big(g(X_n)-g(\theta)\big)\ \xrightarrow{d}\ \frac{g''(\theta)\,\sigma^{2}}{2}\,\chi^{2}_{1},$$
-极限不再是正态——说明 $g(X_n)$ 收敛更快，用二阶量做推断。
-**方差稳定变换**：选 $g$ 使 $[g'(\theta)]^{2}\sigma^{2}(\theta)$ 与 $\theta$ 无关。例：泊松 $\mathrm{Var}(X)=\mu$，取 $g(x)=\sqrt x$ 得 $D(\sqrt{\bar X})\approx\frac{1}{4n}$。
-**其它用途**：求 MLE 函数的渐近方差、构造 Wald 型检验与区间。
-**易混**：$g'(\theta)=0$ 时不能照套一阶公式；Δ 方法与 Slutsky 常配合使用而非相互替代；样本方差与渐近方差不是同一个量。`),
-    // ---- ll13 几乎必然收敛与强大数定律 ----
+      R`**设定**：$\sqrt n(X_n-\theta)\xrightarrow{d}N(0,\sigma^{2})$，$g$ 在 $\theta$ 可导且 $g'(\theta)\ne0$。
+**结论**：$\sqrt n(g(X_n)-g(\theta))\xrightarrow{d}N(0,[g'(\theta)]^{2}\sigma^{2})$，即 $g(X_n)\approx N\big(g(\theta),\frac{[g'(\theta)]^{2}\sigma^{2}}{n}\big)$。
+**口诀**：渐近方差＝导数平方×原渐近方差（误差传播的严格版本）。
+**例**：$\ln\hat\theta$ 的标准误约 $D(\hat\theta)/\hat\theta$；$g'(\theta)=0$ 时一阶退化，需二阶展开或方差稳定变换。`),
+    // ---- ll13 几乎必然收敛的定义与判定 ----
         F('ll13', 'limit', '几乎必然收敛的定义与判定',
       R`几乎必然收敛怎么定义？判定用什么工具？与其它收敛的关系如何？`,
       R`**定义**：$X_n\xrightarrow{a.s.}X\iff P\big(\lim_{n\to\infty}X_n=X\big)=1\iff$ 对任意 $\varepsilon>0$
@@ -1404,22 +1114,15 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
 **强大数定律（Kolmogorov）**：i.i.d. 且 $E|X_1|<\infty\Rightarrow\frac1n\sum X_i\xrightarrow{a.s.}E X_1$；条件恰好是「期望有限」。
 **经典反例**：i.i.d. 而无期望（Cauchy）时不能 $a.s.$ 收敛——这是强、弱 LLN 条件差异的例证。
 **做题口径**：要求「依概率」用切比雪夫或特征函数；要求「概率为 1」用 Borel-Cantelli 或三级数定理；讨论「轨道级」收敛与 $P(\lim_n\bar X_n=\mu)=1$ 用 $a.s.$。`),
-    // ---- est32 MLE 的渐近性质 ----
+    // ---- est32 MLE 的相合性与渐近正态性 ----
     F('est32', 'estimation', 'MLE 的相合性与渐近正态性',
-      R`MLE 的相合性与渐近正态性是什么？核心公式怎么写？`,
-      R`**正则条件**：参数空间开、密度对 $\theta$ 三次可导、支撑与 $\theta$ 无关、Fisher 信息 $0<I(\theta)<\infty$ 连续。
-**相合性**：$\hat\theta_n\xrightarrow{P}\theta$。
-**渐近正态（核心式）**：$$\sqrt n\,\big(\hat\theta_n-\theta\big)\ \xrightarrow{d}\ N\Big(0,\ I^{-1}(\theta)\Big),$$ 即 $\hat\theta_n$ 近似 $N\big(\theta,\ \frac{1}{nI(\theta)}\big)$。
-**Fisher 信息**（单样本）：$$I(\theta)=E\Big[\Big(\frac{\partial}{\partial\theta}\ln f(X;\theta)\Big)^{2}\Big]=-E\Big[\frac{\partial^{2}}{\partial\theta^{2}}\ln f(X;\theta)\Big],$$ 正则下两式等价，常用二阶导形式；$n$ 个独立样本为 $nI(\theta)$。
-**用法**：大样本推断用 Wald 区间 $\hat\theta\pm z_{1-\alpha/2}\frac{1}{\sqrt{nI(\hat\theta)}}$。
-**易混**：单样本信息 $I(\theta)$ 与样本信息 $nI(\theta)$ 别混；支撑依赖参数时渐近正态不成立。`),
-    F('est32-2', 'estimation', 'MLE 的渐近有效性与不变性',
-      R`MLE 的渐近有效性、不变性怎么表述？正则条件不可省的反例是什么？`,
-      R`**渐近有效**：MLE 的渐近方差恰为 C-R 下界 $\frac{1}{nI(\theta)}$，即在所有正则渐近无偏估计中最小（与「有效估计」的区别是后者要求对每个 $n$ 都达界）。
-**不变性**：若 $\hat\theta$ 是 $\theta$ 的 MLE，则 $g(\hat\theta)$ 是 $g(\theta)$ 的 MLE；其渐近方差用 Δ 方法 $[g'(\theta)]^{2}/(nI(\theta))$。
-**用法**：比较两个估计量的渐近效率时比渐近方差；大样本检验可直接用 Wald 统计量。
-**反例（正则条件不可省）**：$U(0,\theta)$ 的 MLE $\hat\theta=X_{(n)}$ 支撑依赖 $\theta$，须用 $n(\theta-X_{(n)})\xrightarrow{d}E(\theta)$ 型结论。
-**易混**：「渐近有效」不等于小样本最优——小样本偏差为 $O(1/n)$。`),
+      R`MLE 的相合性、渐近正态性、渐近有效性与不变性各是什么？`,
+      R`**正则条件**：参数空间开、密度对 $\theta$ 可导、支撑与 $\theta$ 无关、$0<I(\theta)<\infty$。
+**相合**：$\hat\theta_n\xrightarrow{P}\theta$。
+**渐近正态**：$\sqrt n(\hat\theta_n-\theta)\xrightarrow{d}N(0,I^{-1}(\theta))$，即 $\hat\theta_n\approx N\big(\theta,\frac{1}{nI(\theta)}\big)$。
+**Fisher 信息**：$I(\theta)=E[(\partial_\theta\ln f)^2]=-E[\partial^2_\theta\ln f]$，$n$ 个独立样本为 $nI(\theta)$。
+**渐近有效**：方差达到 C-R 下界 $1/(nI(\theta))$；**不变性**：$g(\hat\theta)$ 是 $g(\theta)$ 的 MLE。
+**易混**：单样本 $I(\theta)$ 与样本信息 $nI(\theta)$；支撑依赖参数时渐近正态失效。`),
     // ---- jj17 约束回归与线性约束 F 检验 ----
                     F('jj17', 'regress', '约束回归与线性约束 F 检验',
       R`线性约束回归怎么检验？$F$ 统计量的分子分母自由度怎么算？`,
@@ -1430,6 +1133,92 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
 **判读**：$F\ge F_{1-\alpha}$ 拒绝 $H_0$；$q=1$ 时 $F=t^{2}$。`),
         
     
+    F('est06-b', 'estimation', '边界型 MLE：参数出现在支撑里',
+      R`参数出现在支撑边界（如 $U(0,\theta)$）时，MLE 怎么求？`,
+      R`**识别**：密度可写成 $f(x;\theta)=h(x)I[x\in S(\theta)]$，$\theta$ 藏在示性函数里，$\ln L$ 对 $\theta$ 不可导。
+**做法**：不求导，直接最大化似然。$U(0,\theta)$ 时 $L(\theta)=\theta^{-n}I[\theta\ge x_{(n)}]$ 关于 $\theta$ 单调减，故 $\hat\theta=x_{(n)}$。
+**同类**：$U(a,b)$ 取 $(\hat a,\hat b)=(x_{(1)},x_{(n)})$；$f=\theta x^{\theta-1}(0<x<1)$ 支撑不含 $\theta$，可正常求导。
+**易错**：$\hat\theta=x_{(n)}$ 有偏（$Ex_{(n)}=\frac{n}{n+1}\theta$），无偏需乘 $\frac{n+1}{n}$；示性函数约束不能漏。`),
+    F('reg05-b', 'regress', '正规方程与投影解释',
+      R`为什么 LSE 满足正规方程？投影（几何）解释怎么证明？`,
+      R`**目标函数**：$RSS=(Y-X\beta)'(Y-X\beta)$，对 $\beta$ 求导 $-2X'(Y-X\beta)=0$，得正规方程 $X'X\beta=X'Y$。
+**投影**：$X\hat\beta$ 是 $Y$ 在 $\operatorname{span}(X)$ 上的正交投影，残差 $e=Y-X\hat\beta$ 与 $\operatorname{span}(X)$ 正交，即 $X'e=0$。
+**算子**：$\hat Y=PY$，$P=X(X'X)^{-1}X'$ 对称幂等；$e=(I-P)Y$。
+**推论**：$\operatorname{span}(X)$ 中任一点到 $Y$ 的距离以 $X\hat\beta$ 最小；增加解释变量 $RSS$ 不增。`),
+    F('xt10-b', 'regress', 'Var(β̂) 与 E[RSS] 的推导',
+      R`怎么推导 $\operatorname{Var}(\hat\beta)=\sigma^{2}(X'X)^{-1}$ 与 $E[RSS]=(n-p)\sigma^{2}$？`,
+      R`**方差**：$\hat\beta=\beta+(X'X)^{-1}X'\varepsilon$，故 $\operatorname{Var}(\hat\beta\mid X)=(X'X)^{-1}X'(\sigma^{2}I)X(X'X)^{-1}=\sigma^{2}(X'X)^{-1}$。
+**残差**：$e=(I-P)\varepsilon$，$P=X(X'X)^{-1}X'$，$I-P$ 对称幂等，$\operatorname{tr}(P)=p$。
+**期望**：$E(RSS)=E[\varepsilon'(I-P)\varepsilon]=\sigma^{2}\operatorname{tr}(I-P)=\sigma^{2}(n-p)$。
+**要点**：$\hat\sigma^{2}=RSS/(n-p)$ 无偏；分母是 $n-p$ 而非 $n$，因为估了 $p$ 个参数。`),
+    F('jj06-b', 'regress', 'OLS 无偏性与方差的证明',
+      R`OLS 的无偏性与方差怎么证明？`,
+      R`**无偏**：$\hat\beta=(X'X)^{-1}X'Y=\beta+(X'X)^{-1}X'\varepsilon$，取条件期望 $E(\hat\beta\mid X)=\beta+(X'X)^{-1}X'E(\varepsilon\mid X)=\beta$。
+**方差**：$\operatorname{Var}(\hat\beta\mid X)=(X'X)^{-1}X'\operatorname{Var}(\varepsilon\mid X)X(X'X)^{-1}=\sigma^{2}(X'X)^{-1}$。
+**线性**：$\hat\beta=AY$，$A=(X'X)^{-1}X'$，是 $Y$ 的线性函数。
+**G-M 思路**：任一线性无偏估计 $\tilde\beta=AY$（$AX=I$），$\operatorname{Var}(\tilde\beta)=\sigma^{2}AA'=\sigma^{2}[(X'X)^{-1}+DD']\ge\sigma^{2}(X'X)^{-1}$。`),
+    F('mv12', 'multidim', '马尔可夫链：转移矩阵与首达时间',
+      R`马尔可夫链的转移矩阵、$n$ 步转移与首达时间怎么算？`,
+      R`**定义**：$P(X_{n+1}=j\mid X_n=i,X_{n-1},\dots)=P(X_{n+1}=j\mid X_n=i)=p_{ij}$——未来只依赖现在。
+**转移矩阵**：$P=(p_{ij})$ 行和为 $1$；$n$ 步转移概率是 $P^{n}$ 的 $(i,j)$ 元。
+**分布**：初始分布 $\pi_0$，则 $\pi_n=\pi_0P^{n}$。
+**首达时间**：$T=\min\{n\ge1:X_n=j\}$，$E(T\mid X_0=i)=1+\sum_{k\ne j}p_{ik}E(T\mid X_0=k)$，解线性方程组。
+**易错**：$P$ 与 $P^{n}$ 都按“行是出发状态”排列；吸收态 $p_{jj}=1$。`),
+    F('nc22', 'numchar', '报童模型：随机需求的期望利润最大化',
+      R`报童（随机需求、单周期订货）模型怎么求最优订货量？`,
+      R`**设定**：订货 $y$，需求 $D$ 的分布函数 $F$，单位进价 $c$、售价 $p$、残值 $s$（$p>c>s$）。
+**利润**：$\pi(y)=p\min(D,y)+s(y-D)^{+}-cy$。
+**最优**：临界分位数 $F(y^{*})=\frac{p-c}{p-s}$——多订一单位，边际收益 $(p-c)P(D>y)$ 等于边际损失 $(c-s)P(D\le y)$。
+**报童版**：成功利润 $6$、失败损失 $a$ 时 $F(y^{*})=\frac{6}{6+a}$，$y^{*}=F^{-1}\big(\frac{6}{6+a}\big)$。
+**易混**：$F$ 用需求分布，不是利润分布；离散需求取满足 $F(y)\ge\frac{p-c}{p-s}$ 的最小 $y$。`),
+    F('est33', 'estimation', '含个体效应的混合模型：LSE 与 MLE',
+      R`面板/混合模型 $Y_{ij}=\alpha_i+\beta x_{ij}+\varepsilon_{ij}$ 的 LSE 与 MLE 怎么求？`,
+      R`**模型**：$i=1,\dots,m$ 个体，$j=1,\dots,n$ 期；$\alpha_i$ 为个体效应，$\varepsilon_{ij}$ 独立 $N(0,\sigma^{2})$。
+**LSE**：把 $\alpha_i$ 当 $m$ 个参数，设计阵加个体虚拟变量；正规方程给出组内（within）估计
+$$\hat\beta=\frac{\sum_i\sum_j(x_{ij}-\bar x_i)(y_{ij}-\bar y_i)}{\sum_i\sum_j(x_{ij}-\bar x_i)^{2}},\qquad \hat\alpha_i=\bar y_i-\hat\beta\bar x_i.$$
+**MLE**：正态下 $\hat\beta,\hat\alpha_i$ 与 LSE 相同，$\hat\sigma^{2}=RSS/(mn)$（MLE 除以 $mn$，无偏版本除以 $mn-m-1$）。
+**易混**：$\alpha_i$ 固定 vs 随机（随机效应要用 GLS）；自由度别漏掉 $m$ 个个体参数。`),
+    F('est34', 'estimation', 'Logistic 回归的对数似然与凹性',
+      R`Logistic 回归的似然函数怎么写？为什么 MLE 唯一？`,
+      R`**模型**：$\operatorname{logit}p_i=\ln\frac{p_i}{1-p_i}=x_i'\beta$，$p_i=\frac{e^{x_i'\beta}}{1+e^{x_i'\beta}}$，$Y_i\sim B(1,p_i)$。
+**对数似然**：$\ell(\beta)=\sum_i\big[y_i\ln p_i+(1-y_i)\ln(1-p_i)\big]=\sum_i\big[y_ix_i'\beta-\ln(1+e^{x_i'\beta})\big]$。
+**得分**：$\nabla\ell=\sum_i(y_i-p_i)x_i=X'(y-p)$。
+**凹性**：Hessian $=-\sum_i p_i(1-p_i)x_ix_i'=-X'WX$ 负半定，故 $\ell$ 凹；$X$ 列满秩时严格凹，MLE 唯一。
+**易混**：Logistic 的 MLE 无闭式，用 Newton/IRLS 迭代。`),
+    F('nc23', 'numchar', '蒙特卡洛积分：无偏性与误差',
+      R`用蒙特卡洛方法算积分 $\theta=\int f(x)\,dx$ 的原理与误差是什么？`,
+      R`**原理**：把积分写成期望 $\theta=\int_0^1 f(u)du=E[f(U)]$，$U\sim U(0,1)$；取 $n$ 个独立 $U_i$，$\hat\theta=\frac1n\sum f(U_i)$。
+**性质**：$E\hat\theta=\theta$（无偏）；$\operatorname{Var}(\hat\theta)=\frac1n\operatorname{Var}(f(U))$；由大数定律 $\hat\theta\to\theta$ a.s.。
+**误差**：由 CLT，$\hat\theta\approx N\big(\theta,\frac{\hat\sigma^{2}}{n}\big)$，近似 $1-\alpha$ 区间 $\hat\theta\pm z_{1-\alpha/2}\frac{\hat\sigma}{\sqrt n}$。
+**改进**：分层、对偶变量、重要性抽样都能降方差；误差是 $O(n^{-1/2})$，与维数无关。`),
+    F('nc24', 'numchar', '重要性抽样：无偏估计与方差',
+      R`重要性抽样的估计量为什么无偏？方差与提议分布怎么选？`,
+      R`**目标**：$\mu=E[f(Z)]=\int f(z)\,dz$（$Z$ 的密度为 $1$，或写成 $\int\frac{f(z)}{g(z)}g(z)dz$）。
+**估计**：取 $Z_i\sim g$（$g>0$ 于 $f$ 的支撑），$\hat\mu=\frac1n\sum\frac{f(Z_i)}{g(Z_i)}$。
+**无偏**：$E\hat\mu=\int\frac{f(z)}{g(z)}g(z)dz=\mu$；由大数定律强相合。
+**方差**：$\operatorname{Var}(\hat\mu)=\frac1n\big(E\frac{f^{2}(Z)}{g^{2}(Z)}-\mu^{2}\big)$，需 $E[f^{2}/g^{2}]<\infty$。
+**选 $g$**：最优 $g\propto|f|$ 时方差为零（不可实现）；实践中选与 $f$ 形状接近、尾部更厚的 $g$。`),
+    F('est35', 'estimation', '分位数与可靠寿命的 MLE（不变性）',
+      R`总体分位数（如 $P(X>a)=0.05$ 中的 $a$）的 MLE 怎么求？`,
+      R`**思路**：分位数是参数的函数 $a=g(\mu,\sigma)$，先求 $\mu,\sigma$ 的 MLE，再用不变性 $\hat a=g(\hat\mu,\hat\sigma)$。
+**正态**：$P(X>a)=0.05\Rightarrow a=\mu+z_{0.95}\sigma$，故 $\hat a=\bar X+1.645\hat\sigma$，$\hat\sigma^{2}=\frac1n\sum(X_i-\bar X)^{2}$。
+**指数**：$P(X>a)=e^{-\lambda a}=0.05\Rightarrow a=\frac{\ln20}{\lambda}$，故 $\hat a=\ln20\cdot\bar X$。
+**区间**：用 Delta 法 $\operatorname{Var}(\hat a)\approx\nabla g'\operatorname{Var}(\hat\theta)\nabla g$ 构造近似区间。
+**易错**：$\hat\sigma$ 用除以 $n$ 的 MLE，不是 $n-1$；分位数是参数的函数，须先估参数再用不变性，不能直接对分位数写似然。`),
+    F('est36', 'estimation', 'Rao–Blackwell 定理：条件期望改进估计',
+      R`Rao–Blackwell 定理怎么用充分统计量改进无偏估计？`,
+      R`**定理**：若 $T$ 是 $\theta$ 的充分统计量，$U$ 是 $\theta$ 的无偏估计，令 $U^{*}=E(U\mid T)$，则 $U^{*}$ 仍无偏且 $\operatorname{Var}(U^{*})\le\operatorname{Var}(U)$。
+**等号**：当且仅当 $U$ 几乎必然是 $T$ 的函数。
+**用法**：先找一个粗糙无偏估计（如示性函数），对充分统计量条件化，得到只依赖 $T$ 的改进估计。
+**与 Lehmann–Scheffé 配合**：$T$ 充分完备时，$E(U\mid T)$ 是唯一 UMVUE。
+**易错**：条件化只降方差、不改无偏；$T$ 不必完备，完备性用来保证唯一。`),
+    F('test18', 'testing', '概念速查：MVUE / 两类错误 / 非参数 / 复相关',
+      R`MVUE、两类错误、非参数检验、复相关系数平方分别是什么？`,
+      R`**MVUE**：方差一致最小的无偏估计（最小方差无偏估计），由充分完备统计量 + Lehmann–Scheffé 求得。
+**两类错误**：第一类“弃真”$P(\text{拒绝}\mid H_0\text{真})=\alpha$；第二类“取伪”$P(\text{接受}\mid H_1\text{真})=\beta$；功效 $=1-\beta$。
+**非参数检验**：不假定总体分布族，用秩、符号等构造统计量（如 Wilcoxon 秩和、符号检验），稳健但功效略低。
+**复相关系数平方**：$R^{2}=\frac{ESS}{TSS}=1-\frac{RSS}{TSS}$，度量回归对 $Y$ 的解释比例，也等于 $Y$ 与 $\hat Y$ 相关系数的平方。
+**易混**：$\alpha$ 由研究者设定，$\beta$ 随 $n$、效应、$\alpha$ 变化；$R^{2}$ 高不代表因果。`),
   ];
 
   const META = {
@@ -1552,10 +1341,10 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     test15: [3, '检验功效'],
     test16: [3, '正态性作图法'],
     test17: [4, '假设检验与样本量'],
-    pb12: [3, '概率的统计定义'], pb13: [4, '相互独立与两两独立'],
+    pb13: [4, '相互独立与两两独立'],
     ll08: [4, '依概率收敛'], ll09: [3, '李雅普诺夫CLT'],
-    sm12: [5, '两正态总体抽样分布'], sm13: [3, '中位数与极差'], sm14: [3, '直方图'], sm15: [3, '箱线图'],
-    nc17: [3, '变异系数'], nc18: [3, '偏度与峰度'], nc19: [4, '协方差矩阵'], nc20: [4, '全方差公式'],
+    sm12: [5, '两正态总体抽样分布'], sm13: [3, '中位数与极差'], sm14: [3, '直方图'],
+    nc18: [3, '偏度与峰度'], nc19: [4, '协方差矩阵'], nc20: [4, '全方差公式'],
     est23: [3, 'MLE不变性'], est24: [3, '单侧置信限'],
     reg13: [3, '多重比较'], reg14: [3, '非线性回归'],
     reg07: [4, '回归系数显著性检验'],
@@ -1573,8 +1362,6 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     sy05: [4, '泊松Stein等式与矩'],
     sy06: [4, '泊松分布可加性'],
     sy07: [4, '样本量确定'],
-    sy08: [3, '单边切比雪夫不等式'],
-    sy09: [3, '两正态比（柯西分布）'],
     ts01: [5, '解题方法论'],
     ts02: [5, '解题方法论'],
     ts03: [5, '解题方法论'],
@@ -1589,13 +1376,11 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     xr03: [5, '解题方法论'],
     xt01: [4, '次序统计量密度'],
     xt02: [4, '均匀次序统计量（Beta）'],
-    xt03: [4, '次序统计量之比/独立性'],
     xt04: [4, '充分统计量与因子分解'],
     xt05: [4, '完备统计量'],
     xt06: [5, 'UMVUE 与 C-R 下界'],
     xt07: [4, '特征函数与矩母函数'],
     xt08: [4, '泊松过程'],
-    xt09: [4, '大数定律形式判定'],
     xt10: [4, '多元回归矩阵形式'],
     xt11: [4, '多重共线性'],
     xt12: [4, '异方差与 White 检验'],
@@ -1603,79 +1388,58 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     xt14: [4, '分布拟合检验（K-S/χ²）'],
     xt15: [4, '列联表独立性检验'],
     ys01: [5, '解题方法论'], ys02: [5, '解题方法论'], ys03: [5, '解题方法论'], ys04: [5, '解题方法论'], ys05: [5, '解题方法论'],
-    jj01: [4, '几何概型计算'], jj02: [4, '二维变换'], jj03: [4, '成对样本区间估计'], jj04: [3, '非参数检验（符号）'], jj05: [3, '非参数检验（游程）'],
+    jj01: [4, '几何概型计算'], jj02: [4, '二维变换'], jj03: [4, '成对样本区间估计'],
     jj06: [4, '高斯-马尔可夫定理'], jj08: [4, '异方差与 GLS'], jj09: [4, '自相关与 DW'],
     jj10: [4, '工具变量/2SLS'], jj11: [4, '虚拟变量与交互'], jj12: [4, '模型设定与变量选择'],
     pb14: [4, '事件域与事件列极限'],
-    pb15: [2, '可测空间与 Borel σ-域'],
     pb16: [4, '事件列上下极限'],
-    'pb16-2': [4, 'Borel-Cantelli 定理'],
-    'pb16-3': [4, 'Borel-Cantelli 用法'],
     nc21: [4, '特征函数唯一性定理'],
-    'nc21-2': [4, '特征函数连续性定理'],
     est25: [4, 'EM 算法（E/M 步）'],
-    est26: [4, 'EM 混合模型 M 步'],
     reg15: [4, '方差齐性检验'],
-    pb17: [2, '随机游动与反射原理'],
-    pb18: [4, '示性函数法'],
     'pb18-2': [4, '随机个数 N 的期望与方差'],
     est27: [4, '指数族'],
-    est28: [4, '位置/尺度族枢轴量'],
     est29: [4, '辅助统计量与 Basu'],
-    jj13: [2, '数据类型（截面/时序/面板）'],
     jj14: [4, '无截距项回归'],
     'jj14-2': [4, '去掉截距项的条件'],
-    jj15: [2, '邹至庄稳定性检验'],
     jj16: [2, '投影理论与遗漏变量偏误'],
     est30: [4, '共轭先验'],
     est31: [4, '贝叶斯估计与后验区间'],
     xr04: [4, 'NP 引理与 UMP 检验'],
     'xr04-2': [4, '一致最优势检验'],
     xr05: [4, '似然比检验与 Wilks'],
-    'xr05-2': [4, 'Wilks 定理'],
-    reg16: [4, '多重比较 T 法（Tukey）'],
-    reg17: [3, '多重比较 S 法（Scheffé）'],
     ll11: [4, 'Slutsky 定理'],
-    'll11-2': [4, 'Slutsky 求 t 统计量渐近分布'],
     ll12: [4, 'Δ 方法'],
-    'll12-2': [4, 'Δ 方法二阶退化'],
     ll13: [3, '强大数定律'],
     'll13-2': [3, '大数定律强弱'],
     est32: [4, 'MLE 渐近性质'],
     jj17: [3, '约束回归 F 检验'],
-    'test16-2': [3, '正态性正式检验'],
-    'reg15-2': [4, 'Bartlett 检验'],
-    'est27-2': [4, '指数族归属'],
-    'est29-2': [4, 'Basu 边界'],
-    'est32-2': [4, 'MLE 渐近有效性'],
     'sx03-2': [4, 'C-R 达界与有效估计'],
-    'reg17-2': [3, '多重比较选型'],
-    'est30-2': [4, '共轭先验（Gamma/正态）'],
-    'est30-3': [3, '共轭先验的作用与边界'],
-    'est31-2': [4, '可信区间 vs 置信区间'],
     'xt04-2': [4, '最小充分与完全性'],
-    'est28-2': [4, '位置-尺度族与枢轴量'],
     'll07-2': [3, '切比雪夫不等式用法'],
-    'est25-2': [4, 'EM 单调性与收敛'],
-    'est26-2': [4, '混合模型 M 步闭式'],
-    'est26-3': [4, '混合模型似然无界性'],
     'll01-2': [4, '大数定律家族辨析'],
     'xr03-2': [5, '检验选型（方差/两均值）'],
-    'xt01-2': [4, '两次序统计量联合密度'],
-    'xr01-2': [4, '无记忆性的唯一性'],
     'ys01-2': [5, '多维函数分布套路'],
-    'xt14-2': [4, '拟合检验选型'],
     'pb01-2': [4, '事件运算与对偶律'],
     'xr02-2': [4, 'LRT 渐近分布与最优性'],
     'xt08-2': [4, '泊松过程合成与间隔'],
-    'reg13-2': [3, '多重比较校正'],
     'xt15-2': [4, '列联表校正与关联强度'],
     'jj02-2': [4, '雅可比法关键与技巧'],
     'jj12-2': [4, '变量选择方法'],
     'jj08-2': [4, '异方差修正（WLS/稳健）'],
     'ys02-2': [5, 'MLE 步骤与陷阱'],
-    'jj10-2': [4, '2SLS 两阶段与诊断'],
-    'xt13-2': [4, '秩和检验拒绝域与对比'],
+    test18: [3, '概念辨析'],
+    est36: [5, 'Rao–Blackwell'],
+    est35: [4, '分位数 MLE'],
+    nc24: [4, '重要性抽样'],
+    nc23: [4, '蒙特卡洛积分'],
+    est34: [4, 'Logistic 回归'],
+    est33: [5, '混合模型（面板）'],
+    nc22: [5, '报童模型'],
+    mv12: [4, '马尔可夫链'],
+    'jj06-b': [4, 'OLS 无偏性证明'],
+    'xt10-b': [4, 'Var(β̂) 推导'],
+    'reg05-b': [4, '正规方程与投影'],
+    'est06-b': [4, '边界型 MLE'],
   };
 
   // ============ 经典例题 ============
@@ -1697,7 +1461,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "rv04": {"q":"设 $X_1,X_2$ i.i.d. $\\sim Exp(1)$，求 $W=\\dfrac{X_1}{X_1+X_2}$ 的密度函数","a":"作变换 $U=X_1/(X_1+X_2)$，$V=X_1+X_2$，则 $X_1=UV,\\ X_2=V(1-U)$，雅可比 $|J|=V$。联合密度\n$$f_{U,V}(u,v)=e^{-uv}\\,e^{-v(1-u)}\\cdot v=v\\,e^{-v},\\qquad u\\in(0,1),\\ v>0$$\n对 $v$ 积分得\n$$f_W(u)=\\int_0^{\\infty}v\\,e^{-v}\\,dv=1,\\qquad 0<u<1$$\n即 $W\\sim U(0,1)$（贝塔分布 $Beta(1,1)$），且 $\\int_0^1 1\\,du=1$ 验证了归一化。","src":"2017 复旦大学 432 统计学真题"},
     "rv05": {"q":"设 $X\\sim N(0,1)$，$Y\\sim B(1,p)$，且 $X,Y$ 相互独立，求 $X+Y$ 的概率分布","a":"$Y$ 为 0-1 分布：$P(Y=0)=1-p,\\ P(Y=1)=p$。由全概率公式，$Z=X+Y$ 的分布函数\n$$F_Z(z)=(1-p)P(X\\le z)+p\\,P(X\\le z-1)=(1-p)\\Phi(z)+p\\,\\Phi(z-1)$$\n其密度为\n$$f_Z(z)=(1-p)\\,\\varphi(z)+p\\,\\varphi(z-1),\\qquad \\varphi(z)=\\frac{1}{\\sqrt{2\\pi}}e^{-z^{2}/2}$$\n（两个高斯波包的线性叠加），且 $\\int_{-\\infty}^{+\\infty}f_Z(z)\\,dz=(1-p)+p=1$。","src":"2023 复旦大学 432 统计学真题"},
     "rv06": {"q":"甲有 21 个硬币，乙有 20 个硬币，两人同时抛出所有硬币，求甲朝上的硬币数多于乙的概率","a":"设 $X\\sim B(21,\\frac12)$，$Y\\sim B(20,\\frac12)$ 相互独立。令 $X'=21-X\\sim B(21,\\frac12)$，$Y'=20-Y\\sim B(20,\\frac12)$，则\n$$P(X>Y)=P(21-X'<21-Y)=P(X'\\le Y')$$\n由 $(X',Y')$ 与 $(X,Y)$ 同分布，$P(X'>Y')=P(X>Y)$，而 $P(X>Y)+P(X\\le Y)=1$，故 $P(X>Y)=\\dfrac12$。","src":"2020 复旦大学 432 统计学真题"},
-    "rv07": {"q":"某昆虫产在一片树叶上的虫卵数 $X$ 服从参数为 $\\lambda$ 的泊松分布，但只有虫卵数非零时才被记录。用 $Y$ 表示观察到的虫卵数，即 $P(Y=i)=P(X=i\\,|\\,X>0)$。求 $P(Y\\text{为偶数})$ 和 $E(Y)$","a":"$P(X>0)=1-e^{-\\lambda}$，故 $P(Y=i)=\\dfrac{\\lambda^{i}e^{-\\lambda}}{i!(1-e^{-\\lambda})}\\ (i=1,2,\\dots)$。\n$$E(Y)=E(X\\,|\\,X>0)=\\frac{E(X)}{P(X>0)}=\\frac{\\lambda}{1-e^{-\\lambda}}$$\n$P(Y\\text{为偶数})=\\dfrac{\\sum_{k\\ge1}P(X=2k)}{1-e^{-\\lambda}}=\\dfrac{e^{-\\lambda}(\\cosh\\lambda-1)}{1-e^{-\\lambda}}=\\dfrac{1-e^{-\\lambda}}{2}$。","src":"2013 年人大 805 统计学真题"},
+    "rv07": [{"q":"某昆虫产在一片树叶上的虫卵数 $X$ 服从参数为 $\\lambda$ 的泊松分布，但只有虫卵数非零时才被记录。用 $Y$ 表示观察到的虫卵数，即 $P(Y=i)=P(X=i\\,|\\,X>0)$。求 $P(Y\\text{为偶数})$ 和 $E(Y)$","a":"$P(X>0)=1-e^{-\\lambda}$，故 $P(Y=i)=\\dfrac{\\lambda^{i}e^{-\\lambda}}{i!(1-e^{-\\lambda})}\\ (i=1,2,\\dots)$。\n$$E(Y)=E(X\\,|\\,X>0)=\\frac{E(X)}{P(X>0)}=\\frac{\\lambda}{1-e^{-\\lambda}}$$\n$P(Y\\text{为偶数})=\\dfrac{\\sum_{k\\ge1}P(X=2k)}{1-e^{-\\lambda}}=\\dfrac{e^{-\\lambda}(\\cosh\\lambda-1)}{1-e^{-\\lambda}}=\\dfrac{1-e^{-\\lambda}}{2}$。","src":"2013 年人大 805 统计学真题"},{"q":"设 $X_1,X_2$ 相互独立，分别服从均值为 $\\mu_1,\\mu_2$ 的泊松分布。(1) 写出 $X_1$ 的分布列；(2) 写出 $X_1+X_2$ 的分布列；(3) $2X_1$ 还服从泊松分布吗？","a":"(1) $P(X_1=k)=e^{-\\mu_1}\\mu_1^{k}/k!$，$k=0,1,2,\\dots$。\n(2) 卷积：$P(X_1+X_2=k)=\\sum_{j=0}^{k}e^{-\\mu_1}\\frac{\\mu_1^{j}}{j!}e^{-\\mu_2}\\frac{\\mu_2^{k-j}}{(k-j)!}=e^{-(\\mu_1+\\mu_2)}\\frac{(\\mu_1+\\mu_2)^{k}}{k!}$，即 $P(\\mu_1+\\mu_2)$。\n(3) 不服从。$2X_1$ 只取偶数，$P(2X_1=1)=0$，而泊松分布在 $1$ 处概率为正；且 $E(2X_1)=2\\mu_1$、$D(2X_1)=4\\mu_1\\ne2\\mu_1$。","src":"2020 北京大学光华 431 统计真题"}],
     "rv08": {"q":"打怪物会爆出装备 1 和装备 2：爆出装备 1 的概率为 0.2，爆出装备 2 的概率为 0.2，什么都不爆的概率为 0.6。设 $\\tau$ 为集齐两件装备所用的次数，求 $E\\tau$ 与 $Var\\,\\tau$","a":"记 $\\xi_1$ 为收集到第一件装备所需次数，$\\xi_1\\sim Ge(0.4)$（每把获得任一装备的概率为 $0.2+0.2=0.4$）；记 $\\xi_2$ 为收集到第一件后获得另一件所需次数，$\\xi_2\\sim Ge(0.2)$。由几何分布 $E\\xi=\\frac1p,\\ Var\\xi=\\frac{1-p}{p^2}$：\n$$E\\tau=E\\xi_1+E\\xi_2=\\frac{1}{0.4}+\\frac{1}{0.2}=2.5+5=7.5$$\n$$Var\\,\\tau=Var\\,\\xi_1+Var\\,\\xi_2=\\frac{0.6}{0.16}+\\frac{0.8}{0.04}=3.75+20=23.75$$","src":"2025 复旦大学 432 统计学真题"},
     "rv09": {"q":"$X_1,X_2,X_3$ 是 i.i.d. 的服从 $U(0,1)$ 的随机变量，求次序统计量 $X_{(1)}=\\min\\{X_1,X_2,X_3\\}$ 的分布函数与期望","a":"由极值分布公式：\n$$F_{X_{(1)}}(x)=1-[1-F(x)]^{3}=1-(1-x)^{3},\\qquad 0<x<1$$\n密度 $f_{X_{(1)}}(x)=3(1-x)^{2}$，故\n$$E[X_{(1)}]=\\int_0^1 3x(1-x)^{2}\\,dx=\\frac14$$\n（一般地 $X_{(1)}\\sim Beta(1,3)$，$E=\\frac{1}{1+3}=\\frac14$。）","src":"2016 复旦大学 432 统计学真题"},
     "rv10": {"q":"某种型号灯泡的寿命 $X$ 服从指数分布，平均寿命为 5000 小时。求 3 个这种灯泡使用了 1000 小时后至少有 2 个仍可继续使用的概率","a":"平均寿命 $5000\\Rightarrow E(X)=\\frac1\\lambda=5000\\Rightarrow\\lambda=\\frac1{5000}$。单个灯泡使用 1000 小时后仍正常：$p=P(X>1000)=e^{-0.2}\\approx0.8187$。设 $Y\\sim B(3,p)$，所求\n$$P(Y\\ge2)=C_{3}^{2}p^{2}(1-p)+p^{3}=3p^{2}-2p^{3}\\approx0.9133$$","src":"考研数学真题（指数分布）"},
@@ -1715,14 +1479,14 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "mv02": {"q":"设二维随机变量 $(X,Y)$ 的联合密度为 $f(x,y)=kxy,\\ 0\\le y\\le x\\le1$（其余为 0）。求：(1) 常数 $k$；(2) 联合分布函数 $F(x,y)$；(3) 边缘密度 $f_X(x)$ 与 $f_Y(y)$","a":"(1) $1=\\int_0^1\\int_0^x kxy\\,dy\\,dx=k\\int_0^1 x\\cdot\\frac{x^2}{2}\\,dx=\\frac{k}{2}\\cdot\\frac14=\\frac k8$，故 $k=8$。\n(2) 当 $0\\le y\\le x\\le1$ 时$$F(x,y)=\\int_0^y\\int_v^x 8uv\\,du\\,dv=2x^2y^2-y^4$$当 $0\\le x<y\\le1$ 时 $F(x,y)=F_X(x)=x^4$；当 $x>1$ 时 $F(x,y)=F_Y(y)=2y^2-y^4\\ (0\\le y\\le1)$；$F(1,1)=1$。\n(3) $f_X(x)=\\int_0^x 8xy\\,dy=4x^3\\ (0<x<1)$；$f_Y(y)=\\int_y^1 8xy\\,dx=4y(1-y^2)\\ (0<y<1)$。","src":"2026 北大光华 431 统计真题"},
     "mv03": {"q":"设 $X,Y$ 相互独立，均服从参数为 $p$ 的几何分布，记 $Z=\\max\\{X,Y\\}$。(1) 求 $(Z,X)$ 的联合分布；(2) 求 $X$ 关于 $Z$ 的条件分布","a":"几何分布 $P(X=k)=p(1-p)^{k-1}$，$P(X\\le z)=1-(1-p)^{z}$。\n(1) 当 $x<z$ 时，$Z=z$ 且 $X=x$ 需 $Y=z$：\n$$P(Z=z,\\ X=x)=P(X=x)P(Y=z)=p^{2}(1-p)^{x+z-2}$$\n当 $x=z$ 时：\n$$P(Z=z,\\ X=z)=P(X=z)P(Y\\le z)=p(1-p)^{z-1}\\left[1-(1-p)^{z}\\right]$$\n(2) 条件分布 $P(X=x\\,|\\,Z=z)=\\dfrac{P(Z=z,\\ X=x)}{P(Z=z)}$，其中\n$$P(Z=z)=1-P(X\\le z-1)P(Y\\le z-1)=1-\\left[1-(1-p)^{z-1}\\right]^{2}$$","src":"2020 复旦大学 861 概率论与数理统计真题"},
     "mv04": {"q":"(1) 什么是随机变量 $X$ 和 $Y$ 的相关性？(2) 什么是 $X$ 和 $Y$ 的独立性？(3) 如果 $X$ 和 $Y$ 不相关，那么 $X$ 和 $Y$ 是否独立？请具体论述","a":"(1) 相关性指线性相关程度，用相关系数 $\\rho=\\dfrac{\\mathrm{Cov}(X,Y)}{\\sqrt{D(X)D(Y)}}$ 度量。\n(2) 独立性指一个变量的取值不影响另一个的分布：$F(x,y)=F_X(x)F_Y(y)$（连续型为 $f(x,y)=f_X(x)f_Y(y)$）。\n(3) 不相关不一定独立。独立 $\\Rightarrow$ 不相关（$\\mathrm{Cov}=0$），反之不成立：如 $X\\sim N(0,1)$，$Y=X^{2}$，则 $\\mathrm{Cov}(X,Y)=E(X^{3})=0$ 故不相关，但 $Y$ 完全由 $X$ 决定，二者不独立（仅二维正态分布等特殊场合两者等价）。","src":"2018 北大光华 431 统计真题"},
-    "mv05": {"q":"设 $(X,Y)$ 服从二维正态分布 $N(\\mu_1,\\mu_2,\\sigma_1^{2},\\sigma_2^{2},\\rho)$。证明：$X$ 与 $Y$ 相互独立的充要条件是相关系数 $\\rho=0$","a":"二维正态联合密度为\n$$f(x,y)=\\frac{1}{2\\pi\\sigma_1\\sigma_2\\sqrt{1-\\rho^{2}}}\\exp\\left\\{-\\frac{1}{2(1-\\rho^{2})}\\left[\\frac{(x-\\mu_1)^{2}}{\\sigma_1^{2}}-2\\rho\\frac{(x-\\mu_1)(y-\\mu_2)}{\\sigma_1\\sigma_2}+\\frac{(y-\\mu_2)^{2}}{\\sigma_2^{2}}\\right]\\right\\}$$\n当 $\\rho=0$ 时交叉项消失，$f(x,y)=f_X(x)f_Y(y)$，故 $X,Y$ 独立；反之若 $X,Y$ 独立则 $\\mathrm{Cov}(X,Y)=0$，即 $\\rho=0$。","src":"2013 年人大 805 统计学真题","a2":"巧解（协方差矩阵 / 特征函数）：二维正态的联合特征函数\n$$\\varphi(s,t)=\\exp\\left\\{i(s\\mu_1+t\\mu_2)-\\tfrac12(s^2\\sigma_1^2+2\\rho st\\sigma_1\\sigma_2+t^2\\sigma_2^2)\\right\\}$$\n当 $\\rho=0$ 时 $\\varphi(s,t)=\\varphi_X(s)\\varphi_Y(t)$，由特征函数唯一性即得 $X,Y$ 独立（等价地：协方差矩阵 $\\Sigma$ 为对角阵）。"},
+    "mv05": [{"q":"设 $(X,Y)$ 服从二维正态分布 $N(\\mu_1,\\mu_2,\\sigma_1^{2},\\sigma_2^{2},\\rho)$。证明：$X$ 与 $Y$ 相互独立的充要条件是相关系数 $\\rho=0$","a":"二维正态联合密度为\n$$f(x,y)=\\frac{1}{2\\pi\\sigma_1\\sigma_2\\sqrt{1-\\rho^{2}}}\\exp\\left\\{-\\frac{1}{2(1-\\rho^{2})}\\left[\\frac{(x-\\mu_1)^{2}}{\\sigma_1^{2}}-2\\rho\\frac{(x-\\mu_1)(y-\\mu_2)}{\\sigma_1\\sigma_2}+\\frac{(y-\\mu_2)^{2}}{\\sigma_2^{2}}\\right]\\right\\}$$\n当 $\\rho=0$ 时交叉项消失，$f(x,y)=f_X(x)f_Y(y)$，故 $X,Y$ 独立；反之若 $X,Y$ 独立则 $\\mathrm{Cov}(X,Y)=0$，即 $\\rho=0$。","src":"2013 年人大 805 统计学真题","a2":"巧解（协方差矩阵 / 特征函数）：二维正态的联合特征函数\n$$\\varphi(s,t)=\\exp\\left\\{i(s\\mu_1+t\\mu_2)-\\tfrac12(s^2\\sigma_1^2+2\\rho st\\sigma_1\\sigma_2+t^2\\sigma_2^2)\\right\\}$$\n当 $\\rho=0$ 时 $\\varphi(s,t)=\\varphi_X(s)\\varphi_Y(t)$，由特征函数唯一性即得 $X,Y$ 独立（等价地：协方差矩阵 $\\Sigma$ 为对角阵）。"},{"q":"设 $X,U_1,U_2$ 独立同分布 $N(0,1)$，$W_i=a_iX+\\sqrt{1-a_i^{2}}\\,U_i$（$i=1,2$），求 $(W_1,W_2)$ 的联合密度。","a":"$W_i$ 是独立正态的线性组合，故 $(W_1,W_2)$ 为二维正态。$EW_i=0$，$\\operatorname{Var}(W_i)=a_i^{2}+(1-a_i^{2})=1$，$\\operatorname{Cov}(W_1,W_2)=a_1a_2$。\n所以相关系数 $\\rho=a_1a_2$，联合密度\n$$f(w_1,w_2)=\\frac{1}{2\\pi\\sqrt{1-a_1^{2}a_2^{2}}}\\exp\\Big\\{-\\frac{w_1^{2}-2a_1a_2w_1w_2+w_2^{2}}{2(1-a_1^{2}a_2^{2})}\\Big\\}.$$\n共同因子 $X$ 使两个变量相关；$a_1a_2=0$ 时独立。","src":"2017 北京大学数院 431 统计真题"}],
     "mv06": {"q":"设 $(X,Y)$ 的联合密度为 $f(x,y)=2(x+y),\\ 0\\le x\\le y\\le1$（其余为 0）。求 $Z=X+Y$ 的密度函数","a":"由卷积公式（注意 $0\\le x\\le z-x\\le1$，即 $x\\le\\frac z2$ 且 $x\\ge z-1$）：\n当 $0<z<1$：$f_Z(z)=\\int_0^{z/2}2z\\,dx=z^2$；\n当 $1\\le z<2$：$f_Z(z)=\\int_{z-1}^{z/2}2z\\,dx=2z\\left(1-\\frac z2\\right)=2z-z^2$。\n故\n$$f_Z(z)=\\begin{cases}z^2,&0<z<1\\\\z-z^2,&1\\le z<2\\\\0,&\\text{其他}\\end{cases}$$","src":"2021 北大光华 431 统计真题"},
     "mv07": {"q":"设 $X,Y$ 独立同分布于 $N(0,1)$，求 $E[\\max\\{X,Y\\}]$","a":"由 $\\max\\{X,Y\\}=\\dfrac{X+Y+|X-Y|}{2}$ 及 $E(X)=E(Y)=0$：\n$$E[\\max\\{X,Y\\}]=\\frac12 E|X-Y|$$\n$X-Y\\sim N(0,2)$，$E|X-Y|=\\sqrt2\\sqrt{\\dfrac2\\pi}=\\dfrac2{\\sqrt\\pi}$，故$$E[\\max\\{X,Y\\}]=\\frac{1}{\\sqrt\\pi}$$","src":"2024 北大光华 431 统计真题"},
     "mv08": {"q":"从 $(0,1)$ 中随机地取两个数 $x,y$，求其积不小于 $\\frac3{16}$ 且其和不大于 $1$ 的概率","a":"$(x,y)$ 在单位正方形上均匀分布，所求为区域 $\\{xy\\ge\\frac3{16},\\ x+y\\le1\\}$ 的面积。曲线 $xy=\\frac3{16}$ 与 $x+y=1$ 交于 $x=\\frac14,\\frac34$：\n$$P=\\int_{1/4}^{3/4}\\int_{3/(16x)}^{1-x}dy\\,dx=\\int_{1/4}^{3/4}\\left(1-x-\\frac{3}{16x}\\right)dx=\\left[x-\\frac{x^2}{2}-\\frac{3}{16}\\ln x\\right]_{1/4}^{3/4}=\\frac14-\\frac{3}{16}\\ln 3\\approx0.044$$","src":"2016 复旦大学 432 统计学真题"},
     "mv09": {"q":"设 $X_1,X_2$ i.i.d. $\\sim N(\\mu,\\sigma^{2})$，求 $E[\\max\\{X_1,X_2\\}]$","a":"利用 $\\max\\{X_1,X_2\\}=\\dfrac{X_1+X_2+|X_1-X_2|}{2}$：\n$$E[\\max\\{X_1,X_2\\}]=\\frac{E(X_1)+E(X_2)+E|X_1-X_2|}{2}=\\mu+\\frac12E|X_1-X_2|$$\n$X_1-X_2\\sim N(0,2\\sigma^{2})$，令 $Z=\\dfrac{X_1-X_2}{\\sqrt2\\,\\sigma}\\sim N(0,1)$，$E|Z|=\\sqrt{\\frac2\\pi}$，故\n$$E[\\max\\{X_1,X_2\\}]=\\mu+\\frac12\\cdot\\sqrt2\\,\\sigma\\cdot\\sqrt{\\frac2\\pi}=\\mu+\\frac{\\sigma}{\\sqrt\\pi}$$","src":"2019 复旦大学 432 统计学真题"},
     "mv10": {"q":"$(X,Y)$ 服从由 $1<x<e^{2}$ 与 $0<y<\\frac1x$ 围成区域上的均匀分布，求 $f_{Y|X=3}(y)$","a":"区域面积 $S_D=\\int_1^{e^2}\\frac1x\\,dx=2$，故联合密度 $f(x,y)=\\frac12$。边缘密度\n$$f_X(x)=\\int_0^{1/x}\\frac12\\,dy=\\frac{1}{2x},\\qquad 1<x<e^{2}$$\n由条件密度公式：\n$$f_{Y|X}(y\\,|\\,x)=\\frac{f(x,y)}{f_X(x)}=\\frac{1/2}{1/(2x)}=x,\\qquad 0<y<\\frac1x$$\n代入 $x=3$ 得 $f_{Y|X=3}(y)=3,\\ 0<y<\\frac13$。","src":"2022 南开大学 432 统计学真题"},
     "mv11": {"q":"随机变量 $X_1,X_2$ 相互独立，分别服从 $P(\\lambda_1),P(\\lambda_2)$，求 $E(X_1\\,|\\,X_1+X_2=n)$","a":"由泊松分布的可加性 $X_1+X_2\\sim P(\\lambda_1+\\lambda_2)$，且给定 $X_1+X_2=n$ 时\n$$X_1\\,|\\,(X_1+X_2=n)\\sim B\\left(n,\\ \\frac{\\lambda_1}{\\lambda_1+\\lambda_2}\\right)$$\n（和的条件下条件分布为二项分布），故\n$$E(X_1\\,|\\,X_1+X_2=n)=n\\cdot\\frac{\\lambda_1}{\\lambda_1+\\lambda_2}$$","src":"2023 上海财经大学 432 统计学真题"},
-    "nc01": {"q":"设 $X\\sim N(0,1)$，求 $E[X^{3}\\,|\\,X\\ge0]$","a":"由期望定义（条件期望）：\n$$E[X^{3}\\,|\\,X\\ge0]=\\frac{\\int_0^{\\infty}x^{3}\\varphi(x)\\,dx}{P(X\\ge0)}=\\frac{\\frac{1}{\\sqrt{2\\pi}}\\int_0^{\\infty}x^{3}e^{-x^{2}/2}\\,dx}{\\frac12}$$\n令 $t=x^{2}/2$（$x^{3}dx=2t\\,dt$），$\\int_0^{\\infty}x^{3}e^{-x^{2}/2}dx=2\\int_0^{\\infty}t\\,e^{-t}dt=2$，故\n$$E[X^{3}\\,|\\,X\\ge0]=\\frac{\\frac{1}{\\sqrt{2\\pi}}\\cdot2}{1/2}=\\frac{4}{\\sqrt{2\\pi}}=2\\sqrt{\\frac2\\pi}$$","src":"2023 北大光华 431 统计真题"},
+    "nc01": [{"q":"设 $X\\sim N(0,1)$，求 $E[X^{3}\\,|\\,X\\ge0]$","a":"由期望定义（条件期望）：\n$$E[X^{3}\\,|\\,X\\ge0]=\\frac{\\int_0^{\\infty}x^{3}\\varphi(x)\\,dx}{P(X\\ge0)}=\\frac{\\frac{1}{\\sqrt{2\\pi}}\\int_0^{\\infty}x^{3}e^{-x^{2}/2}\\,dx}{\\frac12}$$\n令 $t=x^{2}/2$（$x^{3}dx=2t\\,dt$），$\\int_0^{\\infty}x^{3}e^{-x^{2}/2}dx=2\\int_0^{\\infty}t\\,e^{-t}dt=2$，故\n$$E[X^{3}\\,|\\,X\\ge0]=\\frac{\\frac{1}{\\sqrt{2\\pi}}\\cdot2}{1/2}=\\frac{4}{\\sqrt{2\\pi}}=2\\sqrt{\\frac2\\pi}$$","src":"2023 北大光华 431 统计真题"},{"q":"设 $N$ 是只取非负整数的随机变量，证明 $EN^{2}=2\\sum_{n=0}^{\\infty}\\big(n+\\frac12\\big)P(N>n)$。","a":"从右端出发，用尾概率恒等式 $P(N>n)=\\sum_{k=n+1}^{\\infty}P(N=k)$：\n$$2\\sum_{n\\ge0}\\big(n+\\tfrac12\\big)\\sum_{k>n}P(N=k)=2\\sum_{k\\ge1}P(N=k)\\sum_{n=0}^{k-1}\\big(n+\\tfrac12\\big).$$\n内层和 $=\\frac{k(k-1)}{2}+\\frac{k}{2}=\\frac{k^{2}}{2}$，乘 $2$ 得 $\\sum_k k^{2}P(N=k)=EN^{2}$。\n（同理 $EN=\\sum_{n\\ge0}P(N>n)$，本题是其“二阶版本”。）","src":"2022 北京大学数院 431 统计真题"}],
     "nc02": {"q":"8 个男生、7 个女生坐成一排。设 $X_i=1$ 表示第 $i$ 个位置与第 $i+1$ 个位置坐的是异性，$X_i=0$ 表示同性，$\\xi=\\sum_{i=1}^{14}X_i$，求 $E\\xi$","a":"由期望的线性性质：\n$$E\\xi=\\sum_{i=1}^{14}E(X_i)=14\\,P(\\text{第 }i,i+1\\text{ 位为异性})$$\n$P(\\text{异性相邻})=\\frac{8}{15}\\cdot\\frac{7}{14}+\\frac{7}{15}\\cdot\\frac{8}{14}=\\frac{8}{15}$，故\n$$E\\xi=14\\times\\frac{8}{15}=\\frac{112}{15}$$","src":"2020 复旦大学 432 统计学真题"},
     "nc03": {"q":"离散型随机变量 $X$ 的分布列为 $P(X=a)=P(X=b)=P(X=a+1)=\\frac13$，其中 $a<b<a+1$，求 $D(X)$ 的取值范围","a":"方差平移不变，令 $c=b-a\\in(0,1)$，则 $X$ 取 $0,c,1$ 各 $\\frac13$：\n$$E(X)=\\frac{c+1}{3},\\qquad E(X^{2})=\\frac{c^{2}+1}{3}$$\n$$D(X)=E(X^{2})-[E(X)]^{2}=\\frac{2}{9}\\left[\\left(c-\\frac12\\right)^{2}+\\frac34\\right]\\in\\left[\\frac16,\\ \\frac29\\right)$$\n（最小值在 $c=\\frac12$ 时取到；$c\\to0$ 或 $1$ 时趋近 $\\frac29$ 但不取到。）","src":"2022 复旦大学 432 统计学真题"},
     "nc04": {"q":"设 $X$ 的密度函数为 $f(x)=c(1-x^2),\\ |x|\\le1$（其余为 0）。求：(1) 常数 $c$；(2) $E(X)$ 与 $D(X)$","a":"(1) $1=\\int_{-1}^{1}c(1-x^2)\\,dx=c\\cdot\\frac43$，故 $c=\\frac34$。\n(2) 由对称性 $E(X)=0$；$E(X^2)=\\int_{-1}^{1}\\frac34 x^2(1-x^2)\\,dx=\\frac34\\left(\\frac23-\\frac25\\right)=\\frac15$。\n故 $D(X)=E(X^2)-[E(X)]^2=\\frac15$。","src":"2022 北大光华 431 统计真题"},
@@ -1735,19 +1499,19 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "nc12": {"q":"设 $X\\sim N(-1,1)$，$Y\\sim N(1,2)$，若 $X$ 与 $X+2Y$ 不相关，则 $X$ 与 $X-Y$ 的相关系数为（  ）\\\\\nA. $\\frac13$　B. $\\frac12$　C. $\\frac23$　D. $\\frac34$","a":"由协方差的线性性（双线性）：\n$$\\mathrm{Cov}(X,X+2Y)=D(X)+2\\mathrm{Cov}(X,Y)=0\\ \\Rightarrow\\ \\mathrm{Cov}(X,Y)=-\\frac12$$\n$$\\mathrm{Cov}(X,X-Y)=D(X)-\\mathrm{Cov}(X,Y)=1+\\frac12=\\frac32$$\n$$D(X-Y)=D(X)+D(Y)-2\\mathrm{Cov}(X,Y)=1+2+1=4$$\n$$\\rho(X,X-Y)=\\frac{3/2}{\\sqrt{1\\times4}}=\\frac34$$\n选 D。","src":"2025 考研数学三真题"},
     "nc13": {"q":"求二项分布、$(a,b)$ 上均匀分布、伽马分布的期望和方差","a":"二项分布 $B(n,p)$：$E=np$，$D=np(1-p)$；\n均匀分布 $U(a,b)$：$E=\\dfrac{a+b}{2}$，$D=\\dfrac{(b-a)^{2}}{12}$；\n伽马分布 $Ga(\\alpha,\\lambda)$（密度 $f(x)=\\frac{\\lambda^{\\alpha}}{\\Gamma(\\alpha)}x^{\\alpha-1}e^{-\\lambda x}$）：$E=\\dfrac{\\alpha}{\\lambda}$，$D=\\dfrac{\\alpha}{\\lambda^{2}}$。","src":"2018 复旦大学 432 统计学真题"},
     "nc14": {"q":"设 $Y$ 是非负随机变量，且 $0<Var(Y)<\\infty$，证明：$P(Y>0)\\ge\\dfrac{(EY)^{2}}{E(Y^{2})}$","a":"对 $Y\\cdot I\\{Y>0\\}$ 用柯西-施瓦茨不等式：\n$$EY=E[Y\\cdot I\\{Y>0\\}]\\le\\sqrt{E(Y^{2})}\\cdot\\sqrt{E[I\\{Y>0\\}^{2}]}=\\sqrt{E(Y^{2})\\,P(Y>0)}$$\n两边平方即得\n$$P(Y>0)\\ge\\frac{(EY)^{2}}{E(Y^{2})}$$\n（恰为马尔可夫型（帕莱-齐格蒙德）不等式的变形。）","src":"2023 复旦大学 432 统计学真题"},
-    "nc15": {"q":"设 $X\\sim N(\\mu,\\sigma^{2})$，求 $X$ 的特征函数","a":"由特征函数定义 $\\varphi(t)=E(e^{itX})$，对正态密度直接积分（指数配方）得\n$$\\varphi(t)=e^{i\\mu t-\\frac{\\sigma^{2}t^{2}}{2}}$$\n特例：$X\\sim N(0,1)$ 时 $\\varphi(t)=e^{-t^{2}/2}$。","src":"2022 南开大学 432 统计学真题"},
+    "nc15": [{"q":"设 $X\\sim N(\\mu,\\sigma^{2})$，求 $X$ 的特征函数","a":"由特征函数定义 $\\varphi(t)=E(e^{itX})$，对正态密度直接积分（指数配方）得\n$$\\varphi(t)=e^{i\\mu t-\\frac{\\sigma^{2}t^{2}}{2}}$$\n特例：$X\\sim N(0,1)$ 时 $\\varphi(t)=e^{-t^{2}/2}$。","src":"2022 南开大学 432 统计学真题"},{"q":"设 $(X,Y)$ 的联合密度为 $f(x,y)=\\frac14\\big[1+\\frac12xy(x^{2}-y^{2})\\big]$，$|x|<1$，$|y|<1$，求 $Y$ 的特征函数。","a":"$\\varphi_Y(t)=E e^{itY}=\\int_{-1}^{1}\\!\\!\\int_{-1}^{1}e^{ity}\\frac14\\big[1+\\frac12xy(x^{2}-y^{2})\\big]dx\\,dy$。\n交叉项含 $\\int_{-1}^{1}x\\,dx=0$，故只剩常数项：$\\varphi_Y(t)=\\frac14\\int_{-1}^{1}e^{ity}\\cdot2\\,dy=\\frac12\\int_{-1}^{1}e^{ity}dy=\\frac{\\sin t}{t}$。\n即 $Y\\sim U(-1,1)$，交叉项只制造相关性、不改变边缘分布。","src":"2018 北京大学数院 431 统计真题"}],
     "nc16": {"q":"设 $X$ 是标准正态随机变量，对 $t\\in\\mathbb{R}$ 定义 $g(x)=e^{tx}$。(1) 计算 $E(g(X))$；(2) 证明 $E(Xg(X))=E(g'(X))$","a":"(1) 由矩母函数定义 $M(t)=E(e^{tX})$，对 $X\\sim N(0,1)$ 指数配方：\n$$E(g(X))=E(e^{tX})=\\int_{-\\infty}^{\\infty}\\frac1{\\sqrt{2\\pi}}e^{tx-x^{2}/2}\\,dx=e^{t^{2}/2}$$\n(2) 对 $t$ 求导（或直接计算）：\n$$E(Xe^{tX})=\\frac{d}{dt}E(e^{tX})=\\frac{d}{dt}e^{t^{2}/2}=t\\,e^{t^{2}/2}=E(t\\,e^{tX})=E(g'(X))$$\n即 Stein 引理 $E[Xg(X)]=E[g'(X)]$ 在 $g(x)=e^{tx}$ 情形的验证。","src":"2024 中国科学技术大学 812 概率论与数理统计真题"},
     "ll01": {"q":"设独立随机变量序列满足 $P(\\xi_n=\\pm n^{\\delta})=\\frac12$。(1) 给出 $\\{\\xi_n\\}$ 服从大数定律的充要条件（即 $\\delta$ 的范围）；(2) 证明结论","a":"(1) 充要条件：$\\delta<\\frac12$。\n(2) $E(\\xi_n)=0$，$Var(\\xi_n)=n^{2\\delta}$。由马尔可夫条件（切比雪夫大数定律的一般形式），\n$$\\sum_{n=1}^{\\infty}\\frac{Var(\\xi_n)}{n^{2}}=\\sum_{n=1}^{\\infty}n^{2\\delta-2}$$\n收敛当且仅当 $2\\delta-2<-1$，即 $\\delta<\\frac12$。此时 $\\frac1n\\sum_{i=1}^{n}\\xi_i\\overset{P}{\\longrightarrow}0$（服从大数定律）；当 $\\delta\\ge\\frac12$ 时级数发散，大数定律不成立。","src":"2024 复旦大学 432 统计学真题"},
-    "ll02": {"q":"设 $X_1,X_2,\\dots$ 是 i.i.d. 的二阶矩存在的随机变量，$Y_n=\\sum_{i=1}^{n}X_i$。问 $\\left\\{\\dfrac{Y_n}{n^{2}}\\right\\}$ 是否服从大数定律？","a":"服从。由辛钦大数定律（二阶矩存在故期望存在），$\\dfrac{Y_n}{n}\\overset{P}{\\longrightarrow}E(X_1)$（实际上几乎必然收敛），于是\n$$\\frac{Y_n}{n^{2}}=\\frac1n\\cdot\\frac{Y_n}{n}\\overset{P}{\\longrightarrow}0\\cdot E(X_1)=0$$\n即 $\\left\\{\\frac{Y_n}{n^{2}}\\right\\}$ 依概率收敛于常数 $0$，服从大数定律。","src":"2022 复旦大学 432 统计学真题"},
+    "ll02": [{"q":"设 $X_1,X_2,\\dots$ 是 i.i.d. 的二阶矩存在的随机变量，$Y_n=\\sum_{i=1}^{n}X_i$。问 $\\left\\{\\dfrac{Y_n}{n^{2}}\\right\\}$ 是否服从大数定律？","a":"服从。由辛钦大数定律（二阶矩存在故期望存在），$\\dfrac{Y_n}{n}\\overset{P}{\\longrightarrow}E(X_1)$（实际上几乎必然收敛），于是\n$$\\frac{Y_n}{n^{2}}=\\frac1n\\cdot\\frac{Y_n}{n}\\overset{P}{\\longrightarrow}0\\cdot E(X_1)=0$$\n即 $\\left\\{\\frac{Y_n}{n^{2}}\\right\\}$ 依概率收敛于常数 $0$，服从大数定律。","src":"2022 复旦大学 432 统计学真题"},{"q":"用统计方法求极限 $\\displaystyle\\lim_{n\\to\\infty}3^{n}\\int_0^\\infty\\!\\!\\cdots\\!\\int_0^\\infty \\cos\\frac{x_1+\\cdots+x_n}{n}\\,e^{-3(x_1+\\cdots+x_n)}\\,dx_1\\cdots dx_n$。","a":"把 $3^{n}e^{-3\\sum x_i}$ 看成 $n$ 个 i.i.d. $Exp(3)$ 密度的乘积，积分即 $E\\big[\\cos\\bar X\\big]$，$\\bar X=\\frac1n\\sum X_i$。\n由辛钦大数定律 $\\bar X\\xrightarrow{P}E X_1=\\frac13$，$\\cos$ 连续有界，故 $E\\cos\\bar X\\to\\cos\\frac13$。\n所以原极限 $=\\cos\\frac13$。","src":"2024 北京大学光华 431 统计真题"}],
     "ll03": {"q":"设 $X_1,X_2,\\dots,X_n$ i.i.d. $\\sim F(x)$，记 $Y_n(x)=\\sum_{i=1}^{n}I\\{X_i\\le x\\}$，求 $\\lim_{n\\to\\infty}\\dfrac{Y_n(x)}{n}$","a":"对固定的 $x$，$I\\{X_i\\le x\\}$ 为 i.i.d. 的 0-1 变量（伯努利试验），$P(I\\{X_i\\le x\\}=1)=F(x)$。由伯努利大数定律（频率依概率收敛于概率）：\n$$\\frac{Y_n(x)}{n}\\ \\overset{P}{\\longrightarrow}\\ F(x)$$\n即经验分布函数依概率收敛于总体分布函数（格里文科定理的逐点版本）。","src":"2017 复旦大学 432 统计学真题"},
     "ll04": {"q":"某单位有 200 台电话分机，每台分机有 5% 的时间要使用外线，且各分机是否使用外线相互独立。问总机至少需装多少条外线，才能以 90% 的概率保证分机使用外线时不需等候（$z_{0.10}=1.28$）","a":"设使用外线的分机数 $X\\sim B(200,0.05)$，$E(X)=10$，$D(X)=9.5$。由中心极限定理，$\\dfrac{X-10}{\\sqrt{9.5}}$ 近似 $N(0,1)$。设需 $m$ 条外线，要求\n$$P(X\\le m)\\approx\\Phi\\left(\\frac{m-10}{\\sqrt{9.5}}\\right)\\ge0.90\\Rightarrow\\frac{m-10}{\\sqrt{9.5}}\\ge1.28\\Rightarrow m\\ge13.95$$\n故至少需装 $14$ 条外线。","src":"考研数学真题（中心极限定理）","a2":"巧解（泊松近似）：$n=200$ 大、$p=0.05$ 小、$np=10$，由泊松定理 $X\\ \\dot\\sim\\ P(10)$。查表 $P(X\\le13)=0.8645<0.90$，$P(X\\le14)=0.9165\\ge0.90$，故同样得至少 $14$ 条外线，与正态近似一致。"},
     "ll05": {"q":"某调查员调查该地区成年人中购买某商品的比率 $\\theta$，随机调查 $n$ 个顾客（$n$ 较大），购买记为 $x_i=1$，否则 $x_i=0$。求样本比例 $\\bar{x}$ 的近似分布","a":"设 $X=\\sum_{i=1}^n x_i\\sim B(n,\\theta)$，由棣莫弗-拉普拉斯中心极限定理，当 $n$ 充分大时\n$$\\frac{\\bar x-\\theta}{\\sqrt{\\theta(1-\\theta)/n}}=\\frac{X-n\\theta}{\\sqrt{n\\theta(1-\\theta)}}\\ \\overset{d}{\\longrightarrow}\\ N(0,1)$$\n即 $\\bar{x}\\ \\dot\\sim\\ N\\left(\\theta,\\ \\dfrac{\\theta(1-\\theta)}{n}\\right)$。","src":"2020 北大光华 431 统计真题"},
     "ll06": {"q":"举出一个期望趋于正无穷，却依概率收敛到 0 的随机变量序列 $\\{X_n\\}$","a":"取 $X_n=\\begin{cases}n^{2},& \\text{概率 }\\frac1n\\\\ 0,& \\text{概率 }1-\\frac1n\\end{cases}$。则\n$$E(X_n)=n^{2}\\cdot\\frac1n+0\\cdot\\left(1-\\frac1n\\right)=n\\to+\\infty$$\n而对任意 $\\varepsilon>0$，$P(|X_n-0|\\ge\\varepsilon)=P(X_n=n^{2})=\\frac1n\\to0$，故 $X_n\\overset{P}{\\longrightarrow}0$。\n这说明“期望趋于无穷”与“依概率收敛”刻画的是不同层面的性质（大数定律研究收敛性，与期望的大小无必然关系）。","src":"2020 复旦大学 432 统计学真题"},
-    "ll07": [{"q":"设 $X\\sim P(\\lambda)$，以下判断正确的是（  ）\\\\\nA. $P(X>2\\lambda)\\le1-\\frac1\\lambda$　B. $P(X>2\\lambda)\\le\\frac1\\lambda$\\\\\nC. $P(X>2\\lambda)\\ge\\frac1\\lambda$　D. $P(X>2\\lambda)\\ge1-\\frac1\\lambda$","a":"选 B。泊松分布 $E(X)=D(X)=\\lambda$，由切比雪夫不等式（只需方差存在即可估计概率上界）：\n$$P(X>2\\lambda)=P(X-\\lambda>\\lambda)\\le P(|X-\\lambda|>\\lambda)\\le\\frac{D(X)}{\\lambda^{2}}=\\frac1\\lambda$$","src":"2023 上海财经大学 432 统计学真题"}, {"q":"设随机变量 $X$ 服从参数为 $2$ 的泊松分布，用切比雪夫不等式估计 $P\\{|X-2|\\ge2\\}$ 的上界","a":"泊松分布 $E(X)=D(X)=\\lambda=2$。\n$$P\\{|X-2|\\ge2\\}\\le\\frac{D(X)}{2^{2}}=\\frac{2}{4}=\\frac12$$","src":"考研数学真题（切比雪夫不等式）","a2":"巧解（精确计算对比）：泊松分布可直接精确算出\n$$P\\{|X-2|\\ge2\\}=1-P(X=1)-P(X=2)-P(X=3)=1-\\frac{16}{3}e^{-2}\\approx0.278$$\n可见切比雪夫上界 $\\tfrac12$ 较为宽松。"}],
+    "ll07": [{"q":"设 $X\\sim P(\\lambda)$，以下判断正确的是（  ）\\\\\nA. $P(X>2\\lambda)\\le1-\\frac1\\lambda$　B. $P(X>2\\lambda)\\le\\frac1\\lambda$\\\\\nC. $P(X>2\\lambda)\\ge\\frac1\\lambda$　D. $P(X>2\\lambda)\\ge1-\\frac1\\lambda$","a":"选 B。泊松分布 $E(X)=D(X)=\\lambda$，由切比雪夫不等式（只需方差存在即可估计概率上界）：\n$$P(X>2\\lambda)=P(X-\\lambda>\\lambda)\\le P(|X-\\lambda|>\\lambda)\\le\\frac{D(X)}{\\lambda^{2}}=\\frac1\\lambda$$","src":"2023 上海财经大学 432 统计学真题"},{"q":"设随机变量 $X$ 服从参数为 $2$ 的泊松分布，用切比雪夫不等式估计 $P\\{|X-2|\\ge2\\}$ 的上界","a":"泊松分布 $E(X)=D(X)=\\lambda=2$。\n$$P\\{|X-2|\\ge2\\}\\le\\frac{D(X)}{2^{2}}=\\frac{2}{4}=\\frac12$$","src":"考研数学真题（切比雪夫不等式）","a2":"巧解（精确计算对比）：泊松分布可直接精确算出\n$$P\\{|X-2|\\ge2\\}=1-P(X=1)-P(X=2)-P(X=3)=1-\\frac{16}{3}e^{-2}\\approx0.278$$\n可见切比雪夫上界 $\\tfrac12$ 较为宽松。"},{"q":"设 $X_n\\sim B(n,\\frac12)$，要求 $\\frac{X_n}{n}$ 与 $\\frac12$ 的差距小于 $0.04$ 的概率大于 $0.95$，用切比雪夫不等式求 $n$ 的最小值。","a":"$E\\frac{X_n}{n}=\\frac12$，$D\\frac{X_n}{n}=\\frac{1}{4n}$。切比雪夫：$P\\big(\\big|\\frac{X_n}{n}-\\frac12\\big|\\ge0.04\\big)\\le\\frac{1/(4n)}{0.04^{2}}=\\frac{156.25}{n}$。\n要它 $<0.05$，需 $n>3125$，故最小整数 $n=3126$（$n=3125$ 只保证 $\\le0.05$，不保证严格大于 $0.95$）。","src":"2023 北京大学数院 431 统计真题"}],
     "sm01": {"q":"调查镜片的曲率，据调查 500 个镜片的平均曲率为 0.5。则调查的总体是（  ）\\\\\nA. 抽查的 500 个镜片　B. 最近 500 个镜片\\\\\nC. 今天销售的所有镜片　D. 该厂生产的所有镜片","a":"选 D。总体是研究对象的全体（该厂生产的所有镜片的曲率），样本是其中被抽取观测的 500 个镜片；样本是总体的一个子集，二者不可混淆。","src":"2023 上海财经大学 432 统计学真题"},
     "sm02": {"q":"根据沪深 300 指数 2020 年和 2023 年的年化日指数收益率：2020 年 $n_1=244$，均值 $26.5\\%$，标准差 $22.3\\%$；2023 年 $n_2=242$，均值 $-11.2\\%$，标准差 $10.1\\%$。将这两年的样本合并，求合并后的均值、标准差","a":"合并均值（按样本量加权）：\n$$\\bar{x}=\\frac{n_1\\bar{x}_1+n_2\\bar{x}_2}{n_1+n_2}=\\frac{244\\times0.265+242\\times(-0.112)}{486}\\approx0.077=7.7\\%$$\n合并标准差：$s^{2}=\\dfrac{(n_1-1)s_1^{2}+(n_2-1)s_2^{2}+n_1(\\bar{x}_1-\\bar{x})^{2}+n_2(\\bar{x}_2-\\bar{x})^{2}}{n_1+n_2-1}\\approx0.0656$，故 $s\\approx0.256=25.6\\%$。","src":"2025 北大光华 431 统计真题"},
     "sm03": {"q":"名词解释：样本均值、样本方差","a":"样本均值 $\\bar{X}=\\dfrac1n\\sum_{i=1}^{n}X_i$——样本观测值的算术平均，是总体均值 $\\mu$ 的估计；\n样本方差 $S^{2}=\\dfrac{1}{n-1}\\sum_{i=1}^{n}(X_i-\\bar{X})^{2}$——用 $n-1$ 作分母（自由度修正）使其成为总体方差 $\\sigma^{2}$ 的无偏估计：$E(S^{2})=\\sigma^{2}$。","src":"2017 复旦大学 432 统计学真题"},
-    "sm04": {"q":"某校学生的成绩服从正态分布 $X\\sim N(\\mu,36)$，在显著性水平 $\\alpha=0.05$ 下，要使估计 $\\mu$ 的测量误差控制在 $\\pm1$ 之内，需要多大的样本量（  ）\\\\\nA. 139　B. 2238　C. 48　D. 934","a":"由 $\\bar{X}\\sim N(\\mu,\\frac{36}{n})$，误差 $\\pm1$ 对应置信区间半宽 $z_{0.025}\\dfrac{6}{\\sqrt n}=1$：\n$$\\sqrt n=1.96\\times6=11.76\\ \\Rightarrow\\ n\\approx138.3$$\n向上取整得 $n=139$，选 A。","src":"2016 北京师范大学 432 统计学真题"},
+    "sm04": [{"q":"某校学生的成绩服从正态分布 $X\\sim N(\\mu,36)$，在显著性水平 $\\alpha=0.05$ 下，要使估计 $\\mu$ 的测量误差控制在 $\\pm1$ 之内，需要多大的样本量（  ）\\\\\nA. 139　B. 2238　C. 48　D. 934","a":"由 $\\bar{X}\\sim N(\\mu,\\frac{36}{n})$，误差 $\\pm1$ 对应置信区间半宽 $z_{0.025}\\dfrac{6}{\\sqrt n}=1$：\n$$\\sqrt n=1.96\\times6=11.76\\ \\Rightarrow\\ n\\approx138.3$$\n向上取整得 $n=139$，选 A。","src":"2016 北京师范大学 432 统计学真题"},{"q":"设 $X_1,\\dots,X_n$ i.i.d. $\\sim N(0,1)$，判断：A. $\\bar X\\sim N(0,\\frac{1}{n^{2}})$；B. $\\frac{\\sqrt{n}\\bar X}{S}\\sim t(n-1)$；C. $\\sum X_i^{2}\\sim\\chi^{2}(n)$；D. $n\\bar X\\sim N(0,n)$。","a":"$\\bar X\\sim N(0,\\frac1n)$，故 A 的方差写错（应为 $\\frac1n$ 而非 $\\frac1{n^{2}}$），A 错。\n$\\frac{\\sqrt{n}\\bar X}{S}=\\frac{\\bar X}{S/\\sqrt n}$，分子标准正态、分母为 $\\chi^{2}(n-1)/(n-1)$ 的平方根且独立，故 B 对。\n$\\sum X_i^{2}$ 是 $n$ 个独立标准正态平方和，C 对。\n$n\\bar X$ 是 $\\bar X$ 的线性变换，$N(0,n^{2}\\cdot\\frac1n)=N(0,n)$，D 对。答案：B、C、D。","src":"2025 北京大学光华 431 统计真题"}],
     "sm05": {"q":"设 $X_1,\\dots,X_n$ 独立同分布于 $N(\\mu,\\sigma^2)$，$F$ 为其分布函数。求 $-2\\sum_{i=1}^{n}\\ln F(X_i)$ 的分布","a":"连续型随机变量经分布函数变换后均匀：$F(X_i)\\sim U(0,1)$。又 $-2\\ln U\\sim\\chi^2(2)$，故\n$$-2\\ln F(X_i)\\sim\\chi^2(2),\\qquad -2\\sum_{i=1}^{n}\\ln F(X_i)\\sim\\chi^2(2n)$$","src":"2022 复旦大学 432 统计学真题"},
     "sm06": {"q":"设 $X_1,\\dots,X_{2n}$ 为来自总体 $X\\sim N(\\mu,\\sigma^2)$ 的样本，$\\bar X$ 为样本均值。求 $E\\left[\\sum_{i=1}^{n}\\left(X_i+X_{n+i}-2\\bar X\\right)^2\\right]$","a":"令 $Y_i=X_i+X_{n+i}$，则 $Y_1,\\dots,Y_n$ 独立同分布于 $N(2\\mu,2\\sigma^2)$，且 $\\bar Y=\\frac1n\\sum_{i=1}^n Y_i=2\\bar X$。于是\n$$\\sum_{i=1}^{n}\\left(X_i+X_{n+i}-2\\bar X\\right)^2=\\sum_{i=1}^{n}(Y_i-\\bar Y)^2=(n-1)S_Y^2$$\n由 $E\\left[(n-1)S_Y^2\\right]=(n-1)\\cdot(2\\sigma^2)$，得所求期望为 $2(n-1)\\sigma^2$。","src":"2016 复旦大学 432 统计学真题"},
     "sm07": {"q":"设 $X_1,\\dots,X_n\\overset{iid}{\\sim}N(0,1)$，$S^2$ 为样本方差。求统计量 $T=\\dfrac{\\sqrt n\\,\\bar X}{S}$ 的分布","a":"$\\bar X\\sim N(0,\\frac1n)$，故 $\\sqrt n\\,\\bar X\\sim N(0,1)$；又 $\\dfrac{(n-1)S^2}{1}\\sim\\chi^2(n-1)$ 且与 $\\bar X$ 独立。由 $t$ 分布定义：\n$$T=\\frac{\\sqrt n\\,\\bar X}{S}=\\frac{\\sqrt n\\,\\bar X}{\\sqrt{\\dfrac{(n-1)S^2}{n-1}}}\\sim t(n-1)$$","src":"2025 北大光华 431 统计真题"},
@@ -1759,34 +1523,34 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "est02": {"q":"$X_1,\\dots,X_n$ 为总体分布的简单随机样本，下列是总体均值 $\\mu$ 的无偏估计的有（  ）（不定项）\\\\\nA. $X_1$　B. $\\bar{X}$　C. $X_1-X_2+X_n$　D. $10X_1-9X_n$","a":"无偏性要求 $E(\\hat\\theta)=\\mu$：\nA：$E(X_1)=\\mu$ ✓；B：$E(\\bar X)=\\mu$ ✓；C：$E(X_1-X_2+X_n)=\\mu-\\mu+\\mu=\\mu$ ✓；D：$E(10X_1-9X_n)=10\\mu-9\\mu=\\mu$ ✓。\n故 A、B、C、D 均为 $\\mu$ 的无偏估计（线性无偏估计中系数之和为 1 即可）。","subOf":{"id":"st-2025-1","item":"2"},"src":"2025 北大光华 431 统计真题"},
     "est04": {"q":"有来自二阶矩存在总体 $X$ 的随机样本 $X_1,\\dots,X_n$，设 $S^{2}=\\frac{1}{n-1}\\sum(X_i-\\bar{X})^{2}$，则 $S$ 一定是总体标准差 $\\sigma$ 的（  ）\\\\\nA. UMVUE　B. 相合估计　C. 无偏估计　D. MLE","a":"选 B。$S^{2}$ 是 $\\sigma^{2}$ 的相合估计（$S^{2}\\overset{P}{\\to}\\sigma^{2}$），由相合性的连续性（$g$ 连续时 $g(\\hat\\theta_n)\\overset{P}{\\to}g(\\theta)$），$S=\\sqrt{S^{2}}$ 是 $\\sigma$ 的相合估计。但一般 $E(S)\\ne\\sigma$（不是无偏的），也不一定是 UMVUE 或 MLE。","src":"2016 南开大学 432 统计学真题"},
     "est05": [{"q":"设 $Y_1,\\dots,Y_n$ 独立同分布，密度 $f(y;\\theta)=\\dfrac1\\theta\\ (0\\le y\\le\\theta)$，$\\theta>0$ 未知。求 $\\theta$ 的矩估计量，并计算其均方误差（MSE）","a":"$E(Y)=\\dfrac\\theta2$，令 $\\bar Y=\\dfrac\\theta2$，得矩估计 $\\hat\\theta_1=2\\bar Y$。\n$E(\\hat\\theta_1)=2E(\\bar Y)=\\theta$（无偏），$D(\\hat\\theta_1)=4D(\\bar Y)=\\dfrac4n\\cdot\\dfrac{\\theta^{2}}{12}=\\dfrac{\\theta^{2}}{3n}$。\n$$\\mathrm{MSE}(\\hat\\theta_1)=D(\\hat\\theta_1)=\\dfrac{\\theta^{2}}{3n}$$","src":"2021 复旦大学 861 概率论与数理统计真题","a2":"巧解（二阶矩法）：$E(Y^2)=\\dfrac{\\theta^2}{3}$，令样本二阶矩 $\\dfrac1n\\sum Y_i^2=\\dfrac{\\theta^2}{3}$，得另一矩估计 $\\hat\\theta=\\sqrt{\\dfrac3n\\sum Y_i^2}$，说明矩估计随所取矩的阶数不同而不同、不唯一。"},{"q":"设 $X_1,\\dots,X_n$ 来自总体 $X\\sim f(x)=\\theta x^{\\theta-1}\\,I\\{0<x<1\\}$，求 $\\theta$ 的矩估计","a":"$E(X)=\\int_0^1 x\\cdot\\theta x^{\\theta-1}\\,dx=\\frac{\\theta}{\\theta+1}$。令样本一阶矩等于总体一阶矩：\n$$\\bar X=\\frac{\\theta}{\\theta+1}\\ \\Rightarrow\\ \\hat\\theta_{M}=\\frac{\\bar X}{1-\\bar X}$$","src":"2020 复旦大学 432 统计学真题"}],
-    "est06": [{"q":"设 $Y_1,\\dots,Y_n$ 独立同分布，密度 $f(y;\\theta)=\\dfrac1\\theta\\ (0\\le y\\le\\theta)$，$\\theta>0$ 未知。求 $\\theta$ 的最大似然估计量，并计算其 MSE","a":"似然 $L(\\theta)=\\prod_{i=1}^{n}\\dfrac1\\theta=\\dfrac1{\\theta^{n}}$（需 $0\\le y_i\\le\\theta$，即 $\\theta\\ge y_{(n)}$）。$L$ 关于 $\\theta$ 递减，故 $\\hat\\theta_2=Y_{(n)}=\\max_{1\\le i\\le n}Y_i$。\n$Y_{(n)}$ 的密度 $f(z)=\\dfrac{n z^{n-1}}{\\theta^{n}}\\ (0\\le z\\le\\theta)$，故 $E(Y_{(n)})=\\dfrac{n}{n+1}\\theta$，$E(Y_{(n)}^{2})=\\dfrac{n}{n+2}\\theta^{2}$。\n$$\\mathrm{MSE}(\\hat\\theta_2)=D+\\mathrm{Bias}^{2}=\\dfrac{n}{(n+2)(n+1)^{2}}\\theta^{2}+\\left(\\dfrac{\\theta}{n+1}\\right)^{2}=\\dfrac{2\\theta^{2}}{(n+1)(n+2)}$$","src":"2021 复旦大学 861 概率论与数理统计真题"},{"q":"设 $X_1,\\dots,X_n$ 来自总体 $X\\sim f(x)=\\theta x^{\\theta-1}\\,I\\{0<x<1\\}$。求 $\\theta$ 的 MLE 并验证无偏性","a":"似然 $L(\\theta)=\\prod_{i=1}^{n}\\theta x_i^{\\theta-1}=\\theta^{n}\\left(\\prod x_i\\right)^{\\theta-1}$，对数似然\n$$\\ln L=n\\ln\\theta+(\\theta-1)\\sum_{i=1}^{n}\\ln x_i\\ \\Rightarrow\\ \\frac{\\partial\\ln L}{\\partial\\theta}=\\frac{n}{\\theta}+\\sum\\ln x_i=0$$\n得 $\\hat\\theta_{MLE}=-\\dfrac{n}{\\sum_{i=1}^{n}\\ln X_i}$。\n无偏性：$-\\ln X\\sim Exp(\\theta)$，故 $-\\sum_{i=1}^{n}\\ln X_i\\sim\\Gamma(n,\\theta)$，$E\\!\\left(\\dfrac{n}{-\\sum\\ln X_i}\\right)=\\dfrac{n\\theta}{n-1}\\ne\\theta$，即 $\\hat\\theta_{MLE}$ 有偏（偏差随 $n$ 增大趋于 0）。","src":"2020 复旦大学 432 统计学真题"}],
+    "est06": [{"q":"设 $Y_1,\\dots,Y_n$ 独立同分布，密度 $f(y;\\theta)=\\dfrac1\\theta\\ (0\\le y\\le\\theta)$，$\\theta>0$ 未知。求 $\\theta$ 的最大似然估计量，并计算其 MSE","a":"似然 $L(\\theta)=\\prod_{i=1}^{n}\\dfrac1\\theta=\\dfrac1{\\theta^{n}}$（需 $0\\le y_i\\le\\theta$，即 $\\theta\\ge y_{(n)}$）。$L$ 关于 $\\theta$ 递减，故 $\\hat\\theta_2=Y_{(n)}=\\max_{1\\le i\\le n}Y_i$。\n$Y_{(n)}$ 的密度 $f(z)=\\dfrac{n z^{n-1}}{\\theta^{n}}\\ (0\\le z\\le\\theta)$，故 $E(Y_{(n)})=\\dfrac{n}{n+1}\\theta$，$E(Y_{(n)}^{2})=\\dfrac{n}{n+2}\\theta^{2}$。\n$$\\mathrm{MSE}(\\hat\\theta_2)=D+\\mathrm{Bias}^{2}=\\dfrac{n}{(n+2)(n+1)^{2}}\\theta^{2}+\\left(\\dfrac{\\theta}{n+1}\\right)^{2}=\\dfrac{2\\theta^{2}}{(n+1)(n+2)}$$","src":"2021 复旦大学 861 概率论与数理统计真题"},{"q":"设 $X_1,\\dots,X_n$ 来自总体 $X\\sim f(x)=\\theta x^{\\theta-1}\\,I\\{0<x<1\\}$。求 $\\theta$ 的 MLE 并验证无偏性","a":"似然 $L(\\theta)=\\prod_{i=1}^{n}\\theta x_i^{\\theta-1}=\\theta^{n}\\left(\\prod x_i\\right)^{\\theta-1}$，对数似然\n$$\\ln L=n\\ln\\theta+(\\theta-1)\\sum_{i=1}^{n}\\ln x_i\\ \\Rightarrow\\ \\frac{\\partial\\ln L}{\\partial\\theta}=\\frac{n}{\\theta}+\\sum\\ln x_i=0$$\n得 $\\hat\\theta_{MLE}=-\\dfrac{n}{\\sum_{i=1}^{n}\\ln X_i}$。\n无偏性：$-\\ln X\\sim Exp(\\theta)$，故 $-\\sum_{i=1}^{n}\\ln X_i\\sim\\Gamma(n,\\theta)$，$E\\!\\left(\\dfrac{n}{-\\sum\\ln X_i}\\right)=\\dfrac{n\\theta}{n-1}\\ne\\theta$，即 $\\hat\\theta_{MLE}$ 有偏（偏差随 $n$ 增大趋于 0）。","src":"2020 复旦大学 432 统计学真题"},{"q":"设 $X_1,\\dots,X_n$ 是来自 $N(\\mu,\\sigma^{2})$ 的独立样本，$\\mu,\\sigma^{2}$ 均未知。已知 $P(X>a)=0.05$，求 $a$ 的最大似然估计。","a":"把 $a$ 写成参数函数：$0.05=P(X>a)=1-\\Phi\\!\\big(\\frac{a-\\mu}{\\sigma}\\big)$，故 $a=\\mu+z_{0.95}\\sigma$，其中 $z_{0.95}\\approx1.645$ 是标准正态上 $0.05$ 分位数。\nMLE 为 $\\hat\\mu=\\bar X$、$\\hat\\sigma^{2}=\\frac1n\\sum(X_i-\\bar X)^{2}$（注意除以 $n$，不是 $n-1$）。\n由 MLE 的不变性，$\\hat a=\\hat\\mu+z_{0.95}\\hat\\sigma=\\bar X+1.645\\sqrt{\\frac1n\\sum(X_i-\\bar X)^{2}}$。","src":"2024 北京大学光华 431 统计真题"}],
     "est07": {"q":"以下关于区间估计的说法正确的是（  ）\\\\\nA. 区间估计是指用一个区间来估计总体参数的真值\\\\\nB. 区间估计是指用一个点来估计总体参数的真值\\\\\nC. 区间估计是指用一个区间来估计样本统计量的真值\\\\\nD. 区间估计是指用一个点来估计样本统计量的真值","a":"选 A。区间估计在点估计的基础上，给出包含未知总体参数真值的一个区间 $(\\hat\\theta_1,\\hat\\theta_2)$，并配以置信水平 $1-\\alpha$（$P(\\hat\\theta_1<\\theta<\\hat\\theta_2)=1-\\alpha$）；它估计的是总体参数而非样本统计量。","src":"2023 上海财经大学 432 统计学真题"},
     "est08": [{"q":"从正态总体 $X\\sim N(\\mu,\\sigma^{2})$ 中抽得容量 $n=36$ 的样本，总体标准差 $\\sigma=6$ 已知，样本均值 $\\bar{x}=50$。求 $\\mu$ 的 95% 置信区间（$z_{0.025}=1.96$）","a":"$$\\bar{x}\\pm z_{\\alpha/2}\\frac{\\sigma}{\\sqrt{n}}=50\\pm1.96\\cdot\\frac{6}{6}=50\\pm1.96=(48.04,\\ 51.96)$$","src":"2013 年中央财经 432 统计学真题"},{"q":"某股票 100 天的数据，年化对数收益率为 15%，标准差为 9%。(1) 求年化对数收益率 95% 的置信区间；(2) 若当前股价为 10 元，求股价 95% 的置信区间","a":"(1) $\\mu$ 的 95% 置信区间：$0.15\\pm1.96\\cdot\\dfrac{0.09}{\\sqrt{100}}=0.15\\pm0.01764=(0.13236,\\ 0.16764)$，即 $(13.24\\%,\\ 16.76\\%)$。\n(2) 未来股价 $P=10\\,e^{r}$（$r$ 为对数收益率），故股价区间为 $(10e^{0.1324},\\ 10e^{0.1676})\\approx(11.42,\\ 11.82)$ 元。","src":"2013 北大光华 431 统计真题"}],
     "est09": {"q":"为检验声波是否对心率有影响，对 9 位测试者测得有声波与无声波时的心率差 $d_i$（有声波－无声波）为 $6,7,-1,13,-5,13,6,2,4$。求心率差均值的 95% 置信区间（$t_{0.975}(8)=2.306$），并判断声波对心率是否有显著影响","a":"$\\bar d=\\frac{45}{9}=5$，$S_d^2=\\frac{280}{8}=35$（$S_d=\\sqrt{35}\\approx5.916$）。\n$$\\bar d\\pm t_{0.975}(8)\\frac{S_d}{\\sqrt n}=5\\pm2.306\\times\\frac{\\sqrt{35}}{3}\\approx5\\pm4.55=(0.45,\\ 9.55)$$\n区间不包含 $0$，故在 $\\alpha=0.05$ 下声波对心率有显著影响。","src":"2021 北大光华 431 统计真题"},
     "est10": {"q":"设 $X_1,\\dots,X_n$ 是 i.i.d. 的 $N(\\mu,\\sigma^{2})$，其中 $\\mu$ 已知、$\\sigma^{2}$ 未知。(1) 试用两种方法给出 $\\sigma^{2}$ 的置信区间；(2) 给出 $\\sigma^{4}$ 的置信区间","a":"(1) 方法一（用样本方差）：$\\dfrac{(n-1)S^{2}}{\\sigma^{2}}\\sim\\chi^{2}(n-1)$，得\n$$\\left(\\frac{(n-1)S^{2}}{\\chi^{2}_{\\alpha/2}(n-1)},\\ \\frac{(n-1)S^{2}}{\\chi^{2}_{1-\\alpha/2}(n-1)}\\right)$$\n方法二（$\\mu$ 已知）：$\\dfrac{\\sum_{i=1}^{n}(X_i-\\mu)^{2}}{\\sigma^{2}}\\sim\\chi^{2}(n)$，得\n$$\\left(\\frac{\\sum(X_i-\\mu)^{2}}{\\chi^{2}_{\\alpha/2}(n)},\\ \\frac{\\sum(X_i-\\mu)^{2}}{\\chi^{2}_{1-\\alpha/2}(n)}\\right)$$\n(2) 由 $a<\\sigma^{2}<b\\iff a^{2}<\\sigma^{4}<b^{2}$，将 (1) 中区间端点平方即可。","src":"2021 北京师范大学 432 统计学真题"},
     "est11": {"q":"设 $X_1,\\dots,X_n$ 是从正态总体 $N(\\mu,\\sigma^{2})$ 中抽出的随机样本，证明样本方差 $S^{2}$ 与样本均值 $\\bar X$ 相互独立","a":"令 $\\bar X=\\frac1n\\sum X_i$，$S^{2}=\\frac{1}{n-1}\\sum(X_i-\\bar X)^{2}$。取正交阵 $A$（第一行 $A_{1\\cdot}=\\frac{1}{\\sqrt n}(1,\\dots,1)$），作变换 $Z=AX$，则 $Z_1=\\sqrt n\\,\\bar X$，且 $\\sum_{i=1}^{n}Z_i^{2}=\\sum_{i=1}^{n}X_i^{2}=\\sum_{i=1}^{n}(X_i-\\bar X)^{2}+n\\bar X^{2}=(n-1)S^{2}+Z_1^{2}$。\n由 $X_i$ 独立正态 $\\Rightarrow$ 正交变换下 $Z_1,\\dots,Z_n$ 相互独立。而 $\\sum_{i=2}^{n}Z_i^{2}=(n-1)S^{2}$，故 $Z_1=\\sqrt n\\bar X$ 与 $S^{2}$ 独立。这是后续 $t$、$F$ 分布等抽样分布推导的根基。","src":"2017 中国科学技术大学 432 统计学真题"},
     "est12": {"q":"$X_1,\\dots,X_n$ 为 $F(X,\\theta)$ 的简单随机样本，下列说法正确的是（  ）（不定项）\\\\\nA. 似然函数是 $\\theta$ 的函数\\\\\nB. 似然函数是 $X_1,\\dots,X_n$ 的函数\\\\\nC. $g(\\theta)$ 的极大似然估计是 $g(\\hat\\theta)$，其中 $\\hat\\theta$ 为 $\\theta$ 的 MLE\\\\\nD. 最大似然估计是似然函数的最大值","a":"选 A、C。A：给定样本后 $L(\\theta)=\\prod f(x_i;\\theta)$ 是参数 $\\theta$ 的函数，正确；B 错（是 $\\theta$ 的函数而非样本的函数）；C：MLE 的不变性（$g$ 连续时 $\\widehat{g(\\theta)}=g(\\hat\\theta)$），正确；D 错：最大似然估计是使似然函数取最大值的参数 $\\theta$ 的值，而非似然函数的最大值本身。","subOf":{"id":"st-2025-1","item":"3"},"src":"2025 北大光华 431 统计真题"},
-    "est13": [{"q":"有来自总体 $U(\\theta,2\\theta)$ 的随机样本 $X_1,\\dots,X_n$，求 $\\theta$ 的矩估计和 MLE，并验证无偏性和相合性","a":"矩估计：$E(X)=\\frac{3\\theta}{2}$，令 $\\bar X=\\frac{3\\theta}{2}$，得 $\\hat\\theta_M=\\frac{2}{3}\\bar X$。$E(\\hat\\theta_M)=\\theta$ 无偏；由辛钦大数定律 $\\bar X\\overset{P}{\\to}\\frac{3\\theta}{2}$，故 $\\hat\\theta_M\\overset{P}{\\to}\\theta$ 相合。\nMLE：$L(\\theta)=\\frac{1}{\\theta^{n}}$，约束 $\\theta\\le X_{(1)}\\le X_{(n)}\\le 2\\theta$，即 $\\frac{X_{(n)}}{2}\\le\\theta\\le X_{(1)}$。$L(\\theta)=\\theta^{-n}$ 关于 $\\theta$ 单调递减，故 $\\theta$ 取**最小值**时为 MLE，即 $\\hat\\theta_{MLE}=\\frac{X_{(n)}}{2}$。令 $Y_i=\\frac{X_i-\\theta}{\\theta}\\sim U(0,1)$，则 $Y_{(n)}\\sim\\mathrm{Beta}(n,1)$、$E(Y_{(n)})=\\frac{n}{n+1}$，故 $E(\\hat\\theta_{MLE})=\\frac{2n+1}{2n+2}\\theta\\ne\\theta$ 有偏（渐近无偏）；又 $Y_{(n)}\\overset{P}{\\to}1$ 即 $X_{(n)}\\overset{P}{\\to}2\\theta$，故 $\\hat\\theta_{MLE}\\overset{P}{\\to}\\theta$ 相合。","src":"2019 复旦大学 432 统计学真题"}, {"q":"设 $X_1,\\dots,X_n$ i.i.d. $\\sim N(\\mu,\\sigma^{2})$，$\\mu$ 已知。证明：(1) $\\dfrac1n\\sum_{i=1}^{n}(X_i-\\mu)^{2}$ 是 $\\sigma^{2}$ 的有效估计；(2) $\\dfrac1n\\sqrt{\\dfrac{\\pi}{2}}\\sum_{i=1}^{n}|X_i-\\mu|$ 是 $\\sigma$ 的无偏估计但不有效","a":"(1) 令 $Z_i=(X_i-\\mu)/\\sigma\\sim N(0,1)$，$\\hat\\sigma_1^{2}=\\frac{\\sigma^{2}}{n}\\sum Z_i^{2}$。$E(\\hat\\sigma_1^{2})=\\sigma^{2}$，$Var(\\hat\\sigma_1^{2})=\\frac{\\sigma^{4}}{n^{2}}\\cdot 2n=\\frac{2\\sigma^{4}}{n}$，达到 C-R 下界 $\\frac{2\\sigma^{4}}{n}$，故有效。\n(2) $E|Z_i|=\\sqrt{\\frac2\\pi}$，故 $E\\left[\\frac1n\\sqrt{\\frac\\pi2}\\sum|X_i-\\mu|\\right]=\\sqrt{\\frac\\pi2}\\cdot\\sigma\\sqrt{\\frac2\\pi}=\\sigma$ 无偏；但其方差大于 C-R 下界，故不有效。","src":"2019 复旦大学 432 统计学真题"},{"q":"对于下述两个命题：命题 A：$\\hat\\theta$ 是 $\\theta$ 的有效估计；命题 B：$\\hat\\theta$ 是 $\\theta$ 的 UMVUE。下列结论正确的是（  ）","a":"有效估计 = 无偏且\\textbf{方差达到 C-R 下界}的估计量，故其方差在所有无偏估计中最小 $\\Rightarrow$ 必为 UMVUE，即 $A\\Rightarrow B$。\n反之，UMVUE 方差最小但不一定达到 C-R 下界（可因信息量未充分利用或非正则情形），故 $B\\not\\Rightarrow A$。选 (b) $A\\Rightarrow B,\\ B\\not\\Rightarrow A$。","src":"2021 南开大学 432 统计学真题"}],
+    "est13": [{"q":"有来自总体 $U(\\theta,2\\theta)$ 的随机样本 $X_1,\\dots,X_n$，求 $\\theta$ 的矩估计和 MLE，并验证无偏性和相合性","a":"矩估计：$E(X)=\\frac{3\\theta}{2}$，令 $\\bar X=\\frac{3\\theta}{2}$，得 $\\hat\\theta_M=\\frac{2}{3}\\bar X$。$E(\\hat\\theta_M)=\\theta$ 无偏；由辛钦大数定律 $\\bar X\\overset{P}{\\to}\\frac{3\\theta}{2}$，故 $\\hat\\theta_M\\overset{P}{\\to}\\theta$ 相合。\nMLE：$L(\\theta)=\\frac{1}{\\theta^{n}}$，约束 $\\theta\\le X_{(1)}\\le X_{(n)}\\le 2\\theta$，即 $\\frac{X_{(n)}}{2}\\le\\theta\\le X_{(1)}$。$L(\\theta)=\\theta^{-n}$ 关于 $\\theta$ 单调递减，故 $\\theta$ 取**最小值**时为 MLE，即 $\\hat\\theta_{MLE}=\\frac{X_{(n)}}{2}$。令 $Y_i=\\frac{X_i-\\theta}{\\theta}\\sim U(0,1)$，则 $Y_{(n)}\\sim\\mathrm{Beta}(n,1)$、$E(Y_{(n)})=\\frac{n}{n+1}$，故 $E(\\hat\\theta_{MLE})=\\frac{2n+1}{2n+2}\\theta\\ne\\theta$ 有偏（渐近无偏）；又 $Y_{(n)}\\overset{P}{\\to}1$ 即 $X_{(n)}\\overset{P}{\\to}2\\theta$，故 $\\hat\\theta_{MLE}\\overset{P}{\\to}\\theta$ 相合。","src":"2019 复旦大学 432 统计学真题"},{"q":"设 $X_1,\\dots,X_n$ i.i.d. $\\sim N(\\mu,\\sigma^{2})$，$\\mu$ 已知。证明：(1) $\\dfrac1n\\sum_{i=1}^{n}(X_i-\\mu)^{2}$ 是 $\\sigma^{2}$ 的有效估计；(2) $\\dfrac1n\\sqrt{\\dfrac{\\pi}{2}}\\sum_{i=1}^{n}|X_i-\\mu|$ 是 $\\sigma$ 的无偏估计但不有效","a":"(1) 令 $Z_i=(X_i-\\mu)/\\sigma\\sim N(0,1)$，$\\hat\\sigma_1^{2}=\\frac{\\sigma^{2}}{n}\\sum Z_i^{2}$。$E(\\hat\\sigma_1^{2})=\\sigma^{2}$，$Var(\\hat\\sigma_1^{2})=\\frac{\\sigma^{4}}{n^{2}}\\cdot 2n=\\frac{2\\sigma^{4}}{n}$，达到 C-R 下界 $\\frac{2\\sigma^{4}}{n}$，故有效。\n(2) $E|Z_i|=\\sqrt{\\frac2\\pi}$，故 $E\\left[\\frac1n\\sqrt{\\frac\\pi2}\\sum|X_i-\\mu|\\right]=\\sqrt{\\frac\\pi2}\\cdot\\sigma\\sqrt{\\frac2\\pi}=\\sigma$ 无偏；但其方差大于 C-R 下界，故不有效。","src":"2019 复旦大学 432 统计学真题"},{"q":"对于下述两个命题：命题 A：$\\hat\\theta$ 是 $\\theta$ 的有效估计；命题 B：$\\hat\\theta$ 是 $\\theta$ 的 UMVUE。下列结论正确的是（  ）","a":"有效估计 = 无偏且\\textbf{方差达到 C-R 下界}的估计量，故其方差在所有无偏估计中最小 $\\Rightarrow$ 必为 UMVUE，即 $A\\Rightarrow B$。\n反之，UMVUE 方差最小但不一定达到 C-R 下界（可因信息量未充分利用或非正则情形），故 $B\\not\\Rightarrow A$。选 (b) $A\\Rightarrow B,\\ B\\not\\Rightarrow A$。","src":"2021 南开大学 432 统计学真题"},{"q":"两组独立样本 $x_1,\\dots,x_n\\sim N(\\mu_1,\\sigma_1^{2})$、$y_1,\\dots,y_m\\sim N(\\mu_2,\\sigma_2^{2})$，$\\sigma_1,\\sigma_2$ 已知，$\\theta=\\mu_1-\\mu_2$。若 $n+m=N$ 固定，如何分配 $n,m$ 使 $\\hat\\theta=\\bar x-\\bar y$ 的均方误差最小？","a":"$\\hat\\theta$ 无偏，故 MSE $=\\operatorname{Var}(\\hat\\theta)=\\frac{\\sigma_1^{2}}{n}+\\frac{\\sigma_2^{2}}{m}$。\n在 $n+m=N$ 下用拉格朗日乘子：$-\\frac{\\sigma_1^{2}}{n^{2}}+\\lambda=0$，$-\\frac{\\sigma_2^{2}}{m^{2}}+\\lambda=0$，得 $n:m=\\sigma_1:\\sigma_2$。\n所以 $n=\\frac{\\sigma_1}{\\sigma_1+\\sigma_2}N$，$m=\\frac{\\sigma_2}{\\sigma_1+\\sigma_2}N$——方差大的一组多分样本。","src":"2023 北京大学光华 431 统计真题"}],
     "est14": {"q":"有来自总体 $N(\\mu,1)$ 的 $n$ 个随机样本 $X_1,\\dots,X_n$，证明：$\\bar{X}$ 是充分统计量","a":"样本联合密度\n$$f(x_1,\\dots,x_n;\\mu)=\\frac{1}{(2\\pi)^{n/2}}\\exp\\left\\{-\\frac{1}{2}\\sum_{i=1}^{n}(x_i-\\mu)^{2}\\right\\}$$\n分解为\n$$=\\underbrace{\\frac{1}{(2\\pi)^{n/2}}e^{-\\frac12\\sum(x_i-\\bar x)^{2}}}_{h(x)}\\cdot\\underbrace{e^{-\\frac{n}{2}(\\bar x-\\mu)^{2}}}_{g(\\bar x,\\,\\mu)}$$\n由因子分解定理，$\\bar{X}$ 是 $\\mu$ 的充分统计量（给定 $\\bar X$ 后样本的条件分布与 $\\mu$ 无关）。","src":"2021 复旦大学 432 统计学真题"},
     "est15": {"q":"设有来自 $U(-\\theta,\\theta)$ 的简单随机样本 $X_1,\\dots,X_n$（$\\theta>0$）。(1) 证明 $T=\\max\\{|X_1|,\\dots,|X_n|\\}$ 是 $\\theta$ 的充分统计量；(2) 求 $\\theta$ 的 MLE","a":"(1) 联合密度\n$$f(x_1,\\dots,x_n;\\theta)=\\frac{1}{(2\\theta)^{n}}\\prod_{i=1}^{n}I\\{|x_i|\\le\\theta\\}=\\underbrace{\\frac{1}{(2\\theta)^{n}}I\\{\\max|x_i|\\le\\theta\\}}_{g(T,\\theta)}\\cdot 1$$\n由因子分解定理，$T=\\max\\{|X_i|\\}$ 是 $\\theta$ 的充分统计量。\n(2) 似然 $\\frac{1}{(2\\theta)^n}$ 关于 $\\theta$ 递减且约束 $\\theta\\ge T$，故 $\\hat\\theta_{MLE}=T=\\max\\{|X_1|,\\dots,|X_n|\\}$。","src":"2024 复旦大学 432 统计学真题"},
     "est16": {"q":"$X_1,\\dots,X_n$ 是来自参数为 $\\lambda$ 的指数分布总体的随机样本（密度 $f(x)=\\lambda e^{-\\lambda x},\\ x>0$）。(1) 求 $G=2\\lambda\\sum_{i=1}^{n}X_i$ 的分布；(2) 基于枢轴量 $G$ 给出 $\\lambda$ 的 $1-\\alpha$ 置信水平的置信区间","a":"(1) $\\lambda X_i\\sim Exp(1)$，且 $2\\lambda X_i\\sim\\chi^{2}(2)$，故 $G=2\\lambda\\sum X_i\\sim\\chi^{2}(2n)$。\n(2) $G$ 为枢轴量（分布与 $\\lambda$ 无关）。由 $\\chi^{2}_{1-\\alpha/2}(2n)\\le G\\le\\chi^{2}_{\\alpha/2}(2n)$ 反解 $\\lambda$：\n$$\\frac{\\chi^{2}_{1-\\alpha/2}(2n)}{2\\sum X_i}\\le\\lambda\\le\\frac{\\chi^{2}_{\\alpha/2}(2n)}{2\\sum X_i}$$\n即 $\\lambda$ 的 $1-\\alpha$ 置信区间为 $\\left(\\dfrac{\\chi^{2}_{1-\\alpha/2}(2n)}{2\\sum X_i},\\ \\dfrac{\\chi^{2}_{\\alpha/2}(2n)}{2\\sum X_i}\\right)$。","src":"2020 复旦大学 861 概率论与数理统计真题"},
     "est17": {"q":"设总体 $X\\sim N(\\mu_1,\\sigma_0^{2})$、$Y\\sim N(\\mu_2,\\sigma_1^{2})$ 相互独立，$\\sigma_0^{2}$ 已知，样本量分别为 $n_1,n_2$。若 $\\sigma_0^{2}=\\sigma_1^{2}$，写出 $\\mu_1-\\mu_2$ 的 $1-\\alpha$ 置信区间","a":"两均值差且\\textbf{方差异已知} $\\Rightarrow$ 用 $z$ 型枢轴量\n$$Z=\\frac{\\bar X-\\bar Y-(\\mu_1-\\mu_2)}{\\sqrt{\\sigma_0^{2}/n_1+\\sigma_1^{2}/n_2}}\\sim N(0,1)$$\n故 $\\mu_1-\\mu_2$ 的 $1-\\alpha$ 置信区间为\n$$\\bar X-\\bar Y\\pm z_{\\alpha/2}\\sqrt{\\frac{\\sigma_0^{2}}{n_1}+\\frac{\\sigma_1^{2}}{n_2}}=\\bar X-\\bar Y\\pm z_{\\alpha/2}\\,\\sigma_0\\sqrt{\\frac1{n_1}+\\frac1{n_2}}$$","src":"2017 上海交通大学 432 统计学真题"},
     "est18": [{"q":"设 $X_1,\\dots,X_n$ 与 $Y_1,\\dots,Y_m$ 分别是来自正态总体 $N(\\mu_x,\\sigma_x^{2})$ 与 $N(\\mu_y,\\sigma_y^{2})$ 的随机样本，当 $\\sigma_x,\\sigma_y$ 未知时，给出 $\\mu_x-\\mu_y$ 的 95% 置信区间","a":"方差未知（视为相等）时用合并方差 $S_p^{2}=\\dfrac{(n-1)S_x^{2}+(m-1)S_y^{2}}{n+m-2}$，枢轴量\n$$T=\\frac{\\bar X-\\bar Y-(\\mu_x-\\mu_y)}{S_p\\sqrt{\\frac1n+\\frac1m}}\\sim t(n+m-2)$$\n故 $\\mu_x-\\mu_y$ 的 95% 置信区间为\n$$\\bar X-\\bar Y\\pm t_{0.025}(n+m-2)\\,S_p\\sqrt{\\frac1n+\\frac1m}$$","src":"2002 北京大学光华 统计学真题"},{"q":"为估计两种方法组装产品所需时间的差异，分别给两种方法各随机安排 $12$ 名工人。方法一用时：$28.3,30.1,29.0,37.6,32.1,28.8,36.0,37.2,38.5,34.4,28.0,30.0$；方法二用时：$27.6,22.2,31.0,33.8,20.0,30.2,31.7,26.0,32.0,31.2,33.4,26.5$。假定两组均服从正态分布且方差相等。(1) 以 95% 置信水平建立两种方法平均时间之差的置信区间；(2) 两种方法有无显著差别","a":"$\\bar x=32.5$，$\\sum(x-\\bar x)^{2}=175.96$；$\\bar y=28.8$，$\\sum(y-\\bar y)^{2}=212.94$。合并方差\n$$S_p^{2}=\\frac{175.96+212.94}{12+12-2}=17.68,\\qquad S_p\\approx4.205$$\n均值差 $\\bar x-\\bar y=3.7$，$S_p\\sqrt{\\frac1{12}+\\frac1{12}}=4.205\\sqrt{\\frac16}\\approx1.72$，$df=22$，$t_{0.025}(22)=2.074$。\n(1) 95% 置信区间：$3.7\\pm2.074\\times1.72=(0.14,\\ 7.26)$。\n(2) $t=\\dfrac{3.7}{1.72}=2.156>t_{0.025}(22)=2.074$，拒绝 $H_0:\\mu_1=\\mu_2$，认为两种方法组装时间有显著差别（方法一更慢）。","src":"2021 上海交通大学 432 统计学真题"}],
     "est19": {"q":"$X_1,\\dots,X_6$ 是来自 $N(0,\\sigma_1^{2})$ 的样本，$Y_1,\\dots,Y_9$ 是来自 $N(0,\\sigma_2^{2})$ 的独立样本，$\\sigma_1^{2},\\sigma_2^{2}$ 未知。已知 $\\sum_{i=1}^{6}X_i^{2}/\\sum_{j=1}^{9}Y_j^{2}=1.94$。在 $\\alpha=0.05$ 下检验 $H_0:\\sigma_1^{2}\\le\\sigma_2^{2}$ 对 $H_1:\\sigma_1^{2}>\\sigma_2^{2}$","a":"两总体\\textbf{方差比}用 $F$：$\\dfrac{\\sum X_i^{2}}{\\sigma_1^{2}}\\sim\\chi^{2}(6)$、$\\dfrac{\\sum Y_j^{2}}{\\sigma_2^{2}}\\sim\\chi^{2}(9)$，当 $\\sigma_1^{2}=\\sigma_2^{2}$ 时\n$$F=\\frac{\\sum X_i^{2}/6}{\\sum Y_j^{2}/9}=\\frac{1.94\\times9}{6}=2.91\\sim F(6,9)$$\n拒绝域 $F>F_{0.05}(6,9)$。由 $F$ 分布表 $F_{0.05}(6,9)\\approx3.37$，因 $2.91<3.37$，不拒绝 $H_0$，无充分证据表明 $\\sigma_1^{2}>\\sigma_2^{2}$。","src":"2017 中国科学技术大学 432 统计学真题"},
-    "est20": {"q":"设有来自 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$ 的 i.i.d. 样本 $X_1,\\dots,X_n$。(1) 求 $g(\\theta)=\\frac1\\theta$ 的 MLE；(2) 该 MLE 是否为有效估计？","a":"(1) 由 $\\hat\\theta_{MLE}=-\\frac{n}{\\sum\\ln X_i}$ 及 MLE 的不变性，$\\hat g_{MLE}=\\dfrac1{\\hat\\theta_{MLE}}=-\\dfrac{\\sum_{i=1}^{n}\\ln X_i}{n}$。\n(2) 计算费希尔信息量：$\\ln f=\\ln\\theta+(\\theta-1)\\ln x$，$\\frac{\\partial\\ln f}{\\partial\\theta}=\\frac1\\theta+\\ln x$，而 $-\\ln X\\sim Exp(\\theta)$ 故 $E(\\ln X)=-\\frac1\\theta$、$Var(\\ln X)=\\frac{1}{\\theta^{2}}$，所以\n$$I(\\theta)=E\\left[\\left(\\frac1\\theta+\\ln X\\right)^{2}\\right]=Var(\\ln X)=\\frac{1}{\\theta^{2}}$$\n$E(\\hat g)=\\frac1\\theta$ 无偏，$Var(\\hat g)=\\frac{1}{n}Var(-\\ln X)=\\frac{1}{n\\theta^{2}}=\\dfrac{1}{nI(\\theta)}$ 达到 C-R 下界，故为有效估计。","src":"2023 复旦大学 432 统计学真题"},
-    "est21": {"q":"叙述 C-R 不等式","a":"在正则条件下（$\\frac{\\partial}{\\partial\\theta}\\ln f(x;\\theta)$ 存在、积分与求导可交换等），设 $X_1,\\dots,X_n$ 为来自 $f(x;\\theta)$ 的样本，$\\hat\\theta$ 为 $\\theta$ 的任一无偏估计，则\n$$D(\\hat\\theta)\\ge\\frac{1}{n\\,I(\\theta)},\\qquad I(\\theta)=E\\left[\\left(\\frac{\\partial}{\\partial\\theta}\\ln f(X;\\theta)\\right)^{2}\\right]=-E\\left[\\frac{\\partial^{2}}{\\partial\\theta^{2}}\\ln f(X;\\theta)\\right]$$\n达到下界的无偏估计称为有效估计。","src":"2021 复旦大学 432 统计学真题"},
+    "est20": [{"q":"设有来自 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$ 的 i.i.d. 样本 $X_1,\\dots,X_n$。(1) 求 $g(\\theta)=\\frac1\\theta$ 的 MLE；(2) 该 MLE 是否为有效估计？","a":"(1) 由 $\\hat\\theta_{MLE}=-\\frac{n}{\\sum\\ln X_i}$ 及 MLE 的不变性，$\\hat g_{MLE}=\\dfrac1{\\hat\\theta_{MLE}}=-\\dfrac{\\sum_{i=1}^{n}\\ln X_i}{n}$。\n(2) 计算费希尔信息量：$\\ln f=\\ln\\theta+(\\theta-1)\\ln x$，$\\frac{\\partial\\ln f}{\\partial\\theta}=\\frac1\\theta+\\ln x$，而 $-\\ln X\\sim Exp(\\theta)$ 故 $E(\\ln X)=-\\frac1\\theta$、$Var(\\ln X)=\\frac{1}{\\theta^{2}}$，所以\n$$I(\\theta)=E\\left[\\left(\\frac1\\theta+\\ln X\\right)^{2}\\right]=Var(\\ln X)=\\frac{1}{\\theta^{2}}$$\n$E(\\hat g)=\\frac1\\theta$ 无偏，$Var(\\hat g)=\\frac{1}{n}Var(-\\ln X)=\\frac{1}{n\\theta^{2}}=\\dfrac{1}{nI(\\theta)}$ 达到 C-R 下界，故为有效估计。","src":"2023 复旦大学 432 统计学真题"},{"q":"设 $x_1,\\dots,x_n$ 是来自 $B(r,\\theta)$ 的 i.i.d. 样本，$r$ 已知。(1) 求 Fisher 信息量 $I(\\theta)$；(2) 求 $g(\\theta)$，使 $g(\\theta)$ 的无偏估计的方差下界与 $\\theta$ 无关。","a":"(1) 单个观测的对数似然 $\\ln f=\\ln\\binom{r}{x}+x\\ln\\theta+(r-x)\\ln(1-\\theta)$，得分函数 $\\frac{x}{\\theta}-\\frac{r-x}{1-\\theta}$。\n$I_1(\\theta)=E\\big[\\big(\\frac{X-r\\theta}{\\theta(1-\\theta)}\\big)^{2}\\big]=\\frac{\\operatorname{Var}(X)}{\\theta^{2}(1-\\theta)^{2}}=\\frac{r\\theta(1-\\theta)}{\\theta^{2}(1-\\theta)^{2}}=\\frac{r}{\\theta(1-\\theta)}$，故 $I(\\theta)=\\frac{nr}{\\theta(1-\\theta)}$。\n(2) C-R 下界为 $\\frac{[g'(\\theta)]^{2}}{I(\\theta)}=\\frac{\\theta(1-\\theta)[g'(\\theta)]^{2}}{nr}$。令 $g'(\\theta)=\\frac{c}{\\sqrt{\\theta(1-\\theta)}}$ 可消去 $\\theta$，积分得 $g(\\theta)=2c\\arcsin\\sqrt{\\theta}$（如 $g=\\arcsin\\sqrt\\theta$）。","src":"2023 北京大学数院 431 统计真题"}],
+    "est21": [{"q":"叙述 C-R 不等式","a":"在正则条件下（$\\frac{\\partial}{\\partial\\theta}\\ln f(x;\\theta)$ 存在、积分与求导可交换等），设 $X_1,\\dots,X_n$ 为来自 $f(x;\\theta)$ 的样本，$\\hat\\theta$ 为 $\\theta$ 的任一无偏估计，则\n$$D(\\hat\\theta)\\ge\\frac{1}{n\\,I(\\theta)},\\qquad I(\\theta)=E\\left[\\left(\\frac{\\partial}{\\partial\\theta}\\ln f(X;\\theta)\\right)^{2}\\right]=-E\\left[\\frac{\\partial^{2}}{\\partial\\theta^{2}}\\ln f(X;\\theta)\\right]$$\n达到下界的无偏估计称为有效估计。","src":"2021 复旦大学 432 统计学真题"},{"q":"设 $X_1,\\dots,X_n$ 独立同分布于参数为 $\\lambda$ 的指数分布，$\\theta=1/\\lambda$。(1) 验证 $\\bar X$ 是否为 $\\theta$ 的 UMVUE；(2) 求 $I(\\lambda)$；(3) 比较 $\\theta$ 的无偏估计方差下界与 $\\bar X$ 的方差。","a":"(1) $E\\bar X=\\theta$，且指数族完全，$\\bar X$ 为充分统计量，故 $\\bar X$ 是 $\\theta$ 的 UMVUE。\n(2) $\\ln f=-\\ln\\lambda-\\lambda x$，得分 $-\\frac1\\lambda+x$，$I_1(\\lambda)=\\operatorname{Var}(X)=\\frac1{\\lambda^{2}}$，$I(\\lambda)=\\frac{n}{\\lambda^{2}}$。\n(3) $g(\\lambda)=1/\\lambda$，$g'=-1/\\lambda^{2}$，C-R 下界 $\\frac{g'^{2}}{I(\\lambda)}=\\frac{1}{n\\lambda^{2}}$；而 $\\operatorname{Var}(\\bar X)=\\frac{\\theta^{2}}{n}=\\frac{1}{n\\lambda^{2}}$，两者相等，$\\bar X$ 达到下界（有效）。","src":"2024 北京大学数院 431 统计真题"}],
     "test01": [{"q":"设随机变量 $X$ 的概率密度为 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$，$X_1,X_2$ 为来自该总体的样本。考虑假设检验问题 $H_0:\\theta=1$ 对 $H_1:\\theta=2$，否定域 $W=\\{(X_1,X_2)\\,|\\,X_1X_2>\\frac34\\}$，求第一、二类错误的概率","a":"第一类错误（弃真）：$\\theta=1$ 时 $X\\sim U(0,1)$，\n$$\\alpha=P\\left(X_1X_2>\\frac34\\right)=\\int_{3/4}^{1}\\int_{3/(4x_1)}^{1}dx_2\\,dx_1=\\frac14+\\frac34\\ln\\frac34\\approx0.034$$\n第二类错误（取伪）：$\\theta=2$ 时 $f(x)=2x$，\n$$\\beta=P\\left(X_1X_2\\le\\frac34\\right)=\\int_0^{3/4}2x_1\\,dx_1+\\int_{3/4}^{1}\\frac{9}{8x_1}\\,dx_1=\\frac{9}{16}-\\frac98\\ln\\frac34\\approx0.886$$\n（小概率原理：$\\alpha$ 很小，样本落入否定域即拒绝 $H_0$。）","src":"2025 复旦大学 432 统计学真题"},{"q":"有来自总体 $P(\\theta)$（泊松）的 $n$ 个随机样本，考虑检验问题 $H_0:\\theta=2$ 对 $H_1:\\theta=3$，拒绝域 $W=\\{\\bar x\\ge2.8\\}$。(1) $n=5$ 时求两类错误的概率；(2) $n\\to\\infty$ 时两类错误将如何变化","a":"(1) 由泊松可加性 $\\sum_{i=1}^{n}X_i\\sim P(n\\theta)$。\n第一类错误（$\\theta=2$）：$\\alpha=P(\\bar X\\ge2.8\\,|\\,\\theta=2)=P(\\sum X_i\\ge14\\ |\\ \\sum X_i\\sim P(10))$；\n第二类错误（$\\theta=3$）：$\\beta=P(\\bar X<2.8\\,|\\,\\theta=3)=P(\\sum X_i\\le13\\ |\\ \\sum X_i\\sim P(15))$（用泊松分布表或递推求值，$\\bar X\\ge2.8\\iff\\sum X_i\\ge14$）。\n(2) 由大数定律 $\\bar X\\overset{P}{\\to}\\theta$，随 $n\\to\\infty$，$\\alpha\\to0$、$\\beta\\to0$（样本越大两类错误都趋于 0，二者的权衡随 $n$ 增大而消失）。","src":"2021 复旦大学 432 统计学真题"}],
     "test02": [{"q":"收集同一公司两个市场 A、B 的日回报率 $(x_1,\\dots,x_n)$、$(y_1,\\dots,y_n)$。请描述如何检验 A 的回报率是否比 B 的高","a":"同一公司同日的 A、B 市场回报构成配对数据，令 $d_i=x_i-y_i$。提出假设\n$$H_0:\\mu_d\\le0\\quad\\text{对}\\quad H_1:\\mu_d>0$$\n（把“欲证”的 A 比 B 高放在备择假设）。用配对 $t$ 检验：\n$$t=\\frac{\\bar d}{S_d/\\sqrt n}\\sim t(n-1)$$\n当 $t>t_{\\alpha}(n-1)$ 时拒绝 $H_0$，认为 A 市场回报率显著高于 B。","src":"2016 北京大学光华 431 统计真题"},{"q":"甲化肥是某厂研制的畅销款，现研制出改进品种乙化肥，为探究乙化肥是否优于甲化肥。第一组选取 $13$ 块稻田施甲化肥，亩产均值 $12.3$、样本方差 $10$；第二组选取 $11$ 块稻田施乙化肥，亩产均值 $14.4$、样本方差 $7.8$。假设亩产服从正态分布，在 $\\alpha=0.1$ 下：(1) 能否认为两组方差相等？(2) 能否认为乙化肥的均值高于甲化肥？","a":"(1) 两总体方差比用 $F$：$H_0:\\sigma_1^{2}=\\sigma_2^{2}$，$F=\\dfrac{S_1^{2}}{S_2^{2}}=\\dfrac{10}{7.8}\\approx1.28\\sim F(12,10)$。取 $F_{0.05}(12,10)$ 与 $F_{0.95}(12,10)$ 为双侧临界值，$1.28$ 落在其中，不拒绝 $H_0$，可认为方差相等。\n(2) 方差相等（合并）作\\textbf{单侧} $t$ 检验：$H_0:\\mu_1\\ge\\mu_2$ 对 $H_1:\\mu_1<\\mu_2$（欲证“乙更高”）。合并方差\n$$S_p^{2}=\\frac{12\\times10+10\\times7.8}{13+11-2}=\\frac{198}{22}=9.0,\\qquad t=\\frac{\\bar x_1-\\bar x_2}{S_p\\sqrt{\\frac1{13}+\\frac1{11}}}=\\frac{12.3-14.4}{3.0\\times0.4097}\\approx-1.71$$\n$df=22$，$t_{0.1}(22)\\approx1.32$，因 $t=-1.71<-1.32$，拒绝 $H_0$，有理由认为乙化肥亩产均值高于甲。","src":"2021 中国科学技术大学 432 统计学真题"}],
     "test03": {"q":"设 $X_1,\\dots,X_n$ 来自 $N(\\mu,1)$，检验 $H_0:\\mu=1$ 对 $H_1:\\mu=2$，拒绝域 $W=\\{\\bar X>1.6\\}$。求：(1) 两类错误的概率 $\\alpha,\\beta$；(2) 要求 $\\beta\\le0.01$，求样本量 $n$ 的范围","a":"(1) $\\alpha=P(\\bar X>1.6\\,|\\,\\mu=1)=1-\\Phi\\left(\\frac{1.6-1}{1/\\sqrt n}\\right)=1-\\Phi(0.6\\sqrt n)$；\n$$\\beta=P(\\bar X\\le1.6\\,|\\,\\mu=2)=\\Phi\\left(\\frac{1.6-2}{1/\\sqrt n}\\right)=\\Phi(-0.4\\sqrt n)$$\n(2) 要求 $\\Phi(-0.4\\sqrt n)\\le0.01$，即 $0.4\\sqrt n\\ge z_{0.01}=2.326$，得 $n\\ge\\left(\\frac{2.326}{0.4}\\right)^2\\approx33.8$，故 $n\\ge34$。","src":"2019 复旦大学 432 统计学真题"},
     "test04": {"q":"设 $X_1,\\dots,X_n$ 是来自均匀分布 $U(0,\\theta)$ 的简单随机样本，检验 $H_0:\\theta\\le\\frac12$ 对 $H_1:\\theta>\\frac12$，拒绝域 $W=\\{x_{(n)}>c\\}$。(1) 求该检验的功效函数；(2) 找出最小的常数 $c$，使得该检验犯第一类错误的概率不超过 0.05","a":"(1) 功效函数 $\\rho(\\theta)=P_{\\theta}(x_{(n)}>c)=1-\\left(\\dfrac{\\min(c,\\theta)}{\\theta}\\right)^{n}$，即 $\\theta>c$ 时 $\\rho(\\theta)=1-(c/\\theta)^{n}$，$\\theta\\le c$ 时 $\\rho(\\theta)=0$。\n(2) 显著性水平 $\\alpha=\\sup_{\\theta\\le1/2}\\rho(\\theta)$。$\\rho(\\theta)$ 在 $\\theta\\in(c,\\frac12]$ 上关于 $\\theta$ 单调增，故最大值在 $\\theta=\\frac12$ 处取得：要求 $1-(2c)^{n}\\le0.05$，即 $c\\ge\\frac12\\cdot(0.95)^{1/n}$，最小的 $c=\\frac12(0.95)^{1/n}$。","src":"2018 复旦大学 861 概率论与数理统计真题"},
     "test05": {"q":"某调查员想检验一种 coffee 包装是否少于 500g，那么他采取的假设检验应该为（  ）\\\\\nA. 双侧检验　B. 单侧且备择假设为小于 500g\\\\\nC. 单侧且备择假设为大于 500g　D. 单双侧检验均可","a":"选 B。调查员关心的是“是否少于 500g”，即怀疑 $\\mu<500$，故用单侧检验，把欲证结论放在备择假设：\n$$H_0:\\mu\\ge500\\quad\\text{对}\\quad H_1:\\mu<500$$\n（若用双侧 $H_1:\\mu\\ne500$ 则不够针对问题、功效较低。）","src":"2023 上海财经大学 432 统计学真题"},
-    "test06": {"q":"某产品尺寸 $X\\sim N(4.55,0.108^2)$，抽查 $n=9$ 件得平均尺寸 $\\bar x=4.84$。若方差未改变，在 $\\alpha=0.05$ 下检验 $H_0:\\mu=4.55$ 对 $H_1:\\mu\\ne4.55$（$z_{0.025}=1.96$）","a":"$Z=\\dfrac{\\bar x-\\mu_0}{\\sigma/\\sqrt n}=\\dfrac{4.84-4.55}{0.108/3}=\\dfrac{0.29}{0.036}\\approx8.06$。因 $|Z|=8.06>z_{0.025}=1.96$，落入拒绝域，拒绝 $H_0$，认为现在生产的产品平均尺寸已显著异于 4.55。","src":"2023 上海财经大学 432 统计学真题","a2":"巧解（$p$ 值法）：双侧 $p$ 值 $=2P(Z>|8.06|)=2[1-\\Phi(8.06)]\\approx0$。因 $p\\ll\\alpha=0.05$，拒绝 $H_0$，结论与临界值法一致。"},
+    "test06": [{"q":"某产品尺寸 $X\\sim N(4.55,0.108^2)$，抽查 $n=9$ 件得平均尺寸 $\\bar x=4.84$。若方差未改变，在 $\\alpha=0.05$ 下检验 $H_0:\\mu=4.55$ 对 $H_1:\\mu\\ne4.55$（$z_{0.025}=1.96$）","a":"$Z=\\dfrac{\\bar x-\\mu_0}{\\sigma/\\sqrt n}=\\dfrac{4.84-4.55}{0.108/3}=\\dfrac{0.29}{0.036}\\approx8.06$。因 $|Z|=8.06>z_{0.025}=1.96$，落入拒绝域，拒绝 $H_0$，认为现在生产的产品平均尺寸已显著异于 4.55。","src":"2023 上海财经大学 432 统计学真题","a2":"巧解（$p$ 值法）：双侧 $p$ 值 $=2P(Z>|8.06|)=2[1-\\Phi(8.06)]\\approx0$。因 $p\\ll\\alpha=0.05$，拒绝 $H_0$，结论与临界值法一致。"},{"q":"两只股票连续两次交易的时间间隔均服从指数分布，现各有一周的全部交易数据。如何检验这两只股票的交易到达率相同？","a":"记股票 $i$ 的到达率为 $\\lambda_i$，观测窗口为 $T_i$，成交次数为 $N_i$，则 $N_i\\sim P(\\lambda_iT_i)$ 且相互独立。\n检验 $H_0:\\lambda_1=\\lambda_2$。在 $H_0$ 下给定总次数 $N=N_1+N_2$，$N_1\\sim B\\big(N,\\frac{T_1}{T_1+T_2}\\big)$——用二项检验（大样本用正态近似）即可，与共同 $\\lambda$ 无关。\n等价地可用条件似然比统计量，拒绝域取双侧；若数据是逐笔间隔，也可先检验指数性（拟合检验）再比较均值。","src":"2018 北京大学光华 431 统计真题"}],
     "test07": {"q":"某培训对 10 位分析师预测误差（培训前－培训后）的影响，差值 $d_i$ 为 $0.5,0.3,0.3,0.4,0.2,0.3,0.2,0.4,0.4,0.4$。在 $\\alpha=0.05$ 下用配对 $t$ 检验判断培训是否显著降低预测误差（$t_{0.025}(9)=2.262$）","a":"$\\bar d=0.34$，$S_d^2=\\dfrac{\\sum d_i^2-(\\sum d_i)^2/n}{n-1}=\\dfrac{1.24-1.156}{9}=0.00933$（$S_d\\approx0.0966$）。\n$$t=\\frac{\\bar d}{S_d/\\sqrt n}=\\frac{0.34}{0.0966/\\sqrt{10}}\\approx11.13$$\n因 $|t|=11.13>t_{0.025}(9)=2.262$，拒绝 $H_0$，培训显著降低了预测误差。","src":"2024 北大光华 431 统计真题","a2":"巧解（置信区间法）：$d$ 的 95% 置信区间为\n$$\\bar d\\pm t_{0.025}(9)\\frac{S_d}{\\sqrt n}=0.34\\pm2.262\\times\\frac{0.0966}{\\sqrt{10}}\\approx(0.271,\\ 0.409)$$\n区间不含 $0$，故在 $\\alpha=0.05$ 下拒绝 $H_0$，与 $t$ 检验结论一致。"},
     "test08": {"q":"经调查，健康成年男子脉搏服从正态分布 $N(72,11^{2})$，现测得 16 位慢性铅中毒患者脉搏平均为 67、标准差为 7。在 0.05 置信水平下检验与正常男子脉搏是否有差异（对均值与方差均作检验）。（$t_{0.025}(15)=2.131$，$\\chi^{2}_{0.975}(15)=6.262$，$\\chi^{2}_{0.025}(15)=27.488$）","a":"先检验方差 $H_0:\\sigma=11$ 对 $H_1:\\sigma\\ne11$：\n$$\\chi^{2}=\\frac{(n-1)s^{2}}{\\sigma_0^{2}}=\\frac{15\\times7^{2}}{11^{2}}=\\frac{735}{121}\\approx6.07$$\n拒绝域 $\\chi^{2}>27.488$ 或 $\\chi^{2}<6.262$。因 $6.07<6.262$，拒绝 $H_0$，认为方差有差异。\n再检验均值（方差未知用 $t$ 检验）$H_0:\\mu=72$ 对 $H_1:\\mu\\ne72$：\n$$t=\\frac{\\sqrt n(\\bar x-\\mu_0)}{s}=\\frac{4(67-72)}{7}\\approx-2.857$$\n$|t|=2.857>t_{0.025}(15)=2.131$，拒绝 $H_0$，认为脉搏均值也有差异。","src":"2024 中国科学技术大学 432 统计学真题"},
     "test09": {"q":"对单个总体均值的 $t$ 检验，软件给出 $p$ 值 0.074。(1) 解释 $p$ 值的含义；(2) 若样本均值 $\\bar x>\\mu_0$，如何判断总体均值是否也大于 $\\mu_0$？能得出什么结论？","a":"(1) 0.074 表示在 $H_0:\\mu=\\mu_0$ 成立时，得到当前或更极端（双侧）结果的概率。\n(2) 判断 $\\mu>\\mu_0$ 需用单侧检验：由 $\\bar x>\\mu_0$ 知 $t>0$，单侧 $p$ 值 $=\\dfrac{0.074}{2}=0.037$。在 $\\alpha=0.05$ 下 $0.037<0.05$，拒绝 $H_0$，有充分理由认为 $\\mu>\\mu_0$。","src":"2001 北京大学光华 统计学真题"},
     "test10": {"q":"设 $X\\sim N(\\mu,1)$，考虑假设检验问题 $H_0:\\mu=1$ 对 $H_1:\\mu=2$，拒绝域为 $W=\\{\\bar x>c\\}$，则下列说法不正确的是（  ）\\\\\nA. 功效函数随 $\\mu$ 单调增　B. 功效函数随 $c$ 单调增\\\\\nC. 第一类错误的概率等于 $1-\\Phi(\\sqrt n(c-1))$　D. 第二类错误的概率等于 $\\Phi(\\sqrt n(c-2))$","a":"选 B。功效函数 $\\rho(\\mu)=P_{\\mu}(\\bar X>c)=1-\\Phi(\\sqrt n(c-\\mu))$：随 $\\mu$ 增大而增大（A 对）；随 $c$ 增大而\\textbf{减小}（B 错）。\n$\\alpha=1-\\Phi(\\sqrt n(c-1))$（C 对）；$\\beta=\\Phi(\\sqrt n(c-2))$（D 对）。","src":"2023 上海财经大学 432 统计学真题"},
     "test11": {"q":"设两组独立样本 $x_1,\\dots,x_n\\sim N(\\mu_1,\\sigma_1^{2})$、$y_1,\\dots,y_m\\sim N(\\mu_2,\\sigma_2^{2})$，$\\sigma_1,\\sigma_2$ 已知，记 $\\theta=\\mu_1-\\mu_2$。求：(1) $\\theta$ 的 MLE；(2) 总样本量 $N=n+m$ 固定时使 $\\hat\\theta$ 均方误差最小的 $n,m$；(3) 检验 $H_0:\\theta=0$ 对 $H_1:\\theta\\ne0$ 在水平 $\\alpha$ 下的拒绝域","a":"(1) $\\hat\\theta=\\bar x-\\bar y$，其方差（均方误差）为 $\\dfrac{\\sigma_1^{2}}{n}+\\dfrac{\\sigma_2^{2}}{m}$。\n(2) 令 $m=N-n$，对 $n$ 求导并令 0：$\\dfrac{\\sigma_1^{2}}{n^{2}}=\\dfrac{\\sigma_2^{2}}{(N-n)^{2}}\\Rightarrow\\dfrac{n}{m}=\\dfrac{\\sigma_1}{\\sigma_2}$（按标准差之比分配样本，即内曼分配）。\n(3) 统计量 $Z=\\dfrac{\\bar x-\\bar y}{\\sqrt{\\sigma_1^{2}/n+\\sigma_2^{2}/m}}\\sim N(0,1)$，拒绝域 $|Z|>z_{\\alpha/2}$。","src":"2023 北京大学光华 431 统计真题"},
-    "test12": {"q":"公司甲同时在 A 股、H 股上市，$X_i,Y_i$ 为两市场过去一年每天的回报观测。(1) 给出两种检验方法检验两市场回报均值是否相等；(2) 讨论两种检验的假设条件，哪种更合理？","a":"(1) 方法一（配对 $t$ 检验）：令 $d_i=X_i-Y_i$，$H_0:\\mu_d=0$，$$t=\\frac{\\bar d}{S_d/\\sqrt n}\\sim t(n-1)$$方法二（两独立样本 $t$ 检验）：视 $X,Y$ 为独立样本且方差相等，$$t=\\frac{\\bar X-\\bar Y}{S_p\\sqrt{1/n+1/n}}\\sim t(2n-2)$$\n(2) 配对检验需两市场数据成对且 $d_i$ 独立正态；两样本检验需两总体独立、方差齐。同一公司同一日的两市场回报受共同市场因素影响，配对检验利用了成对结构、消除了共同因素干扰，功效更高，更合理。","src":"2017 北大光华 431 统计真题"},
+    "test12": [{"q":"公司甲同时在 A 股、H 股上市，$X_i,Y_i$ 为两市场过去一年每天的回报观测。(1) 给出两种检验方法检验两市场回报均值是否相等；(2) 讨论两种检验的假设条件，哪种更合理？","a":"(1) 方法一（配对 $t$ 检验）：令 $d_i=X_i-Y_i$，$H_0:\\mu_d=0$，$$t=\\frac{\\bar d}{S_d/\\sqrt n}\\sim t(n-1)$$方法二（两独立样本 $t$ 检验）：视 $X,Y$ 为独立样本且方差相等，$$t=\\frac{\\bar X-\\bar Y}{S_p\\sqrt{1/n+1/n}}\\sim t(2n-2)$$\n(2) 配对检验需两市场数据成对且 $d_i$ 独立正态；两样本检验需两总体独立、方差齐。同一公司同一日的两市场回报受共同市场因素影响，配对检验利用了成对结构、消除了共同因素干扰，功效更高，更合理。","src":"2017 北大光华 431 统计真题"},{"q":"为检验声波是否对心率有影响，对 $9$ 位测试者记录接受声波前后的心率，数据成对。写出检验方法与拒绝域（$\\alpha=0.05$）。","a":"同一人前后两次观测相关，不能当两独立样本，应做**配对 $t$ 检验**：令 $d_i=$ 前 $-$ 后（或后 $-$ 前），$i=1,\\dots,9$。\n$H_0:\\mu_d=0$，$H_1:\\mu_d\\ne0$；$t=\\frac{\\bar d}{s_d/\\sqrt{9}}\\sim t(8)$。\n$\\alpha=0.05$ 双侧临界值 $t_{0.975}(8)=2.306$，$|t|>2.306$ 拒绝 $H_0$，认为声波对心率有显著影响。\n若误用两独立样本 $t$ 检验，会丢掉配对信息、增大误差、降低功效。","src":"2021 北京大学光华 431 统计真题"}],
     "test13": [{"q":"甲乙两台机床加工同种零件，直径分别服从 $N(\\mu_1,\\sigma_1^{2})$ 与 $N(\\mu_2,\\sigma_2^{2})$。各抽样本得 $n_1=10,\\ s_1^{2}=0.96$；$n_2=8,\\ s_2^{2}=0.30$。在 $\\alpha=0.05$ 下检验 $H_0:\\sigma_1^{2}=\\sigma_2^{2}$ 对 $H_1:\\sigma_1^{2}\\ne\\sigma_2^{2}$（$F_{0.025}(9,7)=4.82$）","a":"统计量 $F=\\dfrac{s_1^{2}}{s_2^{2}}=\\dfrac{0.96}{0.30}=3.2\\sim F(9,7)$。拒绝域 $F>F_{0.025}(9,7)=4.82$ 或 $F<F_{0.975}(9,7)$。因 $3.2<4.82$，不拒绝 $H_0$，无充分证据表明两总体方差不等。","src":"2010 年北大光华金融硕士统计真题"},{"q":"根据沪深 300 指数 2020 年和 2023 年的日指数收益率数据（$n_1=244,\\ s_1=22.3\\%$；$n_2=242,\\ s_2=10.1\\%$），说明如何检验这两年的日指数收益率的标准差是否存在显著差异","a":"两正态总体方差比用 $F$ 检验：$H_0:\\sigma_1^{2}=\\sigma_2^{2}$ 对 $H_1:\\sigma_1^{2}\\ne\\sigma_2^{2}$，统计量\n$$F=\\frac{S_1^{2}}{S_2^{2}}=\\left(\\frac{0.223}{0.101}\\right)^{2}\\approx4.87\\sim F(n_1-1,\\ n_2-1)=F(243,241)$$\n当 $F>F_{\\alpha/2}(243,241)$ 或 $F<F_{1-\\alpha/2}(243,241)$ 时拒绝 $H_0$，认为两年日收益率的标准差存在显著差异。","src":"2025 北大光华 431 统计真题"}],
     "test14": [{"q":"用 $\\chi^{2}$ 检验判断两个分类变量是否独立（列联表独立性检验）。对 $r\\times c$ 列联表写出检验统计量、自由度与拒绝域","a":"统计量 $\\chi^{2}=\\sum_{i=1}^{r}\\sum_{j=1}^{c}\\dfrac{(n_{ij}-\\hat e_{ij})^{2}}{\\hat e_{ij}}$，期望频数 $\\hat e_{ij}=\\dfrac{n_{i\\cdot}\\,n_{\\cdot j}}{n}$。自由度 $(r-1)(c-1)$。当 $\\chi^{2}>\\chi^{2}_{\\alpha}((r-1)(c-1))$ 时拒绝独立性假设 $H_0$。","src":"2010 年北大光华金融硕士统计真题"},{"q":"某公司调查 210 名员工对奖励制度的满意度，按性别整理：男 30 满意、70 不满（共 100），女 45 满意、65 不满（共 110）。在 $\\alpha=0.05$ 下分析男女看法是否有显著差异（$\\chi^2_{0.05}(1)=3.84$）","a":"期望频数：男满意 $\\dfrac{100\\times75}{210}=35.71$、男不满 $64.29$、女满意 $39.29$、女不满 $70.71$。\n$$\\chi^2=\\frac{(30-35.71)^2}{35.71}+\\frac{(70-64.29)^2}{64.29}+\\frac{(45-39.29)^2}{39.29}+\\frac{(65-70.71)^2}{70.71}\\approx2.71$$\n$2.71<\\chi^2_{0.05}(1)=3.84$，不拒绝 $H_0$，无充分证据表明男女对奖励制度的看法存在显著差异。","src":"2019 北大光华 431 统计真题"}],
     "test15": [{"q":"关于假设检验中的概念，以下说法正确的是（  ）\\\\\nA. 第一类错误是指 $H_0$ 为假时接受备择假设\\\\\nB. 第二类错误是指 $H_1$ 为假时接受原假设\\\\\nC. 检验功效是指 $H_0$ 为假时，假设检验拒绝原假设的概率\\\\\nD. 检验功效是指 $H_1$ 为假时，假设检验接受原假设的概率","a":"选 C。检验功效（势）$=1-\\beta=P(\\text{拒绝 }H_0\\,|\\,H_0\\text{ 假})$，即 $H_0$ 为假（$H_1$ 为真）时正确拒绝原假设的概率。\nA、B 对两类错误的表述混乱：第一类错误是 $H_0$ 为真时拒绝 $H_0$（弃真），第二类错误是 $H_0$ 为假时接受 $H_0$（取伪）。","src":"2023 上海财经大学 432 统计学真题"},{"q":"设总体 $X$ 的概率密度为 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$。又设 $X_1,X_2$ 是取自该总体的简单样本，考虑假设检验 $H_0:\\theta=1$ 对 $H_1:\\theta=2$，其否定域为 $\\{(X_1,X_2):3X_1\\le4X_2\\}$。求此检验的功效函数及两类错误的概率","a":"功效函数 $\\rho(\\theta)=P_{\\theta}(3X_1\\le4X_2)$。\n$H_0$（$\\theta=1$，$X\\sim U(0,1)$）：$\\alpha=\\rho(1)=\\displaystyle\\int_0^{3/4}\\frac{4x_2}{3}\\,dx_2+\\int_{3/4}^{1}1\\,dx_2=\\frac{5}{8}$。\n$H_1$（$\\theta=2$，$f(x)=2x$）：$\\rho(2)=4\\displaystyle\\int_0^{3/4}\\frac{(4x_2/3)^{2}}{2}\\,x_2\\,dx_2+4\\int_{3/4}^{1}\\frac{x_2}{2}\\,dx_2=\\frac{23}{32}$，故 $\\beta=1-\\frac{23}{32}=\\frac{9}{32}$。\n即 $\\rho(1)=\\frac58$、$\\rho(2)=\\frac{23}{32}$；第一类错误 $\\alpha=\\frac58$，第二类错误 $\\beta=\\frac{9}{32}$。","src":"2016 中国科学技术大学 432 统计学真题"}],
@@ -1796,7 +1560,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "reg03": {"q":"单因素方差分析中 $k$ 个水平的样本量分别为 $n_1,\\dots,n_k$（共 $n$ 个观测）。写出组间、组内平方和及检验 $H_0:\\mu_1=\\cdots=\\mu_k$ 的 $F$ 统计量","a":"$SSA=\\sum_{j}n_j(\\bar x_j-\\bar x)^{2}$（组间），$SSE=\\sum_{j}\\sum_{i}(x_{ij}-\\bar x_j)^{2}$（组内），$SST=SSA+SSE$。\n$$F=\\frac{SSA/(k-1)}{SSE/(n-k)}\\sim F(k-1,\\ n-k)$$\n当 $F$ 显著大时拒绝 $H_0$，认为各总体均值不全相等。","src":"2011 年北大光华金融硕士统计真题"},
     "reg04": {"q":"一元线性回归 $y_i=\\alpha+\\beta x_i+\\varepsilon_i$ 中，若存在异方差且 $\\mathrm{Var}(\\varepsilon_i)=\\sigma^{2}x_i$（比例形式、已知）。说明如何用加权最小二乘（GLS）估计 $\\beta$","a":"取权重 $w_i=1/x_i$，最小化 $\\sum w_i(y_i-\\alpha-\\beta x_i)^{2}$，即对变换模型\n$$\\frac{y_i}{\\sqrt{x_i}}=\\alpha\\frac{1}{\\sqrt{x_i}}+\\beta\\sqrt{x_i}+\\frac{\\varepsilon_i}{\\sqrt{x_i}}$$\n做 OLS，此时 $\\mathrm{Var}(\\varepsilon_i/\\sqrt{x_i})=\\sigma^{2}$ 满足同方差。方差形式未知时可用怀特（White）检验诊断异方差。","src":"2011 年北大光华金融硕士统计真题"},
     "reg05": {"q":"对一元线性回归 $y_i=\\alpha+\\beta x_i+\\varepsilon_i\\ (\\varepsilon_i\\overset{iid}{\\sim}N(0,\\sigma^{2}))$，用最小二乘法求 $\\alpha,\\beta$ 的估计，并给出 $\\hat\\beta$ 的期望与方差","a":"最小化 $\\sum(y_i-\\alpha-\\beta x_i)^{2}$，令偏导为 0 得\n$$\\hat{\\beta}=\\frac{\\sum(x_i-\\bar{x})(y_i-\\bar{y})}{\\sum(x_i-\\bar{x})^{2}},\\qquad \\hat{\\alpha}=\\bar{y}-\\hat{\\beta}\\bar{x}$$\n$\\hat\\beta$ 为 $y_i$ 的线性组合且 $\\sum(x_i-\\bar{x})=0$，故 $E(\\hat\\beta)=\\beta$，$D(\\hat\\beta)=\\dfrac{\\sigma^{2}}{\\sum(x_i-\\bar{x})^{2}}$。","src":"2010 年北大光华金融硕士统计真题"},
-    "reg06": {"q":"研究者用 50 家公司数据估计 CEO 年薪回归模型 $y=\\beta_0+\\beta_1x_1+\\cdots+\\beta_5x_5+\\varepsilon$，得 $\\hat\\beta_1=0.3$，相应 $t$ 统计量为 1.5。若进一步随机收集到更多数据共 200 家并重新估计，请判断系数的估计值是否会改变、$t$ 统计量大概会是多少、模型的调整 $R^{2}$ 是否会改变，若改变给出变化关系","a":"估计值会改变：新样本对应新的最小二乘解，$\\hat\\beta$ 一般不同。\n$t$ 统计量：$t=\\frac{\\hat\\beta}{s(\\hat\\beta)}$，而 $s(\\hat\\beta)\\approx\\frac{\\sigma}{\\sqrt{\\sum(x_i-\\bar x)^2}}\\propto\\frac1{\\sqrt n}$（新样本与旧样本分布相似时），样本量由 50 增至 200（约 4 倍），$t$ 统计量约增大 $\\sqrt4=2$ 倍，即约 $t\\approx3$。\n调整 $R^{2}$：$\\bar R^{2}=1-\\frac{SSE/(n-k-1)}{SST/(n-1)}$，样本量增大主要减小估计的方差而非改变拟合优度，$\\bar R^{2}$ 变化不大（新增数据同分布时趋于稳定）。","src":"2017 北大光华 431 统计真题"},
+    "reg06": [{"q":"研究者用 50 家公司数据估计 CEO 年薪回归模型 $y=\\beta_0+\\beta_1x_1+\\cdots+\\beta_5x_5+\\varepsilon$，得 $\\hat\\beta_1=0.3$，相应 $t$ 统计量为 1.5。若进一步随机收集到更多数据共 200 家并重新估计，请判断系数的估计值是否会改变、$t$ 统计量大概会是多少、模型的调整 $R^{2}$ 是否会改变，若改变给出变化关系","a":"估计值会改变：新样本对应新的最小二乘解，$\\hat\\beta$ 一般不同。\n$t$ 统计量：$t=\\frac{\\hat\\beta}{s(\\hat\\beta)}$，而 $s(\\hat\\beta)\\approx\\frac{\\sigma}{\\sqrt{\\sum(x_i-\\bar x)^2}}\\propto\\frac1{\\sqrt n}$（新样本与旧样本分布相似时），样本量由 50 增至 200（约 4 倍），$t$ 统计量约增大 $\\sqrt4=2$ 倍，即约 $t\\approx3$。\n调整 $R^{2}$：$\\bar R^{2}=1-\\frac{SSE/(n-k-1)}{SST/(n-1)}$，样本量增大主要减小估计的方差而非改变拟合优度，$\\bar R^{2}$ 变化不大（新增数据同分布时趋于稳定）。","src":"2017 北大光华 431 统计真题"},{"q":"CEO 年薪回归 $y=\\beta_0+\\beta_1x_1+\\cdots+\\beta_4x_4+\\varepsilon$ 只用 $20$ 家公司估计是否合适？若增到 $80$ 家，$\\hat\\beta$、$t$ 值、调整 $R^{2}$ 会怎样变？若 $R^{2}$ 不低但所有系数都不显著，原因是什么？","a":"$n=20$、$5$ 个参数只剩 $14$ 个自由度，估计与检验都不稳，样本量偏少（经验上每个参数至少 $10$ 个观测）。\n$n\\to80$：$\\hat\\beta$ 的期望不变、标准误约乘 $\\sqrt{20/80}=\\frac12$，$t$ 值约翻倍；调整 $R^{2}=1-(1-R^{2})\\frac{n-1}{n-k-1}$ 通常上升。\n$R^{2}$ 高但全不显著，典型原因是**多重共线性**：解释变量高度相关，整体解释力强但各自系数方差大、$t$ 值小；可看 VIF、删冗余变量或增大样本。","src":"2018 北京大学光华 431 统计真题"}],
     "reg07": {"q":"设模型 $y_i=b x_i+\\varepsilon_i$（无截距），$\\varepsilon_i\\overset{iid}{\\sim}N(0,\\sigma^2)$（$\\sigma^2$ 未知）。求：(1) $b$ 的最小二乘估计 $\\hat b$；(2) $\\hat b$ 的期望、方差与分布；(3) 检验 $H_0:b=0$ 对 $H_1:b>0$ 的检验法","a":"(1) 最小化 $\\sum(y_i-bx_i)^2$ 得 $\\hat b=\\dfrac{\\sum x_i y_i}{\\sum x_i^2}$。\n(2) $E(\\hat b)=b$，$D(\\hat b)=\\dfrac{\\sigma^2}{\\sum x_i^2}$，$\\hat b\\sim N\\left(b,\\dfrac{\\sigma^2}{\\sum x_i^2}\\right)$。\n(3) 用 $t$ 检验：$t=\\dfrac{\\hat b}{s/\\sqrt{\\sum x_i^2}}\\sim t(n-1)$，其中 $s^2=\\dfrac{\\sum(y_i-\\hat b x_i)^2}{n-1}$；当 $t>t_{\\alpha}(n-1)$ 时拒绝 $H_0$。","src":"2018 北大光华 431 统计真题"},
     "reg08": {"q":"对回归模型 $grade=\\alpha_0+\\alpha_1 CGPA+\\alpha_2 Skipped+\\varepsilon$，样本量 $n=141$，$R^2=0.234$。在显著性水平 1% 下检验 $H_0:\\alpha_1=\\alpha_2=0$（即 CGPA 与 Skipped 同时无影响）","a":"整体显著性用 $F$ 检验（$k=2$ 个解释变量）：\n$$F=\\frac{R^2/k}{(1-R^2)/(n-k-1)}=\\frac{0.234/2}{0.766/138}\\approx21.1\\sim F(2,138)$$\n因 $F\\approx21.1>F_{0.01}(2,138)\\approx4.79$，拒绝 $H_0$，认为 CGPA 与 Skipped 对 grade 的影响不全为零（单个系数在 1% 下可能不显著，但联合检验显著）。","src":"2016 北大光华 431 统计真题"},
     "reg09": {"q":"对于线性回归模型 $y_i=\\beta x_i+\\varepsilon_i$，其中 $\\varepsilon_i$ 独立同服从 $N(0,\\sigma^{2})$。现有 $n$ 个观测数据。(1) 求 $\\beta$ 的最小二乘估计 $\\hat\\beta$ 及 $\\sigma^{2}$ 的无偏估计；(2) 求 $\\beta$ 的 $1-\\alpha$ 置信区间；(3) 给定 $x_0$，求 $y_0$ 的预测区间","a":"(1) $\\hat\\beta=\\dfrac{\\sum x_i y_i}{\\sum x_i^{2}}$，$E(\\hat\\beta)=\\beta$，$Var(\\hat\\beta)=\\dfrac{\\sigma^{2}}{\\sum x_i^{2}}$；$\\sigma^{2}$ 的无偏估计 $\\hat\\sigma^{2}=\\dfrac{1}{n-1}\\sum_{i}(y_i-\\hat\\beta x_i)^{2}$。\n(2) $\\dfrac{\\hat\\beta-\\beta}{\\hat\\sigma/\\sqrt{\\sum x_i^{2}}}\\sim t(n-1)$，故 $\\beta$ 的 $1-\\alpha$ 置信区间为 $\\hat\\beta\\pm t_{\\alpha/2}(n-1)\\,\\hat\\sigma/\\sqrt{\\sum x_i^{2}}$。\n(3) 对 $x_0$，预测值 $\\hat y_0=\\hat\\beta x_0$，$y_0-\\hat y_0\\sim N(0,\\sigma^{2}(1+\\frac{x_0^{2}}{\\sum x_i^{2}}))$，故 $y_0$ 的 $1-\\alpha$ \\textbf{预测}区间为\n$$\\hat y_0\\pm t_{\\alpha/2}(n-1)\\,\\hat\\sigma\\sqrt{1+\\frac{x_0^{2}}{\\sum x_i^{2}}}$$（比置信区间多出“$+1$”的个体随机项，故更宽。）","src":"2022 北京大学叉院 849 统计学真题"},
@@ -1809,11 +1573,9 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "sy02": {"q":"一家连锁店向其 100 名信用卡顾客分发赠券，结果 13 人使用。(1) 求赠券使用率的 90% 置信区间；(2) 若使用率超过 10% 认为促销成功，在 $\\alpha=0.05$ 下是否应全国推广？（$z_{0.05}=1.645$）","a":"$\\hat p=\\frac{13}{100}=0.13$。\n(1) $0.13\\pm1.645\\sqrt{\\frac{0.13\\times0.87}{100}}=0.13\\pm0.055\\approx(0.075,\\ 0.185)$。\n(2) $H_0:p\\le0.10$ 对 $H_1:p>0.10$，$Z=\\frac{0.13-0.10}{\\sqrt{0.10\\times0.90/100}}=\\frac{0.03}{0.03}=1<z_{0.05}=1.645$，不拒绝 $H_0$，暂无充分证据认为使用率超过 10%，不宜贸然全国推广。","src":"2019 北大光华 431 统计真题"},
     "sy03": {"q":"给定模型 $\\ln y=\\alpha+\\beta\\ln x+\\varepsilon$ 和观测 $(x_i,y_i)_{i=1}^n$。(1) 给出 $\\beta$ 的经济学含义；(2) 给出 $\\beta$ 的一个估计；(3) 验证其无偏性（需给出假设条件）","a":"(1) $\\beta$ 为 $y$ 对 $x$ 的弹性：$x$ 增加 $1\\%$，$y$ 平均增加 $\\beta\\%$。\n(2) 令 $\\tilde x_i=\\ln x_i,\\ \\tilde y_i=\\ln y_i$，$\\hat\\beta=\\dfrac{\\sum(\\tilde x_i-\\bar{\\tilde x})(\\tilde y_i-\\bar{\\tilde y})}{\\sum(\\tilde x_i-\\bar{\\tilde x})^2}$。\n(3) 在 $E(\\varepsilon\\,|\\,\\tilde x)=0$ 且 $\\tilde x$ 与 $\\varepsilon$ 不相关（外生）条件下，$\\hat\\beta$ 是 $y$ 的线性组合且 $E(\\hat\\beta)=\\beta$，故无偏。","src":"2017 北大光华 431 统计真题"},
     "sy04": {"q":"设取值为非负整数的总体，样本容量 $n=800$，取值 $0,1,2,3,4,5$ 的频数分别为 $250,200,180,100,50,20$。(1) 求经验分布函数；(2) 求 $P(X=0)$ 与 $P(2<X\\le4)$","a":"(1) $F_n(x)=\\dfrac{1}{800}\\sum_{i=1}^{800}I\\{X_i\\le x\\}$，在 $0,1,2,3,4,5$ 处依次取值 $0.3125,0.5625,0.7875,0.9125,0.975,1$。\n(2) $P(X=0)=\\dfrac{250}{800}=0.3125$；$P(2<X\\le4)=\\dfrac{100+50}{800}=0.1875$。","src":"2025 北大光华 431 统计真题"},
-    "sy05": {"q":"设 $X\\sim P(\\lambda)$。(1) 对期望存在的 $g$，证明 $E[X\\,g(X)]=\\lambda E[g(X+1)]$；(2) 求 $E[X^3]$ 与 $E[X^4]$","a":"(1) $E[Xg(X)]=\\sum_{k\\ge1}k g(k)\\frac{\\lambda^k}{k!}e^{-\\lambda}=\\lambda\\sum_{j\\ge0}g(j+1)\\frac{\\lambda^j}{j!}e^{-\\lambda}=\\lambda E[g(X+1)]$。\n(2) $E[X^2]=\\lambda^2+\\lambda$，$E[X^3]=\\lambda E[(X+1)^2]=\\lambda(\\lambda^2+3\\lambda+1)=\\lambda^3+3\\lambda^2+\\lambda$；$E[X^4]=\\lambda E[(X+1)^3]=\\lambda[(\\lambda^3+3\\lambda^2+\\lambda)+3(\\lambda^2+\\lambda)+3\\lambda+1]=\\lambda^4+6\\lambda^3+7\\lambda^2+\\lambda$。","src":"2026 北大光华 431 统计真题","subOf":{"id":"st-2026-2","item":"(1)(2)"},"a2":"巧解（矩母函数）：$X\\sim P(\\lambda)$ 的矩母函数 $M(t)=e^{\\lambda(e^t-1)}$。逐阶求导：\n$$E[X]=M'(0)=\\lambda,\\quad E[X^2]=M''(0)=\\lambda^2+\\lambda,\\quad E[X^3]=\\lambda^3+3\\lambda^2+\\lambda,\\quad E[X^4]=\\lambda^4+6\\lambda^3+7\\lambda^2+\\lambda$$\n与 Stein 等式递推结果一致，且更便于机械化求高阶矩。"},
+    "sy05": [{"q":"设 $X\\sim P(\\lambda)$。(1) 对期望存在的 $g$，证明 $E[X\\,g(X)]=\\lambda E[g(X+1)]$；(2) 求 $E[X^3]$ 与 $E[X^4]$","a":"(1) $E[Xg(X)]=\\sum_{k\\ge1}k g(k)\\frac{\\lambda^k}{k!}e^{-\\lambda}=\\lambda\\sum_{j\\ge0}g(j+1)\\frac{\\lambda^j}{j!}e^{-\\lambda}=\\lambda E[g(X+1)]$。\n(2) $E[X^2]=\\lambda^2+\\lambda$，$E[X^3]=\\lambda E[(X+1)^2]=\\lambda(\\lambda^2+3\\lambda+1)=\\lambda^3+3\\lambda^2+\\lambda$；$E[X^4]=\\lambda E[(X+1)^3]=\\lambda[(\\lambda^3+3\\lambda^2+\\lambda)+3(\\lambda^2+\\lambda)+3\\lambda+1]=\\lambda^4+6\\lambda^3+7\\lambda^2+\\lambda$。","src":"2026 北大光华 431 统计真题","subOf":{"id":"st-2026-2","item":"(1)(2)"},"a2":"巧解（矩母函数）：$X\\sim P(\\lambda)$ 的矩母函数 $M(t)=e^{\\lambda(e^t-1)}$。逐阶求导：\n$$E[X]=M'(0)=\\lambda,\\quad E[X^2]=M''(0)=\\lambda^2+\\lambda,\\quad E[X^3]=\\lambda^3+3\\lambda^2+\\lambda,\\quad E[X^4]=\\lambda^4+6\\lambda^3+7\\lambda^2+\\lambda$$\n与 Stein 等式递推结果一致，且更便于机械化求高阶矩。"},{"q":"设 $X_1,X_2$ 是来自泊松总体 $P(\\lambda)$ 的简单随机样本，比较 $\\hat\\lambda_1=\\frac{X_1+X_2}{2}$ 与 $\\hat\\lambda_2=\\frac{(X_1-X_2)^{2}}{2}$ 的均方误差。","a":"$\\hat\\lambda_1$：$E\\hat\\lambda_1=\\lambda$，$\\operatorname{Var}=\\frac{\\lambda+\\lambda}{4}=\\frac{\\lambda}{2}$，MSE$_1=\\frac{\\lambda}{2}$。\n$\\hat\\lambda_2$：令 $Y=X_1-X_2$，$EY^{2}=2\\lambda$，故 $E\\hat\\lambda_2=\\lambda$；又 $Y$ 的四阶累积量为 $2\\lambda$，$EY^{4}=2\\lambda+3(2\\lambda)^{2}=2\\lambda+12\\lambda^{2}$，$\\operatorname{Var}(Y^{2})=2\\lambda+8\\lambda^{2}$，MSE$_2=\\frac{\\lambda}{2}+2\\lambda^{2}$。\n故 $\\lambda>0$ 时 MSE$_2>$MSE$_1$，$\\hat\\lambda_1$ 更优。","src":"2026 北京大学光华 431 统计真题"}],
     "sy06": {"q":"$X_1,X_2$ 独立同分布的泊松随机变量，均值分别为 $\\mu_1,\\mu_2$。(1) 写出 $X_1$ 的分布列；(2) 写出 $X_1+X_2$ 的分布列；(3) $2X_1$ 还服从泊松分布吗？","a":"(1) $P(X_1=k)=\\dfrac{\\mu_1^k}{k!}e^{-\\mu_1},\\ k=0,1,\\dots$\n(2) $X_1+X_2\\sim P(\\mu_1+\\mu_2)$，$P(X_1+X_2=k)=\\dfrac{(\\mu_1+\\mu_2)^k}{k!}e^{-(\\mu_1+\\mu_2)}$。\n(3) 不是。$2X_1$ 只在偶数点取值，$P(2X_1=1)=0$，不满足泊松分布。","src":"2020 北大光华 431 统计真题"},
     "sy07": {"q":"灯泡寿命 $X\\sim N(\\mu,1000^2)$。(1) 使 95% 置信区间误差控制在 $\\pm200$ 小时，需多少样本？(2) 置信水平改为 99%；(3) 误差改为 $\\pm100$ 小时（$z_{0.025}=1.96,\\ z_{0.005}=2.576$）","a":"$n\\ge\\left(\\dfrac{z_{\\alpha/2}\\sigma}{d}\\right)^2$。\n(1) $n\\ge\\left(\\dfrac{1.96\\times1000}{200}\\right)^2=9.8^2=96.04$，取 $n=97$。\n(2) $n\\ge\\left(\\dfrac{2.576\\times1000}{200}\\right)^2=12.88^2=165.9$，取 $n=166$。\n(3) $n\\ge\\left(\\dfrac{1.96\\times1000}{100}\\right)^2=19.6^2=384.2$，取 $n=385$。","src":"2022 北大光华 431 统计真题"},
-    "sy08": {"q":"设 $\\xi$ 为随机变量，$E\\xi=0,\\ D\\xi=\\sigma^2<\\infty$，证明对任意 $a>0$，$P\\{\\xi\\ge a\\}\\le\\dfrac{\\sigma^2}{\\sigma^2+a^2}$","a":"对 $t>0$，由马尔可夫不等式：\n$$P(\\xi\\ge a)=P(\\xi+t\\ge a+t)\\le\\frac{E(\\xi+t)^2}{(a+t)^2}=\\frac{\\sigma^2+t^2}{(a+t)^2}$$\n取 $t=\\dfrac{\\sigma^2}{a}$，得\n$$P(\\xi\\ge a)\\le\\frac{\\sigma^2+\\sigma^4/a^2}{(a+\\sigma^2/a)^2}=\\frac{\\sigma^2}{\\sigma^2+a^2}$$","src":"2026 复旦大学 432 统计学真题"},
-    "sy09": {"q":"$X_1,X_2\\overset{iid}{\\sim}N(0,1)$，求 $\\dfrac{X_1}{X_2}$ 的概率分布","a":"作变换 $u=x_1,\\ v=x_1/x_2$（则 $x_2=u/v$），雅可比 $|J|=\\dfrac{|u|}{v^2}$，联合密度变为 $\\dfrac{1}{2\\pi}e^{-u^2(1+1/v^2)/2}\\cdot\\dfrac{|u|}{v^2}$。对 $u$ 积分（$\\int_{-\\infty}^{+\\infty}|u|e^{-a u^2}du=\\dfrac1a$，$a=\\dfrac{1+1/v^2}{2}$）得\n$$f(v)=\\frac{1}{\\pi(1+v^2)}$$\n即 $\\dfrac{X_1}{X_2}\\sim\\mathrm{Cauchy}(0,1)$（等价于 $t(1)$ 分布）。","src":"2017 复旦大学 432 统计学真题"},
     "ts01": {"q":"设二维随机变量 $(X,Y)$ 的联合密度为 $f(x,y)=A\\,e^{-(2x+3y)}\\,I\\{x>0,\\ y>0\\}$。求：(1) 常数 $A$；(2) $P(X<2,\\ Y<1)$；(3) $X$ 的边缘密度；(4) $P(X<3\\,|\\,Y<1)$；(5) 条件密度 $f(x\\,|\\,y)$","a":"识别分布：$f(x,y)=(2e^{-2x})(3e^{-3y})$ 恰为两独立指数密度之积，故 $X\\sim E(2)$、$Y\\sim E(3)$ 且相互独立。\n(1) 归一化：$1=\\int_0^\\infty\\int_0^\\infty A e^{-2x}e^{-3y}\\,dx\\,dy=A\\cdot\\frac12\\cdot\\frac13=\\frac A6$，故 $A=6$。\n(2) $P(X<2,Y<1)=P(X<2)P(Y<1)=(1-e^{-4})(1-e^{-3})$。\n(3) $f_X(x)=\\int_0^\\infty 6e^{-2x}e^{-3y}\\,dy=2e^{-2x}\\ (x>0)$。\n(4) 由独立性 $P(X<3\\,|\\,Y<1)=P(X<3)=1-e^{-6}$。\n(5) 由独立性 $f(x\\,|\\,y)=f_X(x)=2e^{-2x}\\ (x>0)$。","src":"2019 复旦大学 432 统计学真题"},
     "ts02": {"q":"记 $(0,1),(1,0),(0,0)$ 三点围成的区域为 $D$，$(X,Y)$ 服从 $D$ 上的均匀分布。求：(1) $E(X+Y)$ 与 $\\mathrm{Var}(X+Y)$；(2) $X,Y$ 的相关系数","a":"区域 $D=\\{x\\ge0,\\ y\\ge0,\\ x+y\\le1\\}$，面积 $S=\\frac12$，故 $f(x,y)=2$。\n$E(X)=2\\int_0^1 x(1-x)\\,dx=\\frac13$，同理 $E(Y)=\\frac13$，故 $E(X+Y)=\\frac23$。\n$E(X^2)=2\\int_0^1 x^2(1-x)\\,dx=\\frac16$，同理 $E(Y^2)=\\frac16$；$E(XY)=2\\int_0^1\\int_0^{1-x}xy\\,dy\\,dx=\\int_0^1 x(1-x)^2\\,dx=\\frac1{12}$。\n故 $E[(X+Y)^2]=E(X^2)+2E(XY)+E(Y^2)=\\frac16+\\frac16+\\frac16=\\frac12$，\n$$\\mathrm{Var}(X+Y)=E[(X+Y)^2]-[E(X+Y)]^2=\\frac12-\\frac49=\\frac1{18}$$\n$\\mathrm{Cov}(X,Y)=E(XY)-E(X)E(Y)=\\frac1{12}-\\frac19=-\\frac1{36}$；$\\mathrm{Var}(X)=\\frac16-\\frac19=\\frac1{18}$，同理 $\\mathrm{Var}(Y)=\\frac1{18}$。\n$$\\rho=\\frac{\\mathrm{Cov}(X,Y)}{\\sqrt{\\mathrm{Var}(X)\\,\\mathrm{Var}(Y)}}=\\frac{-1/36}{1/18}=-\\frac12$$","src":"2016 复旦大学 432 统计学真题"},
     "ts03": {"q":"设总体为 $(a,b)$ 上的均匀分布（$a<b$），$X_1,\\dots,X_n$ 为该总体的简单随机样本，$a,b$ 为未知参数。(1) 求 $a,b$ 的矩估计；(2) 求 $a,b$ 的极大似然估计；(3) 关于 $a$ 的两个估计量是否无偏？若不是，说明是否存在无偏估计","a":"$E(X)=\\dfrac{a+b}{2}$，$D(X)=\\dfrac{(b-a)^2}{12}$。\n(1) 令 $\\bar X=\\dfrac{a+b}{2}$、$S^2=\\dfrac{(b-a)^2}{12}$（$S$ 为样本标准差），解得$$\\hat a_M=\\bar X-\\sqrt3\\,S,\\qquad \\hat b_M=\\bar X+\\sqrt3\\,S$$\n(2) 似然 $L(a,b)=\\dfrac{1}{(b-a)^n}$，需满足支撑集约束 $a\\le X_{(1)}\\le X_{(n)}\\le b$。$L$ 关于 $b-a$ 递减，故 $b-a$ 取最小：$$\\hat a_{MLE}=X_{(1)},\\qquad \\hat b_{MLE}=X_{(n)}$$\n(3) $E(X_{(1)})=a+\\dfrac{b-a}{n+1}\\ne a$，故 $\\hat a_{MLE}=X_{(1)}$ 有偏；$\\hat a_M=\\bar X-\\sqrt3\\,S$ 一般也有偏。但存在无偏估计$$\\tilde a=\\frac{nX_{(1)}-X_{(n)}}{n-1}$$其期望 $=\\dfrac{n\\left(a+\\frac{b-a}{n+1}\\right)-\\left(b-\\frac{b-a}{n+1}\\right)}{n-1}=a$。","src":"2025 北大光华 431 统计真题"},
@@ -1824,39 +1586,51 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     "ts08": {"q":"给定二元函数 $f(x,y)=c\\left(e^{-\\frac{x^{2}+y^{2}}{2}}+xy(x^{2}-y^{2})\\sqrt e\\ I_D(x,y)\\right)$，其中 $D=\\{(x,y)\\,|\\,x^{2}+y^{2}\\le1\\}$，$c>0$。(1) 证明 $f(x,y)>0$；(2) 设 $(X,Y)$ 的联合密度为 $f(x,y)$，求 $c$；(3) 求 $X,Y$ 的边缘分布、$Cov(X,Y)$，并判断 $X,Y$ 是否独立","a":"(1) 在 $D$ 外 $f>0$；在 $D$ 内令 $x=\\rho\\cos\\theta,\\ y=\\rho\\sin\\theta$，则 $xy(x^{2}-y^{2})=\\rho^{4}\\cdot\\frac14\\sin4\\theta$：\n$$f/c=e^{-\\rho^{2}/2}+\\frac{\\rho^{4}}{4}\\sin4\\theta\\,\\sqrt e\\ge e^{-\\rho^{2}/2}-\\frac{\\rho^{4}\\sqrt e}{4}>1-\\frac{\\rho^{2}}{2}-\\frac{\\rho^{4}\\sqrt e}{4}\\ge1-\\frac12-\\frac{\\sqrt e}{4}>0$$\n(2) $xy(x^{2}-y^{2})$ 关于各变量为奇函数，$\\iint_D xy(x^{2}-y^{2})\\,dx\\,dy=0$，故\n$$1=c\\int_{\\mathbb R^2}e^{-\\frac{x^{2}+y^{2}}{2}}dx\\,dy=c\\cdot2\\pi\\ \\Rightarrow\\ c=\\frac1{2\\pi}$$\n(3) 边缘密度 $f_X(x)=\\frac{1}{\\sqrt{2\\pi}}e^{-x^{2}/2}$，$f_Y(y)=\\frac{1}{\\sqrt{2\\pi}}e^{-y^{2}/2}$（标准正态）；但 $f(x,y)\\ne f_X(x)f_Y(y)$，故 $X,Y$ 不独立。又 $E(XY)=\\iint xy\\,f(x,y)\\,dx\\,dy=0$（奇函数）、$E(X)=E(Y)=0$，故 $Cov(X,Y)=0$（不相关但不独立）。","src":"2025 复旦大学 432 统计学真题"},
     "ts09": {"q":"设 $EX=0,\\ Var(X)=\\sigma^{2}$，证明对任意 $\\varepsilon>0$：(1) $P(|X|>\\varepsilon)\\le\\dfrac{\\sigma^{2}}{\\varepsilon^{2}}$；(2) $P(X>\\varepsilon)\\le\\dfrac{\\sigma^{2}}{\\sigma^{2}+\\varepsilon^{2}}$","a":"(1) 切比雪夫不等式（马尔可夫不等式取 $g(x)=x^{2}$）：\n$$P(|X|>\\varepsilon)=P(X^{2}>\\varepsilon^{2})\\le\\frac{E(X^{2})}{\\varepsilon^{2}}=\\frac{\\sigma^{2}}{\\varepsilon^{2}}$$\n(2) 单边切比雪夫（坎特利不等式）：对 $t>0$，由 $X>\\varepsilon\\iff X+t>\\varepsilon+t$，\n$$P(X>\\varepsilon)=P(X+t>\\varepsilon+t)\\le\\frac{E(X+t)^{2}}{(\\varepsilon+t)^{2}}=\\frac{\\sigma^{2}+t^{2}}{(\\varepsilon+t)^{2}}$$\n取 $t=\\frac{\\sigma^{2}}{\\varepsilon}$ 使右端最小，得 $P(X>\\varepsilon)\\le\\dfrac{\\sigma^{2}}{\\sigma^{2}+\\varepsilon^{2}}$。","src":"2019 复旦大学 432 统计学真题"},
     "xr01": {"q":"$X_1,X_2,X_3$ 是取自期望为 $\\alpha$ 的指数分布的随机样本。求：(1) $P(X_1<X_2<X_3)$；(2) $X_{(1)}$ 的概率密度","a":"(1) 对 i.i.d. 连续型随机变量，三者次序等可能，故 $P(X_1<X_2<X_3)=\\frac{1}{3!}=\\frac16$。\n(2) 期望为 $\\alpha$ 的指数分布 $X\\sim Exp(\\frac1\\alpha)$，其生存函数 $P(X>x)=e^{-x/\\alpha}$。最小次序统计量 $X_{(1)}$：\n$$P(X_{(1)}>x)=\\left[P(X>x)\\right]^{3}=e^{-3x/\\alpha}$$\n故 $X_{(1)}\\sim Exp(\\frac3\\alpha)$，密度 $f_{X_{(1)}}(x)=\\frac3\\alpha e^{-3x/\\alpha}\\ (x>0)$。","src":"2018 复旦大学 432 统计学真题"},
-    "xr02": {"q":"设有来自总体 $B(1,\\theta)$ 的 $2n$ 个独立样本 $X_1,\\dots,X_{2n}$，其中 $\\theta\\in[\\frac12,1)$。用似然比检验法给出假设检验问题 $H_0:\\theta=\\frac12$ 对 $H_1:\\theta>\\frac12$ 的拒绝域","a":"令 $T=\\sum_{i=1}^{2n}X_i$，则 $T\\sim B(2n,\\theta)$，似然\n$$L(\\theta)=\\theta^{T}(1-\\theta)^{2n-T}$$\n$H_0$ 下 $\\hat\\theta_0=\\frac12$；全空间（$\\theta\\ge\\frac12$）下 $\\hat\\theta=\\max\\{\\frac12,\\ \\bar X\\}$（$\\bar X=\\frac{T}{2n}$）。似然比为\n$$\\Lambda=\\frac{L(\\frac12)}{L(\\hat\\theta)}=\\frac{(1/2)^{2n}}{\\hat\\theta^{T}(1-\\hat\\theta)^{2n-T}}\\le1$$\n$\\Lambda$ 是 $\\bar X$ 的单调下降函数，故拒绝域 $\\Lambda<c$ 等价于 $\\bar X>c'$（似然比单峰族，由单调似然比性质为一致最优）。渐近地\n$$-2\\ln\\Lambda\\ \\overset{d}{\\longrightarrow}\\ \\chi^{2}(1)$$\n故也可取拒绝域 $\\{-2\\ln\\Lambda>\\chi^{2}_{\\alpha}(1)\\}$，即 $\\bar X$ 足够大时拒绝 $H_0:\\theta=\\frac12$。","src":"2021 清华大学 432 统计学真题"},
+    "xr02": [{"q":"设有来自总体 $B(1,\\theta)$ 的 $2n$ 个独立样本 $X_1,\\dots,X_{2n}$，其中 $\\theta\\in[\\frac12,1)$。用似然比检验法给出假设检验问题 $H_0:\\theta=\\frac12$ 对 $H_1:\\theta>\\frac12$ 的拒绝域","a":"令 $T=\\sum_{i=1}^{2n}X_i$，则 $T\\sim B(2n,\\theta)$，似然\n$$L(\\theta)=\\theta^{T}(1-\\theta)^{2n-T}$$\n$H_0$ 下 $\\hat\\theta_0=\\frac12$；全空间（$\\theta\\ge\\frac12$）下 $\\hat\\theta=\\max\\{\\frac12,\\ \\bar X\\}$（$\\bar X=\\frac{T}{2n}$）。似然比为\n$$\\Lambda=\\frac{L(\\frac12)}{L(\\hat\\theta)}=\\frac{(1/2)^{2n}}{\\hat\\theta^{T}(1-\\hat\\theta)^{2n-T}}\\le1$$\n$\\Lambda$ 是 $\\bar X$ 的单调下降函数，故拒绝域 $\\Lambda<c$ 等价于 $\\bar X>c'$（似然比单峰族，由单调似然比性质为一致最优）。渐近地\n$$-2\\ln\\Lambda\\ \\overset{d}{\\longrightarrow}\\ \\chi^{2}(1)$$\n故也可取拒绝域 $\\{-2\\ln\\Lambda>\\chi^{2}_{\\alpha}(1)\\}$，即 $\\bar X$ 足够大时拒绝 $H_0:\\theta=\\frac12$。","src":"2021 清华大学 432 统计学真题"},{"q":"设 $(X_i,Y_i)^{\\mathsf T}$，$i=1,\\dots,n$，i.i.d. $\\sim N_2(\\mu,\\Sigma)$，$\\Sigma=\\begin{pmatrix}\\sigma_1^{2}&\\rho\\sigma_1\\sigma_2\\\\ \\rho\\sigma_1\\sigma_2&\\sigma_2^{2}\\end{pmatrix}$。对 $H_0:\\rho=0$ 给出似然比检验统计量与水平 $\\alpha$ 的拒绝域。","a":"在 $H_0$ 下 $\\Sigma$ 对角，似然函数分解为两个一元正态之积，$\\hat\\mu_i=\\bar X_i$、$\\hat\\sigma_i^{2}=\\frac1n\\sum(X_{ij}-\\bar X_i)^{2}$。\n无约束 MLE 用样本协方差阵 $S$。似然比化简为\n$$\\Lambda=\\Big(\\frac{\\hat\\sigma_1^{2}\\hat\\sigma_2^{2}}{\\det S}\\Big)^{n/2}=\\big(1-r^{2}\\big)^{n/2},\\qquad -2\\ln\\Lambda=-n\\ln(1-r^{2}).$$\n大样本下 $-n\\ln(1-r^{2})\\sim\\chi^{2}(1)$，拒绝域 $-n\\ln(1-r^{2})>\\chi^{2}_{1-\\alpha}(1)$（等价 $|r|>r_{\\alpha}$）。","src":"2024 北京大学数院 431 统计真题"}],
     "xr03": {"q":"测量一个物体的重量，测量值服从 $N(\\mu,\\sigma^{2})$。独立测量 $10$ 次得样本均值 $\\bar x=10.48$、样本标准差 $s=1.36$。求：(1) 该物体重量 $\\mu$ 的 90% 置信区间；(2) 测量标准差 $\\sigma$ 的 95% 置信区间","a":"$\\sigma^{2}$ 未知，求\\textbf{单均值} $\\mu$ 的区间 $\\Rightarrow$ 用 $t$：枢轴量 $\\dfrac{\\bar X-\\mu}{S/\\sqrt n}\\sim t(n-1)$，$n-1=9$，$t_{0.05}(9)=1.833$。\n$$\\bar x\\pm t_{0.05}(9)\\frac{s}{\\sqrt{10}}=10.48\\pm1.833\\times\\frac{1.36}{\\sqrt{10}}\\approx10.48\\pm0.79=(9.69,\\ 11.27)$$\n求\\textbf{方差/标准差}区间 $\\Rightarrow$ 用 $\\chi^{2}$：$\\dfrac{(n-1)S^{2}}{\\sigma^{2}}\\sim\\chi^{2}(n-1)$，$\\chi^{2}_{0.975}(9)=2.70$、$\\chi^{2}_{0.025}(9)=19.02$：\n$$\\left(\\frac{9\\times1.36^{2}}{19.02},\\ \\frac{9\\times1.36^{2}}{2.70}\\right)\\approx(0.875,\\ 6.17)\\ \\Rightarrow\\ \\sigma\\in(0.94,\\ 2.48)$$\n口诀：\\textbf{均值用 $t$、方差用 $\\chi^{2}$}，二者共用同一“枢轴量反解参数”的流程。","src":"2017 中国科学技术大学 432 统计学真题"},
     "xt01": {"q":"设总体的分布是 $f(x)=3x^{2},\\ 0<x<1$，从中抽取 i.i.d. 样本 $x_1,\\dots,x_n$。求 $(x_{(1)},\\dots,x_{(n)})$ 即次序统计量的密度函数","a":"样本联合密度 $f(x_1,\\dots,x_n)=3^{n}\\prod_{i=1}^{n}x_i^{2}$。由次序统计量密度公式（$n!$ 因子来自全排列）：\n$$p(x_{(1)},\\dots,x_{(n)})=n!\\,3^{n}\\prod_{i=1}^{n}x_{(i)}^{2},\\qquad 0<x_{(1)}<\\cdots<x_{(n)}<1$$","src":"2023 中国科学技术大学 812 概率论与数理统计真题"},
     "xt02": {"q":"设总体的分布函数 $F(x)$ 连续单增，$X_{(1)},\\dots,X_{(n)}$ 是来自该总体的随机样本的次序统计量，$Y_i=F(X_{(i)})$。求 $E(Y_i)$、$\\mathrm{Var}(Y_i)$ 与 $(Y_1,\\dots,Y_n)^{T}$ 的协方差矩阵","a":"因 $F(X)\\sim U(0,1)$，故 $Y_i=F(X_{(i)})$ 恰为 $U(0,1)$ 样本的第 $i$ 个次序统计量，$Y_i\\sim\\mathrm{Beta}(i,\\ n-i+1)$：\n$$E(Y_i)=\\frac{i}{n+1},\\qquad \\mathrm{Var}(Y_i)=\\frac{i(n-i+1)}{(n+1)^{2}(n+2)}$$\n$(Y_i,Y_j)$（$i<j$）的联合密度为 $f_{ij}(x,y)=\\dfrac{n!}{(i-1)!(j-i-1)!(n-j)!}x^{i-1}(y-x)^{j-i-1}(1-y)^{n-j}$，据此积分得协方差矩阵元素。","src":"2019 复旦大学 432 统计学真题"},
-    "xt03": {"q":"设总体分布为 $f(x)=3x^{2},\\ 0<x<1$，样本 i.i.d.。证明：$\\dfrac{X_{(i)}}{X_{(j)}}$ 与 $X_{(j)}$ 相互独立，其中 $1\\le i<j\\le n$","a":"由次序统计量公式，$(X_{(i)},X_{(j)})$ 的联合密度为\n$$p_{ij}(u,v)=C\\,u^{3i-1}v^{2}(v^{3}-u^{3})^{j-i-1}(1-v^{3})^{n-j},\\quad 0<u<v<1$$\n作变换 $Z=\\dfrac{u}{v}$、$V=v$（雅可比 $=V$），化简后密度可分离为 $f_Z(z)\\cdot f_V(v)$，其中 $f_V$ 即 $X_{(j)}$ 的边缘密度，故 $Z$ 与 $V=X_{(j)}$ 独立。","src":"2023 中国科学技术大学 812 概率论与数理统计真题"},
-    "xt04": {"q":"设 $X_1,\\dots,X_n$ 为来自总体 $f(x;\\theta)$ 的简单随机样本。叙述充分统计量的定义，并判断 $T=\\sum_{k=1}^{n}X_k$ 是否为 $\\theta$ 的充分统计量（其中 $f(x;\\theta)=\\theta(1-\\theta)^{x},\\ x=0,1,\\dots$）","a":"充分统计量：若给定 $T$ 后样本的条件分布与 $\\theta$ 无关，则 $T$ 为充分统计量。\n$f(x;\\theta)=\\theta(1-\\theta)^{x}$ 的样本联合分布：\n$$f(x_1,\\dots,x_n;\\theta)=\\theta^{n}(1-\\theta)^{\\sum x_i}=\\underbrace{\\theta^{n}(1-\\theta)^{T}}_{g(T,\\theta)}\\cdot\\underbrace{1}_{h(x)}$$\n由因子分解定理，$T=\\sum_{k=1}^{n}X_k$ 是 $\\theta$ 的充分统计量。","src":"2023 复旦大学 432 统计学真题"},
-    "xt05": {"q":"设 $X_1,X_2,X_3$ 是取自 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$ 的简单随机样本，$T=\\sum_{i=1}^{n}\\ln X_i$。叙述并运用充分完备统计量判断（或求 UMVUE）","a":"$X\\sim\\mathrm{Beta}(\\theta,1)$ 为指数族，故 $T'=\\sum\\ln X_i$（等价地 $-\\sum\\ln X_i$）是充分完备统计量。又 $Y=-\\ln X\\sim Exp(\\theta)$，$\\sum Y_i\\sim\\Gamma(n,\\theta)$，可由此构造 $\\theta$ 的无偏、基于充分完备统计量的估计，由 Lehmann-Scheffé 定理即得其 UMVUE。","src":"2024 复旦大学 432 统计学真题","a2":"巧解（指数族结论直接判完备）：凡形如 $f(x;\\theta)=h(x)\\exp\\{c(\\theta)T(x)+d(\\theta)\\}$ 的单参指数族，其 $T=\\sum T(x_i)$ 自动满足“充分 $+$ 完备”，无需从头证完备性。"},
-    "xt06": {"q":"设 $X_1,\\dots,X_n$ 是从参数 $\\lambda$ 的 Poisson 分布总体中抽取的一组随机样本，$\\lambda$ 未知。(1) 求 $\\lambda$ 的充分完备统计量；(2) 求 $g_1(\\lambda)=\\lambda^{3}$ 的最小方差无偏估计（UMVUE）","a":"(1) $X\\sim P(\\lambda)$ 为指数族，$T=\\sum_{i=1}^{n}X_i$ 是 $\\lambda$ 的充分完备统计量（且 $T\\sim P(n\\lambda)$）。\n(2) 由 $E\\left[\\frac{T(T-1)(T-2)}{n^{3}}\\right]=\\lambda^{3}$（利用 $E[T^{(3)}]=(n\\lambda)^{3}$ 阶乘矩），故\n$$\\hat g_1(T)=\\frac{T(T-1)(T-2)}{n^{3}}$$\n是基于充分完备统计量的无偏估计，由 Lehmann-Scheffé 定理为 $\\lambda^{3}$ 的 UMVUE。","src":"2018 中国科学技术大学 812 概率论与数理统计真题"},
+    "xt04": [{"q":"设 $X_1,\\dots,X_n$ 为来自总体 $f(x;\\theta)$ 的简单随机样本。叙述充分统计量的定义，并判断 $T=\\sum_{k=1}^{n}X_k$ 是否为 $\\theta$ 的充分统计量（其中 $f(x;\\theta)=\\theta(1-\\theta)^{x},\\ x=0,1,\\dots$）","a":"充分统计量：若给定 $T$ 后样本的条件分布与 $\\theta$ 无关，则 $T$ 为充分统计量。\n$f(x;\\theta)=\\theta(1-\\theta)^{x}$ 的样本联合分布：\n$$f(x_1,\\dots,x_n;\\theta)=\\theta^{n}(1-\\theta)^{\\sum x_i}=\\underbrace{\\theta^{n}(1-\\theta)^{T}}_{g(T,\\theta)}\\cdot\\underbrace{1}_{h(x)}$$\n由因子分解定理，$T=\\sum_{k=1}^{n}X_k$ 是 $\\theta$ 的充分统计量。","src":"2023 复旦大学 432 统计学真题"},{"q":"设 $X_1,\\dots,X_n$ 是来自 $B(1,p)$ 的简单随机样本。求 $p$ 的充分统计量，并求 $p(1-p)$ 的 UMVUE。","a":"联合分布 $P(\\mathbf x)=p^{\\sum x_i}(1-p)^{n-\\sum x_i}$，由因子分解定理 $T=\\sum X_i$ 充分；$B(1,p)$ 为指数族，$T$ 完备。\n$p(1-p)=P(X_1=1,X_2=0)$，故 $I[X_1=1,X_2=0]$ 无偏。对 $T$ 条件化：\n$$\\hat p(1-p)=P(X_1=1,X_2=0\\mid T=t)=\\frac{\\binom{n-2}{t-1}}{\\binom{n}{t}}=\\frac{t(n-t)}{n(n-1)}.$$\n由 Lehmann–Scheffé，它是 UMVUE。","src":"2016 北京大学数院 431 统计真题"}],
+    "xt05": [{"q":"设 $X_1,X_2,X_3$ 是取自 $f(x;\\theta)=\\theta x^{\\theta-1}\\ (0<x<1)$ 的简单随机样本，$T=\\sum_{i=1}^{n}\\ln X_i$。叙述并运用充分完备统计量判断（或求 UMVUE）","a":"$X\\sim\\mathrm{Beta}(\\theta,1)$ 为指数族，故 $T'=\\sum\\ln X_i$（等价地 $-\\sum\\ln X_i$）是充分完备统计量。又 $Y=-\\ln X\\sim Exp(\\theta)$，$\\sum Y_i\\sim\\Gamma(n,\\theta)$，可由此构造 $\\theta$ 的无偏、基于充分完备统计量的估计，由 Lehmann-Scheffé 定理即得其 UMVUE。","src":"2024 复旦大学 432 统计学真题","a2":"巧解（指数族结论直接判完备）：凡形如 $f(x;\\theta)=h(x)\\exp\\{c(\\theta)T(x)+d(\\theta)\\}$ 的单参指数族，其 $T=\\sum T(x_i)$ 自动满足“充分 $+$ 完备”，无需从头证完备性。"},{"q":"正态总体 $N(\\mu,\\sigma^{2})$，$\\sigma^{2}$ 已知，$n$ 个样本。求 $\\mu^{3}$ 与 $\\mu^{4}$ 的 UMVUE。","a":"$\\bar X$ 是 $\\mu$ 的充分完备统计量且 $\\bar X\\sim N(\\mu,\\frac{\\sigma^{2}}{n})$。用正态矩公式凑无偏：\n$E\\bar X^{3}=\\mu^{3}+3\\mu\\frac{\\sigma^{2}}{n}$，故 $\\widehat{\\mu^{3}}=\\bar X^{3}-3\\frac{\\sigma^{2}}{n}\\bar X$。\n$E\\bar X^{4}=\\mu^{4}+6\\mu^{2}\\frac{\\sigma^{2}}{n}+3\\frac{\\sigma^{4}}{n^{2}}$，故 $\\widehat{\\mu^{4}}=\\bar X^{4}-6\\frac{\\sigma^{2}}{n}\\bar X^{2}+3\\frac{\\sigma^{4}}{n^{2}}$。\n两者都是 $\\bar X$ 的函数、无偏，由 Lehmann–Scheffé 即 UMVUE。","src":"2022 北京大学数院 431 统计真题"}],
+    "xt06": [{"q":"设 $X_1,\\dots,X_n$ 是从参数 $\\lambda$ 的 Poisson 分布总体中抽取的一组随机样本，$\\lambda$ 未知。(1) 求 $\\lambda$ 的充分完备统计量；(2) 求 $g_1(\\lambda)=\\lambda^{3}$ 的最小方差无偏估计（UMVUE）","a":"(1) $X\\sim P(\\lambda)$ 为指数族，$T=\\sum_{i=1}^{n}X_i$ 是 $\\lambda$ 的充分完备统计量（且 $T\\sim P(n\\lambda)$）。\n(2) 由 $E\\left[\\frac{T(T-1)(T-2)}{n^{3}}\\right]=\\lambda^{3}$（利用 $E[T^{(3)}]=(n\\lambda)^{3}$ 阶乘矩），故\n$$\\hat g_1(T)=\\frac{T(T-1)(T-2)}{n^{3}}$$\n是基于充分完备统计量的无偏估计，由 Lehmann-Scheffé 定理为 $\\lambda^{3}$ 的 UMVUE。","src":"2018 中国科学技术大学 812 概率论与数理统计真题"},{"q":"设 $X_1,\\dots,X_n$ 来自 $B(1,p)$，$0<m\\le n$。求 $p^{m}$ 的 UMVUE。","a":"$T=\\sum X_i$ 是 $p$ 的充分完备统计量，$T\\sim B(n,p)$。\n先找无偏：$P(X_1=\\cdots=X_m=1)=p^{m}$，故 $I[X_1=\\cdots=X_m=1]$ 无偏。\n对 $T$ 条件化：$E\\big[I[X_1=\\cdots=X_m=1]\\mid T=t\\big]=P(X_1=\\cdots=X_m=1\\mid T=t)=\\frac{\\binom{n-m}{t-m}}{\\binom{n}{t}}$（$t\\ge m$，否则 $0$）。\n由 Lehmann–Scheffé，$\\hat p^{m}=\\frac{\\binom{n-m}{T-m}}{\\binom{n}{T}}I[T\\ge m]$ 是 UMVUE。","src":"2018 北京大学数院 431 统计真题"}],
     "xt07": {"q":"已知命题 $p$：随机变量 $X$ 与 $Y$ 相互独立；命题 $q$：$X+Y$ 的特征函数是 $X$ 与 $Y$ 特征函数的乘积。则（  ）\\\\\nA. $p$ 成立可推出 $q$ 成立，但反之不行\\\\\nB. $q$ 成立可推出 $p$ 成立，但反之不行\\\\\nC. 它们互为充要条件\\\\\nD. 以上说法都不对","a":"选 A。\n$p\\Rightarrow q$ 显然：独立时 $\\varphi_{X+Y}(t)=\\varphi_X(t)\\varphi_Y(t)$。\n但 $q\\not\\Rightarrow p$：取 $X=Y\\sim\\mathrm{Cauchy}(0,1)$，则 $\\varphi_{X+Y}(t)=e^{-2|t|}=\\varphi_X(t)\\varphi_Y(t)$，而 $X,Y$ 显然不独立。判断独立性须用\\textbf{联合}特征函数 $\\varphi_{X,Y}(s,t)=\\varphi_X(s)\\varphi_Y(t)$。","src":"2021 南开大学 432 统计学真题"},
-    "xt08": {"q":"$\\{N(t),t\\ge0\\}$ 是强度为 $\\lambda$ 的泊松过程，当 $0<t<s$ 时，计算 $E[N(s)\\,|\\,N(t)]$ 以及当 $N(s)=n$ 时 $N(t)$ 的条件分布","a":"由独立增量性与增量分布 $N(s)-N(t)\\sim P(\\lambda(s-t))$：\n$$E[N(s)\\,|\\,N(t)]=E[N(t)+N(s)-N(t)\\,|\\,N(t)]=N(t)+\\lambda(s-t)$$\n（条件期望中 $N(t)$ 已知、增量期望为 $\\lambda(s-t)$。）\n$N(t)\\,|\\,N(s)=n\\ \\sim\\ B\\!\\left(n,\\ \\frac{t}{s}\\right)$，因为 $[0,s]$ 内 $n$ 个到达时刻独立均匀分布，落入 $[0,t]$ 的概率为 $\\dfrac{t}{s}$。","src":"2018 北京大学数院 431 金融学综合真题","a2":"巧解（条件分布二项）：把 $N(t)$ 看作 $N(s)$ 个点中落入前 $t$ 段的个数，逐点独立同概率 $p=t/s$，故 $N(t)\\,|\\,N(s)=n\\sim B(n,t/s)$。"},
-    "xt09": {"q":"有随机变量序列 $\\{X_n\\}$，记 $Y_n=\\frac{1}{n}\\sum_{i=1}^{n}X_i$，$a_n=E(Y_n)$。证明：$\\{X_n\\}$ 服从大数定律的充要条件是 $\\lim_{n\\to\\infty}E\\left[\\dfrac{(Y_n-a_n)^{2}}{1+(Y_n-a_n)^{2}}\\right]=0$","a":"令 $\\Delta_n=Y_n-a_n$。大数定律即 $\\Delta_n\\overset{P}{\\to}0$。\n必要性：若 $\\Delta_n\\overset{P}{\\to}0$，因为 $\\dfrac{\\Delta_n^{2}}{1+\\Delta_n^{2}}\\le1$ 且收敛到 $0$，由控制收敛定理极限为 $0$。\n充分性：$<\\Delta_n^{2}/(1+\\Delta_n^{2})\\to0$ 蕴含依概率收敛（该有界函数刻画“$\\Delta_n$ 不趋 0”的概率趋于 $0$），即 $\\Delta_n\\overset{P}{\\to}0$。此式对$\\mathrm{Var}$ 无穷（仅一阶矩）的情形也适用。","src":"2021 南开大学 432 统计学真题"},
+    "xt08": [{"q":"$\\{N(t),t\\ge0\\}$ 是强度为 $\\lambda$ 的泊松过程，当 $0<t<s$ 时，计算 $E[N(s)\\,|\\,N(t)]$ 以及当 $N(s)=n$ 时 $N(t)$ 的条件分布","a":"由独立增量性与增量分布 $N(s)-N(t)\\sim P(\\lambda(s-t))$：\n$$E[N(s)\\,|\\,N(t)]=E[N(t)+N(s)-N(t)\\,|\\,N(t)]=N(t)+\\lambda(s-t)$$\n（条件期望中 $N(t)$ 已知、增量期望为 $\\lambda(s-t)$。）\n$N(t)\\,|\\,N(s)=n\\ \\sim\\ B\\!\\left(n,\\ \\frac{t}{s}\\right)$，因为 $[0,s]$ 内 $n$ 个到达时刻独立均匀分布，落入 $[0,t]$ 的概率为 $\\dfrac{t}{s}$。","src":"2018 北京大学数院 431 金融学综合真题","a2":"巧解（条件分布二项）：把 $N(t)$ 看作 $N(s)$ 个点中落入前 $t$ 段的个数，逐点独立同概率 $p=t/s$，故 $N(t)\\,|\\,N(s)=n\\sim B(n,t/s)$。"},{"q":"两家公司的违约次数分别是强度为 $\\lambda$ 的独立泊松过程，$T_i$ 为公司 $i$ 首次违约时刻。已知 $T_1+T_2=t$，求 $T_1$ 的条件分布。","a":"$T_1,T_2$ 独立同分布 $Exp(\\lambda)$，联合密度 $\\lambda^{2}e^{-\\lambda(s+u)}$。\n作变换 $t=s+u$、$s=s$，雅可比为 $1$，故 $(T_1,T_1+T_2)$ 的密度为 $\\lambda^{2}e^{-\\lambda t}$，$0<s<t$。\n边际 $f_{T_1+T_2}(t)=\\lambda^{2}te^{-\\lambda t}$（$Gamma(2,\\lambda)$），相除得\n$$f_{T_1\\mid T_1+T_2=t}(s)=\\frac{1}{t},\\quad 0<s<t,$$\n即条件分布为 $U(0,t)$——与 $\\lambda$ 无关。","src":"2019 北京大学数院 431 统计真题"}],
     "xt10": {"q":"考虑多元回归模型 $Z=Y\\beta+e$，其中 $Y=(Y_1^{T},\\dots,Y_n^{T})^{T}$，$Y_i\\in\\mathbb R^{d}$，$E(e)=0$，$\\mathrm{Var}(e)=\\sigma^{2}I_n$，$Y$ 已知且列满秩。若 $\\hat\\beta$ 是 $\\beta$ 的最小二乘估计。(1) 证明 $\\mathrm{Var}(\\hat\\beta)=\\sigma^{2}(Y^{T}Y)^{-1}$；(2) 证明残差平方和 $Q(\\hat\\beta)$ 的期望为 $(n-d)\\sigma^{2}$","a":"(1) $\\hat\\beta=(Y^{T}Y)^{-1}Y^{T}Z$，由 $\\mathrm{Var}(Z)=\\sigma^{2}I_n$：\n$$\\mathrm{Var}(\\hat\\beta)=(Y^{T}Y)^{-1}Y^{T}\\mathrm{Var}(Z)Y(Y^{T}Y)^{-1}=\\sigma^{2}(Y^{T}Y)^{-1}$$\n(2) 残差 $Z-Y\\hat\\beta=(I_n-H)Z$，$H=Y(Y^{T}Y)^{-1}Y^{T}$ 为幂等投影阵且 $\\mathrm{tr}(H)=d$，故 $E\\left[Q(\\hat\\beta)\\right]=\\sigma^{2}\\mathrm{tr}(I_n-H)=\\sigma^{2}(n-d)$。","src":"2024 北京大学数院 431 金融学综合真题"},
     "xt11": {"q":"叙述题：(1) 叙述多重共线性的定义；(2) 如何判断多重共线性；(3) 如何消除多重共线性","a":"(1) 多元回归中自变量间存在（近似）线性相关，使 $X^{T}X$ 接近奇异、$\\hat\\beta$ 方差被放大。\n(2) 判断：自变量两两相关系数高；$VIF_j=\\frac{1}{1-R_j^{2}}>10$；$X^{T}X$ 最小特征值接近 0；整体 $F$ 显著但各系数 $t$ 不显著。\n(3) 消除：删除/合并高相关变量；逐步回归筛选；主成分回归；岭回归；增加样本量。","src":"2023 中国科学技术大学 432 统计学真题"},
     "xt12": {"q":"假设 $y_1,\\dots,y_n$ 独立同服从下述异方差线性回归模型：$y_i=\\beta_0+\\beta_1x_i+\\varepsilon_i$，其中 $\\varepsilon_i\\sim N(0,i^{2})$，$x_1,\\dots,x_n$ 是已知数。(1) 求对数似然函数；(2) 写出 $(\\beta_0,\\beta_1)$ 极大似然估计的数学公式（等价于加权最小二乘）","a":"$\\varepsilon_i\\sim N(0,i^{2})$，$\\mathrm{Var}(\\varepsilon_i)=i^{2}$ 为异方差。对数似然\n$$\\ell(\\beta_0,\\beta_1)=-\\frac{n}{2}\\ln 2\\pi-\\sum_{i=1}^{n}\\ln i-\\frac{1}{2}\\sum_{i=1}^{n}\\frac{(y_i-\\beta_0-\\beta_1x_i)^{2}}{i^{2}}$$\n对 $\\beta$ 求导为 0，得 MLE（即加权最小二乘，权重 $w_i=1/i^{2}$）满足\n$$\\sum\\frac{y_i-\\hat\\beta_0-\\hat\\beta_1x_i}{i^{2}}=0,\\quad \\sum\\frac{x_i(y_i-\\hat\\beta_0-\\hat\\beta_1x_i)}{i^{2}}=0$$\n即对变换 $\\dfrac{y_i}{i}=\\beta_0\\frac1i+\\beta_1\\frac{x_i}{i}+\\dfrac{\\varepsilon_i}{i}$ 做 OLS。","src":"2011 北京大学光华 431 金融学综合真题","a2":"巧解（White 检验对应）：若方差具体形式 $\\mathrm{Var}(\\varepsilon_i)=i^{2}$ 已知，直接用 WLS（等价 GLS）；若未知，则用 White 检验 $W=nR^{2}\\sim\\chi^{2}(p)$ 诊断异方差后取稳健标准误。"},
     "xt13": {"q":"公司甲同时在大陆 A 股及香港 H 股上市，现有它在 A 股市场和 H 股市场上过去一年每天的回报观测 $X_i,Y_i$。请给出两种检验方法，检验该股票在 A 股和 H 股上的回报均值（分布）是否相等，并讨论其假设条件","a":"方法一：\\textbf{配对样本 $t$ 检验}。令 $D_i=X_i-Y_i$，$H_0:\\mu_D=0$，$t=\\dfrac{\\bar D}{S_D/\\sqrt n}\\sim t(n-1)$。\n方法二：$n_1,n_2$ 较大时。方法三（\\textbf{非参数——Wilcoxon 秩和检验}，不要求正态）：合并两样本升序排秩 $R_i$，$W_X=\\sum R(X_i)$，\n$$E(W_X)=\\frac{n_1(n_1+n_2+1)}{2},\\quad \\mathrm{Var}(W_X)=\\frac{n_1n_2(n_1+n_2+1)}{12},\\quad Z=\\frac{W_X-E(W_X)}{\\sqrt{\\mathrm{Var}(W_X)}}\\dot\\sim N(0,1)$$\n$|Z|>z_{\\alpha/2}$ 拒绝 $H_0$。\\textbf{讨论}：配对 $t$ 需差 $D_i$ 正态；秩和检验不需要正态（更稳健），但只利用相对次序、损失部分数值信息。本例为明显配对样本，配对 $t$ 检验利用成对结构消除共同因素、更合理。","src":"2017 北京大学光华 431 金融学综合真题"},
     "xt14": {"q":"设总体 $X$ 的概率分布为：$P(X=-1)=2p$，$P(X=0)=1-5p$，$P(X=1)=3p$，其中 $p>0$ 为未知参数。现有一样本容量 $n=60$ 的简单随机样本，其中 0 出现了 30 次，1 和 -1 均出现 15 次。(1) 求 $p$ 的极大似然估计 $\\hat p$；(2) 在显著性水平 $\\alpha=0.05$ 下，用 $\\hat p$ 和拟合优度检验判断该组样本是否来自总体 $X$","a":"(1) 似然 $L(p)\\propto(3p)^{15}(1-5p)^{30}(2p)^{15}$，$\\ln L=30\\ln p+30\\ln(1-5p)+\\text{const}$，令 $\\frac{d}{dp}=0$：\n$$\\frac{30}{p}-\\frac{150}{1-5p}=0\\Rightarrow\\hat p=\\frac{1}{10}=0.1$$\n（$1-5p=0.5\\ge0$ 成立）。\n(2) $\\chi^{2}$ 拟合优度检验：期望频数 $np_i$ 为 $(2\\hat p\\cdot60,\\ (1-5\\hat p)\\cdot60,\\ 3\\hat p\\cdot60)=(12,30,18)$，观测为 $(15,30,15)$：\n$$\\chi^{2}=\\frac{(15-12)^{2}}{12}+\\frac{(30-30)^{2}}{30}+\\frac{(15-18)^{2}}{18}=\\frac{9}{12}+\\frac{9}{18}=1.25$$\n自由度 $=3-1-1=1$（估计了 $p$），$\\chi^{2}_{0.05}(1)=3.84$，因 $1.25<3.84$，\\textbf{不拒绝} $H_0$，可以认为该组样本来自总体 $X$。","src":"2016 中国科学技术大学 812 概率论与数理统计真题","a2":"巧解（K-S/经验分布印证）：拟合优度亦可比较经验分布 $F_n$ 与理论分布 $F_0$（$K$-$S$ 统计量 $D_n=\\sup|F_n-F_0|$），此处用 $\\chi^{2}$ 组合更简单高效。"},
-    "xt15": {"q":"叙述 $2\\times2$ 的列联表独立性检验原理","a":"设有两个分类变量 $X,Y$，各取 $m,n$ 种值，观测频数 $N_{ij}$，行合计 $N_{i\\cdot}$、列合计 $N_{\\cdot j}$、总 $N$。$H_0$：$X$ 与 $Y$ 相互独立。\n独立时 $\\dfrac{N_{ij}}{N}\\approx\\dfrac{N_{i\\cdot}}{N}\\cdot\\dfrac{N_{\\cdot j}}{N}$，即期望频数 $\\hat e_{ij}=\\dfrac{N_{i\\cdot}N_{\\cdot j}}{N}$。以 $\\dfrac{1}{N_{i\\cdot}N_{\\cdot j}}$ 为权重标准化偏离，得\n$$\\chi^{2}=\\sum_{i=1}^{m}\\sum_{j=1}^{n}\\frac{(N_{ij}-\\hat e_{ij})^{2}}{\\hat e_{ij}}\\sim\\chi^{2}((m-1)(n-1))$$\n$\\chi^{2}>\\chi^{2}_{\\alpha}((m-1)(n-1))$ 则拒绝 $H_0$，认为 $X,Y$ 不独立。对 $2\\times2$ 表自由度 $=1$，可用 Yates 连续性校正：$\\chi^{2}_{c}=\\sum\\dfrac{(|N_{ij}-\\hat e_{ij}|-\\frac12)^{2}}{\\hat e_{ij}}$。","src":"2020 中国科学技术大学 432 统计学真题"},
+    "xt15": [{"q":"叙述 $2\\times2$ 的列联表独立性检验原理","a":"设有两个分类变量 $X,Y$，各取 $m,n$ 种值，观测频数 $N_{ij}$，行合计 $N_{i\\cdot}$、列合计 $N_{\\cdot j}$、总 $N$。$H_0$：$X$ 与 $Y$ 相互独立。\n独立时 $\\dfrac{N_{ij}}{N}\\approx\\dfrac{N_{i\\cdot}}{N}\\cdot\\dfrac{N_{\\cdot j}}{N}$，即期望频数 $\\hat e_{ij}=\\dfrac{N_{i\\cdot}N_{\\cdot j}}{N}$。以 $\\dfrac{1}{N_{i\\cdot}N_{\\cdot j}}$ 为权重标准化偏离，得\n$$\\chi^{2}=\\sum_{i=1}^{m}\\sum_{j=1}^{n}\\frac{(N_{ij}-\\hat e_{ij})^{2}}{\\hat e_{ij}}\\sim\\chi^{2}((m-1)(n-1))$$\n$\\chi^{2}>\\chi^{2}_{\\alpha}((m-1)(n-1))$ 则拒绝 $H_0$，认为 $X,Y$ 不独立。对 $2\\times2$ 表自由度 $=1$，可用 Yates 连续性校正：$\\chi^{2}_{c}=\\sum\\dfrac{(|N_{ij}-\\hat e_{ij}|-\\frac12)^{2}}{\\hat e_{ij}}$。","src":"2020 中国科学技术大学 432 统计学真题"},{"q":"调查大、中、小型公司各 $200$ 名高管是否已开展大数据项目，回答“是”的比例分别为 $10\\%$、$35\\%$、$26\\%$。在 $5\\%$ 水平下检验三类公司是否存在显著差异。","a":"$3\\times2$ 列联表：观测“是”为 $20,70,52$，“否”为 $180,130,148$；行合计均 $200$，列合计 $142,458$，总计 $600$。\n期望频数 $E_{ij}=\\frac{R_iC_j}{600}$：“是”各为 $47.33$，“否”各为 $152.67$。\n$\\chi^{2}=\\sum\\frac{(O-E)^{2}}{E}\\approx15.8+10.9+0.5+4.9+3.4+0.1\\approx35.5$，自由度 $(3-1)(2-1)=2$。\n$\\chi^{2}_{0.95}(2)=5.991$，$35.5>5.991$，拒绝独立性，三类公司开展比例存在显著差异。","src":"2020 北京大学光华 431 统计真题"}],
     "jj01": {"q":"一条线段随机分成三段，求能组成三角形的概率。","a":"等价于在 $[0,1]$ 上取两个均匀随机点（将其排序后得到三段），即三段长度 $(X_1,X_2,X_3)$、$X_1+X_2+X_3=1$ 在\\textbf{单纯形}上均匀分布。能成三角形 $\\Leftrightarrow$ 最长段 $<\\frac12$，即\\textbf{同时} $X_1,X_2,X_3<\\frac12$。\n在单纯形中 $\\{X_1\\ge\\frac12\\}$ 的“面积”占 $\\frac14$（三个角各 $\\frac14$），故\n$$P(\\text{能成三角形})=1-3\\times\\frac14=\\frac14$$\n答案：$\\frac14$（B）。","src":"南开大学-432 统计学-2021 年"},
     "jj06": {"q":"考虑一元线性回归模型 $Y_i=\\beta x_i+\\varepsilon_i$，$i=1,\\dots,n$，其中 $E(\\varepsilon_i)=0$，$\\mathrm{Var}(\\varepsilon_i)=\\sigma^2$，$\\mathrm{Cov}(\\varepsilon_i,\\varepsilon_j)=0\\ (i\\ne j)$。求 $\\beta$ 的最小二乘估计 $\\hat\\beta$，并证明 $\\hat\\beta$ 为 $\\beta$ 的无偏估计。","a":"OLS：最小化 $\\sum(Y_i-\\beta x_i)^2$，对 $\\beta$ 求导并令为 0：\n$$\\hat\\beta=\\frac{\\sum x_iY_i}{\\sum x_i^2}$$\n无偏性：由 $E(Y_i)=\\beta x_i$，$E(\\hat\\beta)=\\frac{\\sum x_iE(Y_i)}{\\sum x_i^2}=\\frac{\\sum x_i\\cdot\\beta x_i}{\\sum x_i^2}=\\beta$，故 $\\hat\\beta$ 是 $\\beta$ 的无偏估计。又 $\\mathrm{Var}(\\hat\\beta)=\\frac{\\sigma^2}{\\sum x_i^2}$；在题给的“同方差、无自相关、外生（$E(\\varepsilon_i)=0$）”条件下，由 Gauss-Markov 定理知 $\\hat\\beta$ 是 $\\beta$ 的 BLUE。","src":"中国科学技术大学-432 统计学-2016 年"},
     "jj11": {"q":"为研究旅游购物金额 $Y$（美元）与性别 $D$ 的关系，同时纳入月收入 $X$ 及交互项 $X:D$，回归结果（$D=1$ 女、$D=0$ 男，$\\alpha=0.05$，各系数均显著）：Intercept=$57.61$，$X$=$0.0118$，$D$=$31.87$，$X:D$=$-0.0088$。(1) 解释 $D$ 的回归系数；(2) 解释 $X:D$ 的回归系数。","a":"模型 $\\hat Y=57.61+0.0118X+31.87D-0.0088(X\\cdot D)$。\n男（$D=0$）：$\\hat Y=57.61+0.0118X$；女（$D=1$）：$\\hat Y=89.48+0.0030X$。\n(1) $D$ 的系数 $31.87$：女性比男性的基础购物支出（截距）高 $31.87$ 美元；$|t|=8.32>t_{0.025}$，显著，说明性别在截距上有显著差异。\n(2) $X:D$ 的系数 $-0.0088$：收入的边际影响在女性中比男性低 $0.0088$——每增加 1 美元收入，男性购物增加 $0.0118$，女性仅增加 $0.0118-0.0088=0.0030$；$|t|=6.69>t_{0.025}$，显著，说明组间斜率有系统差异（交互效应存在）。","src":"上海交通大学-432 统计学-2020 年"},
+    "jj17": [{"q":"CEO 年薪模型 $y=\\beta_0+\\beta_1x_1+\\beta_2x_2+\\beta_3x_3+\\beta_4x_4+\\beta_5x_5+\\varepsilon$。要检验“年薪只与报表收益 $x_1$ 和市场表现 $x_2$ 线性相关”，写出零假设、受约束模型与检验统计量。","a":"$H_0:\\beta_3=\\beta_4=\\beta_5=0$，$H_1$：至少一个不为 $0$；受约束模型 $y=\\beta_0+\\beta_1x_1+\\beta_2x_2+\\varepsilon$。\n$F=\\frac{(RSS_r-RSS_u)/3}{RSS_u/(n-6)}\\sim F(3,n-6)$（无截距时分子自由度仍为约束个数 $3$，分母 $n-6$）。\n给定 $\\alpha$，$F>F_{1-\\alpha}(3,n-6)$ 时拒绝 $H_0$，即认为年薪还受其他变量影响。","src":"2017 北京大学光华 431 统计真题"}],
+    "jj16": [{"q":"线性模型 $Y=X\\beta+\\varepsilon=(X_1,X_2)\\binom{\\beta_1}{\\beta_2}+\\varepsilon$，$E(\\varepsilon\\mid X)=0$、$\\operatorname{Var}(\\varepsilon\\mid X)=V(X)$ 正定。求分块后 $\\beta_2$ 的最小二乘估计 $\\hat\\beta_2$。","a":"记 $M_1=I-X_1(X_1'X_1)^{-1}X_1'$ 为“剔除 $X_1$ 后”的残差投影。对 $Y$ 与 $X_2$ 分别关于 $X_1$ 回归取残差，得 $M_1Y$、$M_1X_2$。\nFWL 定理：$\\hat\\beta_2=(X_2'M_1X_2)^{-1}X_2'M_1Y$，与把 $M_1Y$ 对 $M_1X_2$ 做无截距回归相同。\n直观：$\\hat\\beta_2$ 只用 $X_2$ 中与 $X_1$ 正交的信息；$\\hat\\beta_1$ 再由 $\\hat\\beta_1=(X_1'X_1)^{-1}X_1'(Y-X_2\\hat\\beta_2)$ 回代。","src":"2023 北京大学光华 431 统计真题"}],
+    "jj03": [{"q":"10 位分析师接受培训前后的预测误差（美元）配对数据为：前 2.5,3.0,1.8,2.0,2.3,1.5,2.2,2.8,1.7,2.6；后 2.0,2.7,1.5,1.6,2.1,1.2,2.0,2.4,1.3,2.2。取 $\\alpha=0.05$，检验培训是否显著影响预测误差。","a":"配对设计，令 $d_i=$ 前 $-$ 后，$d=(0.5,0.3,0.3,0.4,0.2,0.3,0.2,0.4,0.4,0.4)$，$\\bar d=0.34$，$s_d\\approx0.0966$。\n$t=\\frac{\\bar d}{s_d/\\sqrt{10}}=\\frac{0.34}{0.0306}\\approx11.1$，自由度 $9$，临界值 $t_{0.975}(9)=2.262$。\n$|t|>2.262$，拒绝 $H_0:\\mu_d=0$，培训显著降低了预测误差。","src":"2024 北京大学光华 431 统计真题"}],
+    "est31": [{"q":"$X_1,\\dots,X_n$ i.i.d. $\\sim U(a,b)$，$a,b$ 未知，先验为 $D=\\{(a,b):a\\ge0,\\ b\\le4,\\ a\\le b-2\\}$ 上的均匀分布。求 $(a,b)$ 的后验最大概率估计。","a":"均匀先验下后验密度 $\\pi(a,b\\mid x)\\propto(b-a)^{-n}$，支撑为 $a\\le x_{(1)},\\ b\\ge x_{(n)},\\ a\\ge0,\\ b\\le4,\\ b-a\\ge2$。\n最大化 $ (b-a)^{-n}$ 等价于最小化区间长度 $b-a$：若 $x_{(n)}-x_{(1)}\\ge2$，取 $(\\hat a,\\hat b)=(x_{(1)},x_{(n)})$；否则取长度 $2$ 的区间并尽量右移，$\\hat a=\\min(x_{(1)},2)$、$\\hat b=\\max(\\hat a+2,x_{(n)})$（受 $b\\le4$ 约束）。","src":"2024 北京大学数院 431 统计真题"}],
+    "sm12": [{"q":"设两正态总体样本分别为 $\\varepsilon_1,\\dots,\\varepsilon_m$ 与 $\\theta_1,\\dots,\\theta_n$，方差相等。问统计量 $\\frac{\\sum(\\varepsilon_i-\\bar\\varepsilon)^{2}}{\\sum(\\varepsilon_i-\\bar\\varepsilon)^{2}+\\sum(\\theta_j-\\bar\\theta)^{2}}$ 服从什么分布？","a":"记 $A=\\sum(\\varepsilon_i-\\bar\\varepsilon)^{2}$，$B=\\sum(\\theta_j-\\bar\\theta)^{2}$。等方差下 $\\frac{A}{\\sigma^{2}}\\sim\\chi^{2}(m-1)$、$\\frac{B}{\\sigma^{2}}\\sim\\chi^{2}(n-1)$ 且独立。\n于是 $F=\\frac{A/(m-1)}{B/(n-1)}\\sim F(m-1,n-1)$，而所给统计量 $R=\\frac{A}{A+B}=\\frac{F}{F+\\frac{n-1}{m-1}}$。\n特别当 $m=n$ 时 $R=\\frac{F}{F+1}\\sim Beta\\big(\\frac{m-1}{2},\\frac{m-1}{2}\\big)$。","src":"2016 北京大学光华 431 统计真题"}],
+    "nc18": [{"q":"沪深 300 指数日收益率：2020 年 $n=244$、均值 $26.5\\%$、标准差 $22.3\\%$、偏度 $-0.84$；2023 年 $n=242$、均值 $-11.2\\%$、标准差 $10.1\\%$、偏度 $0.34$。(1) 说明两年分布差异；(2) 求合并均值与标准差。","a":"(1) 2020 年均值高、波动大约两倍，偏度 $-0.84<0$ 为左偏（左尾长、大跌更多）；2023 年均值为负、波动小，偏度 $0.34>0$ 为右偏。\n(2) 合并均值 $\\bar x=\\frac{244(26.5)+242(-11.2)}{486}\\approx7.73\\%$。\n合并方差用总平方和：$SS=(n_1-1)s_1^{2}+(n_2-1)s_2^{2}+n_1(\\bar x_1-\\bar x)^{2}+n_2(\\bar x_2-\\bar x)^{2}\\approx3.18\\times10^{5}$，$s=\\sqrt{SS/485}\\approx25.6\\%$。\n合并后波动被两年均值差放大，标准差高于任一年。","src":"2025 北京大学光华 431 统计真题"}],
+    "ll13": [{"q":"设 $R_1,\\dots,R_n$ 是 i.i.d. 收益率，$ER_1=\\mu$，$\\operatorname{Var}(R_1)=\\sigma^{2}<\\infty$，$1+R_t>0$。(1) 在什么条件下 $\\big(\\prod_{t=1}^{n}(1+R_t)\\big)^{1/n}$ 几乎必然收敛？(2) 收敛时比较极限与 $\\mu$ 的大小。","a":"(1) 取对数：$\\frac1n\\sum\\ln(1+R_t)$。因 $1+R_t>0$ 且 $E|\\ln(1+R_1)|<\\infty$（由二阶矩有限保证），由辛钦大数定律它 a.s. 收敛到 $E\\ln(1+R_1)$。\n再由 $e^{x}$ 连续，$\\big(\\prod(1+R_t)\\big)^{1/n}\\to\\exp\\{E\\ln(1+R_1)\\}$ a.s.。\n(2) 由 Jensen 不等式 $E\\ln(1+R_1)\\le\\ln(1+ER_1)=\\ln(1+\\mu)$，故极限 $\\le 1+\\mu$——波动带来“波动拖累”。","src":"2022 北京大学数院 431 统计真题"}],
+    "xr04-2": [{"q":"设 $X$ 的密度为 $f(x;\\lambda)=\\lambda m(\\lambda x)^{m-1}e^{-(\\lambda x)^{m}}$，$x>0$，$m>0$ 已知。求 $H_0:\\lambda=\\lambda_0$ 对 $H_1:\\lambda>\\lambda_0$ 的一致最优势检验，并指出统计量的分布。","a":"令 $Y=X^{m}$，则 $f_Y(y)=\\lambda^{m}e^{-\\lambda^{m}y}$，即 $Y\\sim Exp(\\lambda^{m})$，$\\theta=\\lambda^{m}$ 越大分布越随机大。\n这是单参数指数族且 $T=\\sum Y_i=\\sum X_i^{m}$ 关于 $\\theta$ 单调增，故由 Karlin–Rubin，UMP 检验拒绝域为 $T$ 大：$\\{\\sum X_i^{m}>c\\}$。\n在 $H_0$ 下 $2\\lambda_0^{m}\\sum X_i^{m}\\sim\\chi^{2}(2n)$，取 $c=\\chi^{2}_{1-\\alpha}(2n)/(2\\lambda_0^{m})$。","src":"2023 北京大学数院 431 统计真题"}],
+    "xr04": [{"q":"叙述并证明 Neyman–Pearson 基本引理（简单原假设对简单备择假设的最优势检验）。","a":"设样本密度在 $H_0$ 下为 $f_0$、$H_1$ 下为 $f_1$。引理：对给定水平 $\\alpha$，拒绝域 $W=\\{f_1/f_0>c\\}$（离散时边界随机化）是水平 $\\alpha$ 的最优势检验。\n证明：设 $\\varphi^{*}$ 为任一水平 $\\alpha$ 的检验，$\\varphi$ 为上述检验，取 $c$ 使 $E_0\\varphi=\\alpha$。在 $W$ 上 $\\varphi-\\varphi^{*}\\ge0$ 且 $f_1-cf_0>0$，在 $W^{c}$ 上 $\\varphi-\\varphi^{*}\\le0$ 且 $f_1-cf_0\\le0$，故 $(\\varphi-\\varphi^{*})(f_1-cf_0)\\ge0$ 处处成立。\n积分得 $\\int(\\varphi-\\varphi^{*})f_1\\ge c\\int(\\varphi-\\varphi^{*})f_0=c(\\alpha-\\alpha)\\ge0$，即 $\\varphi$ 的功效不小于任何水平 $\\alpha$ 检验。","src":"2016 北京大学数院 431 统计真题"}],
+    "test18": [{"q":"解释下列概念：MVUE、假设检验的两类错误、非参数检验、复相关系数的平方。","a":"MVUE：方差一致最小的无偏估计量；常用充分完备统计量 + Lehmann–Scheffé 构造。\n两类错误：第一类“弃真”（$H_0$ 真却拒绝，概率 $\\alpha$），第二类“取伪”（$H_0$ 假却接受，概率 $\\beta$）；功效 $1-\\beta$。\n非参数检验：不指定总体分布族，用秩/符号等构造统计量，如 Wilcoxon 秩和、符号检验。\n复相关系数平方：$R^{2}=ESS/TSS=1-RSS/TSS$，回归解释的变异比例，等于 $Y$ 与 $\\hat Y$ 相关系数平方。","src":"2020 北京大学数院 431 统计真题"}],
+    "est36": [{"q":"设 $X_1,\\dots,X_n$ 来自 $B(1,p)$。用 Rao–Blackwell 定理求 $p(1-p)$ 的改进无偏估计，并说明它是否为 UMVUE。","a":"$T=\\sum X_i$ 充分完备。粗糙无偏估计 $U=I[X_1=1,X_2=0]$，$EU=p(1-p)$。\nRao–Blackwell：$U^{*}=E(U\\mid T=t)=P(X_1=1,X_2=0\\mid T=t)=\\frac{\\binom{n-2}{t-1}}{\\binom{n}{t}}=\\frac{t(n-t)}{n(n-1)}$。\n$U^{*}$ 无偏且方差不超过 $U$；因 $T$ 完备，由 Lehmann–Scheffé 它还是 UMVUE。","src":"2016 北京大学数院 431 统计真题"}],
+    "nc24": [{"q":"设 $Z_1,\\dots,Z_n$ iid 密度 $g$，$\\hat\\mu=\\frac1n\\sum\\frac{f(Z_i)}{g(Z_i)}$ 估计 $\\mu=\\int f$。证明 $\\hat\\mu\\to\\mu$ a.s.；并求 $\\operatorname{Var}(\\hat\\mu)=1$ 时 $\\hat\\mu$ 的渐近分布与所需 $n$。","a":"令 $W_i=f(Z_i)/g(Z_i)$，则 $EW_i=\\int\\frac{f}{g}g=\\mu$，由强大数定律 $\\hat\\mu=\\bar W\\to\\mu$ a.s.。\n$\\operatorname{Var}(\\hat\\mu)=\\frac1n\\operatorname{Var}(W)$；若 $\\operatorname{Var}(W)=1$，CLT 给 $\\sqrt n(\\hat\\mu-\\mu)\\Rightarrow N(0,1)$。\n要使 $|\\hat\\mu-\\mu|\\le\\varepsilon$ 约 $95\\%$ 把握，需 $1.96/\\sqrt n\\le\\varepsilon$，即 $n\\ge(1.96/\\varepsilon)^{2}$。","src":"2024 北京大学数院 431 统计真题"}],
+    "nc23": [{"q":"设 $U_1,\\dots,U_n$ iid $U(0,1)$，用 $\\hat\\theta=\\frac1n\\sum_{i=1}^{n}f(U_i)$ 估计 $\\theta=\\int_0^1 f(x)dx$。证明 $\\hat\\theta$ 无偏、强相合，并构造 $\\theta$ 的 $95\\%$ 近似置信区间。","a":"无偏：$E\\hat\\theta=\\frac1n\\sum Ef(U_i)=\\int_0^1 f(x)dx=\\theta$。\n强相合：$f(U_i)$ iid 且期望存在，由辛钦大数定律 $\\hat\\theta\\to E f(U)=\\theta$ a.s.。\n区间：$\\operatorname{Var}(\\hat\\theta)=\\frac1n\\operatorname{Var}(f(U))$，用样本方差 $s_f^{2}$ 估计，CLT 给 $\\hat\\theta\\pm1.96\\frac{s_f}{\\sqrt n}$。","src":"2020 北京大学数院 431 统计真题"}],
+    "est34": [{"q":"Logistic 回归中 $\\operatorname{logist}(p)=\\ln\\frac{p}{1-p}=x'\\beta$。写出对数似然；并说明当 $x=1$ 时对数似然为何是凹函数、MLE 有何意义。","a":"$\\ell(\\beta)=\\sum_i[y_ix_i'\\beta-\\ln(1+e^{x_i'\\beta})]$，得分 $X'(y-p)$。\n$x=1$ 时 $\\ell(\\beta)=\\sum y_i\\beta-n\\ln(1+e^{\\beta})$，$\\ell''(\\beta)=-n\\frac{e^{\\beta}}{(1+e^{\\beta})^{2}}<0$，严格凹，MLE 唯一。\nMLE 满足 $\\frac{e^{\\hat\\beta}}{1+e^{\\hat\\beta}}=\\bar y$，即拟合概率等于样本频率——把线性预测变成概率的“校准”。","src":"2022 北京大学数院 431 统计真题"}],
+    "est33": [{"q":"线性模型 $Y_{ij}=\\alpha_i+\\beta x_{ij}+e_{ij}$，$i=1,\\dots,m$，$j=1,\\dots,n$，$Ee_{ij}=0$、$\\operatorname{Var}(e_{ij})=\\sigma^{2}$，求 $(\\alpha_1,\\dots,\\alpha_m,\\beta)$ 的 LSE。","a":"把 $\\alpha_i$ 视为参数，设计阵含 $m$ 个个体虚拟变量加 $x$。正规方程给出组内变换：\n$\\hat\\beta=\\frac{\\sum_i\\sum_j(x_{ij}-\\bar x_i)(y_{ij}-\\bar y_i)}{\\sum_i\\sum_j(x_{ij}-\\bar x_i)^{2}}$，$\\hat\\alpha_i=\\bar y_i-\\hat\\beta\\bar x_i$。\n直观：$\\beta$ 只用个体内部的时间变化识别，个体固定差异被 $\\alpha_i$ 吸收。","src":"2023 北京大学数院 431 统计真题"}],
+    "nc22": [{"q":"每吨大米销售成功利润 $6$ 元，失败损失 $a$ 元；只有一个顾客时需求 $X_1\\sim U(0,1)$，应进货几吨？若有两个独立同分布顾客，求总需求的分布。","a":"报童模型：临界分位数 $F(y^{*})=\\frac{6}{6+a}$，$X_1\\sim U(0,1)$ 故 $y^{*}=\\frac{6}{6+a}$。\n两个顾客 $X_1,X_2$ iid $U(0,1)$：$F_{X_1+X_2}(t)=\\frac{t^{2}}{2}$（$0\\le t\\le1$），$=1-\\frac{(2-t)^{2}}{2}$（$1<t\\le2$），密度为三角分布 $\\min(t,2-t)$。\n联合密度 $f(x_1,x_2)=1$（$0<x_1,x_2<1$，独立）。","src":"2017 北京大学数院 431 统计真题"}],
+    "mv12": [{"q":"债券评级在 A、B、D 三状态间转移，转移矩阵 $P=\\begin{pmatrix}0.8&0.1&0.1\\\\0.9&0.05&0.05\\\\0&0&1\\end{pmatrix}$。已知第 1、2 次评级为 A、第 4、5 次为 B，求第 3 次评级的分布；又 $T$ 为首达 D 的时刻，求 $E(T\\mid$ 第一次为 $B)$。","a":"第 3 次分布夹在已知的第 2 次 A 与第 4 次 B 之间，用桥式条件：$P(X_3=j\\mid X_2=A,X_4=B)\\propto p_{Aj}p_{jB}$。\n$p_{A\\cdot}=(0.8,0.1,0.1)$，$p_{\\cdot B}=(0.1,0.05,0)$，乘积 $(0.08,0.005,0)$，归一化得 $(0.941,0.059,0)$。\n首达：从 B 出发解 $h_i=1+\\sum_{k\\ne D}p_{ik}h_k$：$h_A=1+0.8h_A+0.1h_B$、$h_B=1+0.9h_A+0.05h_B$，解得 $h_A=10.5$、$h_B=11$（$h_D=0$）。","src":"2017 北京大学数院 431 统计真题"}],
   };
 
   // ============ 知识点关系标签 ============
   const REL = {
   pb13: [ { to: 'pb08', tag: '前置' }, { to: 'pb10', tag: '相关' } ],
-  pb12: [ { to: 'll03', tag: '应用' }, { to: 'pb02', tag: '相关' } ],
   ll08: [ { to: 'll07', tag: '前置' }, { to: 'll01', tag: '应用' }, { to: 'll04', tag: '相关' } ],
   ll09: [ { to: 'll04', tag: '同类' }, { to: 'll05', tag: '同类' } ],
   sm12: [ { to: 'sm07', tag: '前置' }, { to: 'sm08', tag: '前置' }, { to: 'test11', tag: '应用' }, { to: 'test12', tag: '应用' }, { to: 'test13', tag: '应用' } ],
   sm13: [ { to: 'xt01', tag: '前置' }, { to: 'sm02', tag: '相关' } ],
   sm14: [ { to: 'rv04', tag: '相关' }, { to: 'sm01', tag: '前置' } ],
-  sm15: [ { to: 'sm13', tag: '前置' }, { to: 'sm14', tag: '同类' } ],
-  nc17: [ { to: 'nc03', tag: '前置' }, { to: 'nc13', tag: '应用' } ],
   nc18: [ { to: 'nc08', tag: '前置' }, { to: 'test16', tag: '相关' } ],
   nc19: [ { to: 'nc06', tag: '前置' }, { to: 'mv05', tag: '应用' } ],
   nc20: [ { to: 'nc11', tag: '前置' }, { to: 'nc03', tag: '前置' } ],
@@ -1974,7 +1748,7 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   test13: [ { to: 'test08', tag: '相关' }, { to: 'sm08', tag: '前置' } ],
   test14: [ { to: 'test08', tag: '相关' }, { to: 'sm05', tag: '前置' }, { to: 'xt14', tag: '同类' } ],
   test15: [ { to: 'test03', tag: '相关' }, { to: 'test04', tag: '相关' }, { to: 'test16', tag: '同类' } ],
-  test16: [ { to: 'test16-2', tag: '同类' }, { to: 'test08', tag: '相关' }, { to: 'sm05', tag: '相关' } ],
+  test16: [ { to: 'test16', tag: '同类' }, { to: 'test08', tag: '相关' }, { to: 'sm05', tag: '相关' } ],
   reg01: [ { to: 'reg02', tag: '前置' }, { to: 'reg03', tag: '前置' }, { to: 'reg02', tag: '同类' } ],
   reg02: [ { to: 'reg01', tag: '前置' }, { to: 'reg03', tag: '前置' }, { to: 'reg03', tag: '同类' } ],
   reg03: [ { to: 'reg02', tag: '前置' }, { to: 'sm08', tag: '前置' } ],
@@ -1996,8 +1770,6 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   sy05: [ { to: 'rv07', tag: '前置' }, { to: 'nc08', tag: '相关' } ],
   sy06: [ { to: 'rv07', tag: '前置' }, { to: 'mv11', tag: '相关' } ],
   sy07: [ { to: 'est08', tag: '前置' }, { to: 'est09', tag: '相关' } ],
-  sy08: [ { to: 'll07', tag: '相关' }, { to: 'nc14', tag: '前置' } ],
-  sy09: [ { to: 'sm07', tag: '相关' }, { to: 'rv11', tag: '前置' } ],
   ts01: [ { to: 'pb02', tag: '方法' }, { to: 'pb06', tag: '方法' }, { to: 'rv01', tag: '方法' } ],
   ts02: [ { to: 'nc01', tag: '方法' }, { to: 'nc04', tag: '方法' }, { to: 'nc06', tag: '方法' } ],
   ts03: [ { to: 'est05', tag: '方法' }, { to: 'est06', tag: '方法' }, { to: 'est12', tag: '前置' } ],
@@ -2010,19 +1782,17 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   xr01: [ { to: 'rv10', tag: '前置' }, { to: 'nc13', tag: '相关' }, { to: 'rv19', tag: '相关' } ],
   xr02: [ { to: 'est12', tag: '前置' }, { to: 'est06', tag: '相关' }, { to: 'test15', tag: '相关' } ],
   xr03: [ { to: 'est08', tag: '方法' }, { to: 'est09', tag: '方法' }, { to: 'est10', tag: '方法' }, { to: 'test06', tag: '方法' }, { to: 'test07', tag: '方法' }, { to: 'test13', tag: '方法' } ],
-  xt01: [ { to: 'xt02', tag: '相关' }, { to: 'mv07', tag: '方法' }, { to: 'xt03', tag: '相关' }, { to: 'xt02', tag: '同类' } ],
-  xt02: [ { to: 'xt01', tag: '相关' }, { to: 'sx02', tag: '相关' }, { to: 'mv07', tag: '方法' }, { to: 'xt03', tag: '同类' } ],
-  xt03: [ { to: 'xt01', tag: '前置' }, { to: 'xt02', tag: '相关' } ],
+  xt01: [ { to: 'xt02', tag: '相关' }, { to: 'mv07', tag: '方法' }, { to: 'xt01', tag: '相关' }, { to: 'xt02', tag: '同类' } ],
+  xt02: [ { to: 'xt01', tag: '相关' }, { to: 'sx02', tag: '相关' }, { to: 'mv07', tag: '方法' }, { to: 'xt01', tag: '同类' } ],
   xt04: [ { to: 'est14', tag: '同类' }, { to: 'est15', tag: '方法' }, { to: 'xt05', tag: '前置' }, { to: 'xt05', tag: '同类' } ],
   xt05: [ { to: 'xt06', tag: '前置' }, { to: 'est14', tag: '相关' }, { to: 'est21', tag: '相关' } ],
   xt06: [ { to: 'xt05', tag: '前置' }, { to: 'est21', tag: '相关' }, { to: 'sx03', tag: '相关' } ],
   xt07: [ { to: 'nc15', tag: '同类' }, { to: 'nc16', tag: '同类' }, { to: 'll04', tag: '应用' } ],
   xt08: [ { to: 'rv07', tag: '前置' }, { to: 'rv19', tag: '相关' }, { to: 'mv11', tag: '相关' } ],
-  xt09: [ { to: 'll01', tag: '相关' }, { to: 'll02', tag: '同类' }, { to: 'll03', tag: '同类' }, { to: 'll07', tag: '应用' } ],
   xt10: [ { to: 'reg05', tag: '推广' }, { to: 'reg06', tag: '相关' }, { to: 'reg08', tag: '相关' }, { to: 'jj06', tag: '同类' } ],
   xt11: [ { to: 'reg04', tag: '相关' }, { to: 'xt12', tag: '相关' }, { to: 'sy03', tag: '相关' }, { to: 'xt12', tag: '同类' } ],
   xt12: [ { to: 'reg04', tag: '相关' }, { to: 'xt11', tag: '相关' }, { to: 'reg07', tag: '应用' }, { to: 'jj08', tag: '同类' } ],
-  xt13: [ { to: 'test12', tag: '同类' }, { to: 'test07', tag: '相关' }, { to: 'test16', tag: '相关' }, { to: 'jj04', tag: '同类' } ],
+  xt13: [ { to: 'test12', tag: '同类' }, { to: 'test07', tag: '相关' }, { to: 'test16', tag: '相关' }, { to: 'xt13', tag: '同类' } ],
   xt14: [ { to: 'test14', tag: '同类' }, { to: 'sy04', tag: '前置' }, { to: 'sm09', tag: '应用' } ],
   xt15: [ { to: 'test14', tag: '同类' }, { to: 'sm05', tag: '前置' }, { to: 'mv04', tag: '相关' } ],
   ys01: [ { to: 'rv15', tag: '方法' }, { to: 'mv06', tag: '方法' }, { to: 'jj02', tag: '方法' }, { to: 'mv07', tag: '相关' } ],
@@ -2033,44 +1803,39 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
   jj01: [ { to: 'pb02', tag: '同类' }, { to: 'pb01', tag: '前置' }, { to: 'rv09', tag: '相关' } ],
   jj02: [ { to: 'mv06', tag: '方法' }, { to: 'mv01', tag: '前置' }, { to: 'mv04', tag: '相关' } ],
   jj03: [ { to: 'test12', tag: '相关' }, { to: 'est18', tag: '相关' }, { to: 'xt13', tag: '相关' } ],
-  jj04: [ { to: 'xt13', tag: '同类' }, { to: 'test12', tag: '相关' }, { to: 'jj05', tag: '相关' }, { to: 'jj05', tag: '同类' } ],
-  jj05: [ { to: 'jj04', tag: '同类' }, { to: 'xt13', tag: '同类' }, { to: 'test16', tag: '相关' } ],
   jj06: [ { to: 'reg05', tag: '前置' }, { to: 'reg04', tag: '前置' }, { to: 'reg07', tag: '相关' }, { to: 'xt10', tag: '相关' } ],
   jj08: [ { to: 'xt12', tag: '同类' }, { to: 'reg05', tag: '前置' }, { to: 'jj09', tag: '相关' }, { to: 'jj09', tag: '同类' } ],
   jj09: [ { to: 'xt11', tag: '相关' }, { to: 'reg04', tag: '前置' }, { to: 'jj08', tag: '相关' } ],
   jj10: [ { to: 'jj06', tag: '相关' }, { to: 'reg04', tag: '前置' }, { to: 'reg05', tag: '相关' }, { to: 'jj11', tag: '同类' } ],
   jj11: [ { to: 'reg05', tag: '前置' }, { to: 'reg04', tag: '相关' }, { to: 'jj12', tag: '同类' } ],
   jj12: [ { to: 'reg08', tag: '相关' }, { to: 'reg04', tag: '相关' } ],
-    'test16-2': [ { to: 'test16', tag: '同类' }, { to: 'test14', tag: '延伸' } ],
-    'est32-2': [ { to: 'est32', tag: '同类' }, { to: 'sx03', tag: '相关' } ],
     'sx03-2': [ { to: 'sx03', tag: '同类' }, { to: 'xt04', tag: '相关' } ],
-    'reg17-2': [ { to: 'reg17', tag: '同类' }, { to: 'reg13', tag: '对比' }, { to: 'reg16', tag: '对比' } ],
-    'est30-2': [ { to: 'est30', tag: '同类' }, { to: 'est31', tag: '延伸' } ],
-    'est30-3': [ { to: 'est30', tag: '同类' }, { to: 'est31', tag: '延伸' } ],
-    'est31-2': [ { to: 'est31', tag: '同类' }, { to: 'est30', tag: '前置' } ],
     'xt04-2': [ { to: 'xt04', tag: '同类' }, { to: 'xt05', tag: '延伸' } ],
-    'est28-2': [ { to: 'est28', tag: '同类' }, { to: 'est32-2', tag: '相关' } ],
     'll07-2': [ { to: 'll07', tag: '同类' }, { to: 'll01', tag: '应用' } ],
-    'est25-2': [ { to: 'est25', tag: '同类' }, { to: 'est26', tag: '延伸' } ],
-    'est26-2': [ { to: 'est26', tag: '同类' }, { to: 'est25', tag: '前置' } ],
-    'est26-3': [ { to: 'est26', tag: '同类' }, { to: 'est25-2', tag: '前置' } ],
     'll01-2': [ { to: 'll01', tag: '同类' }, { to: 'll02', tag: '对比' }, { to: 'll03', tag: '对比' } ],
     'xr03-2': [ { to: 'xr03', tag: '同类' }, { to: 'test07', tag: '方法' }, { to: 'reg15', tag: '相关' } ],
-    'xt01-2': [ { to: 'xt01', tag: '同类' }, { to: 'est28-2', tag: '应用' } ],
-    'xr01-2': [ { to: 'xr01', tag: '同类' }, { to: 'rv19', tag: '相关' }, { to: 'xt08', tag: '应用' } ],
     'ys01-2': [ { to: 'ys01', tag: '同类' }, { to: 'jj02', tag: '方法' }, { to: 'mv06', tag: '方法' } ],
-    'xt14-2': [ { to: 'xt14', tag: '同类' }, { to: 'xt15', tag: '相关' }, { to: 'test14', tag: '同类' } ],
     'pb01-2': [ { to: 'pb01', tag: '同类' }, { to: 'pb02', tag: '延伸' } ],
     'xr02-2': [ { to: 'xr02', tag: '同类' }, { to: 'est06', tag: '前置' }, { to: 'test15', tag: '相关' } ],
     'xt08-2': [ { to: 'xt08', tag: '同类' }, { to: 'xr01', tag: '前置' }, { to: 'rv19', tag: '相关' } ],
-    'reg13-2': [ { to: 'reg13', tag: '同类' }, { to: 'reg16', tag: '对比' }, { to: 'reg17-2', tag: '对比' } ],
     'xt15-2': [ { to: 'xt15', tag: '同类' }, { to: 'test14', tag: '同类' }, { to: 'mv04', tag: '相关' } ],
     'jj02-2': [ { to: 'jj02', tag: '同类' }, { to: 'ys01-2', tag: '同类' }, { to: 'mv06', tag: '方法' } ],
     'jj12-2': [ { to: 'jj12', tag: '同类' }, { to: 'reg08', tag: '相关' } ],
-    'jj08-2': [ { to: 'jj08', tag: '同类' }, { to: 'reg05', tag: '相关' }, { to: 'jj05', tag: '前置' } ],
+    'jj08-2': [ { to: 'jj08', tag: '同类' }, { to: 'reg05', tag: '相关' }, { to: 'xt13', tag: '前置' } ],
     'ys02-2': [ { to: 'ys02', tag: '同类' }, { to: 'est05', tag: '方法' }, { to: 'est21', tag: '相关' } ],
-    'jj10-2': [ { to: 'jj10', tag: '同类' }, { to: 'jj06', tag: '相关' }, { to: 'reg04', tag: '前置' } ],
-    'xt13-2': [ { to: 'xt13', tag: '同类' }, { to: 'test07', tag: '对比' }, { to: 'jj04', tag: '同类' } ],
+  test18: [ { to: 'test03', tag: '两类错误' }, { to: 'xt13', tag: '非参数' }, { to: 'nc07', tag: '复相关' } ],
+  est36: [ { to: 'xt06', tag: 'UMVUE' }, { to: 'est14', tag: '充分统计量' } ],
+  est35: [ { to: 'est06', tag: '不变性' }, { to: 'll12', tag: 'Delta 法' } ],
+  nc24: [ { to: 'nc23', tag: '蒙特卡洛' }, { to: 'll02', tag: '强相合' } ],
+  nc23: [ { to: 'll02', tag: '大数定律' }, { to: 'nc01', tag: '期望' } ],
+  est34: [ { to: 'est06', tag: 'MLE' }, { to: 'xr02', tag: '似然比' } ],
+  est33: [ { to: 'xt10', tag: '多元回归' }, { to: 'jj17', tag: '约束检验' } ],
+  nc22: [ { to: 'nc01', tag: '期望最大化' }, { to: 'rv15', tag: '需求分布' } ],
+  mv12: [ { to: 'rv07', tag: '计数过程' }, { to: 'mv01', tag: '条件分布' } ],
+  'jj06-b': [ { to: 'jj06', tag: '定理母卡' }, { to: 'xt10', tag: '方差公式' } ],
+  'xt10-b': [ { to: 'xt10', tag: '抽样分布' }, { to: 'jj06', tag: '无偏性' } ],
+  'reg05-b': [ { to: 'reg05', tag: '方法母卡' }, { to: 'jj16', tag: '投影解释' } ],
+  'est06-b': [ { to: 'est06', tag: '方法母卡' }, { to: 'xt01', tag: '次序统计量' } ],
   };
 
   const PITFALL = {
@@ -2120,21 +1885,15 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     reg14: R`线性化后的 $R^2$ 是替换后变量的判定系数，与原尺度 $R^2$ 不可直接比较——选型要配合残差图与业务含义。`,
     pb14: R`$\sigma$-域只对**可列**并封闭，不能当成「对任意并封闭」（后者是「$\sigma$-代数」之外的强条件，与可列可加性不匹配）。`,
     pb16: R`上极限含「无穷多个」、下极限含「至多有限个」，两者不要写反。`,
-    'pb16-2': R`Borel-Cantelli 的**第二**结论（$P(\varlimsup A_n)=1$）必须要求 $A_n$ **独立**且 $\sum P(A_n)=\infty$，缺一不可；只用 $\sum P(A_n)=\infty$ 而无独立性时结论不成立。`,
-    pb17: R`反射原理把「曾到达 $a$」换成「终点 $2a-b$」只在 $b<a$ 时是**等式**；$b\ge a$ 时终点已在水平之上，概率就是 $P(S_n=b)$，不要把两个情形混用。`,
     est25: R`EM 只保证观测似然**不下降**，收敛到的是**局部**极大（初值敏感、可能很慢）；不要声称「收敛到全局最优」。`,
-    est26: R`混合模型的似然是**无界**的（取某观测为单点分量使 $\sigma\to0$ 时似然发散），故 M 步必须加方差正下界或用多组初值挑选最优解，不能直接迭代到「似然最大」。`,
     reg15: R`Hartley 的 $F_{\max}$ 要求**各水平重复数相同**（不平衡别硬套）；它和 Bartlett 都对**非正态**敏感——尾部差异会被误判为方差不齐。`,
     est27: R`均匀分布 $U(0,\theta)$ **不是**指数族（支撑依赖参数），因此对它不能用「指数族⇒完全充分⇒C-R 可达」这套推理。`,
     est29: R`Basu 定理要求 $T$ 是**完全**充分统计量：只充分而不完全（如 $U(\theta,\theta+1)$ 位置族的 $(X_{(1)},X_{(n)})$）时结论不成立。`,
     ll11: R`Slutsky 定理的另一项必须依概率收敛到**常数**；两项都只依分布收敛时不能直接相加/相乘/相除（需 Cramér 定理或连续映射定理）。`,
-    'll12-2': R`一阶 Δ 方法要求 $g'(\theta)\ne0$：若一阶导为 0，渐近方差为 0 的说法是错的，必须用**二阶**展开（极限服从 $\chi^{2}_{1}$ 型分布）。`,
     'll13-2': R`强大数定律的条件是「i.i.d. **且** $E|X_1|<\infty$」：期望不存在（如 Cauchy）时 $\frac1n\sum X_i$ 不收敛（连弱 LLN 都不成立），不能只写「i.i.d. 就够了」。`,
     est32: R`渐近正态需要支撑与 $\theta$ 无关等正则条件：$U(0,\theta)$ 的 MLE 是 $X_{(n)}$，$\sqrt n(\hat\theta-\theta)$ 不服从正态（要用 $n(\theta-X_{(n)})$ 型极限），不能把「MLE 必渐近正态」当定理用。`,
     jj16: R`遗漏变量偏误的方向律是「$X_2$ 对 $Y$ 的净效应符号 × $X_1,X_2$ 的相关符号」；同时注意 $\alpha=0$（辅助回归系数为 0）时偏误消失——**正交**的控制变量不改变斜率估计，但会改标准误。`,
-    reg16: R`做多重比较时不能把 $\binom{s}{2}$ 个两两 $t$ 检验当独立检验（整体第一类错误会膨胀到约 $1-(1-\alpha)^{\binom{s}{2}}$），必须用 T 法/S 法的**同时**区间。`,
     'xr04-2': R`双边假设下一般**不存在**一致最优势检验；只有指数族+单侧（或 MLR 结构）才有 UMP，别把单侧结论套到双边（后者需 UMPU 或无偏检验）。`,
-    'xr05-2': R`Wilks 定理（$-2\ln\lambda\sim\chi^{2}(r)$）要求原假设在参数空间**内部**；边界上的原假设（如 $\sigma^{2}=0$、混合比例在边界）极限分布是 $\chi^{2}$ 的混合，不能直接用 $\chi^{2}(r)$。`,
   };
 
   // ============ 助记（MNEM，可选） ============
@@ -2151,8 +1910,6 @@ $$P\Big(\bigcap_{n}\bigcup_{k\ge n}\big\{|X_k-X|\ge\varepsilon\big\}\Big)=0\iff 
     ys03: R`均值区间：方差“知 $z$、不知 $t$”；方差区间一律 $\chi^{2}$。判定“估什么、已知什么”再选分布。`,
     jj06: R`Gauss-Markov = 「线性无偏里最省方差」：外生 + 同方差 + 无自相关 ⇒ OLS 是 BLUE，且\textbf{不需要正态}。`,
     jj08: R`WLS 权重 = 「方差之倒数」$\frac{1}{w_i}$；异方差不坏无偏性、只坏有效性（与标准误），故用 GLS/稳健标准误。`,
-    jj13: R`「面板切一刀得截面，按时间排序得时序」——个体维 $i$ 与时间维 $t$ 分别固定一个即可降维。`,
-    reg16: R`「两两全比用 T 法，任意对比用 S 法；预先少比用 Bonferroni」。`,
   };
 
   return { id: 'stats', group: 'acad', name: '统计学', short: '统计', CATS: CATS, DATA: DATA, META: META, EXAMPLE: EXAMPLE, REL: REL, PITFALL: PITFALL, MNEM: MNEM, ORDER: ['prob_basic', 'dist', 'multidim', 'numchar', 'limit', 'sampling', 'estimation', 'testing', 'regress'] };

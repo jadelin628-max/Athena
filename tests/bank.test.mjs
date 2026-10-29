@@ -81,8 +81,8 @@ const BANKS = ['math3', 'econ', 'stats'];
 // 只是题库不再出现「同一小问的第二条独立条目」；标记写在 data/stats.js 的 EXAMPLE 条目 `subOf`）⇒
 // stats 260 − 3 = 257、全库 767 − 3 = 764；判据与逐对裁定见 docs/refs/2.2.0-PLAN.md §1.2 Q7 与 backup/scratch/bank-split/。
 // 只保留「不得低于已入库量」的护栏，避免题量悄悄失守（下限是护栏，不是对现实的固定描述）。
-// t74 起合计下限由各科下限**派生**（不再单独写死魔数）：改某一科下限时合计自动跟随。
-const MIN_QUESTIONS = {math3: 363, econ: 335, stats: 257};
+// t74 起合计下限由各科下限**派生**（不再单独写死魔数）：改某一科下限时合计自动跟随。T161（2.2.2）数院 431 九年卷 80 条入库 ⇒ stats 330 → 371、合计 1069（verify-refs 要求护栏与现算逐科相等）。
+const MIN_QUESTIONS = {math3: 363, econ: 335, stats: 371};
 const MIN_TOTAL = MIN_QUESTIONS.math3 + MIN_QUESTIONS.econ + MIN_QUESTIONS.stats;
 // 题型定义来自 t4 的题型体系表（数学三 10 / 微观 6 / 统计 6）；t27 为「积分与变限积分」新增 math3 的
 // integral 键（11 类）、t30 为「级数敛散性判别」新增 series 键（12 类）、t32 为统计卡片例题新增
@@ -352,8 +352,8 @@ test('卡片派生题（t32 统计试点）：id/标签/星级/题干/答案/另
   assert.deepEqual(Array.from(derived, (q) => q.id).sort(), Array.from(expected, (e) => e.id).sort(),
     'EXAMPLE（带年份条目）→ 题库 的 id 集合应一一对应');
   // POC 首批真题与 t54 真题册入库题原样保留（本任务只做增量）；
-  // t67 从 t54 那批里删除 2 条与卡片派生题同题的 year 题（st-2025-12、st-2025-2）⇒ 76 − 2 = 74，16 + 74 = 90
-  assert.equal(BANK.stats.questions.length - derived.length, 90, 'POC 首批 16 题 + t54 入库 74 题应逐条保留（增量入库；t67 删 2 条同源重复）');
+  // t67 从 t54 那批里删除 2 条与卡片派生题同题的 year 题（st-2025-12、st-2025-2）⇒ 76 − 2 = 74；t161 再入库北大数院 431 九年卷 80 条 ⇒ 74 + 80 = 154，16 + 154 = 170
+  assert.equal(BANK.stats.questions.length - derived.length, 170, 'POC 首批 16 题 + t54 入库 74 题 + T161 数院 431 80 题应逐条保留（增量入库；t67 删 2 条同源重复）');
   const byId = new Map(expected.map((e) => [e.id, e]));
   for (const q of derived) {
     const e = byId.get(q.id);
@@ -1120,8 +1120,8 @@ test('T148 来源串：真题题不渲染库内文件名，三科逐题给「院
       }
     }
   }
-  assert.equal(yearRows, 445, '三科真题题应为 445 条（题量口径变化须同批更新）');
-  assert.equal(cardRows, 510, '三科卡片派生题应为 510 条（T149 后：533 − math3 23 条同题压制；口径变化须同批更新）');
+  assert.equal(yearRows, 525, '三科真题题应为 525 条（T161 后：445 + 数院 431 九年卷 80 条；口径变化须同批更新）');
+  assert.equal(cardRows, 544, '三科卡片派生题应为 544 条（T160 后：510 + 统计科补例 34 条；口径变化须同批更新）');
 });
 
 // ------------------------------------------------- T149：学生可见字段不得含开发痕迹

@@ -807,7 +807,7 @@
   1. **补卡与消重**：行测 330 → **357 卡**（补 18 张：民法典亮点 5、马哲 2、诉讼法 2、马政经 2、地理 2、公务员 2、前沿科技 3；拆 4 张多知识点打包卡净增 9 张子卡，父卡留首张、父子 REL 组内互连；`pd30` 经核实为单一连贯方法、按 `CARD-STANDARD.md` §1 保留不拆）；申论 354 卡不变，`pf14` 改写为「分析透彻的采分判定」，与 `fx24` 的 6-gram Jaccard **0.2269 → 0**。全库 **3562 卡 / 27 学科**；两科正文净字数 >300 为 0、META 100% 覆盖、REL/AUX 零断裂、`前置` 无环。
   2. **版本 2.3.0（minor＝新增两科）七处**：`src/app.mjs:8` VERSION、`CHANGELOG` 首条、`sw.js:5` `ms3-v126`、`index.html:11-13` `?v=87`、`package.json:3`、`src-tauri/tauri.conf.json:4`、`dist/`（build 同步）；`CHANGELOG.md` 由 `node tools/changelog.mjs` 重生成（**124 条**，首条 `## v2.3.0（2026-11）`）；`docs/ARCHITECTURE.md` 版本段与 `docs/DATA_SCHEMA.md` 的「2.3.0 新增」同步回写。
   3. **闸门全绿**：`npm run build` → `node tools/changelog.mjs` → `node tools/check_version.mjs`（七处一致）→ `node tools/check_data.mjs`（**27 学科 / 3562 卡 / 1069 真题**，题源一致性 171 组 0 冲突）→ `npm test` **439/439** → `npm run check` **exit 0**（CHANGELOG 一致 / `app.js` 与 `src/` 同步）→ `npm run check:render` **3562 卡 / 12938 字段 / 0 问题**。
-  4. **提交推送**：用户已明确授权；提交与推送结果见 `git log -1` 与远端 `main`。
+  4. **提交推送**：用户已明确授权，已完成。本地提交 `8dccd13 feat: Athena 2.3.0 —— 新增《行测》《申论》两科知识点库`（19 files changed, 2524 insertions, 21 deletions）；`git push origin main` 成功，远端 `refs/heads/main` 由 `8d49d1a` → `8dccd13`，`git status -sb` 为 `## main...origin/main`（无领先 / 滞后、工作树干净）。
   5. **边界**：`.workbuddy/` 加入 `.gitignore`（本地工作日志不入库）；`docs/COVERAGE.md` 是 2.2.0 的只读考纲矩阵（仅考研三科），按「只读分析产物」口径未刷新；例题 / 真题与 `data/bank_*.js` 仍未适配；两科内容按国考/省考通用大纲与主流备考共识编写，不引教材页码、不编政策文号 / 年份 / 统计数字。
 
 <!-- 已归档：T122–T137 Athena 2.1.2 / 2.2.0 第一波（题库扩至 767 题、卡片补写 40 张、微观 49 页闭合与重取证、跨来源判重、生成器防护与闸门换代）→ backup/docs-archive/board/2026-10-11-V2.1.2-T122-T137.md -->

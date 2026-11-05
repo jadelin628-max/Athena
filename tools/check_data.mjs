@@ -30,7 +30,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DATA_DIR = process.env.ATHENA_DATA_DIR
   ? path.resolve(process.env.ATHENA_DATA_DIR)
   : path.join(ROOT, 'data');
-const FILES = ['math3.js', 'econ.js', 'stats.js', 'politics.js', 'corp.js', 'inv.js', 'music.js', 'poem.js', 'py.js', 'mon.js', 'fsa.js', 'sishu.js', 'acct.js', 'clang.js', 'cppl.js', 'java.js', 'js.js', 'rust.js', 'ai.js', 'social.js', 'jp.js', 'kr.js', 'fr.js', 'es.js', 'wujing.js'];
+const FILES = ['math3.js', 'econ.js', 'stats.js', 'politics.js', 'corp.js', 'inv.js', 'music.js', 'poem.js', 'py.js', 'mon.js', 'fsa.js', 'sishu.js', 'acct.js', 'clang.js', 'cppl.js', 'java.js', 'js.js', 'rust.js', 'ai.js', 'social.js', 'jp.js', 'kr.js', 'fr.js', 'es.js', 'wujing.js', 'xingce.js', 'shenlun.js'];
 // 题库数据（POC）：window.BANK.<subj>；其 tags 必须命中同名 data/<subj>.js 的真实卡 id
 const BANK_FILES = ['bank_math3.js', 'bank_econ.js', 'bank_stats.js'];
 

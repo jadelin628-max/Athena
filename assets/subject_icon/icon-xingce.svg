@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="240" height="240" rx="52" fill="#FFF8F5"/>
+  <!-- 行政职业能力测验 : answer sheet option grid, three filled, one checked -->
+  <g fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="46" y="54" width="60" height="60" rx="12" stroke="#378ADD"/>
+    <rect x="134" y="54" width="60" height="60" rx="12" stroke="#378ADD"/>
+    <rect x="46" y="126" width="60" height="60" rx="12" stroke="#378ADD"/>
+    <rect x="134" y="126" width="60" height="60" rx="12" stroke="#D4537E"/>
+    <path d="M 148 156 L 160 168 L 182 140" stroke="#D4537E"/>
+  </g>
+  <circle cx="76" cy="84" r="9" fill="#378ADD"/>
+  <circle cx="164" cy="84" r="9" fill="#378ADD"/>
+  <circle cx="76" cy="156" r="9" fill="#378ADD"/>
+</svg>

@@ -712,6 +712,104 @@
   5. **遗留**：`docs/refs/card-coverage-stats.json` 是历史快照（无生成器、不参与闸门），未刷新；`est35` 未配例题；精算题未立项待裁决。
 - 交付: `4b150f8` feat 2.2.2（13 files / +1482 −662）。
 
+---
+### T163 《行测》知识点库 `data/xingce.js`
+- 状态: in-progress
+- 负责: 子代理 xingce-writer（本对话 spawn）
+- 文件集: **仅** `data/xingce.js`
+- 依据: `AGENTS.md` + `docs/WORKFLOW.md` §7 + `docs/DATA_SCHEMA.md` + `docs/CARD-STANDARD.md` + `data/politics.js`（结构样板）
+- 依赖: 无（与 T164 文件集不重叠，可并行）
+- 用户裁定: 尽量穷举（每科 250–350 张）· 归入现有「学业类」(acad) · 只构建不升版 · 复用现有字段且仅重点卡配标签 · **暂不适配例题与真题**
+- 验收:
+  1. 单文件注册 `window.SUBJECTS.xingce`；return 含 `id/name/short/group:'acad'/kind:'qa'/CATS/DATA/META/ORDER/REL/PITFALL/MNEM/HELP/BEGINNER`；卡数 300–340
+  2. **不含 `EXAMPLE` 字段**、不触碰 `data/bank_*.js`
+  3. 12 章覆盖：常识（政治理论 / 法律 / 经济 / 人文历史 / 科技生活 / 地理国情 / 管理与公文）、言语理解与表达、数量关系、判断推理、资料分析、应试策略
+  4. `node --check data/xingce.js` 通过；内联 vm 自检 META 全覆盖、REL 的 `to` 与 PITFALL/MNEM 的 key 全部存在、正文净字数 ≤300
+  5. 主对话收口跑 `node tools/check_data.mjs` / `node tools/check_render.mjs` / `npm test` 无新增 ERR/WARN
+- 升版: 不升（不改版本七处 / CHANGELOG / sw.js 缓存版本 / COVERAGE 快照；不 commit/push）
+
+#### 派单摘要（切片开场三句话）
+工作区 `D:\deepseek harness work\考研\Athena`；先读 `AGENTS.md`（禁止整仓通读），再读 `docs/DATA_SCHEMA.md` / `docs/CARD-STANDARD.md` / `data/politics.js`。文件集**仅** `data/xingce.js`，不得写其它任何文件（含本 BOARD），收口报告直接返回主对话。章节清单、id 规范与字段契约见主对话派单提示词。
+
+### 报告
+
+**结论：accepted（主对话验收）**。
+- **改了什么**：仅 `data/xingce.js`（330 卡 / 12 章 / 186,867 B）。章分布 `cp44 cl36 ce26 ch30 ct24 cg20 cm20 yy28 sl30 pd30 zl28 ys14`。顶层 `group:'acad'` / `kind:'qa'`，META 330 全覆盖、REL 113 卡 211 边、PITFALL 132、MNEM 132、HELP 4 篇、`BEGINNER=['yy','zl','pd']`、ORDER 与 CATS 一致；无 `EXAMPLE`、无 `icon`。
+- **闸门（主对话亲跑，非执行者自报）**：`node --check` PASS；独立 vm 复核 PASS（净字数 >300 = 0、id 泄漏 0、`**`/`$` 未成对 0、非法 cat 0、重复 id 0、emoji 0、REL/AUX 断裂 0、前置边 6 条无环）；`node tools/check_data.mjs` 全绿（27 学科 / 3477 卡）；`npm run check:render` 3477 卡 / 12662 字段 / 0 问题；`npm test` 439/439；`npm run check` exit 0。
+- **未做项**：例题/真题按裁定未配；接线、图标、构建、总闸由主对话完成（见 T165）；未升版、未 commit/push。
+- **备注**：4 张 front 命中「题目式」正则属假阳性（`计算机…` 撞「计算」前缀；`已知…如何求…` 是方法卡，`tests/card-content.test.mjs` 的 `METHOD_MARK` 明确豁免），且 `EXAM_SUBJECTS` 不含本学科，未改动。
+
+---
+### T164 《申论》知识点库 `data/shenlun.js`
+- 状态: in-progress
+- 负责: 子代理 shenlun-writer（本对话 spawn）
+- 文件集: **仅** `data/shenlun.js`
+- 依据: `AGENTS.md` + `docs/WORKFLOW.md` §7 + `docs/DATA_SCHEMA.md` + `docs/CARD-STANDARD.md` + `data/politics.js`（结构样板）
+- 依赖: 无（与 T163 文件集不重叠，可并行）
+- 用户裁定: 同 T163
+- 验收:
+  1. 单文件注册 `window.SUBJECTS.shenlun`；return 字段同 T163；卡数 260–300
+  2. **不含 `EXAMPLE` 字段**、不触碰 `data/bank_*.js`
+  3. 9 章覆盖：审题与材料阅读、归纳概括、综合分析、提出对策、贯彻执行（应用文，文种逐项）、文章论述、规范表达与语言、题型与评分规则、主题与政策表述
+  4. 同 T163 第 4 条
+  5. 同 T163 第 5 条
+- 升版: 不升
+
+#### 派单摘要（切片开场三句话）
+同 T163，文件集改为**仅** `data/shenlun.js`；章节清单、id 规范与字段契约见主对话派单提示词。
+
+### 报告
+
+**结论：accepted（主对话验收）**。
+- **改了什么**：仅 `data/shenlun.js`（296 卡 / 9 章 / 210,355 B）。章分布 `yd25 gk31 fx24 dc20 gc94 wz37 bd18 pf19 zt28`。顶层 `group:'acad'` / `kind:'qa'`，META 296 全覆盖、REL 109 卡 337 边、PITFALL 90、MNEM 95、HELP 4 篇、`BEGINNER=['yd','gk']`、ORDER 与 CATS 一致；无 `EXAMPLE`、无 `icon`。
+- **闸门（主对话亲跑）**：`node --check` PASS；独立 vm 复核 PASS（净字数 >300 = 0、id 泄漏 0、未成对 0、非法 cat 0、重复 id 0、emoji 0、题目式 front 0、REL/AUX 断裂 0、前置边 18 条无环）；总闸同 T163，全绿。
+- **未做项**：例题/真题按裁定未配；接线与总闸见 T165；未升版、未 commit/push。
+- **待用户决策（执行者提出，主对话转呈）**：`gc` 94 张覆盖 14 个法定公文（每文种 2 张）+ 30 个事务文书（重点 2 张 / 次要 1 张，只写适用范围与功能）+ 7 张辨析与通用格式卡；`zt` 21 个主题各 1 张框架卡 + 7 张通用框架卡。为把总量控制在 260–300，次要文种未逐文种拆 2–4 张、主题未拆多张。通用格式/正文结构/语言已有独立卡承载，知识点无遗漏；若要求「每个文种都配格式 + 结构 + 语言」需追加约 40–60 张（可突破 300 上限）。
+
+---
+### T165 公考两科接线 / 图标 / 文档 / 总闸（主对话收口）
+- 状态: accepted
+- 负责: 主对话
+- 文件集: `index.html`、`tools/check_data.mjs`、`sw.js`、`src/store.mjs`、`assets/subject_icon/icon-{xingce,shenlun}.svg`、`AGENTS.md`、`README.md`、`docs/{DATA_SCHEMA,ARCHITECTURE,BOARD}.md`、`app.js`、`dist/`
+- 依据: T163 / T164 + `docs/WORKFLOW.md` §5/§7 + 用户裁定（尽量穷举 · 归入学业类 · 只构建不升版 · 复用字段不新增 schema · 暂不配例题真题）
+- 验收: 闸门行全 PASS；`git status` 改动面＝10 改 + 4 新增，无越界文件
+- 报告:
+  1. **接线四处**：`index.html` 加载清单追加 `data/xingce.js` / `data/shenlun.js`（题库段之前、`app.js` 之前）；`tools/check_data.mjs` 的 `FILES` 追加两科；`sw.js` 的 `APP_ASSETS` 追加 2 个 data 与 2 个 SVG；`src/store.mjs` 的 `SUBJECT_ICON_URLS` 追加两行。主页分组沿用 `acad`，`kind:'qa'` 的「考查方式 / 这个知识点叫什么 / 搜索知识点」等文案自动适配，`src/home.mjs` **零改动**。
+  2. **图标**：`icon-xingce.svg`（答题卡选项矩阵 + 判分勾）、`icon-shenlun.svg`（文稿段落 + 落笔），沿用 240×240 / `rx=52` / `#FFF8F5` 底 / `#378ADD` + `#D4537E` 双色线稿，与既有 25 枚同风格。
+  3. **文档回写**：`AGENTS.md`（27 学科）、`README.md`（27 学科 · 公考）、`docs/DATA_SCHEMA.md`（27 科 id + 公考两科口径说明）、`docs/ARCHITECTURE.md`（27 个 `data/*.js` + 新增学科四处同改）。历史留痕里的「25 科」（`docs/CARD-STANDARD.md`、BOARD 旧报告、`docs/RELEASE-2.0.0.md`）按留档口径未改；`docs/COVERAGE.md` 统计快照按裁定未刷新。
+  4. **闸门全绿**：`npm run build`（22 模块 + dist 同步，4 个新文件均已入 dist）→ `node tools/check_data.mjs`（**27 学科 / 3477 卡 / 1069 真题**，题源一致性 171 组 0 冲突）→ `npm test` **439/439** → `npm run check` **exit 0**（版本七处一致 2.2.2 / CHANGELOG 一致 / `app.js` 与 `src/` 同步）→ `npm run check:render` **3477 卡 / 12662 字段 / 0 问题**。
+  5. **边界与未做**：版本仍 `2.2.2` / `ms3-v125` / `?v=86`，`CHANGELOG.md` 与 COVERAGE 快照未动，**未 commit / 未 push**。按裁定不刷新 sw.js 缓存版本，故已安装 PWA 的旧缓存不会自动重新拉取新增 data/SVG（需下次发版或清缓存）；联网首次加载与本地 `file://` 不受影响。例题、真题与 `data/bank_*.js` 一律未适配。
+  6. **内容依据**：`参考文件/` 无公考教材或真题，两科按国考/省考通用大纲与主流备考共识编写，不引教材页码、不编政策文号/年份/统计数字（已在派单与 `DATA_SCHEMA.md` 落盘）。
+
+---
+### T166 申论应用文逐文种补齐 + 两科覆盖度审计（用户裁定「要补」）
+- 状态: accepted
+- 负责: 子代理 gc-expander（补卡）/ coverage-auditor（只读审计）/ 主对话（验收与收口）
+- 文件集: 仅 `data/shenlun.js`（补卡）；审计只读；主对话改 `docs/BOARD.md`、`.workbuddy/memory/`
+- 依据: T164 待决策项 + 用户裁定「要补」；`docs/WORKFLOW.md` §7
+- 验收: 闸门行全 PASS
+- 报告:
+  1. **补卡**：`data/shenlun.js` 296 → **354 卡**（`gc` 章 94 → **152**），新增 `gc95`–`gc152` 连续 58 张，只追加、不改存量。四组：A 19 张（19 个单卡文种补「正文结构与写法」）、B 19 张（同 19 文种补「格式要素与语言身份」）、C 12 张（12 个高频文种补格式与语言）、D 8 张（一文多任务 / 多文种组合 / 特殊格式要求 / 附件附注 / 引文数据 / 新媒体文书 / 称谓指代 / 字数压缩）。新卡配置：META 星级 16、REL 13、PITFALL 8、MNEM 8，未用「前置」、未加 `EXAMPLE`。
+  2. **主对话独立复核**：全库 **3535 卡 / 27 学科**；META 0 缺、REL/AUX 0 断裂、净字数 >300 为 0、id 泄漏 0、emoji 0、`前置` 环 0、`gc95`~`gc152` 连续；配置并集覆盖率行测 **52.7%** / 申论 **46.3%**（口径＝至少配 REL/PITFALL/MNEM 之一）。
+  3. **闸门全绿**：`npm run build`（`dist/data/shenlun.js` 同步）→ `check_data`（27 学科 / 3535 卡 / 1069 题）→ `npm test` **439/439** → `npm run check` **exit 0**（版本仍 2.2.2 / ms3-v125 / ?v=86）→ `check:render` **3535 卡 / 12852 字段 / 0 问题**。
+  4. **覆盖度审计（子代理主张 → 主对话抽查核实后修正）**：方法与框架类（有边界、可枚举）已达「覆盖所有应考知识点」的可达程度。审计报的 2 个高置信度缺口中，`ch`「中国古代科技成就与典籍」**已由 `ct23` 跨章覆盖**（四大发明 + 齐民要术 / 梦溪笔谈 / 天工开物 / 本草纲目 / 九章算术），`sl`「牛吃草」已由 `sl30` 覆盖，`gc`「一文多任务 / 新媒体文书」已由本次 D 组 `gc145` / `gc150` 补齐 ⇒ **仅余 `cl` 民法典亮点与新增制度（居住权、离婚冷静期、高空抛物、胎儿利益保护等，3–5 张）为实质缺口**。中置信度可补：马哲整体与部分 / 矛盾主次方面、诉讼法特有制度、马政经、地理细分、公务员制度、申论大纲测评要素。
+  5. **质量观察（抽查确认）**：`fx24`「分析透彻」与 `pf14`「特殊要求：分析透彻」内容近乎逐字重复；`cg20`（地图三要素 + 中国之最）、`cm20`（调研 / 督查 / 信息报送 / 会议）、`ch30`（传统文化六类）、`sl30`、`pd30` 为多知识点打包卡，与 `CARD-STANDARD.md` §1「一卡一知识点」有张力但内容具体、非空泛。均未在本次改动（不扩散），供后续切片决策。
+  6. **边界性内容（天然无法穷举 / 不宜补）**：常识百科型事实、时政具体事件与数据（强时效且触发编造红线）、地方省考特有题型（数字推理等，国考已多年不考，未收属正确取舍）、政策原文、大作文素材与临场发挥。现有 `zt` 章按「通用表述框架」、`wz27` 按「论据调用方法」编写，口径正确。
+  7. **未做 / 待用户决策**：是否补 `cl` 民法典亮点 3–5 张与中置信度清单（约 10–15 张）、是否拆 `fx24`/`pf14` 重复与 5 张打包卡 —— 按「一次一切片」未动，等用户裁定。版本 / CHANGELOG / COVERAGE 未动，未 commit/push；sw.js 缓存版本按 T165 裁定保持 `ms3-v125`。
+
+---
+### T167 2.3.0 发版收口：补卡消重 + 升版 + 提交推送
+- 状态: accepted
+- 负责: 子代理 xingce-fixer / shenlun-dedup + 主对话
+- 文件集: `data/xingce.js`、`data/shenlun.js`、`src/app.mjs`、`app.js`、`CHANGELOG.md`、`sw.js`、`index.html`、`package.json`、`src-tauri/tauri.conf.json`、`.gitignore`、`docs/{ARCHITECTURE,DATA_SCHEMA,BOARD}.md`
+- 依据: T166 待决策项 + 用户裁定「按建议继续，完成后提交推送并更新版本」
+- 报告:
+  1. **补卡与消重**：行测 330 → **357 卡**（补 18 张：民法典亮点 5、马哲 2、诉讼法 2、马政经 2、地理 2、公务员 2、前沿科技 3；拆 4 张多知识点打包卡净增 9 张子卡，父卡留首张、父子 REL 组内互连；`pd30` 经核实为单一连贯方法、按 `CARD-STANDARD.md` §1 保留不拆）；申论 354 卡不变，`pf14` 改写为「分析透彻的采分判定」，与 `fx24` 的 6-gram Jaccard **0.2269 → 0**。全库 **3562 卡 / 27 学科**；两科正文净字数 >300 为 0、META 100% 覆盖、REL/AUX 零断裂、`前置` 无环。
+  2. **版本 2.3.0（minor＝新增两科）七处**：`src/app.mjs:8` VERSION、`CHANGELOG` 首条、`sw.js:5` `ms3-v126`、`index.html:11-13` `?v=87`、`package.json:3`、`src-tauri/tauri.conf.json:4`、`dist/`（build 同步）；`CHANGELOG.md` 由 `node tools/changelog.mjs` 重生成（**124 条**，首条 `## v2.3.0（2026-11）`）；`docs/ARCHITECTURE.md` 版本段与 `docs/DATA_SCHEMA.md` 的「2.3.0 新增」同步回写。
+  3. **闸门全绿**：`npm run build` → `node tools/changelog.mjs` → `node tools/check_version.mjs`（七处一致）→ `node tools/check_data.mjs`（**27 学科 / 3562 卡 / 1069 真题**，题源一致性 171 组 0 冲突）→ `npm test` **439/439** → `npm run check` **exit 0**（CHANGELOG 一致 / `app.js` 与 `src/` 同步）→ `npm run check:render` **3562 卡 / 12938 字段 / 0 问题**。
+  4. **提交推送**：用户已明确授权；提交与推送结果见 `git log -1` 与远端 `main`。
+  5. **边界**：`.workbuddy/` 加入 `.gitignore`（本地工作日志不入库）；`docs/COVERAGE.md` 是 2.2.0 的只读考纲矩阵（仅考研三科），按「只读分析产物」口径未刷新；例题 / 真题与 `data/bank_*.js` 仍未适配；两科内容按国考/省考通用大纲与主流备考共识编写，不引教材页码、不编政策文号 / 年份 / 统计数字。
+
 <!-- 已归档：T122–T137 Athena 2.1.2 / 2.2.0 第一波（题库扩至 767 题、卡片补写 40 张、微观 49 页闭合与重取证、跨来源判重、生成器防护与闸门换代）→ backup/docs-archive/board/2026-10-11-V2.1.2-T122-T137.md -->
 
 <!-- 已归档：T77–T121 Athena 2.1.1 / 2.2.0 前置（题库渲染与筛选、自测星标、专注链 UI 与组合语义、错题入口、四族转录基线）→ backup/docs-archive/board/2026-10-10-V2.1.1-T77-T121.md -->

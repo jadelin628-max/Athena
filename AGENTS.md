@@ -51,7 +51,7 @@ index.html          # 入口：先加载 data/*.js，再加载 app.js
 style.css / sw.js   # 样式 / Service Worker（缓存版本跟发版走）
 app.js              # 【生成物】tools/build.mjs 拼接 src/，禁止手改
 src/*.mjs           # 源模块（固定顺序拼接，见 ARCHITECTURE）
-data/<subj>.js      # 25 学科卡片库（window.SUBJECTS）
+data/<subj>.js      # 27 学科卡片库（window.SUBJECTS，含公考行测/申论）
 tools/              # 构建与校验闸门
 tests/              # node:test
 docs/               # 架构 / 数据 schema / 工作流（活文档；历史归档 backup/docs-archive/）

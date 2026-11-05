@@ -59,7 +59,9 @@
 - 工厂：`const F = (id, cat, title, front, back) => ({ id, cat, title, front, back });`
 - `index.html` 与 `tools/check_data.mjs` 的 `FILES` 列表都登记了全部数据文件——**新增学科要改两处**。
 
-当前 25 科 id：`math3 econ stats politics corp inv music poem py mon fsa sishu acct clang cppl java js rust ai social jp kr fr es wujing`。
+当前 27 科 id：`math3 econ stats politics corp inv music poem py mon fsa sishu acct clang cppl java js rust ai social jp kr fr es wujing xingce shenlun`。
+
+> **公考两科（2.3.0 新增）**：`xingce`（行政职业能力测验 / 行测）与 `shenlun`（申论）均 `group:'acad'` / `kind:'qa'`，按用户裁定**暂不配 `EXAMPLE`，也不建 `bank_*.js` 题库**。卡片层无独立标签字段：关联走 `REL`、常见陷阱走 `PITFALL`、技巧口诀走 `MNEM`、考查方式走 `META[id][1]`，且只给重点与易混卡配（覆盖约 30–50%）。内容按国考/省考通用大纲与主流备考共识编写，不引教材页码、不编政策文号与年份数据。
 
 ## 题库数据（`data/bank_*.js` · `window.BANK`）
 

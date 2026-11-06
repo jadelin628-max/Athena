@@ -113,12 +113,12 @@
 
 - **该年只有一种来源** → 值就是**裸年份**（如 `'2013'`，但统计 2013 年已有 3 种来源故实为 `'2013|…'`），选项文案「2013 年 · 8 题」。
 - **该年有多种来源** → 值是 `'<年份>|<完整 school>'`，选项文案用来源简称：`bankYearSourceLabel`（`src/bank.mjs:379`）去掉尾部年份，故显示「2016 年 · 复旦大学 432 统计学真题 · 5 题」。**t32 起统计学科多来源年成为常态**（卡片派生题带入 72 个来源串，13 个年份有多份来源，最多 2021 年 9 种），math3 / econ 仍是单来源年；两种编码都由 `tests/bank.test.mjs` 的年份/来源口径用例逐项对拍。
-- 派生：`bankYearOptions`（`:418`）从题目聚合出选项（聚合器 `bankYearRows`，`:388`，年份降序 / 同年来源升序），首项恒为 `{ value: 'all', label: '全部年份' }`；匹配走 `bankYearSelected`（`:369`，含 `|` 时年份 + 来源双匹配）。
-- 切换与复位：选项点击派发 `handleAction('bankFilter', 'year=' + v)`（动作分支 `src/actions.mjs:176`，`'all'` 写入 `''`）；切科后残留的旧年份不在新学科选项里 → `bankNormalizeYearFilter`（`:438`，`bankListPage` 在 `:632` 调用）渲染前自愈回全选态；`bankReset`（`:220`）与 `resetSessionState`（`src/learn.mjs:536`，题库四键复位在 `:543`）一并复位。
+- 派生：`bankYearOptions`（`:437`）从题目聚合出选项（聚合器 `bankYearRows`，`:403`，年份降序 / 同年来源升序），首项恒为 `{ value: 'all', label: '全部年份' }`；匹配走 `bankYearSelected`（`:385`，含 `|` 时年份 + 来源双匹配）。
+- 切换与复位：选项点击派发 `handleAction('bankFilter', 'year=' + v)`（动作分支 `src/actions.mjs:176`，`'all'` 写入 `''`）；切科后残留的旧年份不在新学科选项里 → `bankNormalizeYearFilter`（`:457`，`bankListPage` 在 `:632` 调用）渲染前自愈回全选态；`bankReset`（`:220`）与 `resetSessionState`（`src/learn.mjs:536`，题库四键复位在 `:543`）一并复位。
 
 ### 选择题的字母与答案标识（界面派生、不落盘）
 
-- 字母来自 `bankChoiceLetter(q)`（`src/bank.mjs:494`）对 `answer` 的三条正则（`BANK_CHOICE_RES`，`:493`：`选 X` / `答案[：:] X` / 括号 `(X)`），与 `tests/bank.test.mjs` 期望表护栏的 `letterOf()`（`:524`，正则表 `LETTER_RES` `:523`）同口径；解析不出返回 `null`，界面**不渲染空标识**（无 `options` 的题也不显示）。
+- 字母来自 `bankChoiceLetter(q)`（`src/bank.mjs:513`）对 `answer` 的三条正则（`BANK_CHOICE_RES`，`:512`：`选 X` / `答案[：:] X` / 括号 `(X)`），与 `tests/bank.test.mjs` 期望表护栏的 `letterOf()`（`:717`，正则表 `LETTER_RES` `:716`）同口径；解析不出返回 `null`，界面**不渲染空标识**（无 `options` 的题也不显示）。
 - `data/bank_*.js` 里没有任何字母字段：字母一律运行时派生，改题只需改 `answer` 散文，护栏用例会同时校验字母与填空/解答题的结论锚点。
 - 渲染结构：选项 `div.bank-option[data-option-letter]`（`span.bank-option-letter` 纯文本 `(A)` + `span.bank-option-text` 经 KaTeX），命中答案字母的那项加 `.is-answer`；答案区额外一行 `div.bank-answer-letter[data-answer-letter]`「答案：X」。CSS 由 `style.css` 的 `.bank-option-letter` / `.bank-option-text` / `.bank-option.is-answer` / `.bank-answer-letter` 承担。
 
@@ -140,7 +140,7 @@
 | `src` | `{ card, note }`（`note` 含例题 `src` 原文 + `traps`/`hint` 缺失说明） | 溯源主体 |
 
 - **排除清单**（不许编造年份/来源）：`EXAMPLE` 展平后**共 8 条无四位年份** → 不入库 —— stats 166 键 177 条中 7 条（`pb06`/`pb07`/`rv10`/`rv11`/`nc07`/`nc09`/`ll04`，`src` 均为「考研数学真题（…）」），逐条登记在 `backup/scratch/bank-cv/excluded.md`；math3 124 键 150 条（t49 时点读数）**全部带年份**（排除 0）；econ 144 键 162 条中 1 条（`mk31`，登记在 `backup/scratch/bank-cv3/excluded.md`）。**T142/T149/T144 后续增量**：stats 键 166 / 177 条不变（T142 只给 3 条加 `subOf`，无年份 7 条不变）；math3 键 **180 / 206 条**（T139 补挂 55 条 → 179/205，T144 返修再补 `int33-2` 1 条，无年份 0 不变）；econ 键 144 / 162 条不变（T149 删的 9 张卡本无 `EXAMPLE`）；三科合计 键 **490** / 条目 **545**。另一类**不删条目、只阻止重复入库**的标记 `subOf` 共 **27** 条（T142 统计 3 + T149 数学三 23 + T144 返修 1）。
-- **生成通道**（唯一可复算入口，按批次三段，均幂等——连跑两次 sha256 相同）：`node backup/scratch/bank-cv/build-bank-cv.mjs`（t32：`data/bank_stats.js` 的 stats 170）、`node backup/scratch/bank-cv2/build-bank-cv2.mjs`（t49：`data/bank_math3.js` 150 + `data/bank_econ.js` 148）、`node backup/scratch/bank-cv3/build-bank-cv3.mjs`（t62：econ +13 → 161）。各脚本只重写对应 `data/bank_*.js` 里 `// ==== BEGIN/END GENERATED ... ====` 哨兵块内的增量，哨兵块外的手写内容（文件头注释、手写题）原样保留；对拍脚本从 `data/<科>.js` 现算期望值并与入库结果逐字段比对。
+- **生成通道**（唯一可复算入口，幂等——连跑两次 sha256 相同）：`node tools/bank-cv.mjs --subject <sid> --write --allow-workspace-write`（math3 另加 `--allow-math3-reorder`；改 `EXAMPLE` 后必跑，见 `docs/CARD-STANDARD.md` §4）。**T141 已完成移植**：t32 / t49 / t62 三段一次性生成器 `backup/scratch/bank-cv/build-bank-cv.mjs`、`backup/scratch/bank-cv2/build-bank-cv2.mjs`、`backup/scratch/bank-cv3/build-bank-cv3.mjs` 已由 `tools/bank-cv.mjs` 以**哨兵原位替换**取代，旧脚本仅留档、不可安全重跑（事故与改造经过见 `docs/refs/2.2.0-PLAN.md` §7.1）。生成侧只重写 `data/bank_*.js` 里 `// ==== BEGIN/END ... ====` 哨兵块内的增量，块外手写内容（文件头注释、手写题）原样保留；对拍脚本从 `data/<科>.js` 现算期望值并与入库结果逐字段比对。
 - **题型归类**：按卡片 `cat` 映射（`prob` 11 · `dist` 24 · `multi` 15 · `numchar` 17 · `limit` 8 为 t32 新增键，各 ≥5 题；`corr`/`sampdist`/`estimate`/`testing`/`chi`/`regress` 复用既有键，其中「列联表/拟合优度/卡方/独立性检验」类标题归 `chi`；`numchar` 里标题含「相关」的归 `corr`（其余仍是数值特征）。
 - **界面口径**：缺 `traps`/`hint`/`altAnswer` 的题在详情页**整段跳过**（标题与正文一起省略，不渲染空行或 `undefined`）；缺 `year`/`no` 的题跳过「年度 · 题号」徽标；`altAnswer` 渲染为独立「另解」块；年份徽标与列表排序对缺 `year` 的题不误判（`tests/bank.test.mjs` 的「缺省字段渲染契约」用例锁定）。
 
@@ -322,16 +322,16 @@
 | 题库：题型 key 重复、题型缺 `name`·`def`·`judge`·`sample` | `check_data` | **ERR** |
 | 题库：某题型无任何题目命中 | `check_data` | **WARN**（不致 exit 1） |
 | 题库：题干·解析·陷阱·提示泄漏内部编号 / `**`·`$` 未成对 | `check_data` | **ERR** / **WARN** |
-| 题库：数学三答案被改写（选择题字母与期望表不符 / 填空·解答题的结论锚点丢失）、新增或删除 math3 题未同步补期望表、选择题选项数不为 4、填空/解答题带了选项 | `tests/bank.test.mjs`（期望表 `tests/fixtures/bank-answer-manifest.json`，181 条 = choice 118 + fill 63，守卫 `:685-725`（口径注释 `:680-684`）；`letterOf()` 正则 `:671`） | **ERR**（`node --test` 失败） |
+| 题库：数学三答案被改写（选择题字母与期望表不符 / 填空·解答题的结论锚点丢失）、新增或删除 math3 题未同步补期望表、选择题选项数不为 4、填空/解答题带了选项 | `tests/bank.test.mjs`（期望表 `tests/fixtures/bank-answer-manifest.json`，181 条 = choice 118 + fill 63，守卫 `:726-760`（口径注释 `:721-725`）；`letterOf()` 正则 `:717`） | **ERR**（`node --test` 失败） |
 | 题库：界面选项字母 / 「答案：X」标识与 `answer` 派生结果不一致（含无 `options` 的题不得出现标识） | `tests/bank.test.mjs`（渲染管线贯通 `:1824`、选择题标识 `:1894`） | **ERR**（`node --test` 失败） |
-| 题库：题量掉到下限以下（math3 < 363 / econ < 335 / stats < 330 / 合计 < 1028） | `tests/bank.test.mjs`（`MIN_QUESTIONS` `:85`、`MIN_TOTAL` `:86`；t49 按 2.2.0 入库量上调、t54 再按统计 +76 题上调、t62 按微观 13 张新卡派生 176/769、t67 按统计跨来源判重删 2 条同源重复题下调为 260/767、**t74/T142 按统计合卷题小问级不重复收录（抑制 3 条 `cv-st-*` 派生题）下调为 257/764，并把 `MIN_TOTAL` 改为由三科求和派生**、**T149 数学三同题不重复收录（抑制 23 条 `cv-m3-*` 派生题）后实际为 363/335/257 与 955——下限仍是护栏，未随之下调**、**T160 补例题后统计派生题 167→201（三科实际 363/335/371、合计 1069），`MIN_QUESTIONS.stats` 上调为 330；T161 数院 431 九年卷 80 题入库后统计真题侧 90→170、`yearRows` 基线 445→525**） | **ERR**（2.2.0 全量入库后应上调；下限是护栏，不是对现实的固定描述） |
+| 题库：题量掉到下限以下（math3 < 418 / econ < 341 / stats < 337 / 合计 < 1096） | `tests/bank.test.mjs`（`MIN_QUESTIONS` `:97`、`MIN_TOTAL` `:98`；t49 按 2.2.0 入库量上调、t54 再按统计 +76 题上调、t62 按微观 13 张新卡派生 176/769、t67 按统计跨来源判重删 2 条同源重复题下调为 260/767、**t74/T142 按统计合卷题小问级不重复收录（抑制 3 条 `cv-st-*` 派生题）下调为 257/764，并把 `MIN_TOTAL` 改为由三科求和派生**、**T149 数学三同题不重复收录（抑制 23 条 `cv-m3-*` 派生题）后实际为 363/335/257 与 955——下限仍是护栏，未随之下调**、**T160 补例题后统计派生题 167→201（三科实际 363/335/371、合计 1069），`MIN_QUESTIONS.stats` 上调为 330；T161 数院 431 九年卷 80 题入库后统计真题侧 90→170、`yearRows` 基线 445→525**、**W3-j 按「数学三每年 23/22 题」标准复核并压制 5 条卡片↔卡片同题派生题后 math3 487 / 合计 1234，下限同步下调；W3-k 补录数学三 2026 卷 22 题后 math3 509 / 合计 1256，下限同步上调**、**W3-l 按用户裁定「凡与同年真题 coverRatio ≥ 0.25 的卡片派生题一律压制」后 math3 418 / econ 341 / stats 337 / 合计 1096（派生 478 → 318、subOf 245），下限同步下调**） | **ERR**（2.2.0 全量入库后应上调；下限是护栏，不是对现实的固定描述） |
 | 题库：`subOf` 标记不成立——例题标了「已被某条 year 真题覆盖」但缺 `id`/`item`、`subOf.id` 不在本科题库、指向卡片派生题、或声明压制后题库仍收录该卡片派生题 | `tools/check_data.mjs`（subOf 段；计数输出 `小问级不重复收录(subOf 压制)`）+ `tests/bank.test.mjs:433` 不变量用例（三科；`subOf` 目标必须是覆盖该例题的最高覆盖 year 题且 ≥ 0.25；未标记的 `origin==='card'` 行对任何 year 行覆盖 < 0.9） | **ERR** / `node --test` 失败 |
-| 题库：学生可见字段（`stem`/`answer`/`traps`/`hint`/`altAnswer`/`options`）里出现开发痕迹（裁片、`backup/`、`scratch/`、参考文件路径、`.png`/`.jpg` 等） | `tests/bank.test.mjs:1132`（唯一允许的例外是 econ 的「答案待批」占位，条数只许减少） | **ERR**（`node --test` 失败） |
+| 题库：学生可见字段（`stem`/`answer`/`traps`/`hint`/`altAnswer`/`options`）里出现开发痕迹（裁片、`backup/`、`scratch/`、参考文件路径、`.png`/`.jpg` 等） | `tests/bank.test.mjs:1174`（唯一允许的例外是 econ 的「答案待批」占位，条数只许减少） | **ERR**（`node --test` 失败） |
 | 加粗 `\textbf{}` 与 `**…**` 勿混用 | 风格约定（`AGENTS.md`） | 无工具强制 |
 
 新增/修改字段时：更新本文 + `normalizeDB`/`sanitize*` + 同步合并 + 导入导出，并补 `tests/` 若行为可测。
 
-**答案护栏的期望表是第二个事实源**：`tests/fixtures/bank-answer-manifest.json` 逐题记 `kind`（`choice` → 字母 / `fill` → 锚点）+ 转录出处（`src`），`_meta.provenance` 明写「手工逐题转录、不得由脚本从数据生成」，`_meta.evidence` 指到文本层行号；因此改 `data/bank_math3.js` 的答案必须**同时**改期望表并给出处，否则 `node --test tests/bank.test.mjs` 转红。**第一波终值**：表覆盖 `math3` 全部**非卡片派生题 181 条**（`choice` 118 + `fill` 63）——选择题字母取自 2012/2013/2019 解析册文本层与 2023/2024/2025 扫描件读图，非选择题记源解析末式的关键结论锚点；`econ` 15 条 / `stats` **90 条**手写真题的答案尚无人工转录表（`stats` 手写量为 257 − 167 = 90，与 T142 前 260 − 170 同值：T142 只移除卡片派生题，未动 year 题；t64 期文档写作 92 系 t67 判重删除 2 条 year 题之前的读数），卡片派生题（math3 182 / econ 161 / stats 167）改由「卡片例题逐题同源」对拍块把关（`tests/bank.test.mjs:341`（stats）/`:548`（math3 + econ）），扩表属 2.2.0 后续批次（`docs/refs/2.2.0-PLAN.md` §1.2 Q4c/Q6）。
+**答案护栏的期望表是第二个事实源**：`tests/fixtures/bank-answer-manifest.json` 逐题记 `kind`（`choice` → 字母 / `fill` → 锚点）+ 转录出处（`src`），`_meta.provenance` 明写「手工逐题转录、不得由脚本从数据生成」，`_meta.evidence` 指到文本层行号；因此改 `data/bank_math3.js` 的答案必须**同时**改期望表并给出处，否则 `node --test tests/bank.test.mjs` 转红。**第一波终值**：表覆盖 `math3` 全部**非卡片派生题 181 条**（`choice` 118 + `fill` 63）——选择题字母取自 2012/2013/2019 解析册文本层与 2023/2024/2025 扫描件读图，非选择题记源解析末式的关键结论锚点；`econ` 15 条 / `stats` **90 条**手写真题的答案尚无人工转录表（`stats` 手写量为 257 − 167 = 90，与 T142 前 260 − 170 同值：T142 只移除卡片派生题，未动 year 题；t64 期文档写作 92 系 t67 判重删除 2 条 year 题之前的读数），卡片派生题（math3 182 / econ 161 / stats 167）改由「卡片例题逐题同源」对拍块把关（`tests/bank.test.mjs:342`（stats）/`:548`（math3 + econ）），扩表属 2.2.0 后续批次（`docs/refs/2.2.0-PLAN.md` §1.2 Q4c/Q6）。
 
 
 ## 行动侧其它键（与学习库隔离）

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { dupKey, coreStem } from '../tools/dup-key.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(path.join(ROOT, p), 'utf8');
@@ -38,6 +39,7 @@ const consts = [
   bankSrc.match(/function bankTypeName\(subjectId, typeKey\) \{[\s\S]*?\n\}/)[0],
   bankSrc.match(/var BANK_NO_UNKNOWN = '[^']*';/)[0],
   bankSrc.match(/function bankNoText\(q\) \{[\s\S]*?\n\}/)[0],
+  bankSrc.match(/function bankNoOrder\(q\) \{[\s\S]*?\n\}/)[0],
   bankSrc.match(/function bankSourceText\(q\) \{[\s\S]*?\n\}/)[0]
 ].join('\n');
 sandbox.exports = {};
@@ -82,7 +84,17 @@ const BANKS = ['math3', 'econ', 'stats'];
 // stats 260 − 3 = 257、全库 767 − 3 = 764；判据与逐对裁定见 docs/refs/2.2.0-PLAN.md §1.2 Q7 与 backup/scratch/bank-split/。
 // 只保留「不得低于已入库量」的护栏，避免题量悄悄失守（下限是护栏，不是对现实的固定描述）。
 // t74 起合计下限由各科下限**派生**（不再单独写死魔数）：改某一科下限时合计自动跟随。T161（2.2.2）数院 431 九年卷 80 条入库 ⇒ stats 330 → 371、合计 1069（verify-refs 要求护栏与现算逐科相等）。
-const MIN_QUESTIONS = {math3: 363, econ: 335, stats: 371};
+// bank-wave3（2026-11-05）第二批入库：math3 2010–2022 之外的 2023–2025 三年全卷 56 条（409）+ 3 组同题压制（−3）= 406；
+// econ 2013 光华微观整卷 5 条 = 340；stats 光华 2021 统计部分缺题 3 条 = 374 ⇒ 合计 1120。
+// W3-h（2026-11-05）：math3 2010–2019 卷内缺题 126 条 ⇒ 532；econ 光华 2014/2015/2019–2025 缺题 38 条 ⇒ 378；
+// stats 光华「统计部分真题」逐年比对后补 18 条 ⇒ 392；合计 1302。1987–2009 数学真题按用户裁定暂缓，未入库。
+// W3-i（2026-11-06）全库去重：删 14 条逐字同题派生题（tools/dup-key.mjs 生成器级去重）、
+// 34 条复述 year 真题的派生题用 subOf 压制（year 真题一条不删）、econ 8 簇同题小问合并为整题（−15 条）
+// ⇒ 合计 1239。1987–2009 数学真题暂缓口径不变。
+// W3-i（2026-11-06）：全库去重（派生题 14 组精确同题 + 34 条复述真题压制 + econ 15 条同题小问合并）
+// ⇒ math3 532→492、econ 378→356、stats 392→391、合计 1302→1239。
+// W3-j：math3 再 −5（卡片↔卡片同题压制，能对到同年真题的 5 条例题）⇒ 487、合计 1234。下限随去重同步下调，仍是护栏。
+const MIN_QUESTIONS = {math3: 418, econ: 341, stats: 337};
 const MIN_TOTAL = MIN_QUESTIONS.math3 + MIN_QUESTIONS.econ + MIN_QUESTIONS.stats;
 // 题型定义来自 t4 的题型体系表（数学三 10 / 微观 6 / 统计 6）；t27 为「积分与变限积分」新增 math3 的
 // integral 键（11 类）、t30 为「级数敛散性判别」新增 series 键（12 类）、t32 为统计卡片例题新增
@@ -267,13 +279,22 @@ test('三科题库均挂载 window.BANK.<subj>，且每科题量不低于已入�
   // 审计判定移除的题不得回流（题源标注不实 / 来源文字层不可还原，见 audit.md §2）
   // t53 更新：m3-2019-6 的旧条目是「2013 年第 5 题」错内容（审计 §2），t53 已按 2019 卷亲读裁片
   // （真题册 p13）重转真实的第 6 题（$A^2+A=2E$、$|A|=4$、二次型规范形），故改为「不得再是那条错内容」；
-  // m3-2019-13 原文仍不可还原，继续禁止回流。
+  // W3-h 更新：m3-2019-13 原先因 OCR 文字层丢失矩阵 A、b 被移除（audit.md §2），2026-11-05 已按
+  // 题面合并册 p14 原页裁片亲读逐字复原矩阵，并与《2019年数学三真题答案解析》p3「填 1」对拍；
+  // 故比照 m3-2019-6 先例，把「不得回流」改为「若存在必须是亲读复原的真实矩阵题」的正向内容断言。
   const q2019_6 = BANK.math3.questions.filter((q) => q.id === 'm3-2019-6')[0];
   if (q2019_6) {
     assert.ok(/规范形/.test(String(q2019_6.stem)) && !/AB\s*=\s*C/.test(String(q2019_6.stem)),
       'm3-2019-6 若在库必须是 t53 按 2019 卷亲读重转的真实第 6 题（二次型规范形），不得回流审计移除的 2013 第 5 题错内容');
   }
-  assert.ok(!BANK.math3.questions.some((q) => q.id === 'm3-2019-13'), '原文不可还原的题不得回流：m3-2019-13');
+  const q2019_13 = BANK.math3.questions.filter((q) => q.id === 'm3-2019-13')[0];
+  if (q2019_13) {
+    const s13 = String(q2019_13.stem || '');
+    assert.ok(s13.includes('a^{2}-1') && s13.includes('有无穷多解') && s13.includes('\\boldsymbol{b}'),
+      'm3-2019-13 若在库必须是按 2019 卷原页亲读复原的矩阵题（含 A、b 与 a²−1），不得回流不可还原的旧残缺题干');
+    assert.ok(String(q2019_13.answer).includes('a=1'),
+      'm3-2019-13 答案应为 a=1（与 2019 解析册 p3 对拍）');
+  }
 });
 
 test('每题字段齐全：题干/答案解析/难度五星/题型/知识点标签/来源（traps/hint 为条件必需）', () => {
@@ -353,7 +374,8 @@ test('卡片派生题（t32 统计试点）：id/标签/星级/题干/答案/另
     'EXAMPLE（带年份条目）→ 题库 的 id 集合应一一对应');
   // POC 首批真题与 t54 真题册入库题原样保留（本任务只做增量）；
   // t67 从 t54 那批里删除 2 条与卡片派生题同题的 year 题（st-2025-12、st-2025-2）⇒ 76 − 2 = 74；t161 再入库北大数院 431 九年卷 80 条 ⇒ 74 + 80 = 154，16 + 154 = 170
-  assert.equal(BANK.stats.questions.length - derived.length, 170, 'POC 首批 16 题 + t54 入库 74 题 + T161 数院 431 80 题应逐条保留（增量入库；t67 删 2 条同源重复）');
+  // W3-h 再补光华「统计部分真题」18 条 ⇒ 173 + 18 = 191（逐年与语料逐题比对后确数）
+  assert.equal(BANK.stats.questions.length - derived.length, 191, 'POC 首批 16 题 + t54 入库 74 题 + T161 数院 431 80 题 + bank-wave3 光华 2021 缺题 3 条 + W3-h 光华缺题 18 条应逐条保留（增量入库；t67 删 2 条同源重复）');
   const byId = new Map(expected.map((e) => [e.id, e]));
   for (const q of derived) {
     const e = byId.get(q.id);
@@ -423,7 +445,8 @@ const coverRatio = (a, b) => {
 
 // 三科各自的口径来源：math3 由 T149 登记（21 条逐字相同 + 2 条同一道题的不同问法），T144 返修又为 ★5 卡
 // `int33-2` 补挂 2012 三(19) 第 2 问（该 year 题的小问子集）⇒ 24 条；stats 由 T142 登记
-// （st-2025-1 第 2/3 小问、st-2026-2 第 (1)(2) 问），econ 经校准量具复测无同题重复（下限 0）。
+// （st-2025-1 第 2/3 小问、st-2026-2 第 (1)(2) 问）；W3-i 后 math3 69 / econ 1 / stats 4 条压制，
+// 下限仍保留为登记时点的历史基线（只增不减），不随新增压制上调。
 const SUBOF_SPECS = [
   { sid: 'math3', prefix: 'cv-m3', file: 'data/math3.js', min: 24 },
   { sid: 'econ', prefix: 'cv-ec', file: 'data/econ.js', min: 0 },
@@ -466,9 +489,20 @@ test('小问级不重复收录（t74/T142 + T149）：三科题库都不得并�
       const scored = yearQs.map((y) => ({ id: y.id, r: coverRatio(m.entry.q, y.stem) }))
         .sort((a, b) => b.r - a.r);
       const r = coverRatio(m.entry.q, target.stem);
-      assert.ok(r >= 0.25, m.id + ' 与声明的 ' + m.entry.subOf.id + ' 相似度过低（' + r.toFixed(3) + '）：压制指错了题？');
-      assert.equal(scored[0].id, m.entry.subOf.id, m.id + ' 声明压制的应为全库最相似的 year 题：实际最相似是 '
-        + scored[0].id + '（' + scored[0].r.toFixed(3) + '），声明是 ' + m.entry.subOf.id + '（' + r.toFixed(3) + '）');
+      // 短公式填空题（如 `$\lim\limits_{x\to0}\dfrac{\ln(\cos x)}{x^2}=$______.`）归一化后 6-gram 不足 8 个，
+      // coverRatio 按设计直接返回 0（避免短题干天然高重合），此时相似度口径失效。bank-wave3 入库 2023–2025 后
+      // 暴露的两组「卡片例题与 year 真题逐字相同」正属此类：**归一化后完全同文**即是同一道题的充分证据，
+      // 故精确同文放行；否则仍要求非平凡相似度且必须是全库最相似的 year 题（指错题照旧转红）。
+      // W3-i：短公式填空题与卡片例题是同一道题的两种表述时（「（2015 数三）求极限 $…$」vs
+      // 「$…=$______.」），6-gram 不足 8 使 coverRatio 恒为 0；用 coreStem 核心表达式补放行，
+      // 与 T149 的 exactSame 放行同口径，仍要求核心长度 ≥12，避免把不同题误判为同题。
+      const exactSame = normStem(m.entry.q) === normStem(target.stem)
+        || (coreStem(m.entry.q).length >= 12 && coreStem(m.entry.q) === coreStem(target.stem));
+      assert.ok(exactSame || r >= 0.25, m.id + ' 与声明的 ' + m.entry.subOf.id + ' 相似度过低（' + r.toFixed(3) + '）：压制指错了题？');
+      if (!exactSame) {
+        assert.equal(scored[0].id, m.entry.subOf.id, m.id + ' 声明压制的应为全库最相似的 year 题：实际最相似是 '
+          + scored[0].id + '（' + scored[0].r.toFixed(3) + '），声明是 ' + m.entry.subOf.id + '（' + r.toFixed(3) + '）');
+      }
       assert.ok(!byId.has(m.id), m.id + ' 已被 subOf 压制，仍出现在题库里');
     }
 
@@ -512,6 +546,8 @@ const CARD_PREFIX = { math3: 'cv-m3', econ: 'cv-ec', stats: 'cv-st' };
 const cardEntriesOf = (EXAMPLE, prefix) => {
   const kept = [];
   const skipped = [];
+  // W3-i：与 tools/bank-cv.mjs expectedRows 同源的派生题精确同题去重表
+  const seenDup = new Map();
   for (const key of Object.keys(EXAMPLE)) {
     const val = EXAMPLE[key];
     const arr = Array.isArray(val) ? val : [val];
@@ -523,6 +559,11 @@ const cardEntriesOf = (EXAMPLE, prefix) => {
       if (e && e.subOf && e.subOf.id) { skipped.push({ key, idx: i, entry: e, src, year: null, id, subOf: e.subOf }); return; }
       const m = src.match(/(?:19|20)\d{2}/);
       const rec = { key, idx: i, entry: e, src, year: m ? Number(m[0]) : null, id };
+      if (m) {
+        const dk = dupKey(e.q);
+        if (dk && seenDup.has(dk)) { skipped.push({ ...rec, dupOf: seenDup.get(dk) }); return; }
+        if (dk) seenDup.set(dk, id);
+      }
       (m ? kept : skipped).push(rec);
     });
   }
@@ -538,11 +579,16 @@ const cardEntriesOf = (EXAMPLE, prefix) => {
 // （150+181=331 → 205+181=386 → 182+181=363），故仍不改为现算——任一侧漂移都会立刻转红。
 const ECON_CARD_PARTS = cardEntriesOf(SUBJECTS.econ.EXAMPLE || {}, CARD_PREFIX.econ);
 const T49_CARDS = [
-  { sid: 'math3', cardFile: 'data/math3.js', kept: 182, skip: 24, poc: 181 },
-  // poc（既有手写真题）＝题库总题数 − 卡片派生题：math3 181（t53 全量入库 2010–2022）；
-  // econ 15（t49 起）→ 174（T143a 第一批微观真题题面 159 条入库：15 + 159 = 174）。
+  // W3-i：派生题 169 → 129（−8 精确同题、−32 subOf 压制）；W3-j：129 → 124（−5 卡片↔卡片同题，均有同年真题可指）
+  // W3-k：poc 363 → 385（+ 2026 卷 22 题）
+  // W3-l：按 0.25 口径全量压制 ⇒ 派生 124 → 33（两遍：91 + 5 条 dupKey 浮出项），skip 82 → 173，poc 385 不变
+  { sid: 'math3', cardFile: 'data/math3.js', kept: 33, skip: 173, poc: 385 },
+  // poc（既有手写真题）＝题库总题数 − 卡片派生题：math3 237（t53 的 2010–2022 + bank-wave3 的 2023–2025）
+  // + W3-h 的 2010–2019 卷内补题 126 = 363 + W3-k 的 2026 卷 22 = 385；econ 179 + W3-h 缺年 38 = 217。
   { sid: 'econ', cardFile: 'data/econ.js', kept: ECON_CARD_PARTS.kept.length,
-    skip: ECON_CARD_PARTS.skipped.length, poc: 174, floor: 161 }
+    // W3-i：econ 合并 15 条同题小问 ⇒ poc 217 → 202；派生题 161 → 154，t62 下限同步下调为新基线 154
+    // W3-l：按 0.25 口径全量压制 ⇒ 派生 154 → 139（15 + 1 条 dupKey 浮出项），下限同步下调为 139
+    skip: ECON_CARD_PARTS.skipped.length, poc: 202, floor: 139 }
 ];
 
 test('卡片派生题（t49 数学三 / 微观）：id/标签/星级/题干/答案/另解/陷阱/提示与卡片例题逐题同源', () => {
@@ -1120,8 +1166,10 @@ test('T148 来源串：真题题不渲染库内文件名，三科逐题给「院
       }
     }
   }
-  assert.equal(yearRows, 525, '三科真题题应为 525 条（T161 后：445 + 数院 431 九年卷 80 条；口径变化须同批更新）');
-  assert.equal(cardRows, 544, '三科卡片派生题应为 544 条（T160 后：510 + 统计科补例 34 条；口径变化须同批更新）');
+  // W3-i：econ 8 簇同题小问合并 −15 条 year 题 ⇒ 771 → 756；派生题 −14 精确同题 −34 subOf ⇒ 531 → 483；W3-j −5 ⇒ 478
+  // W3-k：math3 补 2026 卷 22 条 year 题 ⇒ 756 → 778
+  assert.equal(yearRows, 778, '三科真题题应为 778 条（W3-h 后 771 − W3-i econ 小问合并 15 条 + W3-k 2026 卷 22 条；口径变化须同批更新）');
+  assert.equal(cardRows, 318, '三科卡片派生题应为 318 条（W3-h 531 → W3-i/J 478 → W3-l 按 0.25 口径全量压制 −160）；口径变化须同批更新');
 });
 
 // ------------------------------------------------- T149：学生可见字段不得含开发痕迹
@@ -1153,7 +1201,8 @@ test('T149 学生可见字段（stem/answer/traps/hint/altAnswer/options）不�
       }
     }
   }
-  assert.equal(placeholders, 159, 'econ「答案待批」占位应为 159 条（补录后同步下调；只许减少）');
+  // W3-i 收口：15 条同题小问已并入 8 条整题 ⇒ 159 → 144；1995 首批 3 条 + 六切片 141 条全部重推 ⇒ 0
+  assert.equal(placeholders, 0, 'econ「答案待批」占位应为 0 条（159 − 小问合并 15 − W3-i 全量重推 144；今后不得回流占位）');
 });
 
 test('错题本状态：未入册 → false；入册后 → true（并回传命中条目）', () => {
@@ -1531,18 +1580,23 @@ test('四组下拉交互端到端：点击展开 / 选择派发既有 bankFilter
 // 期望值一律从 data/bank_*.js 现算（年份与来源都是题目自带的 q.year / q.school，零数据改动）。
 const yearRowsOf = (sid) => {
   const bag = new Map();
+  // 年份维度只认真题（origin !== 'card'）：卡片派生题的 year 是例题出处年份，
+  // 若计入，同年会显示「23/22 道真题 + N 条例题」，既像重复又偏离逐年题数标准。
   for (const q of BANK[sid].questions) {
+    if (q.origin === 'card') continue;
     const key = String(q.year) + '|' + q.school;
     if (!bag.has(key)) bag.set(key, { year: String(q.year), school: String(q.school), count: 0 });
     bag.get(key).count++;
   }
   return [...bag.values()].sort((a, b) => Number(b.year) - Number(a.year) || (a.school < b.school ? -1 : 1));
 };
+const yearCountOf = (sid) => BANK[sid].questions.filter((q) => q.origin !== 'card').length;
 const yearHitIn = (sid, value) => {
   const bar = String(value).indexOf('|');
   const year = bar < 0 ? String(value) : String(value).slice(0, bar);
   const school = bar < 0 ? null : String(value).slice(bar + 1);
-  return BANK[sid].questions.filter((q) => String(q.year) === year && (school === null || String(q.school) === school));
+  return BANK[sid].questions.filter((q) => q.origin !== 'card'
+    && String(q.year) === year && (school === null || String(q.school) === school));
 };
 // 年份 × 题型 × 难度 × 关键词 的独立口径（不走 bankMatch，避免与被测实现同源）
 const comboHit = (sid, value, type, star, query) => yearHitIn(sid, value).filter((q) => {
@@ -1567,7 +1621,7 @@ test('年份/卷选项：按库内 (年份, 来源) 聚合派生（年份降序�
       Array.from(want, (r) => [r.year, r.school, r.count]),
       sid + ' 年份聚合应与数据文件逐项一致（年份降序、同年按来源升序、附题数）'
     );
-    assert.equal(rows.reduce((n, r) => n + r.count, 0), qCount(sid), sid + ' 聚合题数之和应等于全科题量');
+    assert.equal(rows.reduce((n, r) => n + r.count, 0), yearCountOf(sid), sid + ' 聚合题数之和应等于全科真题量');
 
     const opts = B.bankYearOptions(sid);
     assert.equal(opts.length, rows.length + 1, sid + ' 选项数 = 聚合分组数 + 全选');
@@ -1584,7 +1638,7 @@ test('年份/卷选项：按库内 (年份, 来源) 聚合派生（年份降序�
       // 谓词与选项口径同源：bankYearSelected 只认这一份编码
       assert.equal(B.bankYearSelected({ year: value.split('|')[0], school: hit[0].school }, value), true);
     }
-    assert.equal(covered.size, qCount(sid), sid + ' 年份选项并集应覆盖全科题目');
+    assert.equal(covered.size, yearCountOf(sid), sid + ' 年份选项并集应覆盖全科真题');
     assert.equal(new Set(opts.map((o) => String(o.value))).size, opts.length, sid + ' 选项 value 不得重复');
     assert.equal(new Set(opts.map((o) => String(o.label))).size, opts.length, sid + ' 选项 label 不得重复');
     assert.deepEqual(Array.from(B.bankYearOptions(sid), (o) => String(o.value)), Array.from(opts, (o) => String(o.value)), sid + ' 选项派生应稳定（两次调用一致）');
@@ -1605,13 +1659,14 @@ test('年份/卷选项：按库内 (年份, 来源) 聚合派生（年份降序�
     }
   }
   // t21：math3 2025 曾把同一份卷子写成两种来源措辞（3 题拆成两项），现已统一为一份卷 →
-  // 该年退回「裸年份」选项，且必须一次筛出该年全部题目（t49 起该年还含卡片派生题，故题数由数据现算；
-  // 措辞与封面亲读口径见下一条用例）
+  // 该年退回「裸年份」选项，且必须一次筛出该年全部真题（W3-j 起年份维度只认真题，
+  // 卡片派生题另有 18 条标注 2025，不计入年份选项与年份筛选）
   const y2025 = B.bankYearOptions('math3').filter((o) => String(o.value).indexOf('2025') === 0);
   assert.deepEqual(Array.from(y2025, (o) => String(o.value)), ['2025'], 'math3 2025 只应有一个年份/卷选项，实际 ' + JSON.stringify(Array.from(y2025, (o) => String(o.value))));
-  const m3_2025 = BANK.math3.questions.filter((q) => String(q.year) === '2025');
+  const m3_2025 = BANK.math3.questions.filter((q) => String(q.year) === '2025' && q.origin !== 'card');
   assert.ok(m3_2025.length >= 3, 'math3 2025 至少应有 t30 入库的 3 题（护栏，防该年题量悄悄失守）');
-  assert.equal(yearHitIn('math3', '2025').length, m3_2025.length, 'math3 2025 单选项应一次命中该年全部题目');
+  assert.equal(m3_2025.length, 22, 'math3 2025 应为 22 道真题（2021 起大题量 22）');
+  assert.equal(yearHitIn('math3', '2025').length, m3_2025.length, 'math3 2025 单选项应一次命中该年全部真题');
 });
 
 // ------------------------------------------------------------------ t21 同年单来源（题源语义统一）
@@ -1702,19 +1757,20 @@ test('年份/来源口径：同一 (年份, 规范化来源) 只有一种措辞�
         const vy = bar < 0 ? v : v.slice(0, bar);
         const vs = bar < 0 ? null : v.slice(bar + 1);
         for (const q of BANK[sid].questions) {
+          if (q.origin === 'card') continue; // 年份维度只认真题
           if (String(q.year) === vy && (vs === null || String(q.school) === vs)) ids.push(q.id);
         }
       }
       assert.equal(new Set(ids).size, ids.length, sid + ' ' + y + ' 年各来源项不得重叠');
-      assert.equal(new Set(ids).size, BANK[sid].questions.filter((q) => String(q.year) === y).length,
-        sid + ' ' + y + ' 年各来源项并集应覆盖该年全部题目');
+      assert.equal(new Set(ids).size, BANK[sid].questions.filter((q) => String(q.year) === y && q.origin !== 'card').length,
+        sid + ' ' + y + ' 年各来源项并集应覆盖该年全部真题');
     }
   }
 
   // ④ math3 2025 逐项定案：同一份卷（试题册封面亲读口径「2025 年全国硕士研究生招生考试 试题（数学三）科目代码：303」）
-  //    t49 起该年含卡片派生题（150 条入库后 2025 年有 23 题），故题数与选项文案都按数据现算，只保留「≥3」护栏。
-  const y2025 = BANK.math3.questions.filter((q) => String(q.year) === '2025');
-  assert.ok(y2025.length >= 3, 'math3 2025 至少应有 t30 入库的 3 题');
+  //   W3-j 起年份维度只认真题：该年选项题数按真题现算（2021 起 22 题），卡片派生题不计入。
+  const y2025 = BANK.math3.questions.filter((q) => String(q.year) === '2025' && q.origin !== 'card');
+  assert.equal(y2025.length, 22, 'math3 2025 应为 22 道真题（2021 起大题量标准）');
   assert.equal(new Set(y2025.map((q) => String(q.school))).size, 1, 'math3 2025 全部题目 school 应逐字相同');
   assert.equal(String(y2025[0].school), '全国硕士研究生招生考试-数学三 2025 年', 'math3 2025 措辞应为试题册封面口径');
   assert.equal(String(y2025[0].school).indexOf('入学'), -1, '不应再出现「入学统一考试」旧称');
@@ -1778,36 +1834,39 @@ test('年份/卷筛选端到端：与题型/难度/关键词正交、跨科残�
   // ④ 下拉交互：选项派发既有 bankFilter + year=，选中态回填，选「全部年份」写回空值。
   //    t32 起统计同年多来源 → 选项值出现「年份|来源」编码；裸年份（单来源年）与「年份|来源」两种都要能派发与回填。
   const statsOpts = B.bankYearOptions('stats').slice(1);
+  // W3-j 起年份维度只认真题：统计真题逐年均为多来源卷（「年份|来源」），数学三逐年单卷（裸年份）。
+  // 两种编码因此跨科目取材，各自在对应科目里派发与回填。
   const cands = [
-    statsOpts.filter((o) => String(o.value).indexOf('|') < 0)[0],
-    statsOpts.filter((o) => String(o.value).indexOf('|') >= 0)[0]
+    { sid: 'math3', opt: B.bankYearOptions('math3').slice(1).filter((o) => String(o.value).indexOf('|') < 0)[0] },
+    { sid: 'stats', opt: statsOpts.filter((o) => String(o.value).indexOf('|') >= 0)[0] }
   ];
-  assert.ok(cands[0] && cands[1], '统计学科应同时存在裸年份与「年份|来源」两种年份选项（前置：数据含单来源年与多来源年）');
+  assert.ok(cands[0].opt && cands[1].opt, '前置：math3 应有裸年份选项、stats 应有「年份|来源」选项（年份维度只认真题）');
   for (const cand of cands) {
-    const val = String(cand.value);
-    const tree = renderTree('stats');
+    const csid = cand.sid;
+    const val = String(cand.opt.value);
+    const tree = renderTree(csid);
     const sel = facetSel(tree, 'year');
     assert.ok(sel, '应有年份/卷 下拉 trigger');
     const target = facetOptions(tree, 'year').filter((o) => o.getAttribute('data-value') === val)[0];
-    assert.ok(target, '统计学应有年份选项：' + val);
+    assert.ok(target, csid + ' 应有年份选项：' + val);
     clickNode(sel);
     assert.equal(sel.getAttribute('aria-expanded'), 'true', '点击后应展开');
     clickNode(target);
     assert.deepEqual(Array.from(viewState('window.__actions[window.__actions.length - 1]')), ['bankFilter', 'year=' + val],
       '选年份应派发既有 bankFilter 动作与 year= 参数：' + val);
     assert.equal(viewState('bankYear'), val, '年份值应写入会话状态：' + val);
-    assert.equal(byClass(appEl, 'bank-item').length, yearHitIn('stats', val).length, '列表应只剩该项对应题目：' + val);
-    assert.ok(treeText(appEl).indexOf('当前筛选命中 ' + yearHitIn('stats', val).length + ' 题（全部 ' + qCount('stats') + ' 题）') >= 0,
+    assert.equal(byClass(appEl, 'bank-item').length, yearHitIn(csid, val).length, '列表应只剩该项对应题目：' + val);
+    assert.ok(treeText(appEl).indexOf('当前筛选命中 ' + yearHitIn(csid, val).length + ' 题（全部 ' + qCount(csid) + ' 题）') >= 0,
       '命中行应显示年份筛选后的活数：' + val);
     const after = facetSel(appEl, 'year');
     assert.equal(after.getAttribute('data-arg'), 'year=' + val, 'trigger 应回填当前年份参数：' + val);
-    assert.equal(byClass(after, 'bank-select-text')[0].getAttribute('data-tex'), cand.label, '折叠态文案应为当前年份选项文案：' + val);
+    assert.equal(byClass(after, 'bank-select-text')[0].getAttribute('data-tex'), cand.opt.label, '折叠态文案应为当前年份选项文案：' + val);
     const picked = facetOptions(appEl, 'year').filter((o) => o.getAttribute('aria-selected') === 'true');
     assert.equal(picked.length, 1, '应恰有一个选中项：' + val);
     assert.equal(picked[0].getAttribute('data-value'), val);
     clickNode(facetOptions(appEl, 'year').filter((o) => o.getAttribute('data-value') === 'all')[0]);
     assert.equal(viewState('bankYear'), '', '选「全部年份」应写回空值（状态里不存 UI 的 all）');
-    assert.equal(byClass(appEl, 'bank-item').length, qCount('stats'), '放宽年份后应恢复全科题量');
+    assert.equal(byClass(appEl, 'bank-item').length, qCount(csid), '放宽年份后应恢复全科题量');
   }
 
   // ⑤ 年份 × 题型无命中 → 沿用既有空状态文案（组合取自探针确认的空集，前置断言兜底防数据漂移）
@@ -1911,15 +1970,15 @@ test('选择题标识：选项 (A)–(D) 前缀 + 答案区「答案：X」+ 正
   const all = B.bankAllQuestions();
   const choiceRows = all.filter((q) => (q.options || []).length > 0);
   const wantChoice = Object.entries(manifest.answers).filter(([, w]) => w.kind === 'choice');
-  assert.equal(choiceRows.length, wantChoice.length, '有选项的题目数应与期望表 choice 条目一致（现 118）');
-  assert.equal(choiceRows.length, 118, '数学三现为 118 道选择题（t53 全量入库后；题量变化时同步复核期望表）');
+  assert.equal(choiceRows.length, wantChoice.length, '有选项的题目数应与期望表 choice 条目一致（现 148）');
+  assert.equal(choiceRows.length, 148, '数学三现为 148 道选择题（t53 的 2010–2022 + bank-wave3 的 2023–2025 + W3-k 的 2026 卷 10 道；题量变化时同步复核期望表）');
   for (const q of choiceRows) {
     assert.equal(q.options.length, 4, q.id + ' 选择题应有 4 个选项');
     assert.equal(B.bankChoiceLetter(q), manifest.answers[q.id].a, q.id + ' 字母应与期望答案表一致');
     assert.equal(B.bankChoiceLetter(q), letterOf(q.answer), q.id + ' 应与期望表护栏的三正则口径一致');
     for (const leg of ['A', 'B', 'C', 'D']) assert.ok(q.options.some((o) => o.length > 0), q.id + ' 选项不应为空');
   }
-  // 无选项的题（math3 213：填空/解答题；econ/stats 全部）不得被误判成选择题
+  // 无选项的题（math3 394：填空/解答题；econ/stats 全部）不得被误判成选择题
   const noOpts = all.filter((q) => !(q.options || []).length);
   assert.equal(noOpts.length, all.length - choiceRows.length);
   for (const sid of ['econ', 'stats']) {
@@ -2146,4 +2205,66 @@ test('缺省字段渲染契约（t32）：traps/hint 缺失时整段跳过、alt
     renderTree('math3');
     resetBankFilter();
   }
+});
+// ------------------------------------------------- W3-j：数学三逐年题量标准 + 题号排序
+// 用户口径（2026-11-06）：数学三 2010–2020 每年 23 题（8 选择 + 6 填空 + 9 解答），
+// 2021 起每年 22 题（10 选择 + 6 填空 + 6 解答）。这套「一次标准」是判定重复/缺失的唯一依据：
+// 每年真题条数必须正好等于标准值，且题号必须恰好是 1..N 的一个排列（重复号 = 录重，缺号 = 漏录）。
+const M3_STD = (y) => (y >= 2010 && y <= 2020 ? 23 : (y >= 2021 && y <= 2026 ? 22 : null));
+const m3NoOrder = (q) => {
+  const m = String(q.no || '').match(/\((\d+)\)/);
+  return m ? Number(m[1]) : NaN;
+};
+
+test('数学三逐年真题题量等于考纲标准（2010–2020 每年 23、2021 起每年 22），且题号恰为 1..N 排列', () => {
+  const years = [...new Set(BANK.math3.questions.filter((q) => q.origin !== 'card').map((q) => Number(q.year)))].sort((a, b) => a - b);
+  assert.ok(years.length > 0, '数学三应至少有一年真题');
+  for (const y of years) {
+    const std = M3_STD(y);
+    assert.ok(std != null, '数学三真题出现了标准之外的年份 ' + y + '（标准只覆盖 2010–2026）');
+    const rows = BANK.math3.questions.filter((q) => q.origin !== 'card' && Number(q.year) === y);
+    assert.equal(rows.length, std, y + ' 年数学三真题应为 ' + std + ' 条（8 选择 + 6 填空 + ' + (std === 23 ? 9 : 6) + ' 解答），实际 ' + rows.length + ' 条');
+    const nums = rows.map(m3NoOrder);
+    assert.ok(nums.every((n) => Number.isInteger(n)), y + ' 年存在取不出序号（形如「一(9)」）的题号：' + JSON.stringify(rows.filter((q) => !Number.isInteger(m3NoOrder(q))).map((q) => q.no)));
+    assert.deepEqual([...nums].sort((a, b) => a - b), Array.from({ length: std }, (_, i) => i + 1),
+      y + ' 年题号应恰为 1..' + std + ' 的排列（重复号＝同一题录了两遍，缺号＝漏录）：实际 ' + JSON.stringify([...nums].sort((a, b) => a - b)));
+  }
+  // W3-k：2026 卷已按 参考文件/真题/数学/2026年考研数学三真题及答案解析.pdf 全年补录（22 题），
+  // 上面逐年循环已覆盖 2026；此处再单独锚一次，防止 2026 被整卷误删后循环「静默跳过」而不报红。
+  const y2026 = BANK.math3.questions.filter((q) => q.origin !== 'card' && Number(q.year) === 2026);
+  assert.equal(y2026.length, 22, 'math3 2026 真题应为 22 条（W3-k 补录）；若整卷移除，请同步改本断言并说明材料是否撤下');
+  assert.deepEqual([...y2026.map(m3NoOrder)].sort((a, b) => a - b), Array.from({ length: 22 }, (_, i) => i + 1),
+    'math3 2026 题号应恰为 1..22 的排列（10 选择 + 6 填空 + 6 解答）');
+});
+
+test('题库列表按题号数值排序：同年内「二(9)」排在「二(10)」之前，真题在卡片例题之前', () => {
+  // ① 反证：字符串比较会把「二(10)」排到「二(9)」前，这正是 W3-j 修掉的缺陷
+  assert.ok(String('二(10)').localeCompare(String('二(9)')) < 0, '反证：字符串比较确实把 10 排在 9 前');
+  // ② 逐年：筛选某年后列表题号必须严格递增
+  for (const y of ['2010', '2019', '2021', '2025', '2026']) {
+    setBankFilter("currentSubjectId = 'math3'; bankYear = " + JSON.stringify(y) + ";");
+    const ids = B.bankFilteredQuestions();
+    assert.equal(ids.length, M3_STD(Number(y)), y + ' 年筛选后的列表条数应等于标准题量');
+    const nums = Array.from(ids, m3NoOrder);
+    assert.deepEqual(nums, Array.from({ length: nums.length }, (_, i) => i + 1), y + ' 年列表应按题号 1..N 顺序排列，实际 ' + JSON.stringify(nums));
+  }
+  // ③ 全部年份：真题在前、卡片例题殿后；同年内题号递增
+  setBankFilter("currentSubjectId = 'math3'; bankYear = '';");
+  const all = B.bankFilteredQuestions();
+  const firstCard = all.findIndex((q) => q.origin === 'card');
+  if (firstCard >= 0) {
+    assert.ok(all.slice(firstCard).every((q) => q.origin === 'card'), '卡片例题应全部排在真题之后');
+  }
+  const seen = new Map();
+  for (const q of all) {
+    if (q.origin === 'card') continue;
+    const key = Number(q.year);
+    const prev = seen.get(key);
+    if (prev) {
+      assert.ok(prev.year >= key, '年份应降序');
+      if (prev.year === key) assert.ok(prev.num < m3NoOrder(q), key + ' 年同年内题号应严格递增（' + prev.num + ' → ' + m3NoOrder(q) + '）');
+    }
+    seen.set(key, { year: key, num: m3NoOrder(q) });
+  }
+  resetBankFilter();
 });

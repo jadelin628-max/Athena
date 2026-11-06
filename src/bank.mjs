@@ -142,6 +142,9 @@ function bankNormalizeTypeFilter(subjectId) {
 // t17 起已无「题型出现频率」维度（typeStar），故不再参与匹配。
 function bankMatch(q, f) {
   if (f.subject && f.subject !== 'all' && q.subject !== f.subject) return false;
+  // 年份筛选只对真题生效：卡片派生题不属于任何一份真题卷，选中某年时不应混进来
+  // （否则该年列表 = 23/22 道真题 + N 条例题，与年份选项上的题数也不一致）。
+  if (f.year && f.year !== 'all' && q.origin === 'card') return false;
   if (!bankYearSelected(q, f.year)) return false; // t14：f.year 缺省（历史调用方）时不参与匹配
   if (!bankTypeSelected(q, f.type)) return false;
   if (f.tag && f.tag !== 'all' && (q.tags || []).indexOf(f.tag) < 0) return false;
@@ -193,8 +196,20 @@ function bankFilteredQuestions() {
     if (bankMatch(all[i], f)) out.push(all[i]);
   }
   out.sort(function (a, b) {
+    // 年份维度只认真题 ⇒ 列表也把真题整体排在卡片例题之前，避免「2026 年例题」因为年份更新而顶在 2025 真题前面
+    var ac = a.origin === 'card' ? 1 : 0;
+    var bc = b.origin === 'card' ? 1 : 0;
+    if (ac !== bc) return ac - bc;
     if (a.year !== b.year) return b.year - a.year;
-    return String(a.no).localeCompare(String(b.no));
+    // 题号按**数值**排序：「二(9)」必须排在「二(10)」之前，字符串比较会把 10 排到 9 前、
+    // 「一(1)」排到「三(15)」之后。取不到序号的（'未编号'）排在同年末尾。
+    var na = bankNoOrder(a);
+    var nb = bankNoOrder(b);
+    if (na !== nb) return na - nb;
+    var ta = bankNoText(a);
+    var tb = bankNoText(b);
+    if (ta !== tb) return ta < tb ? -1 : 1;
+    return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
   });
   return out;
 }
@@ -392,6 +407,10 @@ function bankYearRows(subjectId) {
   var bag = {}, out = [];
   for (var i = 0; i < list.length; i++) {
     var q = list[i];
+    // 年份维度只认真题（origin: 'year'）：卡片派生题的 year 是其例题 src 里的出处年份，
+    // 若混进来，同年会显示「23 道真题 + N 条例题」，看起来像重复、也让逐年题数偏离考纲标准
+    // （数学三 2010–2020 每年 23 题、2021 起每年 22 题）。卡片例题仍在「全部年份」与题型/知识点维度可见。
+    if (q.origin === 'card') continue;
     var year = q.year == null ? '' : String(q.year);
     if (!year) continue;
     var school = bankSchoolLabel(q);
@@ -540,6 +559,17 @@ function bankNoText(q) {
   var no = q && q.no;
   if (no == null || no === '' || no === BANK_NO_UNKNOWN) return '';
   return String(no);
+}
+
+// 题号里的序号（纯函数）：题库题号形如「一(9)」「二(13)」「一、(20 分)」，取其中的阿拉伯数字；
+// 卡片派生题的「未编号」等取不到序号 → Infinity（列表里排在同年最后）。只用于排序，不参与渲染。
+function bankNoOrder(q) {
+  var t = bankNoText(q);
+  if (!t) return Infinity;
+  var m = t.match(/\((\d+)\)/);
+  if (m) return Number(m[1]);
+  m = t.match(/(\d+)/);
+  return m ? Number(m[1]) : Infinity;
 }
 
 // 题目「可纳入错题本」的载体：题型 + 钩子（wrongId 便于回跳定位）

@@ -309,6 +309,8 @@ test('CLI 工作树保护：副本工具（ROOT＝临时沙盒）改写「自己
   fs.mkdirSync(path.join(fakeRoot, 'tools'));
   fs.mkdirSync(path.join(fakeRoot, 'data'));
   fs.copyFileSync(TOOL_PATH, path.join(fakeRoot, 'tools', 'bank-cv.mjs'));
+  // W3-i：生成器已引用同目录的共享去重口径 tools/dup-key.mjs，副本沙盒必须一并带上依赖
+  fs.copyFileSync(path.join(ROOT, 'tools', 'dup-key.mjs'), path.join(fakeRoot, 'tools', 'dup-key.mjs'));
   for (const f of ['econ.js', 'bank_econ.js']) fs.copyFileSync(path.join(REPO_DATA, f), path.join(fakeRoot, 'data', f));
   const fakeTool = path.join(fakeRoot, 'tools', 'bank-cv.mjs');
   const p = path.join(fakeRoot, 'data', 'bank_econ.js');

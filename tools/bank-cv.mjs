@@ -55,6 +55,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { dupKey } from './dup-key.mjs';
 
 export const TOOL = 'tools/bank-cv.mjs';
 export const TOOL_VERSION = '1 (t72)';
@@ -510,6 +511,8 @@ export function expectedRows(cfg, cards) {
   const rows = [];
   const excluded = [];
   const seenId = new Set();
+  // W3-i：派生题精确同题去重表（key → 首条派生题 id）；与 tests/bank.test.mjs 的 cardEntriesOf 同源。
+  const seenDup = new Map();
   for (const key of Object.keys(EXAMPLE)) {
     const v = EXAMPLE[key];
     const arr = Array.isArray(v) ? v : [v];
@@ -535,6 +538,15 @@ export function expectedRows(cfg, cards) {
       }
       const year = Number(m[0]);
       const id = cfg.prefix + '-' + key + (i > 0 ? '-' + (i + 1) : '');
+      // W3-i：同一道例题挂到两张卡上时，按 EXAMPLE 遍历顺序只保留首条派生题。
+      // 判据 tools/dup-key.mjs:dupKey（强归一化逐字同题）；全库现算恰好 14 组，year 真题不受影响。
+      const dk = dupKey(e.q);
+      if (dk && seenDup.has(dk)) {
+        excluded.push({ cardId: key, idx: i, src,
+          reason: '派生题与 ' + seenDup.get(dk) + ' 精确同题（W3-i 去重，保留首条）' });
+        continue;
+      }
+      if (dk) seenDup.set(dk, id);
       if (seenId.has(id)) throw new Error('id 冲突: ' + id);
       seenId.add(id);
       const meta = META[key];
@@ -697,11 +709,25 @@ export function planSubject(cfg, { dataDir, style = 'auto', sentinel = null } = 
     errors.push('块外骨架不一致（哨兵块之外被改动）');
   }
 
-  // —— 自检 4：新题型键覆盖 ≥5
+  // —— 自检 4：新题型键覆盖 ≥5（W3-l 放宽：判据改为「生成块 + 题库真题侧」合计 ≥5）
+  // 原判据只看生成块内条数。W3-l 按用户裁定「凡与同年真题 coverRatio ≥ 0.25 的派生题一律压制」后，
+  // 生成块从 124 条降到 33 条，math3 的 multivar 在块内只剩 2 条——但该题型在真题侧有 24 条，覆盖充足。
+  // t49 的契约本意是「例题同时进题库可练」，不是「每个新题型键必须在生成块里占满 5 题」，
+  // 否则压制重复题越多反而越报红，与「题库内只保留一道相同的题」的目标直接冲突。
   const typeHits = {};
   for (const r of rows) typeHits[r.type] = (typeHits[r.type] || 0) + 1;
+  const yearTypeHits = {};
+  for (const q of oldBank.questions) {
+    const o = q.origin == null ? 'year' : q.origin;
+    if (o === 'card') continue;
+    yearTypeHits[q.type] = (yearTypeHits[q.type] || 0) + 1;
+  }
   for (const t of newTypes) {
-    if ((typeHits[t.key] || 0) < 5) errors.push('新题型 ' + t.key + ' 覆盖不足 5 题: ' + (typeHits[t.key] || 0));
+    const total = (typeHits[t.key] || 0) + (yearTypeHits[t.key] || 0);
+    if (total < 5) {
+      errors.push('新题型 ' + t.key + ' 覆盖不足 5 题（生成块 ' + (typeHits[t.key] || 0)
+        + ' + 真题侧 ' + (yearTypeHits[t.key] || 0) + '）: ' + total);
+    }
   }
 
   const report = {

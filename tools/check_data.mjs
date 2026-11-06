@@ -282,7 +282,11 @@ for (const f of BANK_FILES) {
         }
         if (!covered) report('WARN', title + ' ' + q.id + ' src.file 未被同源规则覆盖，请人工确认 school: ' + srcFile);
         // 文件名里带「<四位年>年」时，school 的年份应与之一致（范围文件名如「1987-2025年」不适用）
-        const yearsInFile = srcFile.match(/(?:19|20)\d{2}(?=年)/g) || [];
+        // W3-h：父目录「【1987-2025年】」是整套真题的年份范围标注、不是单份文件名，须先剔除再取年份；
+        // 否则会把「2025」误当成合并题面册 `3、2010-2022考研数学三真题.pdf` 的年份，
+        // 给 2010–2019 的题刷 126 条假 WARN。剔除后 2023–2025 逐年卷反而真正纳入本项校验（口径变严）。
+        const fileOnly = srcFile.replace(/【[^】]*】/g, '');
+        const yearsInFile = fileOnly.match(/(?:19|20)\d{2}(?=年)/g) || [];
         if (yearsInFile.length === 1 && !school.includes(yearsInFile[0])) {
           report('WARN', title + ' ' + q.id + ' school 与 src.file 年份不一致: ' + school + ' vs ' + yearsInFile[0]);
         }

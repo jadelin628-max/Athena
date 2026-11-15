@@ -302,3 +302,24 @@ t49「卡片例题全量入库」只剩 318 条。**例题本身一条没丢**�
 
 #### 附带订正
 `docs/ARCHITECTURE.md` 闸门表里「数学三非卡片派生题 181 条 = 选择题 118 + 填空/解答 63」为 W3-h 前的旧值，已订正为 **385 条 = 选择题 148 + 填空/解答 237**（与期望表现值一致）。
+
+### T178 专注链：计划违约 ⇒ 归属链整条清空 + 全链单元入档（2.4.1）
+- 状态: **accepted**
+- 来源: 用户 2026-11-15「如今专注链的计划任务违约时仅清除计划任务，而不是整条链全部清除移入归档，这是不对的」
+- 裁定（提问组件）: 「**该条任务链全部清空**，指该条独立的普通链上的全部编制，不影响其他普通链」＋「**全链单元都入档**」。即保留 T151「只清归属链、预约链不动」的范围裁定，只把「扣数、减到 0 才清」改成「整条清空」。
+- 规格: `docs/ACT.md` §13.7 / §13.8；一次性脚本 `backup/scratch/focus-wholechain/`
+- 升版: **patch 2.4.1 / ms3-v128 / ?v=89**
+
+#### 交付
+- `focusClearScopedChains`（`src/focus.mjs:2439`）：删除 `after = Math.max(0, workCount - removed)`，改为把该链上**全部** `state.units`（按 `chainId`）移出、`workCount = 0` / `current = null` / `status='cleared'` / `clearedAt` / `clearReason`；预约链 `focusIsReserveChain` 跳过，其他普通链不进 `scope` 故不动。旧 `state.plans` 口径同函数受益，但仍不写归档（该历史口径无 org 节点，T151 起的既有边界）。
+- `focusArchiveSnapshot`（`src/focus.mjs:2483`）：抽出 `arcUnitOf`，新增 `chainUnits[]`（清空前取，含链上全部单元）；`chains[].removed` 改为全链实际移出数、`workCountAfter` 恒 0、`cleared` 恒 true。`focusSanitizeArchiveRecord`（`src/focus.mjs:319`）白名单放行 `chainUnits`。
+- `focusArchiveCardEl`（`src/focus.mjs:4127`）：链标记改「整条已清空」，展开后按 `chainUnits - units` 差集另列「整链清空时一并移出的其他单元」。归档页提示文案同步。
+- 守卫：`tests/focus.test.mjs` 新增 2 条（整链清空 + 全链入档、源码级守卫含 3 条反证），原有 93 条除标题/注释外一条未改；全量 **443/443**。
+- 文档：`docs/ACT.md` §13.7 / §13.8 重写为 T178 口径，按 diff hunk 重算 **227 处** `src/focus.mjs:行号` 锚点（脚本 `refresh-doc-anchors.mjs`），`docs/ARCHITECTURE.md` 版本段与归档页签条目同步。
+
+#### 验收
+`check_version` 一致（2.4.1 / ms3-v128 / ?v=89）· `npm run check` · `npm test` **443/443** · `check:render` · `verify-refs` exit 0（404 引用 / 0 失败）。
+
+#### 边界
+- `backup/scratch/docs-flavor/verify-refs2.mjs` 是冻结在 t41/t42 波次的历史量具（硬编 2.1.2 / ms3-v115 / ?v=76 / MIN_QUESTIONS 331），**改前即红**，本次不刷新；现行闸门以 `backup/scratch/docs-refresh/verify-refs.mjs` 为准。
+- `check_plan` G1/G3 仍为已裁定历史红，不刷新。

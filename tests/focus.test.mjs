@@ -103,7 +103,7 @@ import {
   focusPlanOrgAutoSettle,
   focusPlanOrgDueSoon,
   focusPlanOrgExpiredList,
-  // T151：归档（逾期未转正的计划编制快照）+ 只清归属链的工具
+  // T151 / T178：归档（编制快照 + 全链单元）+ 归属链整条清空的工具
   FOCUS_ARCHIVE_MAX,
   focusSubtreeOrgIds,
   focusChainLabel,
@@ -737,7 +737,7 @@ test('t41 设置侧契约：层次徽标开关行已删除、风味显示文案�
   assert.ok(s.indexOf('显示中文序数层级名') > 0, '风味显示行的说明文案未更新为中文序数口径');
 });
 
-test('计划模式：未填满只清归属链 / 无归属链不清 / 填满 done（T151 口径）', () => {
+test('计划模式：未填满整条清空归属链 / 无归属链不清 / 填满 done（T151 范围 + T178 整链）', () => {
   let st = makeState();
   let r = focusPlanCreate(st, { title: '线代第三章', dueAt: NOW + 7 * 86400000, targetCount: 3 }, NOW);
   st = r.state;
@@ -786,7 +786,7 @@ test('计划模式：未填满只清归属链 / 无归属链不清 / 填满 done
   assert.equal(r3.plan.status, 'done');
 });
 
-test('到期自动结算：逾期未填满只清归属链 / 已填满转 done / 幂等（T151 口径）', () => {
+test('到期自动结算：逾期未填满整条清空归属链 / 已填满转 done / 幂等（T151 范围 + T178 整链）', () => {
   // 未填满：截止日过后自动结算 → 归属链清空、plan 记 failed，无关链与预约链不动
   let st = makeState();
   const r = focusPlanCreate(st, { title: '线代第三章', dueAt: NOW + 7 * 86400000, targetCount: 3 }, NOW);
@@ -833,7 +833,7 @@ test('临近截止提醒', () => {
   assert.equal(soon[0].title, '快到期');
 });
 
-test('T151 计划层到期结算：只清归属链 + 编制整体移出并归档（用户报 bug 的本体）', () => {
+test('T151/T178 计划层到期结算：归属链整条清空 + 编制整体移出并归档（用户报 bug 的本体）', () => {
   const DAY = 86400000;
   // 走 UI 真实路径：计划模式建「高层次计划任务」（带截止日期 + 转正最低下级数）
   let st = makeState();
@@ -865,7 +865,7 @@ test('T151 计划层到期结算：只清归属链 + 编制整体移出并归档
   assert.ok(s0.archived && s0.archived.id, '逾期结算必须带归档记录');
   const after = auto.state;
 
-  // ① 只清归属链：n1 清空并记 cleared；n2 与预约链一个字节都不许动
+  // ① 归属链整条清空：n1 清零并记 cleared；n2 与预约链一个字节都不许动
   const ch = focusFindChain(after, 'n1');
   assert.equal(ch.workCount, 0, '该计划归属链必须清空');
   assert.equal(ch.status, 'cleared');
@@ -3170,5 +3170,104 @@ test('T157 布局守卫：叶/伪根补同列占位格、折叠键唯一构造�
     missing = true;
   }
   assert.equal(missing, true, '反证：删掉占位规则应判红');
+});
+
+// ---------------- T178：计划违约 ⇒ 归属链整条清空 + 全链单元入档 ----------------
+
+test('T178 整链清空：链上非本计划的单元一并移出并入档，其他普通链/预约链不动', () => {
+  const DAY = 86400000;
+  let st = makeState();
+  st = focusCreateOrg(st, { level: 'group', name: '线代第三章', fromPlan: true, dueAt: focusYmd(NOW - 2 * DAY), minChildCount: 2 }, NOW).state;
+  const orgId = st.orgs[0].id;
+  // 归属链 n1 上先有一条与本计划无关的既有任务，再有一条编入本计划的任务
+  st = startAndFinish(st, 'n1', NOW + 10 * MIN, NOW + 35 * MIN, { name: '链上既有任务', completion: 100 }).state;
+  st = startAndFinish(st, 'n1', NOW + 60 * MIN, NOW + 85 * MIN, { name: '计划内任务', completion: 100 }).state;
+  const planUnitId = st.units[st.units.length - 1].id;
+  st = focusAssignUnit(st, planUnitId, orgId, NOW).state;
+  // 对照链 n2（普通链）与预约链：一个字节都不许动
+  st = focusCreateChain(st, { id: 'n2', tier: FOCUS_TIER_NORMAL, unitMinutes: 25, seatNote: '书架' }, NOW).state;
+  st = startAndFinish(st, 'n2', NOW + 120 * MIN, NOW + 145 * MIN, { name: '别链的任务', completion: 100 }).state;
+  const n2Before = focusFindChain(st, 'n2').workCount;
+  const reserveBefore = focusFindChain(st, FOCUS_RESERVE_CHAIN_ID).status;
+  assert.equal(st.units.filter(function (u) { return String(u.chainId) === 'n1'; }).length, 2, '前置：归属链上应有 2 条单元');
+
+  const auto = focusPlanOrgAutoSettle(st, NOW);
+  assert.equal(auto.changed, true);
+  assert.equal(auto.settled.length, 1);
+  const after = auto.state;
+
+  // ① 归属链整条清空（不是只扣掉本计划那 1 条），链上其他任务也从现场移出
+  const n1 = focusFindChain(after, 'n1');
+  assert.equal(n1.workCount, 0, '整链清空 ⇒ workCount 归零');
+  assert.equal(n1.status, 'cleared');
+  assert.equal(n1.clearReason, 'plan:' + orgId);
+  assert.equal(n1.current, null);
+  assert.equal(after.units.filter(function (u) { return String(u.chainId) === 'n1'; }).length, 0,
+    '归属链上的全部单元（含非本计划）都必须移出');
+  // ② 其他普通链、预约链不受影响（用户裁定的范围）
+  assert.equal(focusFindChain(after, 'n2').workCount, n2Before, '无关普通链不得被动');
+  assert.notEqual(focusFindChain(after, 'n2').status, 'cleared');
+  assert.equal(after.units.filter(function (u) { return String(u.chainId) === 'n2'; }).length, 1);
+  assert.equal(focusFindChain(after, FOCUS_RESERVE_CHAIN_ID).status, reserveBefore, '预约链不得被动');
+
+  // ③ 全链单元都入档：chainUnits 含 2 条，units 仍只含计划编制的那 1 条（供归档树还原层级）
+  const rec = focusArchiveList(after)[0];
+  assert.ok(rec, '必须落一条归档');
+  assert.deepEqual(rec.chainIds, ['n1']);
+  assert.equal(rec.chainUnits.length, 2, '整链清空 ⇒ 全链 2 条单元都要留档');
+  assert.ok(rec.chainUnits.some(function (u) { return u.name === '链上既有任务'; }), '非本计划单元必须入档');
+  assert.ok(rec.chainUnits.some(function (u) { return u.name === '计划内任务'; }));
+  assert.equal(rec.units.length, 1, '归档树的编制单元仍只收计划子树');
+  assert.deepEqual(rec.chains[0], { id: 'n1', label: '普通链', removed: 2, workCountBefore: 2, workCountAfter: 0, cleared: true });
+  assert.deepEqual(focusArchiveTreeRows(rec).map(function (x) { return x.kind; }), ['org', 'unit']);
+  assert.deepEqual(auto.settled[0].archived.clearedChains, ['n1']);
+
+  // ④ 读盘白名单必须保留 chainUnits（否则下一秒节拍会把证据抹掉）
+  const roundTrip = focusSanitizeState(JSON.parse(JSON.stringify(after)));
+  assert.equal(focusArchiveList(roundTrip)[0].chainUnits.length, 2, 'sanitize 丢了全链单元');
+  assert.equal(focusArchiveList(roundTrip)[0].chainUnits[0].name, '链上既有任务', '全链单元字段应完整');
+  assert.equal(focusArchiveList(roundTrip)[0].chainUnits[0].chainId, 'n1');
+  // ⑤ 幂等
+  assert.equal(focusPlanOrgAutoSettle(after, NOW + 1000).changed, false);
+});
+
+test('T178 源码级守卫（+反证）：归属链必须整条清空，全链单元必须进归档快照与读盘白名单', () => {
+  const srcText = fs.readFileSync(new URL('../src/focus.mjs', import.meta.url), 'utf8');
+  const bodyOf = (src, name) => {
+    const i = String(src).indexOf('function ' + name + '(');
+    if (i < 0) return '';
+    const j = String(src).indexOf('\n  }', i);
+    return j < 0 ? '' : String(src).slice(i, j);
+  };
+  const isWholeChain = (src) => {
+    const b = bodyOf(src, 'focusClearScopedChains');
+    return b.indexOf('ch.workCount = 0') >= 0
+      && b.indexOf('state.units =') >= 0
+      && b.indexOf('Math.max(0, before -') < 0
+      && b.indexOf('focusIsReserveChain(') >= 0;
+  };
+  // 反证 1：T151 的「扣掉被移出单元数、减到 0 才清」旧实现必须判红
+  const oldWay = 'function focusClearScopedChains(state, scope, reason, t) {\n'
+    + '    const before = 3;\n    const after = Math.max(0, before - 1);\n'
+    + '    ch.workCount = after;\n    if (focusIsReserveChain(ch)) return;\n  }';
+  assert.equal(isWholeChain(oldWay), false, '守卫失效：扣数口径应判红');
+  // 反证 2：只清链计数、不移出链上其他单元也必须判红
+  const halfWay = 'function focusClearScopedChains(state, scope, reason, t) {\n'
+    + '    ch.workCount = 0;\n    if (focusIsReserveChain(ch)) return;\n  }';
+  assert.equal(isWholeChain(halfWay), false, '守卫失效：只清计数不移出单元应判红');
+  assert.equal(isWholeChain(srcText), true, '归属链未整条清空——用户报的问题会复发');
+  assert.equal(srcText.split('function focusClearScopedChains(').length - 1, 1, '清链工具定义应唯一');
+
+  const snap = bodyOf(srcText, 'focusArchiveSnapshot');
+  const sanitize = bodyOf(srcText, 'focusSanitizeArchiveRecord');
+  assert.ok(snap.indexOf('chainUnits') >= 0 && snap.indexOf('chainIdSet') >= 0,
+    '归档快照必须在清链前收全链单元');
+  assert.ok(sanitize.indexOf('chainUnits') >= 0, '读盘白名单必须保留 chainUnits');
+  // 反证 3：快照写在移出之后 ⇒ 归档拿到的是空现场
+  const outBody = bodyOf(srcText, 'focusPlanOrgArchiveOut');
+  const iSnap = outBody.indexOf('focusArchiveSnapshot(');
+  const iOut = outBody.indexOf('focusRemoveSubtree(');
+  const iClear = outBody.indexOf('focusClearScopedChains(');
+  assert.ok(iSnap >= 0 && iOut > iSnap && iClear > iOut, '次序必须是「快照 → 移出编制 → 整链清空」');
 });
 

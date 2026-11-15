@@ -274,7 +274,7 @@
 
   // ---------------- 归档记录（T151） ----------------
   // 一次「计划逾期未转正」结算 = 该计划编制（计划节点 + 子孙节点 + 子树内已编入单元）整体
-  // 移出编制树，并按单元归属（unit.chainId）只清相关链；快照落进 state.archive，现场不留痕。
+  // 移出编制树，并按单元归属（unit.chainId）把相关链整条清空；快照（含全链单元）落进 state.archive。
   // 归档里的节点/单元都是死数据（不指向现场），只读不改，渲染时按 parentId/orgId 重建层级。
   function focusSanitizeArcNode(raw) {
     if (!raw || typeof raw !== 'object') return null;
@@ -328,6 +328,12 @@
       const uu = focusSanitizeArcUnit(u);
       if (uu) units.push(uu);
     });
+    // T178：整链清空时一并移出的全链单元，必须随归档记录读盘保留
+    const chainUnits = [];
+    (Array.isArray(raw.chainUnits) ? raw.chainUnits : []).forEach(function (u) {
+      const uu = focusSanitizeArcUnit(u);
+      if (uu) chainUnits.push(uu);
+    });
     const chains = [];
     (Array.isArray(raw.chains) ? raw.chains : []).forEach(function (c) {
       if (!c || typeof c !== 'object') return;
@@ -355,7 +361,8 @@
       chainIds: (Array.isArray(raw.chainIds) ? raw.chainIds : []).map(function (x) { return String(x); }).filter(Boolean),
       chains: chains,
       nodes: nodes,
-      units: units
+      units: units,
+      chainUnits: chainUnits
     };
   }
 
@@ -2357,8 +2364,8 @@
   }
 
   // 计划到期自动结算（纯函数）：把所有「已过截止日、且仍是 active」的计划按 focusPlanSettle 的
-  // 规则逐个结掉——填满 → done（不动链）；没填满 → failed + **只清该计划归属的链**（T151；
-  // workCount 减去被移出的单元数，减到 0 才 status 'cleared'、clearReason 'plan:<id>'）。
+  // 规则逐个结掉——填满 → done（不动链）；没填满 → failed + **把归属链整条清空**（T178：
+  // 链上全部单元移出、workCount 归零、status 'cleared'、clearReason 'plan:<id>'）。
   // 修 2.1.3：focusPlanSettle 此前只有 tests/focus.test.mjs 在调用，运行期没有任何入口
   // ⇒ 截止日期过了、整链没填满也不会清空（用户实测：到期后任务链照旧还在）。
   // 现由 focusPlanAutoSettleApply 挂到悬浮提醒的节拍（挂载 + 每 1s）与专注视图渲染前。
@@ -2377,8 +2384,8 @@
     return { changed: settled.length > 0, state: next, settled: settled };
   }
 
-  // ---------------- 归档与「只清该链」的工具（T151） ----------------
-  // 用户口径（T151）：①逾期结算只清**该专注链**，不得清空所有链、不得动预约链；
+  // ---------------- 归档与「整链清空」的工具（T151 / T178） ----------------
+  // 用户口径（T151 + T178）：①逾期结算只清**该计划归属的那条链**，且整条清空，不影响其他普通链、不动预约链；
   // ②编制（计划节点 + 子孙节点 + 子树内已编入单元）整体移出并快照进 `state.archive`。
   function focusChainLabel(chain) {
     if (!chain) return '';
@@ -2425,28 +2432,29 @@
     return { chainIds: chainIds, counts: counts };
   }
 
-  // 只清**归属该计划的链**：workCount 减去被移出的单元数，减到 0 才算清空该链
-  // （该链上正在进行的任务随之中止）；预约链永不因计划逾期被清。
-  // 返回被清空的链 id 数组。scope.counts 指向的链若已不存在则跳过。
+  // 只清**归属该计划的链**，但整条清空（T178）：该链上的全部已编入单元（不限于本计划）一并移出，
+  // workCount 归零、current 置空、status 'cleared'；其他普通链与预约链一个字节都不动。
+  // 归档快照必须在调用本函数之前取（本函数会把链上单元从 state.units 里删掉）。
+  // 返回被清空的链 id 数组。scope.counts 已不再参与判据，仅保留入参形状兼容。
   function focusClearScopedChains(state, scope, reason, t) {
     const cleared = [];
     const sc = scope || { chainIds: [], counts: {} };
     (sc.chainIds || []).forEach(function (cid) {
+      const key = String(cid);
       const ch = focusFindChain(state, cid);
       if (!ch || focusIsReserveChain(ch)) return;
-      const before = Number(ch.workCount) || 0;
-      const after = Math.max(0, before - (Number(sc.counts[cid]) || 0));
-      ch.workCount = after;
+      state.units = (state.units || []).filter(function (u) {
+        return !(u && u.chainId != null && String(u.chainId) === key);
+      });
+      ch.workCount = 0;
+      ch.current = null;
       ch.updatedAt = t;
-      if (after === 0) {
-        ch.current = null;
-        if (ch.status !== 'cleared') {
-          ch.status = 'cleared';
-          ch.clearedAt = t;
-          ch.clearReason = reason;
-        }
-        cleared.push(cid);
+      if (ch.status !== 'cleared') {
+        ch.status = 'cleared';
+        ch.clearedAt = t;
+        ch.clearReason = reason;
       }
+      cleared.push(key);
     });
     return cleared;
   }
@@ -2494,9 +2502,7 @@
         minChildCount: o.minChildCount
       });
     });
-    const units = ((state && state.units) || []).filter(function (u) {
-      return u && u.orgId && idSet[String(u.orgId)];
-    }).map(function (u) {
+    const arcUnitOf = function (u) {
       return {
         id: String(u.id),
         seq: u.seq,
@@ -2513,21 +2519,37 @@
         completion: u.completion,
         promotedFromScout: !!u.promotedFromScout
       };
-    });
+    };
+    // rec.units = 计划编制子树内的单元（归档树按 orgId 还原层级用）
+    const units = ((state && state.units) || []).filter(function (u) {
+      return u && u.orgId && idSet[String(u.orgId)];
+    }).map(arcUnitOf);
     const scope = focusChainScopeOfUnits(state, units);
-    const chains = [];
+    const chainIds = [];
     scope.chainIds.forEach(function (cid) {
       const ch = focusFindChain(state, cid);
       if (!ch || focusIsReserveChain(ch)) return;   // 预约链不计入归档的链归属
+      chainIds.push(String(cid));
+    });
+    // T178：整条链一起清空 ⇒ 该链上**所有**单元（含不属于本计划的）都要留档，避免连带清掉的任务丢证据。
+    // 必须在 focusRemoveSubtree / focusClearScopedChains 之前取，否则现场已空。
+    const chainIdSet = {};
+    chainIds.forEach(function (cid) { chainIdSet[cid] = 1; });
+    const chainUnits = ((state && state.units) || []).filter(function (u) {
+      return u && u.chainId != null && chainIdSet[String(u.chainId)];
+    }).map(arcUnitOf);
+    const chains = chainIds.map(function (cid) {
+      const ch = focusFindChain(state, cid);
       const before = Number(ch.workCount) || 0;
-      chains.push({
+      const removedAll = chainUnits.filter(function (u) { return String(u.chainId) === cid; }).length;
+      return {
         id: cid,
         label: focusChainLabel(ch),
-        removed: Number(scope.counts[cid]) || 0,
+        removed: removedAll,
         workCountBefore: before,
-        workCountAfter: before,
-        cleared: false
-      });
+        workCountAfter: 0,
+        cleared: true
+      };
     });
     return {
       id: focusUid('arc'),
@@ -2539,10 +2561,11 @@
       orgName: org.name,
       dueAt: org.dueAt == null ? null : org.dueAt,
       minChildCount: org.minChildCount,
-      chainIds: chains.map(function (c) { return c.id; }),
+      chainIds: chainIds,
       chains: chains,
       nodes: nodes,
-      units: units
+      units: units,
+      chainUnits: chainUnits
     };
   }
 
@@ -2640,7 +2663,7 @@
   // 现按与 state.plans 同一判据接到 orgs：
   //   转正判据已满足（下级数量达下限且下级全部为完成单元）→ 记「已完成层次」（formalized），**不动任务链**；
   //   否则 → 判为逾期未完成：写 `org.expiredAt`，把该计划编制（计划节点 + 子孙节点 + 子树内已编入单元）
-  //   整体移出编制树并快照进 `state.archive`，再按单元归属**只清该链**（预约链与其他链一律不动，T151）。
+  //   整体移出编制树并快照进 `state.archive`，再按单元归属**把该链整条清空**（预约链与其他链一律不动，T178）。
   function focusPlanOrgOverdue(state, now) {
     const t = Number(now) || 0;
     return ((state && state.orgs) || []).filter(function (o) {
@@ -2648,8 +2671,8 @@
     });
   }
 
-  // 逾期未转正的归档落地（T151 口径，T152 抽成公共函数供「历史已逾期」补做复用）：
-  //   快照（节点 / 单元 / 链归属，此刻都还在）→ 打逾期标记 → 整体移出编制树 → 只清归属链 → 记录入 archive。
+  // 逾期未转正的归档落地（T178 口径，T152 抽成公共函数供「历史已逾期」补做复用）：
+  //   快照（节点 / 编制单元 / 全链单元 / 链归属）→ 打逾期标记 → 整体移出编制树 → 归属链整条清空 → 记录入 archive。
   // 预约链永不参与；archive 超上限截断。返回新入档的记录。
   function focusPlanOrgArchiveOut(next, org, t) {
     // T152：老标记（2.1.7 打过 expiredAt、但编制没移出）补归档时沿用**原逾期时刻**，
@@ -4053,7 +4076,7 @@
     wrap.appendChild(head);
     wrap.appendChild(el('div', 'act-hint',
       '计划任务过截止日期仍未转正 ⇒ 该计划的编制（计划节点 + 所有下级 + 已编入单元）整体移出并归档；'
-      + '逾期结算只清该计划归属的链，其他链与预约链不动。归档只读，用于回看当时的编成。'));
+      + '逾期结算会把该计划归属的链整条清空（链上其他任务一并移出并留档），其他链与预约链不动。归档只读。'));
 
     if (!all.length) {
       const empty = el('div', 'act-panel');
@@ -4114,7 +4137,7 @@
     parts.push('编制 ' + Math.max(0, rec.nodes.length - 1) + ' 个下级节点 / ' + rec.units.length + ' 个已编入单元');
     if (rec.chains.length) {
       parts.push('链：' + rec.chains.map(function (c) {
-        return c.label + '（移出 ' + c.removed + ' · ' + (c.cleared ? '已清空' : '剩余 ' + c.workCountAfter) + '）';
+        return c.label + '（移出 ' + c.removed + ' · ' + (c.cleared ? '整条已清空' : '剩余 ' + c.workCountAfter) + '）';
       }).join('、'));
     } else {
       parts.push('未编入任何链');
@@ -4162,6 +4185,28 @@
       tree.appendChild(row);
     });
     card.appendChild(tree);
+
+    // T178：整条链一起清空时，链上不属于本计划的单元也随链移出，必须留档且可见
+    const extraUnits = (rec.chainUnits || []).filter(function (u) {
+      return !(rec.units || []).some(function (x) { return String(x.id) === String(u.id); });
+    });
+    if (extraUnits.length) {
+      const extra = el('div', 'act-panel focus-archive-extra');
+      extra.appendChild(el('div', 'muted', '整链清空时一并移出的其他单元（' + extraUnits.length + '）'));
+      const extraTree = el('div', 'focus-tree');
+      extraUnits.forEach(function (u) {
+        const row = el('div', 'focus-tree-row focus-archive-unit');
+        row.appendChild(el('span', 'focus-tree-guide', '──'));
+        const main = el('div', 'focus-tree-main');
+        const label = focusSeqLabel('unit', u.seq) + ' ' + focusUnitTypeLabel(u, setts) + '：' + String(u.taskText || u.name || '');
+        main.appendChild(focusTreeLabelEl(label));
+        main.appendChild(el('span', 'focus-tree-state', u.endedAt ? (u.achieved ? '已达成' : '未达成') : '未结束'));
+        row.appendChild(main);
+        extraTree.appendChild(row);
+      });
+      extra.appendChild(extraTree);
+      card.appendChild(extra);
+    }
     return card;
   }
 
@@ -5145,7 +5190,7 @@ export {
   focusPlanOrgAutoSettle,
   focusPlanOrgDueSoon,
   focusPlanOrgExpiredList,
-  // T151：归档（逾期未转正的计划编制快照）+ 只清归属链的工具
+  // T151 / T178：归档（逾期未转正的计划编制快照 + 全链单元）+ 归属链整条清空的工具
   FOCUS_ARCHIVE_MAX,
   focusSubtreeOrgIds,
   focusChainLabel,

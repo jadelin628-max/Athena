@@ -323,3 +323,4 @@ t49「卡片例题全量入库」只剩 318 条。**例题本身一条没丢**�
 #### 边界
 - `backup/scratch/docs-flavor/verify-refs2.mjs` 是冻结在 t41/t42 波次的历史量具（硬编 2.1.2 / ms3-v115 / ?v=76 / MIN_QUESTIONS 331），**改前即红**，本次不刷新；现行闸门以 `backup/scratch/docs-refresh/verify-refs.mjs` 为准。
 - `check_plan` G1/G3 仍为已裁定历史红，不刷新。
+- 提交: `e055b4b`（12 files / +364 / −146），已推送 `origin/main`（`9363981..e055b4b`），工作树干净。

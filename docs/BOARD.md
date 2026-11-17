@@ -324,3 +324,33 @@ t49「卡片例题全量入库」只剩 318 条。**例题本身一条没丢**�
 - `backup/scratch/docs-flavor/verify-refs2.mjs` 是冻结在 t41/t42 波次的历史量具（硬编 2.1.2 / ms3-v115 / ?v=76 / MIN_QUESTIONS 331），**改前即红**，本次不刷新；现行闸门以 `backup/scratch/docs-refresh/verify-refs.mjs` 为准。
 - `check_plan` G1/G3 仍为已裁定历史红，不刷新。
 - 提交: `e055b4b`（12 files / +364 / −146），已推送 `origin/main`（`9363981..e055b4b`），工作树干净。
+
+### T179 专注链：未编入单元一并清空 + 手动「清空所有链」（2.4.2）
+- 状态: **accepted**
+- 来源: 用户 2026-11-18「清空时应该把未编入的任务单元也清空，同时新增一个小功能，可以使用户自己选择清空所有链」
+- 裁定（提问组件，四条）:
+  - 未编入范围：**仅清空该链中的未编入下的任务单元**（不是全库未编入一律清）
+  - 功能形态：**一个手动按钮，有确认提示窗**
+  - 预约链：**预约链永不参与**
+  - 计划下没有任何已编入单元、只存在未编入单元时：**只清当前座位链**
+- 规格: `docs/ACT.md` §13.7 / §13.8；只读探针 `backup/scratch/focus-clearall/probe.mjs` / `probe2.mjs`；端到端 `check-clear-all-ui.mjs`
+- 升版: **patch 2.4.2 / ms3-v129 / ?v=90**
+
+#### 交付
+- 根因：T178 的 `focusArchiveSnapshot` 靠计划编制子树内 `orgId` 非空的单元反推 `chainIds`；计划下没有任何已编入单元时范围为空，违约结算只归档计划节点、一条链都不清，链上「未编入」单元全部留在现场。`focusClearScopedChains` 本身按 `chainId` 移出全部单元，本来就含未编入，缺的只是范围。
+- `focusArchiveSnapshot`（`src/focus.mjs:2503`）：`chainIds` 为空时回退 `state.activeId`（`focusFindChain` + `!focusIsReserveChain` 双判），只清当前座位链；当前座位是预约链时不清任何链。
+- `focusArcUnitOf`（`src/focus.mjs:2483`）从快照内部提升为模块级，供逾期归档与手动清空共用。
+- 新增 `focusManualClearSnapshot`（`src/focus.mjs:2583`）与 `focusClearAllChains`（`src/focus.mjs:2624`）：只收集非预约链，先快照后清链再入档，写 `reason: 'manual_clear_all'` 记录（只读根行 + 全链 `chainUnits`）；无普通链返回 `no_chain`，不写空归档。
+- UI：`focusRenderSeat` 链 chips 下加「清空所有链」按钮（`src/focus.mjs:3165`），`window.confirm` 现算链数 / 单元数并声明预约链不受影响、操作不可撤销，取消即不落盘。
+- `focusArchiveHintRec`（`src/focus.mjs:2888`）过滤 `manual_clear_all`，状态页「已归档 · 逾期未转正」不被手动清空触发；`focusArchiveCardEl` 元信息加「手动清空所有链」。
+- 守卫：`tests/focus.test.mjs` 末尾追加 3 条（空范围回退、手动清空所有链、源码级守卫含 3 条反证），原有 95 条一条未改；`node --test tests/focus.test.mjs` 98/98。
+- 文档：`docs/ACT.md` §13.7 / §13.8 回写 T179 口径，按 diff 重算 104 处 `src/focus.mjs:行号` 锚点；`docs/ARCHITECTURE.md` 归档页签条目与版本七处同步。
+
+#### 验收
+`check_version` 一致（2.4.2 / ms3-v129 / ?v=90）· `npm run check` 全绿（1096 题 / 派生 318 / subOf 245 / 154 组题源一致 0 组多写法）· `npm test` **446/446** · `npm run check:render` 0 问题（3562 卡 / 12938 渲染字段）· `verify-refs` exit 0 · `check-archive-ui` 全 PASS（原有 31 项）· 新增 `check-clear-all-ui.mjs` **21 项 PASS** · `check_plan` **59 PASS / 2 FAIL**（G1/G3 仍为已裁定历史红，按「不刷新」裁决保留）。
+
+#### 边界
+- 预约链永不参与；计划违约只清归属链（T151 范围裁定继续有效），只有手动按钮才清所有普通链。
+- 归档只读、上限 200 条；`backup/scratch/docs-flavor/verify-refs2.mjs` 仍是冻结在 t41/t42 的历史量具，改前即红，本次不刷新。
+- `focusUid` 同毫秒碰撞导致的「日实际分钟」偶发 flake 仍在（本次全量测试绿），未根治，属独立任务。
+- 提交与推送: 随本次提交一并推送 `origin/main`，工作树干净。

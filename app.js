@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '2.4.1';
+  const VERSION = '2.4.2';
 
   // ---------------- 更新日志（设置页「更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '2.4.2', date: '2026-11', items: ["专注链清空补边界（按反馈）：计划任务违约时，链上「未编入」的任务单元（没有编进计划、但仍挂在这条链上）也要一起清掉。原先只按计划编制子树里的已编入单元反推归属链，若做完任务没手动编入，范围就是空的——结算只归档计划节点、一条链都不清，未编入单元全留在现场。现在这种情形按裁定回退到「当前座位链」整条清空，只清这一条，其他普通链与预约链都不动；当前座位是预约链时则一条链都不清","新功能：专注链链 chips 下新增「清空所有链」手动按钮，带确认提示窗（列出将清空的链数与任务单元数，并说明预约链不受影响、操作不可撤销），取消即不落盘。确认后把全部普通链整条清空并写入归档；预约链永不参与。归档记录 reason 为 manual_clear_all，链上全部单元（含未编入）都在 chainUnits 留档、卡片展开逐条可见；状态页「已归档 · 逾期未转正」提示不会因手动清空而弹出","工程：新增 3 条守卫用例（含反证，锁定「按钮带确认」「清空函数跳预约链」「快照先于清链」），原有 95 条一条未改；`docs/ACT.md` §13.7 / §13.8 回写 T179 口径并按 diff 刷新 104 处 `src/focus.mjs:行号` 锚点，`docs/ARCHITECTURE.md` 归档页签条目与版本七处同步；全量闸门通过；版本七处同步 2.4.2 / ms3-v129 / ?v=90"] },
     { v: '2.4.1', date: '2026-11', items: ["专注链 · 计划任务违约改口径（按用户裁定）：过截止日仍未转正时，不再只清掉计划任务自己，而是把该计划挂靠的那条普通链**整条清空**——链上全部已编入单元（含不属于本计划的任务）一并移出，链计数归零、当前任务中止、标记已清空；其他普通链不受影响，预约链一个字节都不动。此前「扣掉被移出单元数、减到 0 才清链」的做法在链上还有别的任务时只清了计划任务，正是本次要修的问题", "归档同步扩到全链：归档记录新增 chainUnits（被清空链上的全部单元），归档卡片展开后另列「整链清空时一并移出的其他单元」，连带清掉的任务不再丢证据；读盘清洗白名单放行该字段，归档元信息把链标记改为「整条已清空」。旧的 state.plans 口径同样改为整链清空，但该历史口径没有编制节点，沿用既有边界不写归档", "工程：新增 2 条守卫用例（含三条反证，锁定「扣数口径」「只清计数不移出单元」「快照顺序」都不许回潮）；`docs/ACT.md` §13.7 / §13.8 回写 T178 口径，并按 diff 重算 227 处行号锚点；npm test 443/443、npm run check、check_render、verify-refs 全绿；版本七处同步 2.4.1 / ms3-v128 / ?v=89"] },
     { v: '2.4.0', date: '2026-11', items: ["题库补录：2026 年数学三整卷 22 题入库（10 选择 + 6 填空 + 6 解答，题号 1–22 无重无缺），题面按真题册逐字录入、答案逐题独立重推后与册上对拍——21 题一致，第 10 题判为册上笔误（答案栏标 C，同页解析先证 AC 均不成立、末段结论为 D，反证 m=1, n=5 时 7/36 < 5/12），按重推结论记 D，题内来源注与答案期望表双处留痕。数学三 487 → 418 题（真题侧 363 → 385）、全库 1234 → 1096 题", "题库去重（按反馈「题库内只保留一道相同的题」）：166 条卡片派生题让位于同年真题（数学 96 / 微观 16 / 统计 54，含压制后重复键位浮现的二遍 5 + 1 条），派生题 478 → 318、`subOf` 压制标记 79 → 245，**`year` 真题 778 条一条未删**——例题本身全部保留，被去掉的只是「题库里与某道真题重复的可练副本」。关键发现：例题把四个选项内联在题干里、真题把选项拆进 options，这层格式差异让 18 条逐字同题在 0.9 阈值下相似度只有 0.5–0.8，此前两轮去重都没抓到；换用 6-gram 且分母取例题自身、先剥 LaTeX 命令的真实口径后全部显形", "题库列表（按反馈）：年份维度只认真题——选中某年时只列该年真题（数学三 2010–2020 每年 23 题、2021 起 22 题），卡片派生题不再混进来；排序改为题号数值比较（「二(9)」排在「二(10)」之前，「一(1)」不再落到「三(15)」之后，取不到序号者置同年末尾），真题整体排在派生题之前。年份下拉的题数与列表同源，不再出现同年「23 道真题 + N 条例题」的重复观感", "工程：新增 tools/dup-key.mjs（生成器与测试同源的去重口径，避免两份实现漂移）；bank-cv 的「新题型覆盖 ≥5」自检放宽为「生成块 + 真题侧合计 ≥5」（否则压制越多越报红，与去重目标冲突）；check_data 先剔除父目录的【年份范围】标注再取单卷年份（2010–2019 的 126 条假警告清零，2023–2025 逐年卷反而纳入校验）；数学三答案期望表 363 → 385 条（选择题 138 → 148）；npm test 441/441，check_data / check_version / check_render / verify-refs 全绿；版本七处同步 2.4.0 / ms3-v127 / ?v=88"] },
     { v: '2.3.0', date: '2026-11', items: ["新增《行测》《申论》两科知识点库（用户裁定：尽量穷举 / 归入学业类 / 复用现有字段 / 暂不配例题真题）：行测 357 卡 · 12 章（常识七类 + 言语理解 / 数量关系 / 判断推理 / 资料分析 / 应试策略），申论 354 卡 · 9 章（审题与材料阅读 / 归纳概括 / 综合分析 / 提出对策 / 贯彻执行 152 卡逐文种 / 文章论述 / 规范表达 / 题型与评分 / 主题表述）。全库 25 → 27 学科、2851 → 3562 卡；两科均 qa 类，关联走 REL、陷阱走 PITFALL、技巧口诀走 MNEM、考查方式走 META，无 EXAMPLE、不建题库", "覆盖度收口：行测补民法典亮点制度、马哲细化、诉讼法特有制度、马政经、地理细分、公务员制度、前沿科技等 18 张；按《卡片粒度与体量标准》拆 4 张多知识点打包卡（地图三要素与中国之最、机关实务、传统文化概览、经典应用模型），父子卡 REL 互连、原 id 保留首张；申论消除「分析透彻」写法侧与评分侧重复卡（评分侧改写为采分判定）。两科正文净字数全部 ≤300，配置并集覆盖约 54% / 46%", "接线与图标：index.html 加载清单、tools/check_data.mjs 的 FILES、sw.js 预缓存、src/store.mjs 的 SUBJECT_ICON_URLS 四处同改；新增 icon-xingce.svg / icon-shenlun.svg 两枚 240×240 双色线稿；AGENTS / README / DATA_SCHEMA / ARCHITECTURE 回写 27 学科口径与「新增学科四处同改」约定", "工程：npm run build 同步 app.js 与 dist/；check_data（27 学科 / 3562 卡 / 1069 真题）、npm test 439/439、npm run check、npm run check:render 全绿；版本七处同步 2.3.0 / ms3-v126 / ?v=87"] },
@@ -15364,7 +15365,7 @@ function bankDetailNode(q) {
     return { chainIds: chainIds, counts: counts };
   }
 
-  // 只清**归属该计划的链**，但整条清空（T178）：该链上的全部已编入单元（不限于本计划）一并移出，
+  // 只清**归属该计划的链**，但整条清空（T178 / T179）：该链上的全部单元（含「未编入」、且不限于本计划）一并移出，
   // workCount 归零、current 置空、status 'cleared'；其他普通链与预约链一个字节都不动。
   // 归档快照必须在调用本函数之前取（本函数会把链上单元从 state.units 里删掉）。
   // 返回被清空的链 id 数组。scope.counts 已不再参与判据，仅保留入参形状兼容。
@@ -15411,6 +15412,26 @@ function bankDetailNode(q) {
     return removedUnits;
   }
 
+  // 归档单元快照（模块级，供计划逾期归档与手动清空所有链的归档共用）
+  function focusArcUnitOf(u) {
+    return {
+      id: String(u.id),
+      seq: u.seq,
+      typeKey: u.typeKey,
+      name: u.name,
+      taskText: u.taskText,
+      chainId: u.chainId == null ? null : String(u.chainId),
+      orgId: u.orgId == null ? null : String(u.orgId),
+      startedAt: u.startedAt,
+      endedAt: u.endedAt,
+      plannedMin: u.plannedMin,
+      actualMin: u.actualMin,
+      achieved: !!u.achieved,
+      completion: u.completion,
+      promotedFromScout: !!u.promotedFromScout
+    };
+  }
+
   // 归档快照（纯函数，不落库）：计划节点 + 编制（子树节点 + 子树内已编入单元）+ 链归属统计
   function focusArchiveSnapshot(state, org, now) {
     const t = Number(now) || 0;
@@ -15434,28 +15455,10 @@ function bankDetailNode(q) {
         minChildCount: o.minChildCount
       });
     });
-    const arcUnitOf = function (u) {
-      return {
-        id: String(u.id),
-        seq: u.seq,
-        typeKey: u.typeKey,
-        name: u.name,
-        taskText: u.taskText,
-        chainId: u.chainId == null ? null : String(u.chainId),
-        orgId: u.orgId == null ? null : String(u.orgId),
-        startedAt: u.startedAt,
-        endedAt: u.endedAt,
-        plannedMin: u.plannedMin,
-        actualMin: u.actualMin,
-        achieved: !!u.achieved,
-        completion: u.completion,
-        promotedFromScout: !!u.promotedFromScout
-      };
-    };
     // rec.units = 计划编制子树内的单元（归档树按 orgId 还原层级用）
     const units = ((state && state.units) || []).filter(function (u) {
       return u && u.orgId && idSet[String(u.orgId)];
-    }).map(arcUnitOf);
+    }).map(focusArcUnitOf);
     const scope = focusChainScopeOfUnits(state, units);
     const chainIds = [];
     scope.chainIds.forEach(function (cid) {
@@ -15463,13 +15466,20 @@ function bankDetailNode(q) {
       if (!ch || focusIsReserveChain(ch)) return;   // 预约链不计入归档的链归属
       chainIds.push(String(cid));
     });
+    // T179：计划编制下没有任何已编入单元时（运行期很常见——做完任务没手动编入），上面的范围会是空的，
+    // 结算就一条链都不清、未编入单元全部留在现场。按用户裁定回退到「当前座位链」state.activeId
+    // （非预约链才有效）：只清这一条，其他普通链与预约链都不动。
+    if (!chainIds.length) {
+      const active = focusFindChain(state, state && state.activeId);
+      if (active && !focusIsReserveChain(active)) chainIds.push(String(active.id));
+    }
     // T178：整条链一起清空 ⇒ 该链上**所有**单元（含不属于本计划的）都要留档，避免连带清掉的任务丢证据。
     // 必须在 focusRemoveSubtree / focusClearScopedChains 之前取，否则现场已空。
     const chainIdSet = {};
     chainIds.forEach(function (cid) { chainIdSet[cid] = 1; });
     const chainUnits = ((state && state.units) || []).filter(function (u) {
       return u && u.chainId != null && chainIdSet[String(u.chainId)];
-    }).map(arcUnitOf);
+    }).map(focusArcUnitOf);
     const chains = chainIds.map(function (cid) {
       const ch = focusFindChain(state, cid);
       const before = Number(ch.workCount) || 0;
@@ -15498,6 +15508,68 @@ function bankDetailNode(q) {
       nodes: nodes,
       units: units,
       chainUnits: chainUnits
+    };
+  }
+
+  // T179 手动「清空所有链」的归档记录：没有计划编制节点，故造一个只读的根行；
+  // 链上全部单元（含未编入）压进 chainUnits，归档卡片展开后逐条可见。
+  function focusManualClearSnapshot(state, chainIds, t) {
+    const idSet = {};
+    (chainIds || []).forEach(function (cid) { idSet[String(cid)] = 1; });
+    const chainUnits = ((state && state.units) || []).filter(function (u) {
+      return u && u.chainId != null && idSet[String(u.chainId)];
+    }).map(focusArcUnitOf);
+    const chains = (chainIds || []).map(function (cid) {
+      const ch = focusFindChain(state, cid);
+      return {
+        id: cid,
+        label: focusChainLabel(ch),
+        removed: chainUnits.filter(function (u) { return String(u.chainId) === String(cid); }).length,
+        workCountBefore: ch ? (Number(ch.workCount) || 0) : 0,
+        workCountAfter: 0,
+        cleared: true
+      };
+    });
+    const rootId = 'manual_' + String(t);
+    return {
+      id: focusUid('arc'),
+      clearedAt: t,
+      reason: 'manual_clear_all',
+      orgId: rootId,
+      orgLevel: 'group',
+      orgSeq: 1,
+      orgName: '手动清空所有链',
+      dueAt: null,
+      minChildCount: 1,
+      chainIds: (chainIds || []).slice(),
+      chains: chains,
+      nodes: [{
+        id: rootId, level: 'group', seq: 1, name: '手动清空所有链', parentId: null,
+        fromPlan: false, formalized: false, dueAt: null, expiredAt: null, minChildCount: 1
+      }],
+      units: [],
+      chainUnits: chainUnits
+    };
+  }
+
+  // T179：手动清空所有链（纯函数）。只清非预约链；链上全部单元（含未编入）移出并留档；
+  // 快照必须先取，否则 chainUnits 会是空的。预约链一个字节都不动。
+  function focusClearAllChains(state, now) {
+    const next = focusCloneState(state);
+    const t = Number(now) || Date.now();
+    const chainIds = [];
+    (next.chains || []).forEach(function (c) {
+      if (!c || focusIsReserveChain(c)) return;
+      chainIds.push(String(c.id));
+    });
+    if (!chainIds.length) return { ok: false, reason: 'no_chain', state: next, clearedChains: [] };
+    const rec = focusManualClearSnapshot(next, chainIds, t);
+    focusClearScopedChains(next, { chainIds: chainIds, counts: {} }, 'manual:all', t);
+    next.archive.unshift(rec);
+    if (next.archive.length > FOCUS_ARCHIVE_MAX) next.archive.length = FOCUS_ARCHIVE_MAX;
+    return {
+      ok: true, state: next, chain: null, clearedChains: chainIds,
+      archived: { id: rec.id, chainIds: chainIds, unitCount: rec.chainUnits.length }
     };
   }
 
@@ -15595,7 +15667,8 @@ function bankDetailNode(q) {
   // 现按与 state.plans 同一判据接到 orgs：
   //   转正判据已满足（下级数量达下限且下级全部为完成单元）→ 记「已完成层次」（formalized），**不动任务链**；
   //   否则 → 判为逾期未完成：写 `org.expiredAt`，把该计划编制（计划节点 + 子孙节点 + 子树内已编入单元）
-  //   整体移出编制树并快照进 `state.archive`，再按单元归属**把该链整条清空**（预约链与其他链一律不动，T178）。
+  //   整体移出编制树并快照进 `state.archive`，再按单元归属**把该链整条清空**（预约链与其他链一律不动，T178）；
+  //   T179：计划下没有已编入单元时回退到当前座位链（state.activeId），链上「未编入」单元同样移出并留档。
   function focusPlanOrgOverdue(state, now) {
     const t = Number(now) || 0;
     return ((state && state.orgs) || []).filter(function (o) {
@@ -15742,9 +15815,13 @@ function bankDetailNode(q) {
     return { ok: true, state: next };
   }
 
-  // 需要提示的归档记录：只提示「比上次确认更新」的那条（关闭后不再重复打扰，出现新归档才会再提示）
+  // 需要提示的归档记录：只提示「比上次确认更新」的那条（关闭后不再重复打扰，出现新归档才会再提示）。
+  // T179：手动清空所有链也写归档，但面板标题是「已归档 · 逾期未转正」，不能拿它来提示；
+  // 老记录没有 reason 字段（或为空）时按逾期处理，保持 2.1.9 的行为。
   function focusArchiveHintRec(state) {
-    const newest = focusArchiveList(state)[0];
+    const newest = focusArchiveList(state).filter(function (r) {
+      return !r || !r.reason || r.reason === 'overdue';
+    })[0];
     if (!newest) return null;
     const seen = Number((((state || {}).warnClosed) || {}).archiveSeenAt) || 0;
     return Number(newest.clearedAt) > seen ? newest : null;
@@ -16015,6 +16092,27 @@ function bankDetailNode(q) {
     });
     chips.appendChild(addChip);
     wrap.appendChild(chips);
+
+    // T179：手动「清空所有链」——用户主动选择、带确认提示；预约链永不参与，清空结果写入归档
+    const clearAllRow = el('div', 'focus-clear-all-row');
+    const clearAllBtn = el('button', 'btn small', '清空所有链');
+    clearAllBtn.type = 'button';
+    clearAllBtn.addEventListener('click', function () {
+      const normal = (st.chains || []).filter(function (c) { return c && !focusIsReserveChain(c); });
+      if (!normal.length) { toast('没有可清空的链'); return; }
+      const ids = {};
+      normal.forEach(function (c) { ids[String(c.id)] = 1; });
+      const total = (st.units || []).filter(function (u) {
+        return u && u.chainId != null && ids[String(u.chainId)];
+      }).length;
+      const msg = '确认清空所有链？\n将清空 ' + normal.length + ' 条任务链、移出 ' + total
+        + ' 个任务单元（含未编入），并写入归档；预约链不受影响。此操作不可撤销。';
+      if (!window.confirm(msg)) return;
+      focusApply(function (s) { return focusClearAllChains(s, Date.now()); }, '已清空所有任务链');
+    });
+    clearAllRow.appendChild(clearAllBtn);
+    clearAllRow.appendChild(el('span', 'muted', '清空全部任务链并留档；预约链不动'));
+    wrap.appendChild(clearAllRow);
 
     const chain = focusActiveChain(st) || st.chains[0];
     if (!chain) return;
@@ -17008,7 +17106,8 @@ function bankDetailNode(q) {
     wrap.appendChild(head);
     wrap.appendChild(el('div', 'act-hint',
       '计划任务过截止日期仍未转正 ⇒ 该计划的编制（计划节点 + 所有下级 + 已编入单元）整体移出并归档；'
-      + '逾期结算会把该计划归属的链整条清空（链上其他任务一并移出并留档），其他链与预约链不动。归档只读。'));
+      + '逾期结算会把该计划归属的链整条清空（链上含「未编入」在内的任务一并移出并留档），其他链与预约链不动；'
+      + '计划下没有已编入单元时回退到当前座位链。手动「清空所有链」也在这里留一条记录。归档只读。'));
 
     if (!all.length) {
       const empty = el('div', 'act-panel');
@@ -17065,6 +17164,7 @@ function bankDetailNode(q) {
     card.appendChild(title);
 
     const parts = [];
+    if (rec.reason === 'manual_clear_all') parts.push('手动清空所有链');
     parts.push('截止 ' + (rec.dueAt ? focusFmtTs(rec.dueAt) : '—'));
     parts.push('编制 ' + Math.max(0, rec.nodes.length - 1) + ' 个下级节点 / ' + rec.units.length + ' 个已编入单元');
     if (rec.chains.length) {

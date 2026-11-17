@@ -104,6 +104,9 @@ import {
   focusPlanOrgDueSoon,
   focusPlanOrgExpiredList,
   // T151 / T178：归档（编制快照 + 全链单元）+ 归属链整条清空的工具
+  // T179：手动清空所有链
+  focusClearAllChains,
+  focusManualClearSnapshot,
   FOCUS_ARCHIVE_MAX,
   focusSubtreeOrgIds,
   focusChainLabel,
@@ -3269,5 +3272,129 @@ test('T178 源码级守卫（+反证）：归属链必须整条清空，全链�
   const iOut = outBody.indexOf('focusRemoveSubtree(');
   const iClear = outBody.indexOf('focusClearScopedChains(');
   assert.ok(iSnap >= 0 && iOut > iSnap && iClear > iOut, '次序必须是「快照 → 移出编制 → 整链清空」');
+});
+
+// ---------------- T179：未编入单元 + 手动清空所有链 ----------------
+
+test('T179 空范围回退：计划下无已编入单元时按当前座位链整条清空，未编入单元一并入档', () => {
+  const DAY = 86400000;
+  let st = makeState();
+  st = focusCreateChain(st, { id: 'n2', tier: FOCUS_TIER_NORMAL, unitMinutes: 25, seatNote: '书架' }, NOW).state;
+  st = focusCreateOrg(st, { level: 'group', name: '线代第三章', fromPlan: true, dueAt: focusYmd(NOW - 2 * DAY), minChildCount: 2 }, NOW).state;
+  const orgId = st.orgs[0].id;
+  // 计划节点下**一条已编入单元都没有**；未编入单元分别落在 n1（座位链）与 n2（对照链）
+  st = startAndFinish(st, 'n1', NOW + 10 * MIN, NOW + 35 * MIN, { name: '未编入-n1-A', completion: 100 }).state;
+  st = startAndFinish(st, 'n1', NOW + 60 * MIN, NOW + 85 * MIN, { name: '未编入-n1-B', completion: 100 }).state;
+  st = startAndFinish(st, 'n2', NOW + 120 * MIN, NOW + 145 * MIN, { name: '未编入-n2', completion: 100 }).state;
+  st = focusSetActive(st, 'n1').state;
+  const n2Before = focusFindChain(st, 'n2').workCount;
+  const reserveBefore = focusFindChain(st, FOCUS_RESERVE_CHAIN_ID).status;
+  assert.equal(st.units.every(function (u) { return !u.orgId; }), true, '前置：所有单元都未编入');
+
+  const auto = focusPlanOrgAutoSettle(st, NOW);
+  assert.equal(auto.changed, true);
+  const after = auto.state;
+  const rec = focusArchiveList(after)[0];
+
+  // ① 回退到当前座位链 n1，整条清空（不是「一条都不清」）
+  assert.deepEqual(rec.chainIds, ['n1'], '空范围必须回退到当前座位链');
+  const n1 = focusFindChain(after, 'n1');
+  assert.equal(n1.workCount, 0);
+  assert.equal(n1.status, 'cleared');
+  assert.equal(n1.clearReason, 'plan:' + orgId);
+  assert.equal(n1.current, null);
+  // ② 该链中的未编入单元全部移出并留档；其他普通链的未编入单元不动
+  assert.deepEqual(after.units.map(function (u) { return u.name; }), ['未编入-n2'], '只清该链中的未编入单元');
+  assert.equal(focusFindChain(after, 'n2').workCount, n2Before, '其他普通链不得被动');
+  assert.notEqual(focusFindChain(after, 'n2').status, 'cleared');
+  assert.equal(focusFindChain(after, FOCUS_RESERVE_CHAIN_ID).status, reserveBefore, '预约链不得被动');
+  assert.equal(rec.units.length, 0, '计划编制子树里没有已编入单元');
+  assert.deepEqual(rec.chainUnits.map(function (u) { return u.name; }), ['未编入-n1-A', '未编入-n1-B']);
+  assert.deepEqual(rec.chains[0], { id: 'n1', label: '普通链', removed: 2, workCountBefore: 2, workCountAfter: 0, cleared: true });
+  // ③ 读盘与幂等
+  const roundTrip = focusSanitizeState(JSON.parse(JSON.stringify(after)));
+  assert.equal(focusArchiveList(roundTrip)[0].chainUnits.length, 2, 'sanitize 丢了全链单元');
+  assert.equal(focusPlanOrgAutoSettle(after, NOW + 1000).changed, false);
+});
+
+test('T179 手动清空所有链：全部非预约链整条清空、未编入单元入档、预约链不动', () => {
+  let st = makeState();
+  st = focusCreateChain(st, { id: 'n2', tier: FOCUS_TIER_NORMAL, unitMinutes: 25 }, NOW).state;
+  st = startAndFinish(st, 'n1', NOW + 10 * MIN, NOW + 35 * MIN, { name: 'M1-未编入-n1', completion: 100 }).state;
+  st = startAndFinish(st, 'n2', NOW + 60 * MIN, NOW + 85 * MIN, { name: 'M2-未编入-n2', completion: 100 }).state;
+  const reserveBefore = focusFindChain(st, FOCUS_RESERVE_CHAIN_ID).workCount;
+  const reserveStatus = focusFindChain(st, FOCUS_RESERVE_CHAIN_ID).status;
+
+  const r = focusClearAllChains(st, NOW + 200 * MIN);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.clearedChains, ['n1', 'n2']);
+  const after = r.state;
+  assert.deepEqual(after.units, [], '两条链上的全部单元（含未编入）都要移出');
+  ['n1', 'n2'].forEach(function (cid) {
+    const ch = focusFindChain(after, cid);
+    assert.equal(ch.workCount, 0, cid + ' 计数归零');
+    assert.equal(ch.status, 'cleared', cid + ' 标记已清空');
+    assert.equal(ch.current, null);
+    assert.equal(ch.clearReason, 'manual:all');
+  });
+  assert.equal(focusFindChain(after, FOCUS_RESERVE_CHAIN_ID).workCount, reserveBefore, '预约链计数不得被动');
+  assert.equal(focusFindChain(after, FOCUS_RESERVE_CHAIN_ID).status, reserveStatus, '预约链状态不得被动');
+
+  const rec = focusArchiveList(after)[0];
+  assert.equal(rec.reason, 'manual_clear_all');
+  assert.equal(rec.orgName, '手动清空所有链');
+  assert.deepEqual(rec.chainIds, ['n1', 'n2']);
+  assert.deepEqual(rec.chainUnits.map(function (u) { return u.name; }), ['M1-未编入-n1', 'M2-未编入-n2']);
+  assert.equal(rec.units.length, 0);
+  assert.equal(rec.nodes.length, 1, '手动记录造一个只读根行供归档树展示');
+  assert.equal(rec.chains.every(function (c) { return c.cleared && c.workCountAfter === 0; }), true);
+  assert.equal(focusArchiveHintRec(after), null, '手动清空不该弹「已归档 · 逾期未转正」提示');
+  assert.deepEqual(focusArchiveTreeRows(rec).map(function (x) { return x.kind; }), ['org']);
+  const roundTrip = focusSanitizeState(JSON.parse(JSON.stringify(after)));
+  assert.equal(focusArchiveList(roundTrip)[0].chainUnits.length, 2, 'sanitize 丢了手动清空的全链单元');
+  // 无可清链时拒绝，不写空归档
+  const empty = focusClearAllChains(focusDefaultState(), NOW + 300 * MIN);
+  assert.equal(empty.ok, false);
+  assert.equal(empty.reason, 'no_chain');
+  assert.equal(focusArchiveList(empty.state).length, 0);
+});
+
+test('T179 源码级守卫（+反证）：按钮带确认、清空函数跳预约链、快照先于清链', () => {
+  const srcText = fs.readFileSync(new URL('../src/focus.mjs', import.meta.url), 'utf8');
+  const bodyOf = (src, name) => {
+    const i = String(src).indexOf('function ' + name + '(');
+    if (i < 0) return '';
+    const j = String(src).indexOf('\n  }', i);
+    return j < 0 ? '' : String(src).slice(i, j);
+  };
+  const clearAll = bodyOf(srcText, 'focusClearAllChains');
+  assert.ok(clearAll.indexOf('focusIsReserveChain(') >= 0, '手动清空必须显式跳过预约链');
+  assert.ok(clearAll.indexOf('focusManualClearSnapshot(') >= 0, '手动清空必须写归档');
+  assert.ok(clearAll.indexOf('focusManualClearSnapshot(') < clearAll.indexOf('focusClearScopedChains('),
+    '手动清空必须「先快照后清链」，否则归档拿到空现场');
+  assert.equal(srcText.split('function focusClearAllChains(').length - 1, 1, '手动清空函数定义应唯一');
+  // 反证：漏掉预约链判据 / 先清后快照，都必须判红
+  const isSafe = (src) => {
+    const b = bodyOf(src, 'focusClearAllChains');
+    return b.indexOf('focusIsReserveChain(') >= 0
+      && b.indexOf('focusManualClearSnapshot(') >= 0
+      && b.indexOf('focusManualClearSnapshot(') < b.indexOf('focusClearScopedChains(');
+  };
+  assert.equal(isSafe('function focusClearAllChains(state, now) {\n    focusClearScopedChains(next, scope, reason, t);\n    focusManualClearSnapshot(next, ids, t);\n  }'), false,
+    '守卫失效：先清链后快照应判红');
+  assert.equal(isSafe('function focusClearAllChains(state, now) {\n    focusManualClearSnapshot(next, ids, t);\n    focusClearScopedChains(next, scope, reason, t);\n  }'), false,
+    '守卫失效：漏掉预约链判据应判红');
+  // 空范围回退必须在归档快照里，且只回退到非预约链
+  const snap = bodyOf(srcText, 'focusArchiveSnapshot');
+  assert.ok(snap.indexOf('state.activeId') >= 0, '计划无已编入单元时必须回退到当前座位链');
+  assert.ok(snap.indexOf('focusIsReserveChain(active)') >= 0, '回退链必须排除预约链');
+  // 按钮接线：必须带 window.confirm，且调用纯函数
+  const seat = bodyOf(srcText, 'focusRenderSeat');
+  assert.ok(seat.indexOf('清空所有链') >= 0, '专注座位页必须有「清空所有链」按钮');
+  assert.ok(seat.indexOf('window.confirm(') >= 0, '按钮必须有确认提示窗');
+  assert.ok(seat.indexOf('focusClearAllChains(') >= 0, '按钮必须调用纯函数');
+  // 归档提示必须过滤手动记录
+  const hint = bodyOf(srcText, 'focusArchiveHintRec');
+  assert.ok(hint.indexOf("reason === 'overdue'") >= 0, '手动清空不该触发逾期归档提示');
 });
 

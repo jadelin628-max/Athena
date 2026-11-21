@@ -382,4 +382,4 @@ t49「卡片例题全量入库」只剩 318 条。**例题本身一条没丢**�
 - **升级窗口**：升级前的旧客户端读到新版 gzip 会在 `JSON.parse` 处抛错、该科计入 `failed`；异常发生在任何写回之前，**不会用本机旧数据覆盖云端**（fail-safe），所有设备刷新到新版后即恢复，窗口内旧设备该科暂不同步。
 - **同一版本内改静态资源必须 bump `ms3-vN`**：缓存优先策略下否则用户会停在旧缓存；本次随发版 bump 到 `ms3-v130`，`activate` 清旧缓存重预缓存。
 - `backup/scratch/docs-flavor/verify-refs2.mjs` 仍是冻结在 t41/t42 的历史量具（改前即红），现行闸门以 `backup/scratch/docs-refresh/verify-refs.mjs` 为准；`focusUid` 同毫秒碰撞导致的偶发 flake 未根治，属独立任务。
-- 提交: 待回写。
+- 提交: `fb1badb`（14 files / +659 / −342），已推送 `origin/main`（`2333ad3..fb1badb`），工作树干净。

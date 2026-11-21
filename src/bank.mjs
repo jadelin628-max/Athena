@@ -659,6 +659,33 @@ function bankSubjectEmpty() {
     '当前学科暂无题库数据 · 用顶部学科选择器切到 ' + labels.join(' / '));
 }
 
+// T180：题库数据按需加载 —— 三个 bank 文件共 2.06 MB，index.html 已移出首屏。
+// 首次进入题库视图时并行注入三个脚本；sw.js 预缓存清单仍含这三个文件，离线从缓存读。
+// onload / onerror 都计入完成，且只尝试一次：某个文件缺失时不会反复注入造成死循环，
+// 由下方原有空态接手，不会把界面卡在「加载中」。
+var bankLoadAttempted = false;
+function bankEnsureData(onDone) {
+  if (typeof document === 'undefined' || bankLoadAttempted) return false;
+  bankLoadAttempted = true;
+  var left = BANK_SUBJECT_ORDER.length;
+  var settled = false;
+  var finish = function () {
+    left -= 1;
+    if (left > 0 || settled) return;
+    settled = true;
+    try { onDone(); } catch (e) {}
+  };
+  for (var i = 0; i < BANK_SUBJECT_ORDER.length; i++) {
+    var s = document.createElement('script');
+    s.src = 'data/bank_' + BANK_SUBJECT_ORDER[i] + '.js';
+    s.async = true;
+    s.onload = finish;
+    s.onerror = finish;
+    document.head.appendChild(s);
+  }
+  return true;
+}
+
 function renderBank() {
   if (typeof document === 'undefined') return null;
   var app = document.getElementById('app');
@@ -666,7 +693,14 @@ function renderBank() {
   app.innerHTML = '';
   // 每次重渲染都重建筛选控件，旧弹层节点已随 innerHTML 丢弃，展开态同步归零
   bankSelectOpen = null;
-  if (!bankAvailableSubjects().length) {
+  var available = bankAvailableSubjects();
+  if (!available.length && !bankLoadAttempted) {
+    // 三个脚本并行拉取；完成后由 renderApp 按当前视图重渲染（若用户已切走也不会强制回题库）
+    bankEnsureData(function () { renderApp(); });
+    app.appendChild(el('div', 'bank-empty', '题库数据加载中…'));
+    return app;
+  }
+  if (!available.length) {
     var empty = el('div', 'bank-empty', '题库数据未加载（data/bank_*.js）。');
     app.appendChild(empty);
     return app;

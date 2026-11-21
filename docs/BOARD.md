@@ -354,3 +354,32 @@ t49「卡片例题全量入库」只剩 318 条。**例题本身一条没丢**�
 - 归档只读、上限 200 条；`backup/scratch/docs-flavor/verify-refs2.mjs` 仍是冻结在 t41/t42 的历史量具，改前即红，本次不刷新。
 - `focusUid` 同毫秒碰撞导致的「日实际分钟」偶发 flake 仍在（本次全量测试绿），未根治，属独立任务。
 - 提交: `97e43c7`（12 files / +466 / −98），已推送 `origin/main`（`b6ed468..97e43c7`），工作树干净。
+
+### T180 性能：GitHub Pages 首屏 + 云同步上传/下载提速（2.4.3）
+- 状态: **accepted**
+- 来源: 用户「能否进行一定的优化，改进基于 GitHub pages 的加载速度，以及同步数据的上传与下载速度」
+- 裁定（提问组件，两问）: 优化范围**四档全选**——「加载侧低风险三项」「同步并发化与修剪收紧」「同步载荷 gzip 压缩」「云端 manifest 索引」；发版方式「**升 patch 并推送**」。
+- 规格: `docs/ARCHITECTURE.md` 内容加载 / 云同步 / 版本段；`docs/DATA_SCHEMA.md` 题库加载口径；一次性脚本与探针 `backup/scratch/perf-loading/`
+- 升版: **patch 2.4.3 / ms3-v130 / ?v=91**
+
+#### 现状摸底
+- `index.html` 原有 30 个同步阻塞 `<script>`（27 学科 + 3 题库 + `app.js`），首屏静态约 5.6 MB / 31 个阻塞请求；`data/bank_*.js` 共 2.06 MB，但 `window.BANK` 只在题库视图经 `bankData()` 才读。
+- `sw.js` 静态资源原为网络优先，在线刷新仍逐文件回源；`install` 预缓存整份大资源。
+- `src/sync.mjs`：27 学科 + `_act` 共 28 个独立 JSON，`doRunSync()` 完全串行，稳态一轮约 56 次串行往返；明文 JSON 再 base64，体积膨胀；收尾每科无条件 `pruneArchives()` GET 一次归档目录。
+
+#### 交付
+- **加载侧**：`index.html` 移除 3 条题库首屏脚本，27 个学科数据 + `app.js` 共 28 个脚本统一 `defer`（并行下载、文档顺序执行，学科注册仍先于 `app.js`）；`src/bank.mjs` 新增 `bankLoadAttempted` / `bankEnsureData()`，首次进题库时并行动态注入三份脚本、先显示「题库数据加载中…」、`onload` 后经 `renderApp()` 重渲染；三份题库仍在 `sw.js` 的 `APP_ASSETS` 预缓存清单，离线进题库照常可用。`sw.js` 静态资源改**缓存优先 + 后台更新**（stale-while-revalidate），导航仍网络优先。
+- **同步载荷**：新增字节级 base64 与 gzip 工具链 `b64encodeBytes` / `b64decodeBytes` / `syncIsGzipBytes` / `syncGzipEncode` / `syncGzipDecode` / `syncEncodeContent` / `syncDecodeContent`；`ghPutJson` 写 gzip、`ghGetJson` 按 `1f 8b` 魔数双读 gzip 与明文（升级前的明文文件照旧可读），`CompressionStream` 缺席或压缩失败自动退回明文。样本实测 821164 B → 45436 B（约 94.5%）。
+- **云端索引**：裁定项「manifest 索引」落地为 **Contents 目录 API 索引**，刻意不另写云端 manifest 文件——目录 API 是服务端真值，旧版设备直接写 `data/` 也能被立刻发现，还省一次 PUT 与一处多设备并发冲突点。`syncRemoteIndex()` 一次 `GET athena-sync/data/` 取全部 blob sha，`syncNeedFetch()` 按 sha 与本机 `updatedAt` 判据跳过无变化学科（本机无此库且云端无文件时连 404 GET 都省）；`athena_sync.lastSyncSha` 存索引状态，目录请求失败 / 404 时退回全量扫描。
+- **并发与修剪**：`mapLimit()` + `SYNC_CONCURRENCY = 4`；`doRunSync()` / `doForceUploadAll()` / `doForceDownloadAll()` 一轮内并发，`runExclusive` 总闸与每科 409 重拉合并重试保留（不同学科是不同云端文件，互不冲突），收尾 `loadDBAsync` / `buildSession` / `renderApp` 仍串行；`syncSubject()` 返回 `{ action, up, sha, archived }`，`pruneArchives()` 只对本轮确实写了归档的学科跑且并发。
+- **护栏**：`tests/sync.test.mjs` 末尾追加 7 条（gzip 往返与压缩率、明文老格式双读、压缩缺席回退、`syncPutSha`、`mapLimit` 并发峰值/顺序/单项失败、`syncNeedFetch` 判据、源码级守卫），该文件 42/42；`tests/bank.test.mjs` 旧「三份题库接进首屏」契约改写为 T180 口径；`check-loading.mjs` 13 项 PASS；`probe-sync.mjs` 四场景实测（稳态学科 GET 0 / PUT 0；云端变更只拉 1 科；本机改动 GET + PUT 各 1 且 PUT 为 gzip；索引失效退回全量 3 科）。
+- **文档**：`docs/ARCHITECTURE.md` 内容加载 / 云同步 / 版本段、`docs/DATA_SCHEMA.md` 题库加载口径回写；`src/bank.mjs` 显式锚点 1 处 + 裸引用 10 处按 diff 刷新；另顺带校准 `src/app.mjs` 的 4 处裸行号锚点（每次发版插入 CHANGELOG 都会让后续行号 +1，这几处是 T156 以来累积漂移 7 行的历史债，`verify-refs` 的 ANCHORS 表不覆盖该文件故一直静默通过，本次按当前源码改为符号定义行单点）。`verify-refs` 最终 411 引用 / 411 通过 / exit 0。
+
+#### 验收
+`check_version` 一致（2.4.3 / ms3-v130 / ?v=91）· `npm run check` 全绿（1096 题 / 派生 318 / subOf 245 / 154 组题源一致 0 组多写法）· `npm test` **453/453** · `npm run check:render` 0 问题（3562 卡 / 12938 渲染字段）· `verify-refs` exit 0 · `check-archive-ui` 全 PASS · `check-clear-all-ui` **21 项 PASS** · `check-loading.mjs` **13 项 PASS** · `probe-sync.mjs` 四场景全绿 · `check_plan` **59 PASS / 2 FAIL**（G1/G3 仍为已裁定历史红，按「不刷新」裁决保留）。
+
+#### 边界
+- **升级窗口**：升级前的旧客户端读到新版 gzip 会在 `JSON.parse` 处抛错、该科计入 `failed`；异常发生在任何写回之前，**不会用本机旧数据覆盖云端**（fail-safe），所有设备刷新到新版后即恢复，窗口内旧设备该科暂不同步。
+- **同一版本内改静态资源必须 bump `ms3-vN`**：缓存优先策略下否则用户会停在旧缓存；本次随发版 bump 到 `ms3-v130`，`activate` 清旧缓存重预缓存。
+- `backup/scratch/docs-flavor/verify-refs2.mjs` 仍是冻结在 t41/t42 的历史量具（改前即红），现行闸门以 `backup/scratch/docs-refresh/verify-refs.mjs` 为准；`focusUid` 同毫秒碰撞导致的偶发 flake 未根治，属独立任务。
+- 提交: 待回写。

@@ -1057,17 +1057,17 @@ test('导航接线：learn.mjs 声明题库会话状态并在 resetSessionState 
   }
 });
 
-test('数据加载契约：index.html 与 sw.js 均接线三份题库数据', () => {
+test('数据加载契约（T180）：题库按需加载、首屏 defer、sw.js 仍预缓存', () => {
   const html = read('index.html');
   const sw = read('sw.js');
+  const bank = read('src/bank.mjs');
   for (const f of ['data/bank_math3.js', 'data/bank_econ.js', 'data/bank_stats.js']) {
-    assert.ok(html.indexOf('<script src="' + f + '"></script>') >= 0, 'index.html 缺少 ' + f);
+    assert.ok(html.indexOf('<script src="' + f + '"></script>') < 0, 'T180 起题库不得进首屏：' + f);
     assert.ok(sw.indexOf("'./" + f + "'") >= 0, 'sw.js 预缓存缺少 ' + f);
   }
-  // 必须在 app.js 之前加载（bank.mjs 运行时要读 window.BANK）
-  assert.ok(html.indexOf('data/bank_stats.js') < html.indexOf('app.js'), '题库数据必须在 app.js 之前加载');
-  // 船长发版轮统一改版本号：2.1.0 发版时 sw.js 缓存戳由 ms3-v112 升为 ms3-v113。
-  // 这里只钉「必须是合法的 ms3-vN 缓存戳」这一结构契约，具体值由发版轮维护（题库任务不得擅自改动）。
+  assert.match(bank, /function bankEnsureData\(onDone\)/, 'bank.mjs 必须按需注入题库脚本');
+  assert.match(bank, /bankLoadAttempted/, '按需加载必须只尝试一次，避免某文件缺失时死循环');
+  assert.equal((html.match(/<script defer src=/g) || []).length, 28, '27 个学科 + app.js 都要 defer');
   assert.match(sw, /const VERSION = 'ms3-v\d+';/, 'sw.js VERSION 必须是合法的 ms3-vN 缓存戳');
 });
 

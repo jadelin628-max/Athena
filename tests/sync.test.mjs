@@ -9,7 +9,7 @@ globalThis.localStorage = {
   setItem: (k, v) => { store[k] = String(v); },
   removeItem: (k) => { delete store[k]; }
 };
-const { b64encodeUtf8, b64decodeUtf8, mergeDb, mergeActModule, mergeNodesByIdUpdatedAt, mergeMileHits, actModuleLocalPayload, actModuleWriteLocal, syncConfigured, syncReady, saveSyncCfg } = await import('../src/sync.mjs');
+const { b64encodeUtf8, b64decodeUtf8, b64encodeBytes, b64decodeBytes, syncIsGzipBytes, syncEncodeContent, syncDecodeContent, mapLimit, syncNeedFetch, syncPutSha, mergeDb, mergeActModule, mergeNodesByIdUpdatedAt, mergeMileHits, actModuleLocalPayload, actModuleWriteLocal, syncConfigured, syncReady, saveSyncCfg } = await import('../src/sync.mjs');
 // 里程碑键与归一化口径来自 mile.mjs（形状契约对拍：sync 的合并结果必须能被 mileNormalize 原样接受）
 const { MILE_KEY, mileNormalize } = await import('../src/mile.mjs');
 
@@ -692,4 +692,91 @@ test('mergeDb：畸形字段不影响其余合法语义（counts 逐日逐字段
   assert.equal(m.cards.x.lastR, 900);
   assert.deepEqual(m.log.revlogs.map((e) => e.t), [1]);   // 本地 revlogs 畸形 → 按空，云端记录照常并入
   assert.deepEqual(m.log.quiz.map((r) => r.t), [5]);
+});
+
+// ---------------------------------------------------------------- T180 同步性能改造
+// 原则：压缩是加速手段而非功能前提，明文老格式必须永远读得了；并发只改变调度、不改变合并语义。
+
+function perfDb() {
+  const db = { updatedAt: 1700000000500, cards: {}, wrongs: {}, log: { revlogs: [], quiz: [] } };
+  for (let i = 0; i < 400; i++) {
+    db.cards['cu' + i] = { lastR: 1700000000000 + i, stab: 12.5, note: '中文笔记 · LaTeX $\\frac{1}{2}$ · emoji ✓', tag: ['高数', '线代'] };
+    db.log.revlogs.push({ t: 1700000000000 + i, cid: 'cu' + i, r: 3 });
+  }
+  return db;
+}
+
+test('T180 载荷压缩：gzip 往返逐字段一致，且明显短于明文 base64', async () => {
+  const db = perfDb();
+  const plain = b64encodeUtf8(JSON.stringify(db));
+  const enc = await syncEncodeContent(db);
+  assert.ok(enc.length < plain.length * 0.6, '压缩后应不到明文 base64 的 60%（实际 ' + enc.length + ' / ' + plain.length + '）');
+  assert.equal(syncIsGzipBytes(b64decodeBytes(enc)), true, '压缩载荷应以 gzip 魔数开头');
+  assert.deepEqual(await syncDecodeContent(enc), db, '压缩 → 解压必须逐字段一致');
+});
+
+test('T180 载荷压缩：旧版明文文件仍可读（双读兼容）', async () => {
+  const db = perfDb();
+  const legacy = b64encodeUtf8(JSON.stringify(db));
+  assert.equal(syncIsGzipBytes(b64decodeBytes(legacy)), false, '老格式不该被误判为 gzip');
+  assert.deepEqual(await syncDecodeContent(legacy), db, 'ghGetJson 必须照旧读得懂升级前写的文件');
+});
+
+test('T180 载荷压缩：CompressionStream 缺席时自动退回明文，同步不中断', async () => {
+  const saved = globalThis.CompressionStream;
+  delete globalThis.CompressionStream;
+  try {
+    const db = perfDb();
+    const enc = await syncEncodeContent(db);
+    assert.equal(syncIsGzipBytes(b64decodeBytes(enc)), false, '不支持压缩的设备应写明文');
+    assert.deepEqual(await syncDecodeContent(enc), db, '明文回退仍要能读回');
+  } finally {
+    if (saved !== undefined) globalThis.CompressionStream = saved;
+  }
+});
+
+test('T180 载荷压缩：syncPutSha 从 PUT 响应取 blob sha，缺字段时保守返回空串', () => {
+  assert.equal(syncPutSha({ content: { sha: 'abc123' } }), 'abc123');
+  assert.equal(syncPutSha({ content: {} }), '');
+  assert.equal(syncPutSha(null), '');
+});
+
+test('T180 并发：mapLimit 不超上限、结果按输入顺序、单项失败不中断其余', async () => {
+  let active = 0, peak = 0;
+  const items = [1, 2, 3, 4, 5, 6, 7, 8];
+  const rs = await mapLimit(items, 3, async (n) => {
+    active += 1;
+    peak = Math.max(peak, active);
+    await new Promise((r) => setTimeout(r, 8));
+    active -= 1;
+    if (n === 5) throw new Error('boom');
+    return n * 2;
+  });
+  assert.ok(peak <= 3, '并发峰值不得超过上限（实际 ' + peak + '）');
+  assert.ok(peak >= 2, '必须真的并发起来（实际 ' + peak + '）');
+  assert.deepEqual(rs.map((r) => (r.ok ? r.value : 'ERR')), [2, 4, 6, 8, 'ERR', 12, 14, 16]);
+  assert.equal(rs[4].ok, false);
+  assert.match(String(rs[4].error.message), /boom/);
+});
+
+test('T180 索引：syncNeedFetch 只在两边都没变化时才跳过', () => {
+  assert.equal(syncNeedFetch(null, 'sha1', 100, 100, 2000), true, '索引不可用 → 保守全量');
+  assert.equal(syncNeedFetch('sha1', '', 100, 100, 2000), true, '首次记录 → 全量');
+  assert.equal(syncNeedFetch('sha2', 'sha1', 100, 100, 2000), true, '另一端写过 → 必须拉');
+  assert.equal(syncNeedFetch('sha1', 'sha1', 5000, 100, 2000), true, '本机有新改动 → 必须推');
+  assert.equal(syncNeedFetch('sha1', 'sha1', 100, 100, 2000), false, '稳态 → 跳过');
+  assert.equal(syncNeedFetch('sha1', 'sha1', 2099, 100, 2000), false, '2 秒容差内不算新改动');
+});
+
+test('T180 源码级守卫：索引跳过、并发、压缩三处接线不许回潮', async () => {
+  const fs2 = await import('node:fs');
+  const src = fs2.readFileSync(new URL('../src/sync.mjs', import.meta.url), 'utf8');
+  assert.match(src, /const SYNC_CONCURRENCY = 4;/, '并发上限常量必须保留');
+  assert.match(src, /await syncRemoteIndex\(\)/, '一轮同步必须先取目录索引');
+  assert.match(src, /await mapLimit\(todo, SYNC_CONCURRENCY/, '学科同步必须走受限并发');
+  assert.match(src, /await syncEncodeContent\(obj\)/, 'PUT 必须走压缩编码');
+  assert.match(src, /await syncDecodeContent\(j.content\)/, 'GET 必须走双读解码');
+  assert.match(src, /runExclusive/, '同一设备仍只能有一轮同步在跑（总闸不许删）');
+  // 反证：若有人把压缩改成「只压缩不解密」，上面的双读断言会红；
+  // 若有人把并发改成无上限 Promise.all，mapLimit 的峰值断言会红。
 });

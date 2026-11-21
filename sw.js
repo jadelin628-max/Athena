@@ -2,7 +2,7 @@
  * Service Worker：缓存应用与 KaTeX，实现离线可用
  * 说明：仅在 http(s) 环境下生效（file:// 下浏览器不注册 SW）。
  */
-const VERSION = 'ms3-v129';
+const VERSION = 'ms3-v130';
 const APP_CACHE = VERSION + '-app';
 const KATEX_CACHE = VERSION + '-katex';
 
@@ -144,17 +144,21 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  // 其他静态资源（app.js / style.css / 图标等）：网络优先，回退缓存
-  // 这样上传新版本后，在线刷新即可看到更新，无需手动清缓存
+  // 其他静态资源（app.js / style.css / data/*.js / 图标等）：缓存优先 + 后台更新
+  // T180：原来一律网络优先，在线刷新时 30+ 个文件仍要逐个回源，首屏被 4.55 MB 数据文件拖住。
+  // 现在命中缓存即刻返回，网络请求只负责把新版本写回缓存、不阻塞渲染（stale-while-revalidate）。
+  // 发版时 VERSION 必须 bump：activate 会清掉所有不含新版本号的缓存并重新预缓存，
+  // 所以「缓存优先」不会让用户永远停在旧数据上。
   e.respondWith(
-    fetch(req).then(function (resp) {
-      if (resp && resp.status === 200) {
-        const clone = resp.clone();
-        caches.open(APP_CACHE).then(function (c) { c.put(req, clone); });
-      }
-      return resp;
-    }).catch(function () {
-      return caches.match(req);
+    caches.match(req).then(function (cached) {
+      const network = fetch(req).then(function (resp) {
+        if (resp && resp.status === 200) {
+          const clone = resp.clone();
+          caches.open(APP_CACHE).then(function (c) { c.put(req, clone); });
+        }
+        return resp;
+      }).catch(function () { return cached; });
+      return cached || network;
     })
   );
 });

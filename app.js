@@ -21,10 +21,11 @@
  */
 (function () {
   'use strict';
-  const VERSION = '2.4.2';
+  const VERSION = '2.4.3';
 
   // ---------------- 更新日志（设置页「更新日志」展示） ----------------
   const CHANGELOG = [
+    { v: '2.4.3', date: '2026-11', items: ["GitHub Pages 首屏提速：原来 31 个同步阻塞脚本把约 5.6 MB 静态资源全压在关键路径上。现在 27 个学科数据 + app.js 统一带 defer（浏览器并行下载、按文档顺序执行，学科注册仍先于 app.js），HTML 解析不再被 4.55 MB 数据卡住；三份 data/bank_*.js 共 2.06 MB 题库从首屏移除，改由 src/bank.mjs 的 bankEnsureData() 在首次进入题库视图时并行动态注入（bankLoadAttempted 只尝试一次，文件缺失时回落原空态），三份文件仍在 sw.js 预缓存清单里，离线进题库照常可用。Service Worker 静态资源从「一律网络优先」改为「缓存优先 + 后台更新」，命中缓存即刻返回、在线刷新不再 30+ 个文件逐个回源；导航仍网络优先，发版 bump ms3-vN 时 activate 清旧缓存重预缓存，不会停在旧数据上","云同步提速：写侧用 CompressionStream('gzip') 把整库压成字节再 base64（中文与日志重复度高的库实测 821 KB → 45 KB，约 94.5%），读侧按 1f 8b 魔数双读 gzip 与明文——升级前写入的明文文件照旧读得懂；CompressionStream 缺席或压缩失败自动退回明文。一轮开始先 GET athena-sync/data/ 目录拿全部 blob sha，与本机 athena_sync.lastSyncSha 比对：云端 sha 没变且本机自上次同步后无新改动就整科跳过，本机无此库且云端无文件连 404 GET 都省；目录请求失败或 404 时退回全量扫描。一轮内部由 28 个文件完全串行改为 mapLimit(..., 4) 受限并发（不同学科是不同云端文件，互不冲突；每科自己的 409 重拉合并重试与 runExclusive 总闸照旧），归档修剪只对这一轮确实写了归档的学科跑，forceUploadAll / forceDownloadAll 一并受益","兼容边界（升级窗口）：新版写的 gzip 文件，升级前的旧客户端会在 JSON.parse 处抛错、该科计入 failed；异常发生在任何写回之前，不会用本机旧数据覆盖云端（fail-safe），所有设备刷新到新版后即恢复，窗口内旧设备该科暂不同步。另：这一档「云端索引」刻意不另维护 manifest 文件——Contents 目录 API 是服务端真值，旧版设备直接写 data/ 也能被立刻发现，还省一次 PUT 与一处多设备并发冲突点","工程：tests/sync.test.mjs 末尾追加 7 条护栏（gzip 往返与压缩率、明文老格式双读、压缩缺席回退、syncPutSha、mapLimit 并发峰值/顺序/单项失败、syncNeedFetch 判据、源码级守卫），tests/bank.test.mjs 的旧「三份题库接进首屏」契约改写为 T180 口径；新增 check-loading.mjs（headless Chrome + CDP，13 项 PASS）与 probe-sync.mjs（GitHub API 桩驱动真实 runSync：稳态学科 GET/PUT 均 0、云端变更只拉 1 科、本机改动 PUT 为 gzip、索引失效退回全量）；docs/ARCHITECTURE.md 与 docs/DATA_SCHEMA.md 回写加载与同步口径并刷新 src/bank.mjs 行号锚点；npm test 453/453、npm run check / check:render / verify-refs / check-archive-ui / check-clear-all-ui 全绿；版本七处同步 2.4.3 / ms3-v130 / ?v=91"] },
     { v: '2.4.2', date: '2026-11', items: ["专注链清空补边界（按反馈）：计划任务违约时，链上「未编入」的任务单元（没有编进计划、但仍挂在这条链上）也要一起清掉。原先只按计划编制子树里的已编入单元反推归属链，若做完任务没手动编入，范围就是空的——结算只归档计划节点、一条链都不清，未编入单元全留在现场。现在这种情形按裁定回退到「当前座位链」整条清空，只清这一条，其他普通链与预约链都不动；当前座位是预约链时则一条链都不清","新功能：专注链链 chips 下新增「清空所有链」手动按钮，带确认提示窗（列出将清空的链数与任务单元数，并说明预约链不受影响、操作不可撤销），取消即不落盘。确认后把全部普通链整条清空并写入归档；预约链永不参与。归档记录 reason 为 manual_clear_all，链上全部单元（含未编入）都在 chainUnits 留档、卡片展开逐条可见；状态页「已归档 · 逾期未转正」提示不会因手动清空而弹出","工程：新增 3 条守卫用例（含反证，锁定「按钮带确认」「清空函数跳预约链」「快照先于清链」），原有 95 条一条未改；`docs/ACT.md` §13.7 / §13.8 回写 T179 口径并按 diff 刷新 104 处 `src/focus.mjs:行号` 锚点，`docs/ARCHITECTURE.md` 归档页签条目与版本七处同步；全量闸门通过；版本七处同步 2.4.2 / ms3-v129 / ?v=90"] },
     { v: '2.4.1', date: '2026-11', items: ["专注链 · 计划任务违约改口径（按用户裁定）：过截止日仍未转正时，不再只清掉计划任务自己，而是把该计划挂靠的那条普通链**整条清空**——链上全部已编入单元（含不属于本计划的任务）一并移出，链计数归零、当前任务中止、标记已清空；其他普通链不受影响，预约链一个字节都不动。此前「扣掉被移出单元数、减到 0 才清链」的做法在链上还有别的任务时只清了计划任务，正是本次要修的问题", "归档同步扩到全链：归档记录新增 chainUnits（被清空链上的全部单元），归档卡片展开后另列「整链清空时一并移出的其他单元」，连带清掉的任务不再丢证据；读盘清洗白名单放行该字段，归档元信息把链标记改为「整条已清空」。旧的 state.plans 口径同样改为整链清空，但该历史口径没有编制节点，沿用既有边界不写归档", "工程：新增 2 条守卫用例（含三条反证，锁定「扣数口径」「只清计数不移出单元」「快照顺序」都不许回潮）；`docs/ACT.md` §13.7 / §13.8 回写 T178 口径，并按 diff 重算 227 处行号锚点；npm test 443/443、npm run check、check_render、verify-refs 全绿；版本七处同步 2.4.1 / ms3-v128 / ?v=89"] },
     { v: '2.4.0', date: '2026-11', items: ["题库补录：2026 年数学三整卷 22 题入库（10 选择 + 6 填空 + 6 解答，题号 1–22 无重无缺），题面按真题册逐字录入、答案逐题独立重推后与册上对拍——21 题一致，第 10 题判为册上笔误（答案栏标 C，同页解析先证 AC 均不成立、末段结论为 D，反证 m=1, n=5 时 7/36 < 5/12），按重推结论记 D，题内来源注与答案期望表双处留痕。数学三 487 → 418 题（真题侧 363 → 385）、全库 1234 → 1096 题", "题库去重（按反馈「题库内只保留一道相同的题」）：166 条卡片派生题让位于同年真题（数学 96 / 微观 16 / 统计 54，含压制后重复键位浮现的二遍 5 + 1 条），派生题 478 → 318、`subOf` 压制标记 79 → 245，**`year` 真题 778 条一条未删**——例题本身全部保留，被去掉的只是「题库里与某道真题重复的可练副本」。关键发现：例题把四个选项内联在题干里、真题把选项拆进 options，这层格式差异让 18 条逐字同题在 0.9 阈值下相似度只有 0.5–0.8，此前两轮去重都没抓到；换用 6-gram 且分母取例题自身、先剥 LaTeX 命令的真实口径后全部显形", "题库列表（按反馈）：年份维度只认真题——选中某年时只列该年真题（数学三 2010–2020 每年 23 题、2021 起 22 题），卡片派生题不再混进来；排序改为题号数值比较（「二(9)」排在「二(10)」之前，「一(1)」不再落到「三(15)」之后，取不到序号者置同年末尾），真题整体排在派生题之前。年份下拉的题数与列表同源，不再出现同年「23 道真题 + N 条例题」的重复观感", "工程：新增 tools/dup-key.mjs（生成器与测试同源的去重口径，避免两份实现漂移）；bank-cv 的「新题型覆盖 ≥5」自检放宽为「生成块 + 真题侧合计 ≥5」（否则压制越多越报红，与去重目标冲突）；check_data 先剔除父目录的【年份范围】标注再取单卷年份（2010–2019 的 126 条假警告清零，2023–2025 逐年卷反而纳入校验）；数学三答案期望表 363 → 385 条（选择题 138 → 148）；npm test 441/441，check_data / check_version / check_render / verify-refs 全绿；版本七处同步 2.4.0 / ms3-v127 / ?v=88"] },
@@ -5941,6 +5942,33 @@ function bankSubjectEmpty() {
     '当前学科暂无题库数据 · 用顶部学科选择器切到 ' + labels.join(' / '));
 }
 
+// T180：题库数据按需加载 —— 三个 bank 文件共 2.06 MB，index.html 已移出首屏。
+// 首次进入题库视图时并行注入三个脚本；sw.js 预缓存清单仍含这三个文件，离线从缓存读。
+// onload / onerror 都计入完成，且只尝试一次：某个文件缺失时不会反复注入造成死循环，
+// 由下方原有空态接手，不会把界面卡在「加载中」。
+var bankLoadAttempted = false;
+function bankEnsureData(onDone) {
+  if (typeof document === 'undefined' || bankLoadAttempted) return false;
+  bankLoadAttempted = true;
+  var left = BANK_SUBJECT_ORDER.length;
+  var settled = false;
+  var finish = function () {
+    left -= 1;
+    if (left > 0 || settled) return;
+    settled = true;
+    try { onDone(); } catch (e) {}
+  };
+  for (var i = 0; i < BANK_SUBJECT_ORDER.length; i++) {
+    var s = document.createElement('script');
+    s.src = 'data/bank_' + BANK_SUBJECT_ORDER[i] + '.js';
+    s.async = true;
+    s.onload = finish;
+    s.onerror = finish;
+    document.head.appendChild(s);
+  }
+  return true;
+}
+
 function renderBank() {
   if (typeof document === 'undefined') return null;
   var app = document.getElementById('app');
@@ -5948,7 +5976,14 @@ function renderBank() {
   app.innerHTML = '';
   // 每次重渲染都重建筛选控件，旧弹层节点已随 innerHTML 丢弃，展开态同步归零
   bankSelectOpen = null;
-  if (!bankAvailableSubjects().length) {
+  var available = bankAvailableSubjects();
+  if (!available.length && !bankLoadAttempted) {
+    // 三个脚本并行拉取；完成后由 renderApp 按当前视图重渲染（若用户已切走也不会强制回题库）
+    bankEnsureData(function () { renderApp(); });
+    app.appendChild(el('div', 'bank-empty', '题库数据加载中…'));
+    return app;
+  }
+  if (!available.length) {
     var empty = el('div', 'bank-empty', '题库数据未加载（data/bank_*.js）。');
     app.appendChild(empty);
     return app;
@@ -9098,6 +9133,51 @@ function bankDetailNode(q) {
     return new TextDecoder().decode(bytes);
   }
 
+  // —— T180：字节级 base64 + gzip 载荷（GitHub contents API 存的是 base64 字节）——
+  // 老版 b64decodeUtf8 用 TextDecoder 解字节，遇到 gzip 二进制会产生替换字符，不能拿来解压；
+  // 这里补一组纯字节往返，b64encodeUtf8 / b64decodeUtf8 保留作为「明文回退」与既有测试口径。
+  function b64encodeBytes(bytes) {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function b64decodeBytes(b64) {
+    const bin = atob(String(b64).replace(/\s/g, ''));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+  function syncIsGzipBytes(bytes) {
+    return !!bytes && bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b;
+  }
+  // 压缩流在旧浏览器 / 部分 WebView 里可能缺席：返回 null，由调用方回退明文。
+  // 压缩只是加速手段，绝不能成为同步能否进行的前提。
+  async function syncGzipEncode(obj) {
+    if (typeof CompressionStream === 'undefined' || typeof Blob === 'undefined' || typeof Response === 'undefined') return null;
+    const raw = new TextEncoder().encode(JSON.stringify(obj));
+    const buf = await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+    return new Uint8Array(buf);
+  }
+  async function syncGzipDecode(bytes) {
+    const buf = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+    return JSON.parse(new TextDecoder().decode(buf));
+  }
+  async function syncEncodeContent(obj) {
+    try {
+      const z = await syncGzipEncode(obj);
+      if (z) return b64encodeBytes(z);
+    } catch (e) { /* 压缩失败不阻断同步，退回明文 */ }
+    return b64encodeUtf8(JSON.stringify(obj));
+  }
+  // 下载解码：按 gzip 魔数区分新旧格式，两种都读得了。
+  // 老客户端若读到 gzip，b64decodeUtf8 + JSON.parse 会在任何写回之前抛错 → 该科计入 failed，
+  // 不会用本机旧数据覆盖云端（fail-safe）；所有设备刷新到新版后即恢复。
+  async function syncDecodeContent(b64) {
+    const bytes = b64decodeBytes(b64);
+    if (syncIsGzipBytes(bytes)) return syncGzipDecode(bytes);
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+
   // —— LWW 决策已被 mergeDb 合并取代：覆盖改为逐卡归并，多端同时打开安全 ——
 
   // 卡片合并：调度状态整组取 lastR 较新一方（一次评分产生的一致整体）；
@@ -9295,11 +9375,13 @@ function bankDetailNode(q) {
     const j = await ghRequest(path);
     if (j.notFound) return null;
     if (j.encoding !== 'base64' || typeof j.content !== 'string') throw new Error('文件内容编码异常：' + path);
-    return { sha: j.sha, data: JSON.parse(b64decodeUtf8(j.content)) };
+    // T180：按内容判断 gzip / 明文，两种云端文件都能读
+    return { sha: j.sha, data: await syncDecodeContent(j.content) };
   }
 
   async function ghPutJson(path, obj, sha) {
-    const body = { message: 'Athena 同步：' + path + '（' + new Date().toISOString() + '）', content: b64encodeUtf8(JSON.stringify(obj)) };
+    // T180：载荷 gzip 压缩后再 base64，上传体积约降到 1/3；不支持压缩流的设备自动退回明文
+    const body = { message: 'Athena 同步：' + path + '（' + new Date().toISOString() + '）', content: await syncEncodeContent(obj) };
     if (sha) body.sha = sha;
     return ghRequest(path, { method: 'PUT', body: body });
   }
@@ -9663,11 +9745,72 @@ function bankDetailNode(q) {
   function isShaConflict(err) {
     return err && /409|does not match|wasn't supplied/i.test(String(err.message || err));
   }
+  // T180：PUT 响应里取新 blob sha，供目录索引缓存使用；老响应缺字段时返回空串（下次保守全量）。
+  function syncPutSha(put) {
+    return (put && put.content && put.content.sha) ? String(put.content.sha) : '';
+  }
 
   // 归档治理：仅「分歧冲突」时归档（云端版本比本机上次同步所见的更新，说明另一端有本机未见的变化，
   // 此时的覆盖才真正丢弃信息）；常规单向推送/拉取不再归档（合并结果已包含被覆盖方的全部信息）。
   // 每次同步后把归档目录修剪到每科最多 KEEP 份，防止仓库无限膨胀。
   const ARCHIVE_KEEP = 10;
+
+  // —— T180：一轮同步内的受限并发 ——
+  // runExclusive 的总闸仍然保留（同一设备同一时刻只跑一轮，防两轮对同一文件 GET 相同 sha 后
+  // 先后 PUT 收 409）；这里只是把「一轮内部」由 28 个文件完全串行改成最多 4 路并发。
+  // 不同学科是不同云端文件，彼此不会冲突，每科自己的 409 重试照旧。
+  const SYNC_CONCURRENCY = 4;
+  async function mapLimit(items, limit, fn) {
+    const out = new Array(items.length);
+    let cursor = 0;
+    const n = Math.max(1, Math.min(limit, items.length));
+    async function worker() {
+      while (true) {
+        const i = cursor++;
+        if (i >= items.length) return;
+        try { out[i] = { ok: true, value: await fn(items[i], i) }; }
+        catch (e) { out[i] = { ok: false, error: e }; }
+      }
+    }
+    const workers = [];
+    for (let i = 0; i < n; i++) workers.push(worker());
+    await Promise.all(workers);
+    return out;
+  }
+
+  // —— T180：云端目录索引（零写入 manifest）——
+  // 一次 GET athena-sync/data/ 就能拿到每个文件当前的 blob sha，据此判断哪些学科变了。
+  // 刻意不另维护一个 manifest 文件：目录 API 是服务端真值，旧版设备直接写 data/ 也能被
+  // 立刻发现，不会因 manifest 没更新而漏同步；还省掉一次 PUT 与一处多设备并发冲突点。
+  function syncLastSha(sid) {
+    const cfg = syncCfg();
+    return (cfg.lastSyncSha && cfg.lastSyncSha[sid]) || '';
+  }
+  function syncSetLastSha(map) {
+    const cfg = syncCfg();
+    if (!cfg.lastSyncSha) cfg.lastSyncSha = {};
+    Object.keys(map || {}).forEach(function (k) { cfg.lastSyncSha[k] = map[k]; });
+    saveSyncCfg(cfg);
+  }
+  async function syncRemoteIndex() {
+    try {
+      const j = await ghRequest(SYNC_DIR + '/data/');
+      if (j.notFound || !Array.isArray(j)) return null;
+      const files = {};
+      j.forEach(function (f) {
+        if (!f || typeof f.name !== 'string' || !/\.json$/.test(f.name)) return;
+        files[f.name.replace(/\.json$/, '')] = String(f.sha || '');
+      });
+      return files;
+    } catch (e) { return null; } // 索引不可用 → 回退全量扫描，宁可多拉不可漏拉
+  }
+  // 纯函数判据：索引缺失 / 没有历史 sha / 云端 sha 变了 ⇒ 必须拉；
+  // 否则只有「本机自上次同步后有新改动」才需要拉（否则漏推本地变化）。
+  function syncNeedFetch(remoteSha, lastSha, localUp, seenUp, tolerance) {
+    if (remoteSha == null || !lastSha) return true;
+    if (remoteSha !== lastSha) return true;
+    return (Number(localUp) || 0) > (Number(seenUp) || 0) + (Number(tolerance) || 0);
+  }
 
   function syncLastUp(sid) {
     const cfg = syncCfg();
@@ -9702,16 +9845,20 @@ function bankDetailNode(q) {
   async function syncSubject(sid) {
     const local = syncLocalDb(sid);
     const seenUp = syncLastUp(sid); // 本机上次同步所见的云端时间戳
+    const localUp = (local && typeof local.updatedAt === 'number') ? local.updatedAt : 0;
     let lastErr = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
         const remoteUp = (remote && remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0;
+        let put = null;
+        let archived = false;
 
         if (local && !remote) { // 首推（若另一设备恰好先推了 → 409 重试，走合并分支）
           try {
-            await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local);
-            return { action: 'push' };
+            put = await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local);
+            syncSetLastUp(sid, localUp);
+            return { action: 'push', up: localUp, sha: syncPutSha(put), archived: archived };
           } catch (err) {
             if (isShaConflict(err)) { lastErr = err; continue; }
             throw err;
@@ -9719,9 +9866,10 @@ function bankDetailNode(q) {
         }
         if (!local && remote) { // 本地没有（新设备）：拉取（不写云端，无冲突可能）
           if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
-          return { action: 'pull' };
+          syncSetLastUp(sid, remoteUp);
+          return { action: 'pull', up: remoteUp, sha: remote.sha || '', archived: archived };
         }
-        if (!local && !remote) return { action: 'skip' };
+        if (!local && !remote) return { action: 'skip', up: 0, sha: '', archived: archived };
 
         // 两侧都有：合并（多端同时打开的安全基石）。
         // 云端有本机没有的内容 → 必须写回本地（不再用时间差判断——本机打开/评分会推高自己的时间戳，
@@ -9732,22 +9880,24 @@ function bankDetailNode(q) {
         const cloudDiverged = remoteUp > seenUp + SYNC_TOLERANCE_MS; // 云端在本机上次同步后被别的设备改过
         let action = 'skip';
         if (changedFromRemote) { // 覆盖本地（分歧冲突时先归档本地旧版，常规拉取不归档）
-          if (cloudDiverged) await ghPutJson(syncArchivePath(sid), local);
+          if (cloudDiverged) { await ghPutJson(syncArchivePath(sid), local); archived = true; }
           if (!syncWriteLocalDb(sid, merged)) throw new Error('本地写入失败（存储空间不足？）');
           action = 'pull';
         }
         if (mergedUp > remoteUp + SYNC_TOLERANCE_MS) { // 本机有云端没有的变化（或合并结果更新）→ 更新云端
-          if (remote && cloudDiverged) await ghPutJson(syncArchivePath(sid), remote.data, remote.sha); // 覆盖未见过的云端版本才归档
+          if (remote && cloudDiverged) { await ghPutJson(syncArchivePath(sid), remote.data, remote.sha); archived = true; } // 覆盖未见过的云端版本才归档
           try {
-            await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', merged, remote.sha);
+            put = await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', merged, remote.sha);
           } catch (err) {
             if (isShaConflict(err)) { lastErr = err; continue; } // 云端刚被别的设备更新：重拉重合
             throw err;
           }
           action = changedFromRemote ? 'merge' : 'push';
         }
-        syncSetLastUp(sid, Math.max(remoteUp, mergedUp));
-        return { action: action };
+        const finalUp = Math.max(remoteUp, mergedUp);
+        syncSetLastUp(sid, finalUp);
+        // T180：up / sha 交给 doRunSync 统一写进目录索引缓存；archived 决定要不要跑归档修剪
+        return { action: action, up: finalUp, sha: put ? syncPutSha(put) : (remote.sha || ''), archived: archived };
       } catch (err) {
         if (isShaConflict(err)) { lastErr = err; continue; }
         throw err;
@@ -9776,17 +9926,50 @@ function bankDetailNode(q) {
   async function doRunSync() {
     const summary = { cloud: [], local: [], both: [], skipped: [], failed: [] };
     const sids = Object.keys(subjectList());
-    for (const sid of sids) {
-      try {
-        const res = await syncSubject(sid);
-        if (res.action === 'push') summary.cloud.push(sid);
-        else if (res.action === 'pull') summary.local.push(sid);
-        else if (res.action === 'merge') summary.both.push(sid);
-        else summary.skipped.push(sid);
-      } catch (err) {
-        summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
+
+    // T180：一次目录 GET 拿全部云端 sha，只处理「云端变了」或「本机有新改动」的学科。
+    // 索引不可用时 syncNeedFetch 恒为 true，自动退回全量扫描，宁可多拉不可漏拉。
+    const index = await syncRemoteIndex();
+    const localUps = {};
+    const localPresent = {};
+    sids.forEach(function (sid) {
+      const l = syncLocalDb(sid);
+      localUps[sid] = (l && typeof l.updatedAt === 'number') ? l.updatedAt : 0;
+      localPresent[sid] = !!l;
+    });
+    const todo = sids.filter(function (sid) {
+      // 索引可用、本机没这份库、云端也没有这个文件 ⇒ 两边都空，连 404 的 GET 都省掉。
+      // 从未学过的学科通常占 27 科里的大半，不省这一步索引就白建了。
+      if (index && !localPresent[sid] && index[sid] == null) return false;
+      return syncNeedFetch(index ? index[sid] : null, syncLastSha(sid), localUps[sid], syncLastUp(sid), SYNC_TOLERANCE_MS);
+    });
+    const todoSet = {};
+    todo.forEach(function (sid) { todoSet[sid] = 1; });
+    sids.forEach(function (sid) { if (!todoSet[sid]) summary.skipped.push(sid); });
+
+    const results = await mapLimit(todo, SYNC_CONCURRENCY, function (sid) { return syncSubject(sid); });
+    const shaMap = {};
+    const needPrune = [];
+    results.forEach(function (r, i) {
+      const sid = todo[i];
+      if (!r.ok) {
+        summary.failed.push(sid + '：' + (r.error && r.error.message ? r.error.message : '未知错误'));
+        return;
       }
-    }
+      const res = r.value;
+      if (res.action === 'push') summary.cloud.push(sid);
+      else if (res.action === 'pull') summary.local.push(sid);
+      else if (res.action === 'merge') summary.both.push(sid);
+      else summary.skipped.push(sid);
+      if (res.sha) shaMap[sid] = res.sha;
+      if (res.archived) needPrune.push(sid);
+    });
+    // 没进 todo 的学科把索引 sha 记下来，否则 lastSyncSha 一直为空、每轮都退化成全量扫描。
+    sids.forEach(function (sid) {
+      if (!shaMap[sid] && index && index[sid]) shaMap[sid] = index[sid];
+    });
+    syncSetLastSha(shaMap);
+
     // 行动模块（习惯/计划/专注）：独立文件，不触碰 *_formula_srs_v1 的 updatedAt
     try {
       const actRes = await syncActModule();
@@ -9803,119 +9986,29 @@ function bankDetailNode(q) {
     cfg.lastError = summary.failed.length ? summary.failed.join('；') : '';
     saveSyncCfg(cfg);
 
-    // 当前学科被更新时：重载数据、重建学习队列并刷新界面。
-    // 旧会话（deck/pos/frontier）基于同步前的卡片状态，直接沿用会卡死新卡引入
-    // （syncWriteLocalDb 已删除对应会话，这里无条件重建）。
+    // 当前学科被更新时：重载数据、重建学习队列并刷新界面（保持串行收尾，避免并发重建队列）。
     if (summary.local.concat(summary.both).indexOf(currentSubjectId) !== -1) {
       await loadDBAsync();
       buildSession(0);
       renderApp();
     }
-    // 归档修剪：每科仅保留最近 ARCHIVE_KEEP 份（修剪失败不影响同步）
-    for (const sid of sids) { await pruneArchives(sid); }
+    // 归档修剪：只对这一轮确实写了归档的学科跑，且 4 路并发（原来每科无条件 GET 一次目录）。
+    await mapLimit(needPrune, SYNC_CONCURRENCY, function (sid) { return pruneArchives(sid); });
     return summary;
   }
 
   // —— 单向全覆盖（危险操作，跳过 mergeDb；与合并式「立即同步」并存）——
-  // 完全上传：本机整库快照覆盖云端对应文件；完全下载：云端整库快照覆盖本机。
-  // 覆盖前把被覆盖侧归档到 archive/（与合并同步同一策略）；单科失败只记 summary.failed，不弄脏本地。
-  // 本机无数据 / 云端无数据的科目跳过（不删除对侧多余文件——避免误删另一端独有进度）。
-
-  function settleLocalSave() {
-    // 落盘未决写先冲掉，避免稍后 flush 把旧内存 DB 盖回刚下载的云端快照
-    try { if (typeof flushSave === 'function') flushSave(); } catch (e) {}
-  }
-
-  async function forceUploadSubject(sid) {
-    const local = syncLocalDb(sid);
-    if (!local) return { action: 'skip' };
-    let lastErr = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
-        if (remote && remote.data) {
-          // 覆盖前归档云端旧版（archive 新路径，不带 sha）
-          await ghPutJson(syncArchivePath(sid), remote.data);
-        }
-        await ghPutJson(SYNC_DIR + '/data/' + sid + '.json', local, remote ? remote.sha : undefined);
-        syncSetLastUp(sid, (typeof local.updatedAt === 'number') ? local.updatedAt : Date.now());
-        return { action: 'upload' };
-      } catch (err) {
-        if (isShaConflict(err)) { lastErr = err; continue; } // 云端刚被别的设备更新：重拉归档后再覆盖
-        throw err;
-      }
-    }
-    throw new Error('云端正在被其他设备更新，重试 3 次未成功——稍后再试（' + (lastErr && lastErr.message ? lastErr.message : '') + '）');
-  }
-
-  async function forceDownloadSubject(sid) {
-    const remote = await ghGetJson(SYNC_DIR + '/data/' + sid + '.json');
-    if (!remote || !remote.data) return { action: 'skip' };
-    const local = syncLocalDb(sid);
-    if (local) {
-      // 覆盖前归档本机旧版到云端 archive/；归档失败则中止该科——绝不未归档就丢本地
-      await ghPutJson(syncArchivePath(sid), local);
-    }
-    if (!syncWriteLocalDb(sid, remote.data)) throw new Error('本地写入失败（存储空间不足？）');
-    syncSetLastUp(sid, (remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0);
-    return { action: 'download' };
-  }
-
-  function recordForceSummary(kind, summary) {
-    const cfg = syncCfg();
-    cfg.lastSyncAt = Date.now();
-    cfg.lastSyncSummary = { force: kind, ok: summary.ok.length, skipped: summary.skipped.length, failed: summary.failed.length };
-    cfg.lastError = summary.failed.length ? summary.failed.join('；') : '';
-    saveSyncCfg(cfg);
-  }
-
-  // 行动模块单向覆盖（完全上传/下载共用）
-  async function forceUploadAct() {
-    const local = actModuleLocalPayload();
-    let lastErr = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const remote = await ghGetJson(ACT_SYNC_PATH);
-        if (remote && remote.data) {
-          await ghPutJson(SYNC_DIR + '/archive/_act/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json', remote.data);
-        }
-        await ghPutJson(ACT_SYNC_PATH, local, remote ? remote.sha : undefined);
-        syncSetLastUp('_act', local.updatedAt || Date.now());
-        return { action: 'upload' };
-      } catch (err) {
-        if (isShaConflict(err)) { lastErr = err; continue; }
-        throw err;
-      }
-    }
-    throw new Error('云端正在被其他设备更新，重试 3 次未成功（' + (lastErr && lastErr.message ? lastErr.message : '') + '）');
-  }
-
-  async function forceDownloadAct() {
-    const remote = await ghGetJson(ACT_SYNC_PATH);
-    if (!remote || !remote.data) return { action: 'skip' };
-    const local = actModuleLocalPayload();
-    try {
-      await ghPutJson(SYNC_DIR + '/archive/_act/' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6) + '.json', local);
-    } catch (e) { /* 归档失败不阻断下载 */ }
-    actModuleWriteLocal(remote.data);
-    syncSetLastUp('_act', (remote.data && typeof remote.data.updatedAt === 'number') ? remote.data.updatedAt : 0);
-    return { action: 'download' };
-  }
-
   // 完全上传：本机 → 云端（单向覆盖）。返回 { ok, skipped, failed }
   async function doForceUploadAll() {
     settleLocalSave();
     const summary = { ok: [], skipped: [], failed: [] };
     const sids = Object.keys(subjectList());
-    for (const sid of sids) {
-      try {
-        const res = await forceUploadSubject(sid);
-        if (res.action === 'upload') summary.ok.push(sid);
-        else summary.skipped.push(sid);
-      } catch (err) {
-        summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
-      }
-    }
+    const results = await mapLimit(sids, SYNC_CONCURRENCY, function (sid) { return forceUploadSubject(sid); });
+    results.forEach(function (r, i) {
+      if (!r.ok) { summary.failed.push(sids[i] + '：' + (r.error && r.error.message ? r.error.message : '未知错误')); return; }
+      if (r.value.action === 'upload') summary.ok.push(sids[i]);
+      else summary.skipped.push(sids[i]);
+    });
     try {
       const ares = await forceUploadAct();
       if (ares.action === 'upload') summary.ok.push('_act');
@@ -9924,7 +10017,9 @@ function bankDetailNode(q) {
       summary.failed.push('行动模块：' + (err && err.message ? err.message : '未知错误'));
     }
     recordForceSummary('upload', summary);
-    for (const sid of sids) { await pruneArchives(sid); }
+    // 完全上传每科都会写归档，只对成功且非 _act 的学科修剪，4 路并发
+    const pruneIds = summary.ok.filter(function (sid) { return sid !== '_act'; });
+    await mapLimit(pruneIds, SYNC_CONCURRENCY, function (sid) { return pruneArchives(sid); });
     return summary;
   }
 
@@ -9933,15 +10028,12 @@ function bankDetailNode(q) {
     settleLocalSave();
     const summary = { ok: [], skipped: [], failed: [] };
     const sids = Object.keys(subjectList());
-    for (const sid of sids) {
-      try {
-        const res = await forceDownloadSubject(sid);
-        if (res.action === 'download') summary.ok.push(sid);
-        else summary.skipped.push(sid);
-      } catch (err) {
-        summary.failed.push(sid + '：' + (err && err.message ? err.message : '未知错误'));
-      }
-    }
+    const results = await mapLimit(sids, SYNC_CONCURRENCY, function (sid) { return forceDownloadSubject(sid); });
+    results.forEach(function (r, i) {
+      if (!r.ok) { summary.failed.push(sids[i] + '：' + (r.error && r.error.message ? r.error.message : '未知错误')); return; }
+      if (r.value.action === 'download') summary.ok.push(sids[i]);
+      else summary.skipped.push(sids[i]);
+    });
     try {
       const ares = await forceDownloadAct();
       if (ares.action === 'download') summary.ok.push('_act');
@@ -9950,13 +10042,14 @@ function bankDetailNode(q) {
       summary.failed.push('行动模块：' + (err && err.message ? err.message : '未知错误'));
     }
     recordForceSummary('download', summary);
-    // 当前学科被云端覆盖：重载内存 DB、重建学习队列并刷新界面（与 doRunSync 一致）
+    // 当前学科被云端覆盖：重载内存 DB、重建学习队列并刷新界面（与 doRunSync 一致，串行收尾）
     if (summary.ok.indexOf(currentSubjectId) !== -1) {
       await loadDBAsync();
       buildSession(0);
       renderApp();
     }
-    for (const sid of sids) { await pruneArchives(sid); }
+    const pruneIds = summary.ok.filter(function (sid) { return sid !== '_act'; });
+    await mapLimit(pruneIds, SYNC_CONCURRENCY, function (sid) { return pruneArchives(sid); });
     return summary;
   }
 

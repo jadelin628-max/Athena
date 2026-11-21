@@ -2,6 +2,13 @@
 
 > 本文件由 `tools/changelog.mjs` 从 `src/app.mjs` 的 CHANGELOG 自动生成（应用内「设置 → 更新日志」同步展示），请勿手改；改日志后运行 `node tools/changelog.mjs` 重新生成。
 
+## v2.4.3（2026-11）
+
+- GitHub Pages 首屏提速：原来 31 个同步阻塞脚本把约 5.6 MB 静态资源全压在关键路径上。现在 27 个学科数据 + app.js 统一带 defer（浏览器并行下载、按文档顺序执行，学科注册仍先于 app.js），HTML 解析不再被 4.55 MB 数据卡住；三份 data/bank_*.js 共 2.06 MB 题库从首屏移除，改由 src/bank.mjs 的 bankEnsureData() 在首次进入题库视图时并行动态注入（bankLoadAttempted 只尝试一次，文件缺失时回落原空态），三份文件仍在 sw.js 预缓存清单里，离线进题库照常可用。Service Worker 静态资源从「一律网络优先」改为「缓存优先 + 后台更新」，命中缓存即刻返回、在线刷新不再 30+ 个文件逐个回源；导航仍网络优先，发版 bump ms3-vN 时 activate 清旧缓存重预缓存，不会停在旧数据上
+- 云同步提速：写侧用 CompressionStream('gzip') 把整库压成字节再 base64（中文与日志重复度高的库实测 821 KB → 45 KB，约 94.5%），读侧按 1f 8b 魔数双读 gzip 与明文——升级前写入的明文文件照旧读得懂；CompressionStream 缺席或压缩失败自动退回明文。一轮开始先 GET athena-sync/data/ 目录拿全部 blob sha，与本机 athena_sync.lastSyncSha 比对：云端 sha 没变且本机自上次同步后无新改动就整科跳过，本机无此库且云端无文件连 404 GET 都省；目录请求失败或 404 时退回全量扫描。一轮内部由 28 个文件完全串行改为 mapLimit(..., 4) 受限并发（不同学科是不同云端文件，互不冲突；每科自己的 409 重拉合并重试与 runExclusive 总闸照旧），归档修剪只对这一轮确实写了归档的学科跑，forceUploadAll / forceDownloadAll 一并受益
+- 兼容边界（升级窗口）：新版写的 gzip 文件，升级前的旧客户端会在 JSON.parse 处抛错、该科计入 failed；异常发生在任何写回之前，不会用本机旧数据覆盖云端（fail-safe），所有设备刷新到新版后即恢复，窗口内旧设备该科暂不同步。另：这一档「云端索引」刻意不另维护 manifest 文件——Contents 目录 API 是服务端真值，旧版设备直接写 data/ 也能被立刻发现，还省一次 PUT 与一处多设备并发冲突点
+- 工程：tests/sync.test.mjs 末尾追加 7 条护栏（gzip 往返与压缩率、明文老格式双读、压缩缺席回退、syncPutSha、mapLimit 并发峰值/顺序/单项失败、syncNeedFetch 判据、源码级守卫），tests/bank.test.mjs 的旧「三份题库接进首屏」契约改写为 T180 口径；新增 check-loading.mjs（headless Chrome + CDP，13 项 PASS）与 probe-sync.mjs（GitHub API 桩驱动真实 runSync：稳态学科 GET/PUT 均 0、云端变更只拉 1 科、本机改动 PUT 为 gzip、索引失效退回全量）；docs/ARCHITECTURE.md 与 docs/DATA_SCHEMA.md 回写加载与同步口径并刷新 src/bank.mjs 行号锚点；npm test 453/453、npm run check / check:render / verify-refs / check-archive-ui / check-clear-all-ui 全绿；版本七处同步 2.4.3 / ms3-v130 / ?v=91
+
 ## v2.4.2（2026-11）
 
 - 专注链清空补边界（按反馈）：计划任务违约时，链上「未编入」的任务单元（没有编进计划、但仍挂在这条链上）也要一起清掉。原先只按计划编制子树里的已编入单元反推归属链，若做完任务没手动编入，范围就是空的——结算只归档计划节点、一条链都不清，未编入单元全留在现场。现在这种情形按裁定回退到「当前座位链」整条清空，只清这一条，其他普通链与预约链都不动；当前座位是预约链时则一条链都不清
